@@ -5,5 +5,6 @@ function truthy(val: any) {
 
 if (truthy("")) {
 
+console.log("hey buddy")
 } else {
 }
