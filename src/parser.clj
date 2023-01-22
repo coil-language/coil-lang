@@ -16,6 +16,10 @@
   (->> (p/from {:type :id-lookup} tokens)
        (p/one :id :name)))
 
+(defn- parse-num [tokens]
+  (->> (p/from {:type :num} tokens)
+       (p/one :num :value)))
+
 (defn- parse-dot [lhs tokens]
   (->> (p/from {:type :property-lookup, :lhs lhs} tokens)
        (p/skip :dot)
@@ -37,10 +41,18 @@
       (recur expr tokens)
       (p/from lhs tokens))))
 
+(defn- parse-array [tokens]
+  (->> (p/from {:type :array} tokens)
+       (p/skip :open-sq)
+       (p/parse-until :close-sq parse-expr :elements)
+       (p/skip :close-sq)))
+
 (defn- parse-expr [tokens]
   (->> (p/null tokens)
        (p/one-case {:string-lit parse-str,
-                    :id parse-id})
+                    :id parse-id,
+                    :num parse-num,
+                    :open-sq parse-array})
        parse-snd-expr))
 
 (defn- parse-else-branch [tokens]
@@ -59,10 +71,37 @@
        (p/skip :close-b)
        (p/one-case {:else parse-else-branch} :fail [])))
 
+(defn- parse-assign-expr [tokens]
+  (->> (p/null tokens)
+       (p/one :id :name)))
+
+(defn- parse-let [tokens]
+  (->> (p/from {:type :let} tokens)
+       (p/skip :let)
+       (p/then parse-assign-expr :assign-expr)
+       (p/skip :eq)
+       (p/then parse-expr :rhs)))
+
+(defn- parse-if-let [tokens]
+  (->> (p/from {:type :if-let} tokens)
+       (p/skip :if)
+       (p/skip :let)
+       (p/then parse-assign-expr :assign-expr)
+       (p/skip :eq)
+       (p/then parse-expr :expr)
+       (p/skip :open-b)
+       (p/parse-until :close-b parse-statement :pass)
+       (p/skip :close-b)
+       (p/one-case {:else parse-else-branch} :fail [])))
+
 (defn- parse-statement [tokens]
   (->> (p/null tokens)
-       (p/one-case {:if parse-if
-                    'otherwise parse-expr})))
+       (p/one-case
+        (array-map
+         [:if :let] parse-if-let,
+         :if parse-if,
+         :let parse-let,
+         'otherwise parse-expr))))
 
 (defn parse [tokens]
   (loop [ast-list [], rest-tokens tokens]

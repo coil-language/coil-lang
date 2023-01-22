@@ -6,6 +6,7 @@
    {:regex #"^if\b"         :keyword :if}
    {:regex #"^else\b"       :keyword :else}
    {:regex #"^let\b"        :keyword :let}
+   {:regex #"^\="           :keyword :eq}
    {:regex #"^\{"           :keyword :open-b}
    {:regex #"^\}"           :keyword :close-b}
    {:regex #"^\("           :keyword :open-p}
