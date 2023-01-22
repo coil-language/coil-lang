@@ -16,13 +16,25 @@
 (defn- eval-str [{:keys [value]}]
   (str \" value \"))
 
+(defn- property-lookup [{:keys [lhs property]}]
+  (str (eval-expr lhs) "." property))
+
+(defn- eval-fn-call [{:keys [lhs args]}]
+  (str (eval-expr lhs) "("
+       (string/join ", " (map eval-expr args))
+       ")"))
+
 (defn- eval-expr [node]
   (case (:type node)
-    :str (eval-str node)))
+    :str (eval-str node)
+    :property-lookup (property-lookup node)
+    :id-lookup (node :name)
+    :fn-call (eval-fn-call node)))
 
 (defn- eval-statement [node]
   (case (:type node)
-    :if (eval-if node)))
+    :if (eval-if node)
+    (eval-expr node)))
 
 (defn- eval-ast [ast]
   (reduce #(str %1 "\n" (eval-statement %2)) "" ast))

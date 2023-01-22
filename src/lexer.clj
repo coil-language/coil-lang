@@ -10,6 +10,7 @@
    {:regex #"^\}"           :keyword :close-b}
    {:regex #"^\("           :keyword :open-p}
    {:regex #"^\)"           :keyword :close-p}
+   {:regex #"\."            :keyword :dot}
    {:regex #"^\>"           :keyword :gt}
    {:regex #"^\<"           :keyword :lt}
    {:regex #"^\+"           :keyword :plus}
