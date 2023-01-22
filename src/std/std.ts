@@ -1,3 +1,3 @@
 function truthy(val: any) {
-  return val !== null && val !== undefined;
+  return val !== null && val !== undefined && val !== false;
 }
