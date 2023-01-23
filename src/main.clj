@@ -34,6 +34,7 @@
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn snapshot [opts]
+  (reset! globals/emit-std false)
   (let [src-file (str ('src opts))
         name (str ('name opts))
         src (slurp src-file)

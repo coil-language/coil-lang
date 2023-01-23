@@ -31,7 +31,7 @@
        (p/parse-until :close-p parse-expr :args)
        (p/skip :close-p)))
 
-(def math-ops #{:plus :minus :times :pow :div})
+(def math-ops #{:plus :minus :lt :gt :lt-eq :gt-eq :times :pow :div})
 
 (defn- parse-math-op [lhs tokens]
   (->> (p/from {:type :math-op, :lhs lhs} tokens)
@@ -43,6 +43,16 @@
        (p/skip :double-colon)
        (p/one :id :to)))
 
+(defn- parse-double-eq [lhs tokens]
+  (->> (p/from {:type :double-equals, :lhs lhs} tokens)
+       (p/skip :double-eq)
+       (p/then parse-expr :rhs)))
+
+(defn- parse-not-eq [lhs tokens]
+  (->> (p/from {:type :not-equals, :lhs lhs} tokens)
+       (p/skip :not-eq)
+       (p/then parse-expr :rhs)))
+
 (defn- parse-snd-expr [[lhs tokens]]
   (loop [lhs lhs, tokens tokens]
     (if-let [[expr tokens]
@@ -50,6 +60,8 @@
                :dot (parse-dot lhs tokens)
                :open-p (parse-fn-call lhs tokens)
                :double-colon (parse-double-colon lhs tokens)
+               :double-eq (parse-double-eq lhs tokens)
+               :not-eq (parse-not-eq lhs tokens)
                (when (math-ops (p/peek-next tokens)) (parse-math-op lhs tokens)))]
       (recur expr tokens)
       (p/from lhs tokens))))
@@ -99,7 +111,7 @@
 
 (defn- parse-reg-obj-entry [tokens]
   (->> (p/from {:type :reg-obj-entry} tokens)
-       (p/one :id :key)
+       (p/either #{:id :num} :key)
        (p/skip :colon)
        (p/then parse-expr :value)))
 
@@ -119,6 +131,7 @@
   (->> (p/null tokens)
        (p/one-case
         {[:id :colon] parse-reg-obj-entry,
+         [:num :colon] parse-reg-obj-entry,
          :id parse-obj-shorthand-entry,
          :open-sq parse-dynamic-obj-entry})))
 
@@ -127,6 +140,16 @@
        (p/skip :open-b)
        (p/parse-until :close-b parse-obj-entry :entries)
        (p/skip :close-b)))
+
+(defn- parse-bind-this [tokens]
+  (->> (p/from {:type :bind-this} tokens)
+       (p/skip :double-colon)
+       (p/one :id :fn-name)))
+
+(defn- parse-not [tokens]
+  (->> (p/from {:type :not} tokens)
+       (p/skip :not)
+       (p/then parse-expr :expr)))
 
 (defn- parse-expr [tokens]
   (->> (p/null tokens)
@@ -137,6 +160,8 @@
          :open-sq parse-array,
          [:hash :open-b] parse-set,
          :open-b parse-obj,
+         :double-colon parse-bind-this,
+         :not parse-not,
          :fn parse-fn})
        parse-snd-expr))
 

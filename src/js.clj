@@ -7,6 +7,11 @@
 (declare eval-expr)
 (declare eval-ast)
 
+(defn- resolve-name [name]
+  (-> name
+      (string/replace "?" "__q")
+      (string/replace "!" "__b")))
+
 (defn- eval-if [{:keys [expr pass fail]}]
   (str "if (truthy(" (eval-expr expr) ")) {\n"
        (eval-ast pass) "\n"
@@ -26,7 +31,7 @@
        ")"))
 
 (defn- eval-assign-expr [{:keys [name]}]
-  name)
+  (resolve-name name))
 
 (defn- eval-if-let [{:keys [assign-expr expr pass fail]}]
   (str "if (truthy(" (eval-expr expr) ")) {\n"
@@ -48,7 +53,7 @@
 
 (defn- eval-fn [{:keys [name args body]}]
   (str
-   "function " name "(" (string/join ", " (map eval-assign-expr args)) ") {\n"
+   "function " (resolve-name name) "(" (string/join ", " (map eval-assign-expr args)) ") {\n"
    (eval-ast body) "\n"
    "}"))
 
@@ -59,13 +64,13 @@
    "])"))
 
 (defn- eval-bind [{:keys [lhs to]}]
-  (str to ".bind(" (eval-expr lhs) ")"))
+  (str (resolve-name to) ".bind(" (eval-expr lhs) ")"))
 
 (defn- eval-reg-obj-entry [{:keys [key value]}]
-  (str key ": " (eval-expr value)))
+  (str (resolve-name key) ": " (eval-expr value)))
 
 (defn- eval-obj-shorthand-entry [{:keys [id]}]
-  (str id))
+  (resolve-name id))
 
 (defn- eval-dynamic-obj-entry [{:keys [key-expr value]}]
   (str (eval-expr key-expr) ": " (eval-expr value)))
@@ -81,19 +86,41 @@
        (string/join ", " (map eval-obj-entry entries))
        "}"))
 
+(defn- eval-bind-this [{:keys [fn-name]}]
+  (str (resolve-name fn-name) ".bind(this)"))
+
+(defn- eval-id-lookup [node]
+  (-> node :name resolve-name))
+
+(defn- eval-num [node]
+  (node :value))
+
+(defn- eval-double-equals [{:keys [lhs rhs]}]
+  (str "equals(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
+
+(defn- eval-not-equals [{:keys [lhs rhs]}]
+  (str "!equals(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
+
+(defn- eval-not [{:keys [expr]}]
+  (str "not(" (eval-expr expr) ")"))
+
 (defn- eval-expr [node]
   (case (:type node)
     :str (eval-str node)
     :property-lookup (property-lookup node)
-    :id-lookup (node :name)
+    :id-lookup (eval-id-lookup node)
     :fn-call (eval-fn-call node)
-    :num (node :value)
+    :num (eval-num node)
     :array (eval-array node)
     :math-op (eval-math-op node)
+    :double-equals (eval-double-equals node)
+    :not-equals (eval-not-equals node)
+    :not (eval-not node)
     :fn (eval-fn node)
     :bind (eval-bind node)
     :set (eval-set node)
-    :obj-lit (eval-obj-lit node)))
+    :obj-lit (eval-obj-lit node)
+    :bind-this (eval-bind-this node)))
 
 (defn- eval-return [{:keys [expr]}]
   (str "return " (eval-expr expr)))
