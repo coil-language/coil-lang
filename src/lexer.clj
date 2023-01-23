@@ -17,9 +17,9 @@
    {:regex #"^\<"           :keyword :lt}
    {:regex #"^\+"           :keyword :plus}
    {:regex #"^\-"           :keyword :minus}
+   {:regex #"^\*\*"         :keyword :pow}
    {:regex #"^\*"           :keyword :times}
    {:regex #"^\/"           :keyword :div}
-   {:regex #"^\*\*"         :keyword :pow}
    {:regex #"^\["           :keyword :open-sq}
    {:regex #"^\]"           :keyword :close-sq}
    {:regex #"^(\d*\.)?\d+"  :keyword :num}

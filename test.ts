@@ -3,8 +3,7 @@ function truthy(val: any) {
 }
 
 
-function add(a, b) {
+console.log([1, 2, 3].map(function (x) {
 
-return a+b
-}
-console.log(add(10, 20))
+return x**2
+}))
