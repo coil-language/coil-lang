@@ -38,12 +38,18 @@
        (p/either math-ops :op)
        (p/then parse-expr :rhs)))
 
+(defn- parse-double-colon [lhs tokens]
+  (->> (p/from {:type :bind, :lhs lhs} tokens)
+       (p/skip :double-colon)
+       (p/one :id :to)))
+
 (defn- parse-snd-expr [[lhs tokens]]
   (loop [lhs lhs, tokens tokens]
     (if-let [[expr tokens]
              (case (p/peek-next tokens)
                :dot (parse-dot lhs tokens)
                :open-p (parse-fn-call lhs tokens)
+               :double-colon (parse-double-colon lhs tokens)
                (when (math-ops (p/peek-next tokens)) (parse-math-op lhs tokens)))]
       (recur expr tokens)
       (p/from lhs tokens))))
@@ -84,6 +90,13 @@
         {:eq parse-fn-expr-body,
          'otherwise nil} :body)))
 
+(defn- parse-set [tokens]
+  (->> (p/from {:type :set} tokens)
+       (p/skip :hash)
+       (p/skip :open-b)
+       (p/parse-until :close-b parse-expr :elements)
+       (p/skip :close-b)))
+
 (defn- parse-expr [tokens]
   (->> (p/null tokens)
        (p/one-case
@@ -91,6 +104,7 @@
          :id parse-id,
          :num parse-num,
          :open-sq parse-array,
+         [:hash :open-b] parse-set,
          :fn parse-fn})
        parse-snd-expr))
 

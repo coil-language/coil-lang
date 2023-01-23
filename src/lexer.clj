@@ -2,7 +2,8 @@
   (:require [utils.lexing :refer [make-tokenizer]]))
 
 (def ^:private tokens
-  [{:regex #"#.*"           :ignore true}
+  [;;  {:regex #"#.*"           :ignore true}
+   {:regex #"^#"             :keyword :hash}
    {:regex #"^if\b"         :keyword :if}
    {:regex #"^else\b"       :keyword :else}
    {:regex #"^let\b"        :keyword :let}
@@ -19,6 +20,7 @@
    {:regex #"^\-"           :keyword :minus}
    {:regex #"^\*\*"         :keyword :pow}
    {:regex #"^\*"           :keyword :times}
+   {:regex #"^\:\:"         :keyword :double-colon}
    {:regex #"^\/"           :keyword :div}
    {:regex #"^\["           :keyword :open-sq}
    {:regex #"^\]"           :keyword :close-sq}

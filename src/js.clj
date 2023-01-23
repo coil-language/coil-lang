@@ -51,6 +51,15 @@
    (eval-ast body) "\n"
    "}"))
 
+(defn- eval-set [{:keys [elements]}]
+  (str
+   "new Set(["
+   (string/join ", " (map eval-expr elements))
+   "])"))
+
+(defn- eval-bind [{:keys [lhs to]}]
+  (str to ".bind(" (eval-expr lhs) ")"))
+
 (defn- eval-expr [node]
   (case (:type node)
     :str (eval-str node)
@@ -60,7 +69,9 @@
     :num (node :value)
     :array (eval-array node)
     :math-op (eval-math-op node)
-    :fn (eval-fn node)))
+    :fn (eval-fn node)
+    :bind (eval-bind node)
+    :set (eval-set node)))
 
 (defn- eval-return [{:keys [expr]}]
   (str "return " (eval-expr expr)))
