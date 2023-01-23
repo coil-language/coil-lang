@@ -21,11 +21,12 @@
    {:regex #"^\*\*"         :keyword :pow}
    {:regex #"^\*"           :keyword :times}
    {:regex #"^\:\:"         :keyword :double-colon}
+   {:regex #"^\:"           :keyword :colon}
    {:regex #"^\/"           :keyword :div}
    {:regex #"^\["           :keyword :open-sq}
    {:regex #"^\]"           :keyword :close-sq}
    {:regex #"^(\d*\.)?\d+"  :keyword :num}
-   {:regex #"\".*\""        :keyword :string-lit}
+   {:regex #"\"([^\\\"]|\\.)*\""        :keyword :string-lit}
    {:regex #"^[a-zA-Z_]+"   :keyword :id}])
 
 (def tokenize (make-tokenizer tokens))

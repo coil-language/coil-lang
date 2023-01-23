@@ -97,6 +97,37 @@
        (p/parse-until :close-b parse-expr :elements)
        (p/skip :close-b)))
 
+(defn- parse-reg-obj-entry [tokens]
+  (->> (p/from {:type :reg-obj-entry} tokens)
+       (p/one :id :key)
+       (p/skip :colon)
+       (p/then parse-expr :value)))
+
+(defn- parse-obj-shorthand-entry [tokens]
+  (->> (p/from {:type :obj-shorthand-entry} tokens)
+       (p/one :id :id)))
+
+(defn- parse-dynamic-obj-entry [tokens]
+  (->> (p/from {:type :dynamic-obj-entry} tokens)
+       (p/skip :open-sq)
+       (p/then parse-expr :key-expr)
+       (p/skip :close-sq)
+       (p/skip :colon)
+       (p/then parse-expr :value)))
+
+(defn- parse-obj-entry [tokens]
+  (->> (p/null tokens)
+       (p/one-case
+        {[:id :colon] parse-reg-obj-entry,
+         :id parse-obj-shorthand-entry,
+         :open-sq parse-dynamic-obj-entry})))
+
+(defn- parse-obj [tokens]
+  (->> (p/from {:type :obj-lit} tokens)
+       (p/skip :open-b)
+       (p/parse-until :close-b parse-obj-entry :entries)
+       (p/skip :close-b)))
+
 (defn- parse-expr [tokens]
   (->> (p/null tokens)
        (p/one-case
@@ -105,6 +136,7 @@
          :num parse-num,
          :open-sq parse-array,
          [:hash :open-b] parse-set,
+         :open-b parse-obj,
          :fn parse-fn})
        parse-snd-expr))
 

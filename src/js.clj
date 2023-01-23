@@ -1,5 +1,6 @@
 (ns js
   (:require [clojure.string :as string])
+  (:require [utils.globals :as globals])
   (:require [utils.emit :as emit])
   (:require [utils.ast :as ast]))
 
@@ -60,6 +61,26 @@
 (defn- eval-bind [{:keys [lhs to]}]
   (str to ".bind(" (eval-expr lhs) ")"))
 
+(defn- eval-reg-obj-entry [{:keys [key value]}]
+  (str key ": " (eval-expr value)))
+
+(defn- eval-obj-shorthand-entry [{:keys [id]}]
+  (str id))
+
+(defn- eval-dynamic-obj-entry [{:keys [key-expr value]}]
+  (str (eval-expr key-expr) ": " (eval-expr value)))
+
+(defn- eval-obj-entry [entry]
+  (case (entry :type)
+    :reg-obj-entry (eval-reg-obj-entry entry)
+    :obj-shorthand-entry (eval-obj-shorthand-entry entry)
+    :dynamic-obj-entry (eval-dynamic-obj-entry entry)))
+
+(defn- eval-obj-lit [{:keys [entries]}]
+  (str "{"
+       (string/join ", " (map eval-obj-entry entries))
+       "}"))
+
 (defn- eval-expr [node]
   (case (:type node)
     :str (eval-str node)
@@ -71,7 +92,8 @@
     :math-op (eval-math-op node)
     :fn (eval-fn node)
     :bind (eval-bind node)
-    :set (eval-set node)))
+    :set (eval-set node)
+    :obj-lit (eval-obj-lit node)))
 
 (defn- eval-return [{:keys [expr]}]
   (str "return " (eval-expr expr)))
@@ -89,5 +111,7 @@
 
 (defn eval-js [ast]
   (let [output (eval-ast ast)]
-    (str (slurp "./src/std/std.ts") "\n"
-         output)))
+    (if @globals/emit-std
+      (str (slurp "./src/std/std.ts") "\n"
+           output)
+      output)))

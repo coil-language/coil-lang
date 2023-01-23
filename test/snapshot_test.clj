@@ -2,6 +2,7 @@
   (:require
    [clojure.java.io :as io]
    [clojure.string :as str]
+   [utils.globals :as globals]
    [clojure.test :refer [deftest is]]
    main))
 
@@ -17,6 +18,7 @@
      actual-js)))
 
 (deftest snapshot-tests
+  (reset! globals/emit-std false)
   (let [files
         (->> (io/file "test/snapshots")
              file-seq
