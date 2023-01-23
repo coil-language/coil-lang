@@ -47,7 +47,7 @@
 
 (defn- eval-fn [{:keys [name args body]}]
   (str
-   "function " name "(" (string/join ", " args) ") {\n"
+   "function " name "(" (string/join ", " (map eval-assign-expr args)) ") {\n"
    (eval-ast body) "\n"
    "}"))
 

@@ -54,6 +54,10 @@
        (p/parse-until :close-sq parse-expr :elements)
        (p/skip :close-sq)))
 
+(defn- parse-assign-expr [tokens]
+  (->> (p/null tokens)
+       (p/one :id :name)))
+
 (defn- parse-fn-name [tokens]
   (->> (p/null tokens)
        (p/one :id :name)
@@ -62,8 +66,7 @@
 (defn- parse-args-def [tokens]
   (->> (p/from {:type :args} tokens)
        (p/skip :open-p)
-       (p/parse-until :close-p parse-id)
-       (p/fmap #(map :name %))
+       (p/parse-until :close-p parse-assign-expr)
        (p/skip :close-p)))
 
 (defn- parse-fn-expr-body [tokens]
@@ -106,10 +109,6 @@
        (p/parse-until :close-b parse-statement :pass)
        (p/skip :close-b)
        (p/one-case {:else parse-else-branch} :fail [])))
-
-(defn- parse-assign-expr [tokens]
-  (->> (p/null tokens)
-       (p/one :id :name)))
 
 (defn- parse-let [tokens]
   (->> (p/from {:type :let} tokens)
