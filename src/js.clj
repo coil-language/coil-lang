@@ -19,8 +19,14 @@
        (eval-ast fail) "\n"
        "}"))
 
+(some #{\newline} "a
+                   
+                   ")
+
 (defn- eval-str [{:keys [value]}]
-  (str \" value \"))
+  (if (some #{\newline} value)
+    (str \` value \`)
+    (str \" value \")))
 
 (defn- property-lookup [{:keys [lhs property]}]
   (str (eval-expr lhs) "." property))
