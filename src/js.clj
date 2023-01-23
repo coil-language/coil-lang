@@ -42,6 +42,15 @@
 (defn- eval-array [{:keys [elements]}]
   (str "[" (string/join ", " (map eval-expr elements)) "]"))
 
+(defn- eval-math-op [{:keys [lhs op rhs]}]
+  (str (eval-expr lhs) op (eval-expr rhs)))
+
+(defn- eval-fn [{:keys [name args body]}]
+  (str
+   "function " name "(" (string/join ", " args) ") {\n"
+   (eval-ast body) "\n"
+   "}"))
+
 (defn- eval-expr [node]
   (case (:type node)
     :str (eval-str node)
@@ -49,13 +58,19 @@
     :id-lookup (node :name)
     :fn-call (eval-fn-call node)
     :num (node :value)
-    :array (eval-array node)))
+    :array (eval-array node)
+    :math-op (eval-math-op node)
+    :fn (eval-fn node)))
+
+(defn- eval-return [{:keys [expr]}]
+  (str "return " (eval-expr expr)))
 
 (defn- eval-statement [node]
   (case (:type node)
     :if (eval-if node)
     :let (eval-let node)
     :if-let (eval-if-let node)
+    :return (eval-return node)
     (eval-expr node)))
 
 (defn- eval-ast [ast]

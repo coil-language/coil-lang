@@ -44,6 +44,9 @@
 (defn fmap [map-fn [expr tokens]]
   (from (map-fn expr) tokens))
 
+(defn peek-next [tokens]
+  (-> tokens first :type))
+
 (defn many-case-until
   ([end-token-type parse-map [_ tokens]]
    (loop [exprs [], tokens tokens]
