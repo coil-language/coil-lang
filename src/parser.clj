@@ -6,6 +6,7 @@
 
 (declare parse-statement)
 (declare parse-expr)
+(declare parse-single-expr)
 
 (defn- parse-str [tokens]
   (->> (p/from {:type :str} tokens)
@@ -59,6 +60,16 @@
        (p/then parse-expr :expr)
        (p/skip :close-sq)))
 
+(defn- parse-triple-eq [lhs tokens]
+  (->> (p/from {:type :triple-equals, :lhs lhs} tokens)
+       (p/skip :triple-eq)
+       (p/then parse-expr :rhs)))
+
+(defn- parse-triple-not-eq [lhs tokens]
+  (->> (p/from {:type :triple-not-equals, :lhs lhs} tokens)
+       (p/skip :triple-not-eq)
+       (p/then parse-expr :rhs)))
+
 (defn- parse-snd-expr [[lhs tokens]]
   (loop [lhs lhs, tokens tokens]
     (if-let [[expr tokens]
@@ -67,6 +78,8 @@
                :open-p (parse-fn-call lhs tokens)
                :double-colon (parse-double-colon lhs tokens)
                :double-eq (parse-double-eq lhs tokens)
+               :triple-eq (parse-triple-eq lhs tokens)
+               :triple-not-eq (parse-triple-not-eq lhs tokens)
                :not-eq (parse-not-eq lhs tokens)
                :open-sq (parse-dynamic-access lhs tokens)
                (when (math-ops (p/peek-next tokens)) (parse-math-op lhs tokens)))]
@@ -100,6 +113,12 @@
        (p/then parse-expr :expr)
        (p/fmap vector)))
 
+(defn- parse-fn-body [tokens]
+  (->> (p/null tokens)
+       (p/skip :open-b)
+       (p/parse-until :close-b parse-statement)
+       (p/skip :close-b)))
+
 (defn- parse-fn [tokens]
   (->> (p/from {:type :fn} tokens)
        (p/skip :fn)
@@ -107,7 +126,7 @@
        (p/then parse-args-def :args)
        (p/one-case
         {:eq parse-fn-expr-body,
-         'otherwise nil} :body)))
+         :open-b parse-fn-body} :body)))
 
 (defn- parse-set [tokens]
   (->> (p/from {:type :set} tokens)
@@ -140,7 +159,8 @@
         {[:id :colon] parse-reg-obj-entry,
          [:num :colon] parse-reg-obj-entry,
          :id parse-obj-shorthand-entry,
-         :open-sq parse-dynamic-obj-entry})))
+         :open-sq parse-dynamic-obj-entry,
+         :fn parse-fn})))
 
 (defn- parse-obj [tokens]
   (->> (p/from {:type :obj-lit} tokens)
@@ -158,7 +178,12 @@
        (p/skip :not)
        (p/then parse-expr :expr)))
 
-(defn- parse-expr [tokens]
+(defn- parse-new [tokens]
+  (->> (p/from {:type :new} tokens)
+       (p/skip :new)
+       (p/then parse-single-expr :expr)))
+
+(defn- parse-single-expr [tokens]
   (->> (p/null tokens)
        (p/one-case
         {:string-lit parse-str,
@@ -169,7 +194,11 @@
          :open-b parse-obj,
          :double-colon parse-bind-this,
          :not parse-not,
-         :fn parse-fn})
+         :fn parse-fn,
+         :new parse-new})))
+
+(defn- parse-expr [tokens]
+  (->> (parse-single-expr tokens)
        parse-snd-expr))
 
 (defn- parse-else-branch [tokens]
@@ -187,6 +216,14 @@
        (p/parse-until :close-b parse-statement :pass)
        (p/skip :close-b)
        (p/one-case {:else parse-else-branch} :fail [])))
+
+(defn- parse-unless [tokens]
+  (->> (p/from {:type :unless} tokens)
+       (p/skip :unless)
+       (p/then parse-expr :expr)
+       (p/skip :open-b)
+       (p/parse-until :close-b parse-statement :body)
+       (p/skip :close-b)))
 
 (defn- parse-let [tokens]
   (->> (p/from {:type :let} tokens)
@@ -221,15 +258,22 @@
        (p/skip :protocol)
        (p/one :id :name)))
 
+(defn- parse-return [tokens]
+  (->> (p/from {:type :return} tokens)
+       (p/skip :return)
+       (p/then parse-expr :expr)))
+
 (defn- parse-statement [tokens]
   (->> (p/null tokens)
        (p/one-case
         (array-map
          [:if :let] parse-if-let,
          :if parse-if,
+         :unless parse-unless,
          :impl parse-impl,
          :protocol parse-protocol,
          :let parse-let,
+         :return parse-return,
          'otherwise parse-expr))))
 
 (defn parse [tokens]

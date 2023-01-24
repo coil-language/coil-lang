@@ -14,7 +14,7 @@ impl Iterator for Array = {
   fn filter(f) = this.filter(f)
 }
 
-fn protocol_for(sym) {
+fn get_protocol(sym) {
   let proto = this[sym]
   let self = this
   return new Proxy(proto, {
@@ -22,7 +22,7 @@ fn protocol_for(sym) {
   })
 }
 
-fn iter() = this::protocol_for(Iterator)
+fn iter() = this::get_protocol(Iterator)
 
 fn each(f) = this::iter().each(f)
 fn map(f) = this::iter().map(f)

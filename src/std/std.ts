@@ -95,7 +95,7 @@ function not(a: any) {
   return !truthy(a);
 }
 
-function equals(a: Equable, b: Equable) {
+function eq__q(a: Equable, b: Equable) {
   return a[Protocol.is_equal](b);
 }
 
@@ -111,24 +111,24 @@ function call(...args) {
   return this[Protocol.call](...args);
 }
 
-function filter(callable: Callable) {
-  let output: any[] = [];
-  for (let elem of this) {
-    if (call.bind(callable)(elem)) {
-      output.push(elem);
-    }
-  }
-  return output;
-}
+// function filter(callable: Callable) {
+//   let output: any[] = [];
+//   for (let elem of this) {
+//     if (call.bind(callable)(elem)) {
+//       output.push(elem);
+//     }
+//   }
+//   return output;
+// }
 
-function map(callable: Callable) {
-  let output: any[] = [];
-  // for loop to integrate Protocol.iter
-  for (let elem of this) {
-    output.push(call.bind(callable)(elem));
-  }
-  return output;
-}
+// function map(callable: Callable) {
+//   let output: any[] = [];
+//   // for loop to integrate Protocol.iter
+//   for (let elem of this) {
+//     output.push(call.bind(callable)(elem));
+//   }
+//   return output;
+// }
 
 function sum() {
   let total = 0;

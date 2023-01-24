@@ -20,9 +20,10 @@
        (eval-ast fail) "\n"
        "}"))
 
-(some #{\newline} "a
-                   
-                   ")
+(defn- eval-unless [{:keys [expr body]}]
+  (str "if (not(" (eval-expr expr) ")) {\n"
+       (eval-ast body) "\n"
+       "}"))
 
 (defn- eval-str [{:keys [value]}]
   (if (some #{\newline} value)
@@ -82,11 +83,19 @@
 (defn- eval-dynamic-obj-entry [{:keys [key-expr value]}]
   (str (eval-expr key-expr) ": " (eval-expr value)))
 
+(defn- eval-obj-fn [{:keys [name args body]}]
+  (assert name)
+  (str
+   (resolve-name name) "(" (string/join ", " (map eval-assign-expr args)) ") {\n"
+   (eval-ast body) "\n"
+   "}"))
+
 (defn- eval-obj-entry [entry]
   (case (entry :type)
     :reg-obj-entry (eval-reg-obj-entry entry)
     :obj-shorthand-entry (eval-obj-shorthand-entry entry)
-    :dynamic-obj-entry (eval-dynamic-obj-entry entry)))
+    :dynamic-obj-entry (eval-dynamic-obj-entry entry)
+    :fn (eval-obj-fn entry)))
 
 (defn- eval-obj-lit [{:keys [entries]}]
   (str "{"
@@ -103,16 +112,25 @@
   (node :value))
 
 (defn- eval-double-equals [{:keys [lhs rhs]}]
-  (str "equals(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
+  (str (resolve-name "eq?") "(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
 
 (defn- eval-not-equals [{:keys [lhs rhs]}]
-  (str "!equals(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
+  (str "!" (resolve-name "eq?") "(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
 
 (defn- eval-not [{:keys [expr]}]
   (str "not(" (eval-expr expr) ")"))
 
-(defn eval-dynamic-access [{:keys [lhs expr]}]
+(defn- eval-dynamic-access [{:keys [lhs expr]}]
   (str (eval-expr lhs) "[" (eval-expr expr) "]"))
+
+(defn- eval-new [{:keys [expr]}]
+  (str "new " (eval-expr expr)))
+
+(defn- eval-triple-equals [{:keys [lhs rhs]}]
+  (str (eval-expr lhs) " === " (eval-expr rhs)))
+
+(defn- eval-triple-not-equals [{:keys [lhs rhs]}]
+  (str (eval-expr lhs) " !== " (eval-expr rhs)))
 
 (defn- eval-expr [node]
   (case (:type node)
@@ -131,7 +149,10 @@
     :set (eval-set node)
     :obj-lit (eval-obj-lit node)
     :bind-this (eval-bind-this node)
-    :dynamic-access (eval-dynamic-access node)))
+    :dynamic-access (eval-dynamic-access node)
+    :new (eval-new node)
+    :triple-equals (eval-triple-equals node)
+    :triple-not-equals (eval-triple-not-equals node)))
 
 (defn- eval-return [{:keys [expr]}]
   (str "return " (eval-expr expr)))
@@ -146,6 +167,7 @@
 (defn- eval-statement [node]
   (case (:type node)
     :if (eval-if node)
+    :unless (eval-unless node)
     :let (eval-let node)
     :if-let (eval-if-let node)
     :return (eval-return node)

@@ -95,7 +95,7 @@ function not(a: any) {
   return !truthy(a);
 }
 
-function equals(a: Equable, b: Equable) {
+function eq__q(a: Equable, b: Equable) {
   return a[Protocol.is_equal](b);
 }
 
@@ -111,24 +111,24 @@ function call(...args) {
   return this[Protocol.call](...args);
 }
 
-function filter(callable: Callable) {
-  let output: any[] = [];
-  for (let elem of this) {
-    if (call.bind(callable)(elem)) {
-      output.push(elem);
-    }
-  }
-  return output;
-}
+// function filter(callable: Callable) {
+//   let output: any[] = [];
+//   for (let elem of this) {
+//     if (call.bind(callable)(elem)) {
+//       output.push(elem);
+//     }
+//   }
+//   return output;
+// }
 
-function map(callable: Callable) {
-  let output: any[] = [];
-  // for loop to integrate Protocol.iter
-  for (let elem of this) {
-    output.push(call.bind(callable)(elem));
-  }
-  return output;
-}
+// function map(callable: Callable) {
+//   let output: any[] = [];
+//   // for loop to integrate Protocol.iter
+//   for (let elem of this) {
+//     output.push(call.bind(callable)(elem));
+//   }
+//   return output;
+// }
 
 function sum() {
   let total = 0;
@@ -140,9 +140,64 @@ function sum() {
 }
 
 
-const get = Symbol("get")
-Object.prototype[get] = function (key) {
+const Iterator = Symbol("Iterator")
+function split(f) {
 
-return this[key]
+return function (arr) {
+
+return f(arr[0], arr[1])
 }
-console.log({a: 10}[get]("a"))
+}
+Object.prototype[Iterator] = {each(f) {
+
+return Object.entries(this).forEach(split(f))
+}, map(f) {
+
+return Object.fromEntries(Object.entries(this).map(split(f)))
+}, filter(f) {
+
+return Object.fromEntries(Object.entries(this).filter(split(f)))
+}}
+Array.prototype[Iterator] = {each(f) {
+
+return this.forEach(f)
+}, map(f) {
+
+return this.map(f)
+}, filter(f) {
+
+return this.filter(f)
+}}
+function get_protocol(sym) {
+
+let proto = this[sym]
+let self = this
+return new Proxy(proto, {get(target, method) {
+
+return target[method].bind(self)
+}})
+}
+function iter() {
+
+return get_protocol.bind(this)(Iterator)
+}
+function each(f) {
+
+return iter.bind(this)().each(f)
+}
+function map(f) {
+
+return iter.bind(this)().map(f)
+}
+function filter(f) {
+
+return iter.bind(this)().filter(f)
+}
+console.log(filter.bind({a: 10, b: 20})(function (k, v) {
+
+return v>10
+}))
+console.log(filter.bind([1, 2, 3])(function (x) {
+
+return x>1
+}))

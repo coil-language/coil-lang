@@ -5,11 +5,16 @@
   [{:regex #"\/\/.*"              :ignore true}
    {:regex #"^#"                  :keyword :hash}
    {:regex #"^if\b"               :keyword :if}
+   {:regex #"^unless\b"           :keyword :unless}
    {:regex #"^else\b"             :keyword :else}
+   {:regex #"^return\b"           :keyword :return}
    {:regex #"^let\b"              :keyword :let}
    {:regex #"^protocol\b"         :keyword :protocol}
    {:regex #"^for\b"              :keyword :for}
    {:regex #"^impl\b"             :keyword :impl}
+   {:regex #"^new\b"              :keyword :new}
+   {:regex #"^\=\=\="             :keyword :triple-eq}
+   {:regex #"^\!\=\="             :keyword :triple-not-eq}
    {:regex #"^\=\="               :keyword :double-eq}
    {:regex #"^\!\="               :keyword :not-eq}
    {:regex #"^\!"                 :keyword :not}
@@ -35,6 +40,6 @@
    {:regex #"^\["                 :keyword :open-sq}
    {:regex #"^\]"                 :keyword :close-sq}
    {:regex #"(?s)\"([^\\\"]|\\.)*\"" :keyword :string-lit}
-   {:regex #"^[a-zA-Z_\?\!]+"     :keyword :id}])
+   {:regex #"^[a-zA-Z_\?\!\$]+"     :keyword :id}])
 
 (def tokenize (make-tokenizer tokens))
