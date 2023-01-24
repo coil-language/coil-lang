@@ -53,6 +53,12 @@
        (p/skip :not-eq)
        (p/then parse-expr :rhs)))
 
+(defn- parse-dynamic-access [lhs tokens]
+  (->> (p/from {:type :dynamic-access, :lhs lhs} tokens)
+       (p/skip :open-sq)
+       (p/then parse-expr :expr)
+       (p/skip :close-sq)))
+
 (defn- parse-snd-expr [[lhs tokens]]
   (loop [lhs lhs, tokens tokens]
     (if-let [[expr tokens]
@@ -62,6 +68,7 @@
                :double-colon (parse-double-colon lhs tokens)
                :double-eq (parse-double-eq lhs tokens)
                :not-eq (parse-not-eq lhs tokens)
+               :open-sq (parse-dynamic-access lhs tokens)
                (when (math-ops (p/peek-next tokens)) (parse-math-op lhs tokens)))]
       (recur expr tokens)
       (p/from lhs tokens))))
@@ -200,12 +207,28 @@
        (p/skip :close-b)
        (p/one-case {:else parse-else-branch} :fail [])))
 
+(defn- parse-impl [tokens]
+  (->> (p/from {:type :impl-for} tokens)
+       (p/skip :impl)
+       (p/one :id :symbol-name)
+       (p/skip :for)
+       (p/one :id :constructor)
+       (p/skip :eq)
+       (p/then parse-expr :expr)))
+
+(defn- parse-protocol [tokens]
+  (->> (p/from {:type :protocol-def} tokens)
+       (p/skip :protocol)
+       (p/one :id :name)))
+
 (defn- parse-statement [tokens]
   (->> (p/null tokens)
        (p/one-case
         (array-map
          [:if :let] parse-if-let,
          :if parse-if,
+         :impl parse-impl,
+         :protocol parse-protocol,
          :let parse-let,
          'otherwise parse-expr))))
 

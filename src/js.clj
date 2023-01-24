@@ -8,9 +8,10 @@
 (declare eval-ast)
 
 (defn- resolve-name [name]
-  (-> name
-      (string/replace "?" "__q")
-      (string/replace "!" "__b")))
+  (when name
+    (-> name
+        (string/replace "?" "__q")
+        (string/replace "!" "__b"))))
 
 (defn- eval-if [{:keys [expr pass fail]}]
   (str "if (truthy(" (eval-expr expr) ")) {\n"
@@ -110,6 +111,9 @@
 (defn- eval-not [{:keys [expr]}]
   (str "not(" (eval-expr expr) ")"))
 
+(defn eval-dynamic-access [{:keys [lhs expr]}]
+  (str (eval-expr lhs) "[" (eval-expr expr) "]"))
+
 (defn- eval-expr [node]
   (case (:type node)
     :str (eval-str node)
@@ -126,10 +130,18 @@
     :bind (eval-bind node)
     :set (eval-set node)
     :obj-lit (eval-obj-lit node)
-    :bind-this (eval-bind-this node)))
+    :bind-this (eval-bind-this node)
+    :dynamic-access (eval-dynamic-access node)))
 
 (defn- eval-return [{:keys [expr]}]
   (str "return " (eval-expr expr)))
+
+(defn- eval-protocol [{:keys [name]}]
+  (str "const " (resolve-name name) " = Symbol(\"" name "\")"))
+
+(defn- eval-impl-for [{:keys [symbol-name constructor expr]}]
+
+  (str constructor ".prototype[" (resolve-name symbol-name) "] = " (eval-expr expr)))
 
 (defn- eval-statement [node]
   (case (:type node)
@@ -137,6 +149,8 @@
     :let (eval-let node)
     :if-let (eval-if-let node)
     :return (eval-return node)
+    :protocol-def (eval-protocol node)
+    :impl-for (eval-impl-for node)
     (eval-expr node)))
 
 (defn- eval-ast [ast]

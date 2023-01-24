@@ -32,7 +32,7 @@ BigInt.prototype[Protocol.is_equal] = function (other) {
 Array.prototype[Protocol.is_equal] = function (other) {
   if (!(other instanceof Array)) return false;
   if (this.length !== other.length) return false;
-  return this.every((value) => value[Protocol.is_equal](other));
+  return this.every((value, index) => value[Protocol.is_equal](other[index]));
 };
 
 Map.prototype[Protocol.is_equal] = function (other) {

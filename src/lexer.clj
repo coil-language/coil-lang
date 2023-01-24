@@ -7,6 +7,9 @@
    {:regex #"^if\b"               :keyword :if}
    {:regex #"^else\b"             :keyword :else}
    {:regex #"^let\b"              :keyword :let}
+   {:regex #"^protocol\b"         :keyword :protocol}
+   {:regex #"^for\b"              :keyword :for}
+   {:regex #"^impl\b"             :keyword :impl}
    {:regex #"^\=\="               :keyword :double-eq}
    {:regex #"^\!\="               :keyword :not-eq}
    {:regex #"^\!"                 :keyword :not}
