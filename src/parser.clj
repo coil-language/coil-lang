@@ -70,6 +70,33 @@
        (p/skip :triple-not-eq)
        (p/then parse-expr :rhs)))
 
+(defn- parse-is-not [lhs tokens]
+  (->> (p/from {:type :is-not, :lhs lhs} tokens)
+       (p/skip :is)
+       (p/skip :not)
+       (p/then parse-expr :rhs)))
+
+(defn- parse-is [lhs tokens]
+  (->> (p/from {:type :is, :lhs lhs} tokens)
+       (p/skip :is)
+       (p/then parse-expr :rhs)))
+
+(defn- parse-is-or-is-not [lhs tokens]
+  (->> (p/null tokens)
+       (p/one-case
+        {[:is :not] #(parse-is-not lhs %),
+         :is #(parse-is lhs %)})))
+
+(defn- parse-and-and [lhs tokens]
+  (->> (p/from {:type :and-and, :lhs lhs} tokens)
+       (p/skip :and-and)
+       (p/then parse-expr :rhs)))
+
+(defn- parse-or-or [lhs tokens]
+  (->> (p/from {:type :or-or, :lhs lhs} tokens)
+       (p/skip :or-or)
+       (p/then parse-expr :rhs)))
+
 (defn- parse-snd-expr [[lhs tokens]]
   (loop [lhs lhs, tokens tokens]
     (if-let [[expr tokens]
@@ -82,6 +109,9 @@
                :triple-not-eq (parse-triple-not-eq lhs tokens)
                :not-eq (parse-not-eq lhs tokens)
                :open-sq (parse-dynamic-access lhs tokens)
+               :and-and (parse-and-and lhs tokens)
+               :or-or (parse-or-or lhs tokens)
+               :is (parse-is-or-is-not lhs tokens)
                (when (math-ops (p/peek-next tokens)) (parse-math-op lhs tokens)))]
       (recur expr tokens)
       (p/from lhs tokens))))
@@ -92,9 +122,32 @@
        (p/parse-until :close-sq parse-expr :elements)
        (p/skip :close-sq)))
 
+(defn- parse-assign-id [tokens]
+  (->> (p/from {:type :id-assign} tokens)
+       (p/one :id :name)))
+
+(defn- parse-simple-name [tokens]
+  (->> (p/null tokens)
+       (p/one :id :name)
+       (p/fmap :name)))
+
+(defn- parse-assign-array [tokens]
+  (->> (p/from {:type :array-deconstruction} tokens)
+       (p/skip :open-sq)
+       (p/parse-until :close-sq parse-simple-name :names)
+       (p/skip :close-sq)))
+
+(defn- parse-spread-assign [tokens]
+  (->> (p/from {:type :spread-assign} tokens)
+       (p/skip :spread)
+       (p/one :id :name)))
+
 (defn- parse-assign-expr [tokens]
   (->> (p/null tokens)
-       (p/one :id :name)))
+       (p/one-case
+        {:id parse-assign-id,
+         :open-sq parse-assign-array,
+         :spread parse-spread-assign})))
 
 (defn- parse-fn-name [tokens]
   (->> (p/null tokens)
@@ -175,12 +228,17 @@
 
 (defn- parse-not [tokens]
   (->> (p/from {:type :not} tokens)
-       (p/skip :not)
+       (p/skip :bang)
        (p/then parse-expr :expr)))
 
 (defn- parse-new [tokens]
   (->> (p/from {:type :new} tokens)
        (p/skip :new)
+       (p/then parse-single-expr :expr)))
+
+(defn- parse-spread [tokens]
+  (->> (p/from {:type :spread} tokens)
+       (p/skip :spread)
        (p/then parse-single-expr :expr)))
 
 (defn- parse-single-expr [tokens]
@@ -190,10 +248,11 @@
          :id parse-id,
          :num parse-num,
          :open-sq parse-array,
+         :spread parse-spread,
          [:hash :open-b] parse-set,
          :open-b parse-obj,
          :double-colon parse-bind-this,
-         :not parse-not,
+         :bang parse-not,
          :fn parse-fn,
          :new parse-new})))
 
@@ -263,17 +322,36 @@
        (p/skip :return)
        (p/then parse-expr :expr)))
 
+(defn- parse-for-loop [tokens]
+  (->> (p/from {:type :for-loop} tokens)
+       (p/skip :for)
+       (p/skip :let)
+       (p/then parse-assign-expr :assign-expr)
+       (p/skip :of)
+       (p/then parse-expr :iterable-expr)
+       (p/skip :open-b)
+       (p/parse-until :close-b parse-statement :body)
+       (p/skip :close-b)))
+
+(defn- parse-id-assign [tokens]
+  (->> (p/from {:type :id-assign} tokens)
+       (p/one :id :name)
+       (p/skip :eq)
+       (p/then parse-expr :expr)))
+
 (defn- parse-statement [tokens]
   (->> (p/null tokens)
        (p/one-case
         (array-map
          [:if :let] parse-if-let,
          :if parse-if,
+         [:id :eq] parse-id-assign,
          :unless parse-unless,
          :impl parse-impl,
          :protocol parse-protocol,
          :let parse-let,
          :return parse-return,
+         :for parse-for-loop,
          'otherwise parse-expr))))
 
 (defn parse [tokens]

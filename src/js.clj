@@ -1,8 +1,9 @@
 (ns js
-  (:require [clojure.string :as string])
-  (:require [utils.globals :as globals])
-  (:require [utils.emit :as emit])
-  (:require [utils.ast :as ast]))
+  (:require [clojure.string :as string]
+            [clojure.java.io :as io]
+            [utils.globals :as globals]
+            [lexer]
+            [parser]))
 
 (declare eval-expr)
 (declare eval-ast)
@@ -31,15 +32,27 @@
     (str \" value \")))
 
 (defn- property-lookup [{:keys [lhs property]}]
-  (str (eval-expr lhs) "." property))
+  (str (eval-expr lhs) "." (resolve-name property)))
 
 (defn- eval-fn-call [{:keys [lhs args]}]
   (str (eval-expr lhs) "("
        (string/join ", " (map eval-expr args))
        ")"))
 
-(defn- eval-assign-expr [{:keys [name]}]
+(defn- eval-id-assign-name [{:keys [name]}]
   (resolve-name name))
+
+(defn- eval-array-deconstruction-names [{:keys [names]}]
+  (str "[" (string/join ", " (map resolve-name names)) "]"))
+
+(defn- eval-spread-assign [{:keys [name]}]
+  (str "..." name))
+
+(defn- eval-assign-expr [node]
+  (case (node :type)
+    :id-assign (eval-id-assign-name node)
+    :spread-assign (eval-spread-assign node)
+    :array-deconstruction (eval-array-deconstruction-names node)))
 
 (defn- eval-if-let [{:keys [assign-expr expr pass fail]}]
   (str "if (truthy(" (eval-expr expr) ")) {\n"
@@ -118,7 +131,7 @@
   (str "!" (resolve-name "eq?") "(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
 
 (defn- eval-not [{:keys [expr]}]
-  (str "not(" (eval-expr expr) ")"))
+  (str "negate(" (eval-expr expr) ")"))
 
 (defn- eval-dynamic-access [{:keys [lhs expr]}]
   (str (eval-expr lhs) "[" (eval-expr expr) "]"))
@@ -131,6 +144,21 @@
 
 (defn- eval-triple-not-equals [{:keys [lhs rhs]}]
   (str (eval-expr lhs) " !== " (eval-expr rhs)))
+
+(defn- eval-spread [{:keys [expr]}]
+  (str "..." (eval-expr expr)))
+
+(defn- eval-is-not [{:keys [lhs rhs]}]
+  (str "!(" (eval-expr lhs) " instanceof " (eval-expr rhs) ")"))
+
+(defn- eval-is [{:keys [lhs rhs]}]
+  (str (eval-expr lhs) " instanceof " (eval-expr rhs)))
+
+(defn- eval-and-and [{:keys [lhs rhs]}]
+  (str "and(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
+
+(defn- eval-or-or [{:keys [lhs rhs]}]
+  (str "or(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
 
 (defn- eval-expr [node]
   (case (:type node)
@@ -152,7 +180,12 @@
     :dynamic-access (eval-dynamic-access node)
     :new (eval-new node)
     :triple-equals (eval-triple-equals node)
-    :triple-not-equals (eval-triple-not-equals node)))
+    :triple-not-equals (eval-triple-not-equals node)
+    :spread (eval-spread node)
+    :is-not (eval-is-not node)
+    :is (eval-is node)
+    :and-and (eval-and-and node)
+    :or-or (eval-or-or node)))
 
 (defn- eval-return [{:keys [expr]}]
   (str "return " (eval-expr expr)))
@@ -161,8 +194,15 @@
   (str "const " (resolve-name name) " = Symbol(\"" name "\")"))
 
 (defn- eval-impl-for [{:keys [symbol-name constructor expr]}]
-
   (str constructor ".prototype[" (resolve-name symbol-name) "] = " (eval-expr expr)))
+
+(defn- eval-for-loop [{:keys [assign-expr iterable-expr body]}]
+  (str "for (let " (eval-assign-expr assign-expr) " of " (eval-expr iterable-expr) ") {\n"
+       (eval-ast body) "\n"
+       "}"))
+
+(defn- eval-id-assign [{:keys [name expr]}]
+  (str name " = " (eval-expr expr)))
 
 (defn- eval-statement [node]
   (case (:type node)
@@ -173,14 +213,25 @@
     :return (eval-return node)
     :protocol-def (eval-protocol node)
     :impl-for (eval-impl-for node)
+    :for-loop (eval-for-loop node)
+    :id-assign (eval-id-assign node)
     (eval-expr node)))
 
 (defn- eval-ast [ast]
   (reduce #(str %1 "\n" (eval-statement %2)) "" ast))
 
+(defn- compile-std-lib []
+  (->> (file-seq (io/file "./src/std"))
+       (map #(. % getPath))
+       (filter #(re-matches  #".*\.sjs" %))
+       (map slurp)
+       (map #(-> % lexer/tokenize parser/parse eval-ast))
+       (string/join "\n\n")))
+
 (defn eval-js [ast]
   (let [output (eval-ast ast)]
     (if @globals/emit-std
-      (str (slurp "./src/std/std.ts") "\n"
+      (str (slurp "./src/std/booleans.ts") "\n"
+           (compile-std-lib)
            output)
       output)))
