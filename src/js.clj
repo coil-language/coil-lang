@@ -209,8 +209,8 @@
 (defn- eval-impl-for [{:keys [symbol-name constructor expr]}]
   (str constructor ".prototype[" (resolve-name symbol-name) "] = " (eval-expr expr)))
 
-(defn- eval-for-loop [{:keys [assign-expr iterable-expr body]}]
-  (str "for (let " (eval-assign-expr assign-expr) " of " (eval-expr iterable-expr) ") {\n"
+(defn- eval-for-loop [{:keys [await? assign-expr iterable-expr body]}]
+  (str "for " (when await? "await ") " (let " (eval-assign-expr assign-expr) " of " (eval-expr iterable-expr) ") {\n"
        (eval-ast body) "\n"
        "}"))
 

@@ -295,5 +295,8 @@ function eq__q(a, b) {
 }
 async function* f() {
   let a = await 10;
-  yield http.get();
+  let response = yield http.get();
+  for await (let data of response) {
+    view.bind(data)();
+  }
 }

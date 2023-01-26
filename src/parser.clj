@@ -179,14 +179,12 @@
        (p/skip :close-b)))
 
 (defn- parse-gen-modifier [tokens]
-  (->> (p/null tokens)
-       (p/skip :times)
-       (p/fmap (fn [_] true))))
+  (->> (p/from true tokens)
+       (p/skip :times)))
 
 (defn- parse-async-modifier [tokens]
-  (->> (p/null tokens)
-       (p/skip :async)
-       (p/fmap (fn [_] true))))
+  (->> (p/from true tokens)
+       (p/skip :async)))
 
 (defn- parse-fn [tokens]
   (->> (p/from {:type :fn} tokens)
@@ -353,9 +351,14 @@
        (p/skip :return)
        (p/then parse-expr :expr)))
 
+(defn- parse-await-modifier [tokens]
+  (->> (p/from true tokens)
+       (p/skip :await)))
+
 (defn- parse-for-loop [tokens]
   (->> (p/from {:type :for-loop} tokens)
        (p/skip :for)
+       (p/one-case {:await parse-await-modifier} :await? false)
        (p/skip :let)
        (p/then parse-assign-expr :assign-expr)
        (p/skip :of)
