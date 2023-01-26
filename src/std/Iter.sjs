@@ -1,14 +1,17 @@
 protocol Iter
 
+fn entries() = Object.entries(this)
+fn from_entries() = Object.fromEntries(this)
+
 impl Iter for Object = {
-  fn each(f) = Object.entries(this).forEach(fn ([k, v]) = f(k, v))
-  fn map(f) = Object.fromEntries(Object.entries(this).map(fn ([k, v]) = f(k, v)))
-  fn filter(f) = Object.fromEntries(Object.entries(this).filter(fn ([k, v]) = f(k, v)))
-  fn reduce(f, start) = Object.entries(this).reduce(f, start)
+  fn each(f) = this::entries().forEach(fn ([k, v]) = f(k, v))
+  fn map(f) = this::entries().map(fn ([k, v]) = f(k, v))::from_entries()
+  fn filter(f) = this::entries().filter(fn ([k, v]) = f(k, v))::from_entries()
+  fn some?(f) = this::entries().some(fn ([k, v]) = f(k, v))::from_entries()
+  fn every?(f) = this::entries().every(fn ([k, v]) = f(k, v))::from_entries()
+  fn reduce(f, start) = this::entries().reduce(f, start)
   fn insert(key, value) = Object.assign(this, {[key]: value})
-  fn sum() = Object.entries(this).map(fn ([_, v]) = v).reduce(fn (acc, x) = acc + x, 0)
-  fn some?(f) = Object.fromEntries(Object.entries(this).some(fn([k, v]) = f(k, v)))
-  fn every?(f) = Object.fromEntries(Object.entries(this).every(fn([k, v]) = f(k, v)))
+  fn sum() = this::entries().map(fn ([_, v]) = v).reduce(fn (acc, x) = acc + x, 0)
 }
 
 impl Iter for Array = {
@@ -71,14 +74,11 @@ impl Iter for Set = {
   }
 }
 
-
-fn iter() = this::protocol_for(Iter)
-
-fn each(f) = this::iter().each(f::call)
-fn map(f) = this::iter().map(f::call)
-fn filter(f) = this::iter().filter(f::call)
-fn reduce(f, start) = this::iter().reduce(f::call, start)
-fn insert(...args) = this::iter().insert(...args)
-fn sum() = this::iter().sum()
-fn some?(f) = this::iter().some(f::call)
-fn every?(f) = this::iter().every(f::call)
+fn each(f) = this::(this[Iter].each)(f::call)
+fn map(f) = this::(this[Iter].map)(f::call)
+fn filter(f) = this::(this[Iter].filter)(f::call)
+fn reduce(f, start) = this::(this[Iter].reduce)(f::call, start)
+fn insert(...args) = this::(iter[Iter].insert)(...args)
+fn sum() = this::(this[Iter].sum)()
+fn some?(f) = this::(this[Iter].some)(f::call)
+fn every?(f) = this::(this[Iter].every)(f::call)

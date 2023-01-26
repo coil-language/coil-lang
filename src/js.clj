@@ -85,8 +85,8 @@
    (string/join ", " (map eval-expr elements))
    "])"))
 
-(defn- eval-bind [{:keys [lhs to]}]
-  (str (resolve-name to) ".bind(" (eval-expr lhs) ")"))
+(defn- eval-bind [{:keys [lhs expr]}]
+  (str (eval-expr expr) ".bind(" (eval-expr lhs) ")"))
 
 (defn- eval-reg-obj-entry [{:keys [key value]}]
   (str (resolve-name key) ": " (eval-expr value)))
@@ -170,6 +170,37 @@
 (defn- eval-yield [{:keys [expr]}]
   (str "yield " (eval-expr expr)))
 
+(defn- eval-jsx-attr-reg [{:keys [name expr]}]
+  (str name ": " (eval-expr expr)))
+
+(defn- eval-jsx-attr-shorthand [{:keys [name]}]
+  (str name ": " name))
+
+(defn- eval-jsx-attr [node]
+  (case (node :type)
+    :jsx-attr-reg (eval-jsx-attr-reg node)
+    :jsx-attr-shorthand (eval-jsx-attr-shorthand node)))
+
+(declare eval-jsx-tag)
+
+(defn- eval-jsx-expr [node]
+  (case (node :type)
+    :quoted-expr (eval-expr (node :expr))
+    :str (eval-str node)
+    (do
+      (assert (-> node :type (= :jsx-tag)))
+      (eval-jsx-tag node))))
+
+(defn- eval-jsx-tag [{:keys [name attrs children]}]
+  (str "h(\"" name "\", {"
+       (->> attrs (map eval-jsx-attr) (string/join ", "))
+       "},"
+       (->> children (map eval-jsx-expr) (string/join ", "))
+       ")"))
+
+(defn- eval-paren-expr [{expr :expr}]
+  (str "(" (eval-expr expr) ")"))
+
 (defn- eval-expr [node]
   (case (:type node)
     :str (eval-str node)
@@ -198,7 +229,9 @@
     :or-or (eval-or-or node)
     :snd-assign (eval-snd-assign node)
     :await (eval-await node)
-    :yield (eval-yield node)))
+    :yield (eval-yield node)
+    :jsx-tag (eval-jsx-tag node)
+    :paren-expr (eval-paren-expr node)))
 
 (defn- eval-return [{:keys [expr]}]
   (str "return " (eval-expr expr)))

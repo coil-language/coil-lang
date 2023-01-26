@@ -17,4 +17,4 @@ impl Callable for Array = {
   fn call(index) = this.at(index)
 }
 
-fn call(...args) = this::protocol_for(Callable).call(...args)
+fn call(...args) = this::(this[Callable].call)(...args)

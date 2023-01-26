@@ -23,6 +23,7 @@ impl Equal for Array = {
     return this.every(fn(value, index) = value[Equal](other[index]))
   }
 }
+
 impl Equal for Map = {
   fn eq?(other) {
     if other is not Map {
@@ -50,4 +51,4 @@ impl Equal for Object = {
   }
 }
 
-fn eq?(a, b) = a::protocol_for(Equal).eq?(b)
+fn eq?(a, b) = a::(a[Equal].eq?)(b)
