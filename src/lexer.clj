@@ -15,6 +15,9 @@
    {:regex #"^for\b"              :keyword :for}
    {:regex #"^of\b"               :keyword :of}
    {:regex #"^impl\b"             :keyword :impl}
+   {:regex #"^yield\b"            :keyword :yield}
+   {:regex #"^async\b"            :keyword :async}
+   {:regex #"^await\b"            :keyword :await}
    {:regex #"^new\b"              :keyword :new}
    {:regex #"^\&\&"               :keyword :and-and}
    {:regex #"^\|\|"               :keyword :or-or}

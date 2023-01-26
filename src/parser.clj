@@ -97,6 +97,11 @@
        (p/skip :or-or)
        (p/then parse-expr :rhs)))
 
+(defn- parse-snd-assign [lhs tokens]
+  (->> (p/from {:type :snd-assign, :lhs lhs} tokens)
+       (p/skip :eq)
+       (p/then parse-expr :rhs)))
+
 (defn- parse-snd-expr [[lhs tokens]]
   (loop [lhs lhs, tokens tokens]
     (if-let [[expr tokens]
@@ -112,6 +117,7 @@
                :and-and (parse-and-and lhs tokens)
                :or-or (parse-or-or lhs tokens)
                :is (parse-is-or-is-not lhs tokens)
+               :eq (parse-snd-assign lhs tokens)
                (when (math-ops (p/peek-next tokens)) (parse-math-op lhs tokens)))]
       (recur expr tokens)
       (p/from lhs tokens))))
@@ -172,9 +178,21 @@
        (p/parse-until :close-b parse-statement)
        (p/skip :close-b)))
 
+(defn- parse-gen-modifier [tokens]
+  (->> (p/null tokens)
+       (p/skip :times)
+       (p/fmap (fn [_] true))))
+
+(defn- parse-async-modifier [tokens]
+  (->> (p/null tokens)
+       (p/skip :async)
+       (p/fmap (fn [_] true))))
+
 (defn- parse-fn [tokens]
   (->> (p/from {:type :fn} tokens)
+       (p/one-case {:async parse-async-modifier} :async? false)
        (p/skip :fn)
+       (p/one-case {:times parse-gen-modifier} :generator? false)
        (p/one-case {:id parse-fn-name} :name nil)
        (p/then parse-args-def :args)
        (p/one-case
@@ -241,10 +259,22 @@
        (p/skip :spread)
        (p/then parse-single-expr :expr)))
 
+(defn- parse-yield [tokens]
+  (->> (p/from {:type :yield} tokens)
+       (p/skip :yield)
+       (p/then parse-expr :expr)))
+
+(defn- parse-await [tokens]
+  (->> (p/from {:type :await} tokens)
+       (p/skip :await)
+       (p/then parse-expr :expr)))
+
 (defn- parse-single-expr [tokens]
   (->> (p/null tokens)
        (p/one-case
         {:string-lit parse-str,
+         :yield parse-yield,
+         :await parse-await,
          :id parse-id,
          :num parse-num,
          :open-sq parse-array,
@@ -253,6 +283,7 @@
          :open-b parse-obj,
          :double-colon parse-bind-this,
          :bang parse-not,
+         [:async :fn] parse-fn,
          :fn parse-fn,
          :new parse-new})))
 

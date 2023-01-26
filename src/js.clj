@@ -72,9 +72,10 @@
 (defn- eval-math-op [{:keys [lhs op rhs]}]
   (str (eval-expr lhs) op (eval-expr rhs)))
 
-(defn- eval-fn [{:keys [name args body]}]
+(defn- eval-fn [{:keys [async? generator? name args body]}]
   (str
-   "function " (resolve-name name) "(" (string/join ", " (map eval-assign-expr args)) ") {\n"
+   (when async? "async ")
+   "function " (when generator? "*") (resolve-name name) "(" (string/join ", " (map eval-assign-expr args)) ") {\n"
    (eval-ast body) "\n"
    "}"))
 
@@ -160,6 +161,15 @@
 (defn- eval-or-or [{:keys [lhs rhs]}]
   (str "or(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
 
+(defn- eval-snd-assign [{:keys [lhs rhs]}]
+  (str (eval-expr lhs) " = " (eval-expr rhs)))
+
+(defn- eval-await [{:keys [expr]}]
+  (str "await " (eval-expr expr)))
+
+(defn- eval-yield [{:keys [expr]}]
+  (str "yield " (eval-expr expr)))
+
 (defn- eval-expr [node]
   (case (:type node)
     :str (eval-str node)
@@ -185,7 +195,10 @@
     :is-not (eval-is-not node)
     :is (eval-is node)
     :and-and (eval-and-and node)
-    :or-or (eval-or-or node)))
+    :or-or (eval-or-or node)
+    :snd-assign (eval-snd-assign node)
+    :await (eval-await node)
+    :yield (eval-yield node)))
 
 (defn- eval-return [{:keys [expr]}]
   (str "return " (eval-expr expr)))
