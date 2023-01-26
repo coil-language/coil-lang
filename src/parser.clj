@@ -1,5 +1,6 @@
 (ns parser
-  (:require [utils.parsing :as p]))
+  (:require [utils.parsing :as p]
+            [utils.globals :as globals]))
 
 (defn- remove-quotes [s]
   (subs s 1 (dec (count s))))
@@ -63,11 +64,23 @@
        (p/skip :not-eq)
        (p/then parse-expr :rhs)))
 
+(defn- when-on-same-line [token body]
+  (let [token'
+        (loop [[prev-token token' & rest] @globals/tokens]
+          (cond
+            (= token' token) prev-token
+            (nil? prev-token) nil
+            :else (recur (concat [token'] rest))))]
+    (when (and token' (= (token' :line) (token :line)))
+      (body))))
+
 (defn- parse-dynamic-access [lhs tokens]
-  (->> (p/from {:type :dynamic-access, :lhs lhs} tokens)
-       (p/skip :open-sq)
-       (p/then parse-expr :expr)
-       (p/skip :close-sq)))
+  (when-on-same-line
+   (first tokens)
+   #(->> (p/from {:type :dynamic-access, :lhs lhs} tokens)
+         (p/skip :open-sq)
+         (p/then parse-expr :expr)
+         (p/skip :close-sq))))
 
 (defn- parse-triple-eq [lhs tokens]
   (->> (p/from {:type :triple-equals, :lhs lhs} tokens)

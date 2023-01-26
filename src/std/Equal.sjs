@@ -40,6 +40,7 @@ impl Equal for Map = {
     return true
   }
 }
+
 impl Equal for Object = {
   fn eq?(other) {
     for let [key, value] of Object.entries(this) {

@@ -271,7 +271,11 @@
        (map #(. % getPath))
        (filter #(re-matches  #".*\.sjs" %))
        (map slurp)
-       (map #(-> % lexer/tokenize parser/parse eval-ast))
+       (map #(-> (let [tokens (lexer/tokenize %)]
+                   (reset! globals/tokens tokens)
+                   (reset! globals/file-src %)
+                   tokens)
+                 parser/parse eval-ast))
        (string/join "\n\n")))
 
 (defn eval-js [ast]

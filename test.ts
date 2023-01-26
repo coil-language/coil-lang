@@ -31,13 +31,17 @@ Set.prototype[Callable] = {call(key) {
 
 return this.has(key)
 }}
+Map.prototype[Callable] = {call(key) {
+
+return this.get(key)
+}}
 Object.prototype[Callable] = {call(key) {
 
 return this[key]
 }}
 String.prototype[Callable] = {call(object) {
 
-return object[this]
+return call.bind(object)(this)
 }}
 Array.prototype[Callable] = {call(index) {
 
@@ -309,4 +313,4 @@ function eq__q(a, b) {
 
 return (a[Equal].eq__q).bind(a)(b)
 }
-console.log(sum.bind(map.bind(["won", "lost"])({won: 10, lost: -10}))())
+console.log(sum.bind(map.bind(["won", "lost"])(new Map([["won", 10], ["lost", 10]])))())

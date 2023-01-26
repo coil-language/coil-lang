@@ -12,7 +12,10 @@
 
 (defn compile-from-str [program-str]
   (->> program-str
-       lexer/tokenize
+       (#(let [tokens (lexer/tokenize %)]
+           (reset! globals/file-src %)
+           (reset! globals/tokens tokens)
+           tokens))
        parser/parse
        js/eval-js))
 
