@@ -89,6 +89,20 @@ fn map(callable) = this::(this[Iter].map)(callable::call)
 
 Now we have to `impl` Callable for all things we want to use as a map function, but that's quite straightforward, you can see the full implementation of `Iter` and `Callable` in ./src/std
 
+### Note on defining polymorphic functions
+
+I'll admit the definition of `map` and `call` is dense & requires deep understanding of JavaScript "this" semantics, but it is also hiding _nothing_, if you understand these functions, you understand polymorphism. If its still not desirable to have the boilerplate, you can also easily define a helper to take care of some of the details.
+
+```
+fn get_protocol_method(Protocol, method_name) = this::(this[Protocol])[method_name]
+
+fn map(f) = this::get_protocol_method(Iter, "map")(f)
+```
+
+But I've left that out of the standard library because I think understanding the boilerplate enables you to do new kinds of polymorphism most languages can't dream of (think of a parameterized protocol for example.)
+
+This kind of direct manipulation of protocols is core to what makes `protej` so powerful.
+
 ## JavaScript's rough edges
 
 ### Truthiness
