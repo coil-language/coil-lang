@@ -64,7 +64,7 @@
        (p/skip :not-eq)
        (p/then parse-expr :rhs)))
 
-(defn- when-on-same-line [token body]
+(defn- when-on-same-line-as-previous-token [token body]
   (let [token'
         (loop [[prev-token token' & rest] @globals/tokens]
           (cond
@@ -75,7 +75,7 @@
       (body))))
 
 (defn- parse-dynamic-access [lhs tokens]
-  (when-on-same-line
+  (when-on-same-line-as-previous-token
    (first tokens)
    #(->> (p/from {:type :dynamic-access, :lhs lhs} tokens)
          (p/skip :open-sq)

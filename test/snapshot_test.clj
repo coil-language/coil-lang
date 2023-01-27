@@ -23,11 +23,11 @@
         (->> (io/file "test/snapshots")
              file-seq
              (map #(. % getPath))
-             (filter #(re-matches #".*\.sjs" %)))]
+             (filter #(re-matches #".*\.prt" %)))]
     (doseq [file files]
       (try
         (let [src (slurp file)
-              expected-js (slurp (str/replace file #"\.sjs" ".ts"))
+              expected-js (slurp (str/replace file #"\.prt" ".ts"))
               actual-js (main/compile-from-str src)]
           (when (not= expected-js actual-js)
             (write-failed-test-file file actual-js))

@@ -42,5 +42,5 @@
         name (str ('name opts))
         src (slurp src-file)
         js (compile-from-str src)]
-    (spit (str "test/snapshots/" name ".sjs") src)
+    (spit (str "test/snapshots/" name ".prt") src)
     (spit (str "test/snapshots/" name ".ts") js)))
