@@ -147,7 +147,7 @@ We redefine all math operators to make sure that there is no automatic type conv
 
 ## Inspiration
 
-Clojure
-lodash
-JavaScript
-[Bind Operator](https://github.com/tc39/proposal-bind-operator)
+- Clojure
+- lodash
+- JavaScript
+- [Bind Operator](https://github.com/tc39/proposal-bind-operator)
