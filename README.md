@@ -17,7 +17,7 @@ Protej addresses this with a very simple system called Protocols, it combines Ja
 
 I think this is pure magic, I love it.
 
-But unlike other forms of "magic" we often hear about, this magic is well defined & designed to be extended to new data types.
+But unlike other forms of "magic" we often hear about, this magic is well defined & easy to extend.
 
 The core of what's happening is protocols.
 
