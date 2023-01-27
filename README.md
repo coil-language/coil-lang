@@ -4,7 +4,7 @@
 
 Protej is a Protege of JavaScript, it doesn't try to fundamentally change the language but instead embrace what it's really good at while polishing a few rough edges.
 
-JavaScript's prototypal system is radically underused resulting in no agreed upon idioms for polymorphic design.
+JavaScript's prototype system is radically underused resulting in no agreed upon idioms for polymorphic design.
 
 Protej addresses this with a very simple system called Protocols, it combines JavaScript Symbols, prototypes & dynamic `this` semantics to bring a system that can do the following:
 
