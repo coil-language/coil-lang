@@ -145,6 +145,10 @@ When you do
 
 We redefine all math operators to make sure that there is no automatic type conversions happening.
 
+### Conclusion
+
+The JavaScript hate is really poorly founded, the problems I've mentioned above are very easy to fix using protocols (prototypes with syntax sugar) and we get to the shining gem that is the core of JavaScript.
+
 ## Inspiration
 
 - Clojure
