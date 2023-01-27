@@ -17,6 +17,7 @@
    {:regex #"^impl\b"             :keyword :impl}
    {:regex #"^yield\b"            :keyword :yield}
    {:regex #"^async\b"            :keyword :async}
+   {:regex #"^assert\!"           :keyword :assert!}
    {:regex #"^await\b"            :keyword :await}
    {:regex #"^new\b"              :keyword :new}
    {:regex #"^\&\&"               :keyword :and-and}

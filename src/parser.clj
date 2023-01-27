@@ -354,6 +354,7 @@
   (->> (p/null tokens)
        (p/one-case
         {:string-lit parse-str,
+         :open-p parse-paren-expr,
          :yield parse-yield,
          :await parse-await,
          :id parse-id,
@@ -457,6 +458,13 @@
        (p/skip :eq)
        (p/then parse-expr :expr)))
 
+(defn- parse-assert [tokens]
+  (->> (p/from {:type :assert} tokens)
+       (p/skip :assert!)
+       (p/then (fn [tokens] (p/from (first tokens) tokens)) :token)
+       (p/then parse-expr :expr)
+       (p/one-case {:string-lit parse-str} :msg nil)))
+
 (defn- parse-statement [tokens]
   (->> (p/null tokens)
        (p/one-case
@@ -465,6 +473,7 @@
          :if parse-if,
          [:id :eq] parse-id-assign,
          :unless parse-unless,
+         :assert! parse-assert,
          :impl parse-impl,
          :protocol parse-protocol,
          :let parse-let,

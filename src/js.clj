@@ -250,6 +250,16 @@
 (defn- eval-id-assign [{:keys [name expr]}]
   (str name " = " (eval-expr expr)))
 
+(defn- eval-assert [{:keys [expr token msg]}]
+  (str
+   "assert__b("
+   (eval-expr expr) ", "
+   (token :line) ", "
+   (token :col) ", "
+   "`" (eval-expr expr) "`,"
+   msg
+   ")"))
+
 (defn- eval-statement [node]
   (case (:type node)
     :if (eval-if node)
@@ -261,6 +271,7 @@
     :impl-for (eval-impl-for node)
     :for-loop (eval-for-loop node)
     :id-assign (eval-id-assign node)
+    :assert (eval-assert node)
     (eval-expr node)))
 
 (defn- eval-ast [ast]
@@ -269,7 +280,7 @@
 (defn- compile-std-lib []
   (->> (file-seq (io/file "./src/std"))
        (map #(. % getPath))
-       (filter #(re-matches  #".*\.sjs" %))
+       (filter #(re-matches  #".*\.prt" %))
        (map slurp)
        (map #(-> (let [tokens (lexer/tokenize %)]
                    (reset! globals/tokens tokens)
@@ -281,7 +292,7 @@
 (defn eval-js [ast]
   (let [output (eval-ast ast)]
     (if @globals/emit-std
-      (str (slurp "./src/std/booleans.ts") "\n"
+      (str (slurp "./src/std/operators.ts") "\n"
            (compile-std-lib)
            output)
       output)))

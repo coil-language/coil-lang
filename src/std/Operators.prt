@@ -1,0 +1,52 @@
+protocol Plus
+protocol Minus
+protocol Times
+protocol Divide
+protocol Exponent
+
+impl Plus for Number = {
+  fn plus(other) {
+    assert! typeof(other) === "number"
+    return js_plus(this, other)
+  }
+}
+
+impl Minus for Number = {
+  fn minus(other) {
+    assert! typeof(other) === "number"
+    return js_minus(this, other)
+  }
+}
+
+impl Times for Number = {
+  fn times(other) {
+    assert! typeof(other) === "number"
+    return js_times(this, other)
+  }
+}
+
+impl Divide for Number = {
+  fn times(other) {
+    assert! typeof(other) === "number"
+    return js_divide(this, other)
+  }
+}
+
+impl Exponent for Number = {
+  fn exponent(other) {
+    assert! typeof(other) === "number"
+    return js_exponent(this, other)
+  }
+}
+
+impl Plus for String = {
+  fn plus(other) {
+    assert! typeof(other) === "string"
+    return js_plus(this, other)
+  }
+}
+
+fn plus(other) = this::(this[Plus].plus)(other)
+fn minus(other) = this::(this[Minus].minus)(other)
+fn divide_by(other) = this::(this[Divide].divide_by)(other)
+fn times(other) = this::(this[Times].times)(other)
