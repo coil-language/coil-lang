@@ -21,7 +21,7 @@ But unlike other forms of "magic" we often hear about, this magic is well define
 
 The core of what's happening is protocols.
 
-Protocols can be thought of as a safe form of monkey-patching by the use of JS Symbols.
+Protocols can be thought of as a safe form of monkey-patching, or highly dynamic interfaces.
 
 The protocols at play here are `Iter` and `Callable`
 
