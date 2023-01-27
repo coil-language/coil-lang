@@ -9,6 +9,16 @@
 (declare parse-expr)
 (declare parse-single-expr)
 
+(defn- when-on-same-line-as-previous-token [token body]
+  (let [token'
+        (loop [[prev-token token' & rest] @globals/tokens]
+          (cond
+            (= token' token) prev-token
+            (nil? prev-token) nil
+            :else (recur (concat [token'] rest))))]
+    (when (and token' (= (token' :line) (token :line)))
+      (body))))
+
 (defn- parse-str [tokens]
   (->> (p/from {:type :str} tokens)
        (p/one :string-lit :value)
@@ -28,10 +38,12 @@
        (p/one :id :property)))
 
 (defn- parse-fn-call [lhs tokens]
-  (->> (p/from {:type :fn-call, :lhs lhs} tokens)
-       (p/skip :open-p)
-       (p/parse-until :close-p parse-expr :args)
-       (p/skip :close-p)))
+  (when-on-same-line-as-previous-token
+   (first tokens)
+   #(->> (p/from {:type :fn-call, :lhs lhs} tokens)
+         (p/skip :open-p)
+         (p/parse-until :close-p parse-expr :args)
+         (p/skip :close-p))))
 
 (def math-ops #{:plus :minus :lt :gt :lt-eq :gt-eq :times :pow :div})
 
@@ -63,16 +75,6 @@
   (->> (p/from {:type :not-equals, :lhs lhs} tokens)
        (p/skip :not-eq)
        (p/then parse-expr :rhs)))
-
-(defn- when-on-same-line-as-previous-token [token body]
-  (let [token'
-        (loop [[prev-token token' & rest] @globals/tokens]
-          (cond
-            (= token' token) prev-token
-            (nil? prev-token) nil
-            :else (recur (concat [token'] rest))))]
-    (when (and token' (= (token' :line) (token :line)))
-      (body))))
 
 (defn- parse-dynamic-access [lhs tokens]
   (when-on-same-line-as-previous-token

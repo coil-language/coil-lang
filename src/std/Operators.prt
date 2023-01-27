@@ -3,6 +3,8 @@ protocol Minus
 protocol Times
 protocol Divide
 protocol Exponent
+protocol Comparable
+protocol LessThan
 
 impl Plus for Number = {
   fn plus(other) {
@@ -26,7 +28,7 @@ impl Times for Number = {
 }
 
 impl Divide for Number = {
-  fn times(other) {
+  fn divide_by(other) {
     assert! typeof(other) === "number"
     return js_divide(this, other)
   }
@@ -39,6 +41,22 @@ impl Exponent for Number = {
   }
 }
 
+impl Comparable for Object = {
+  fn greater_than_eq(other) = this::greater_than(other) || this == other
+  fn less_than_eq(other) = this::greater_than(other) || this == other
+}
+
+impl Comparable for Number = {
+  fn greater_than(other) {
+    assert! typeof(other) === "number"
+    return js_greater_than(this, other)
+  }
+  fn less_than(other) {
+    assert! typeof(other) === "number"
+    return js_less_than(this, other)
+  }
+}
+
 impl Plus for String = {
   fn plus(other) {
     assert! typeof(other) === "string"
@@ -46,7 +64,34 @@ impl Plus for String = {
   }
 }
 
+impl Times for String = {
+  fn times(amount) {
+    assert! typeof(amount) === "number"
+    let s = ""
+    for let _ of Array.from({length: amount}) {
+      s = s + this
+    }
+    return s
+  }
+}
+
+impl Comparable for String = {
+  fn greater_than(other) {
+    assert! typeof(other) === "string"
+    return js_greater_than(this, other)
+  }
+  fn less_than(other) {
+    assert! typeof(other) === "string"
+    return js_less_than(this, other)
+  }
+}
+
 fn plus(other) = this::(this[Plus].plus)(other)
 fn minus(other) = this::(this[Minus].minus)(other)
-fn divide_by(other) = this::(this[Divide].divide_by)(other)
 fn times(other) = this::(this[Times].times)(other)
+fn divide_by(other) = this::(this[Divide].divide_by)(other)
+fn exponent(other) = this::(this[Exponent].exponent)(other)
+fn greater_than(other) = this::(this[Comparable].greater_than)(other)
+fn greater_than_eq(other) = this::(this[Comparable].greater_than_eq)(other)
+fn less_than(other) = this::(this[Comparable].less_than)(other)
+fn less_than_eq(other) = this::(this[Comparable].less_than_eq)(other)

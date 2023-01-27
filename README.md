@@ -146,8 +146,6 @@ Meaning this works:
 
 ### Math Type Coercion
 
-[TO BE IMPLEMENTED]
-
 When you do
 
 ```

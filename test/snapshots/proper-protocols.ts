@@ -54,9 +54,9 @@ return iter.bind(this)().filter(f)
 }
 console.log(filter.bind({a: 10, b: 20})(function (k, v) {
 
-return v>10
+return greater_than.bind(v)(10)
 }))
 console.log(filter.bind([1, 2, 3])(function (x) {
 
-return x>1
+return greater_than.bind(x)(1)
 }))

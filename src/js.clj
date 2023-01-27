@@ -69,8 +69,22 @@
 (defn- eval-array [{:keys [elements]}]
   (str "[" (string/join ", " (map eval-expr elements)) "]"))
 
+(def math-op-to-method
+  {">" "greater_than"
+   "<" "less_than"
+   ">=" "greater_than_eq"
+   "<=" "less_than_eq"
+   "*" "times"
+   "**" "exponent"
+   "/" "divide_by"
+   "+" "plus"
+   "-" "minus"})
+
 (defn- eval-math-op [{:keys [lhs op rhs]}]
-  (str (eval-expr lhs) op (eval-expr rhs)))
+  (str
+   (math-op-to-method op)
+   ".bind(" (eval-expr lhs) ")"
+   "(" (eval-expr rhs) ")"))
 
 (defn- eval-fn [{:keys [async? generator? name args body]}]
   (str
