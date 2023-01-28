@@ -188,6 +188,14 @@ function eq__q(a, b) {
 return (a[Equal].eq__q).bind(a)(b)
 }
 const Iter = Symbol("Iter")
+function entries() {
+
+return Object.entries(this)
+}
+function from_entries() {
+
+return Object.fromEntries(this)
+}
 ObjectLiteral.prototype[Iter] = new ObjectLiteral({each(f) {
 
 return entries.bind(this)().forEach(function ([k, v]) {
@@ -363,27 +371,27 @@ const Comparable = Symbol("Comparable")
 const LessThan = Symbol("LessThan")
 Number.prototype[Plus] = new ObjectLiteral({plus(other) {
 
-assert__b(typeof(other) === "number", 189, 13, `typeof(other) === "number"`,)
+assert__b(typeof(other) === "number", 192, 13, `typeof(other) === "number"`,)
 return js_plus(this, other)
 }})
 Number.prototype[Minus] = new ObjectLiteral({minus(other) {
 
-assert__b(typeof(other) === "number", 196, 13, `typeof(other) === "number"`,)
+assert__b(typeof(other) === "number", 199, 13, `typeof(other) === "number"`,)
 return js_minus(this, other)
 }})
 Number.prototype[Times] = new ObjectLiteral({times(other) {
 
-assert__b(typeof(other) === "number", 203, 13, `typeof(other) === "number"`,)
+assert__b(typeof(other) === "number", 206, 13, `typeof(other) === "number"`,)
 return js_times(this, other)
 }})
 Number.prototype[Divide] = new ObjectLiteral({divide_by(other) {
 
-assert__b(typeof(other) === "number", 210, 13, `typeof(other) === "number"`,)
+assert__b(typeof(other) === "number", 213, 13, `typeof(other) === "number"`,)
 return js_divide(this, other)
 }})
 Number.prototype[Exponent] = new ObjectLiteral({exponent(other) {
 
-assert__b(typeof(other) === "number", 217, 13, `typeof(other) === "number"`,)
+assert__b(typeof(other) === "number", 220, 13, `typeof(other) === "number"`,)
 return js_exponent(this, other)
 }})
 Object.prototype[Comparable] = new ObjectLiteral({greater_than_eq(other) {
@@ -395,21 +403,21 @@ return or(greater_than.bind(this)(other), eq__q(this, other))
 }})
 Number.prototype[Comparable] = new ObjectLiteral({greater_than(other) {
 
-assert__b(typeof(other) === "number", 231, 13, `typeof(other) === "number"`,)
+assert__b(typeof(other) === "number", 234, 13, `typeof(other) === "number"`,)
 return js_greater_than(this, other)
 }, less_than(other) {
 
-assert__b(typeof(other) === "number", 235, 13, `typeof(other) === "number"`,)
+assert__b(typeof(other) === "number", 238, 13, `typeof(other) === "number"`,)
 return js_less_than(this, other)
 }})
 String.prototype[Plus] = new ObjectLiteral({plus(other) {
 
-assert__b(typeof(other) === "string", 242, 13, `typeof(other) === "string"`,)
+assert__b(typeof(other) === "string", 245, 13, `typeof(other) === "string"`,)
 return js_plus(this, other)
 }})
 String.prototype[Times] = new ObjectLiteral({times(amount) {
 
-assert__b(typeof(amount) === "number", 249, 13, `typeof(amount) === "number"`,)
+assert__b(typeof(amount) === "number", 252, 13, `typeof(amount) === "number"`,)
 let s = ""
 for  (let _ of Array.from(new ObjectLiteral({length: amount}))) {
 
@@ -419,11 +427,11 @@ return s
 }})
 String.prototype[Comparable] = new ObjectLiteral({greater_than(other) {
 
-assert__b(typeof(other) === "string", 260, 13, `typeof(other) === "string"`,)
+assert__b(typeof(other) === "string", 263, 13, `typeof(other) === "string"`,)
 return js_greater_than(this, other)
 }, less_than(other) {
 
-assert__b(typeof(other) === "string", 264, 13, `typeof(other) === "string"`,)
+assert__b(typeof(other) === "string", 267, 13, `typeof(other) === "string"`,)
 return js_less_than(this, other)
 }})
 function plus(other) {
@@ -469,9 +477,26 @@ return op[Callable] = new ObjectLiteral({call(a, b) {
 return op.bind(a)(b)
 }})
 })
+const Printable = Symbol("Printable")
+Object.prototype[Printable] = new ObjectLiteral({printable() {
+
+return this
+}})
+ObjectLiteral.prototype[Printable] = new ObjectLiteral({printable() {
+
+return map.bind(this)(function (k, v) {
+
+k = k.replaceAll("__q", "?").replaceAll("__b", "!")
+return [k, v]
+})
+}})
+function printable() {
+
+return (this[Printable].printable).bind(this)()
+}
 function log() {
 
-console.log(this)
+console.log(printable.bind(this)())
 return this
 }
-"won__q__b"
+log.bind(new ObjectLiteral({won__q: 10}))()

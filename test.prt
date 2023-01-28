@@ -1,1 +1,3 @@
-:won?!
+//[1 2 3]::every?(even? && odd?)
+
+{won?: 10}::log()

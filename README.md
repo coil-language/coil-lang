@@ -167,3 +167,7 @@ The JavaScript hate is really poorly founded, the problems I've mentioned above 
 - lodash
 - JavaScript
 - [Bind Operator](https://github.com/tc39/proposal-bind-operator)
+
+## Left to do
+
+- Regex support

@@ -94,6 +94,9 @@ fn eq?(a, b) = a::(a[Equal].eq?)(b)
 // ITER PROTOCOL
 protocol Iter
 
+fn entries() = Object.entries(this)
+fn from_entries() = Object.fromEntries(this)
+
 impl Iter for ObjectLiteral = {
   fn each(f) = this::entries().forEach(fn ([k, v]) = f(k, v))
   fn map(f) = this::entries().map(fn ([k, v]) = f(k, v))::from_entries()
@@ -280,9 +283,24 @@ fn less_than_eq(other) = this::(this[Comparable].less_than_eq)(other)
 [plus minus times divide_by exponent greater_than greater_than_eq less_than less_than_eq]
   .forEach(fn (op) = op[Callable] = { fn call(a, b) = a::op(b) })
 
-// GENERAL HELPERS
+// Printable
 
-fn log() {
-  console.log(this)
+protocol Printable
+
+impl Printable for Object = {
+  fn printable() = this
+}
+
+impl Printable for ObjectLiteral = {
+  fn printable() = this::map(fn (k, v) {
+    k = k.replaceAll("__q", "?").replaceAll("__b", "!")
+    return [k, v]
+  })
+}
+
+fn printable() = this::(this[Printable].printable)()
+
+fn log() {  
+  console.log(this::printable())
   return this
 }

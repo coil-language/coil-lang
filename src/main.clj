@@ -30,6 +30,8 @@
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn run [opts]
+  ;; (reset! globals/emit-std false)
+
   (let [src-file (str ('src opts))
         out-file (str ('out opts))]
     (prn "SRC:" src-file " OUT:" out-file)
