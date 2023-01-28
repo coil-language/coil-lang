@@ -10,7 +10,7 @@ Protej addresses this with a very simple system called Protocols, it combines Ja
 
 ```
 [{ status: "won" }, { status: "lost" }]
-  ::map("status")
+  ::map(:status)
   ::map({ won: 10, lost: -10 })
   ::sum() == 0
 ```
@@ -34,7 +34,7 @@ impl Iter for Array = {
   fn map(f) = this.map(f)
 }
 
-fn map(f) = this::(this[Iter].map)(f)
+fn map(f) = this[[Iter]].map(f)
 
 [2, 3]::map(fn (x) = x ** 2) // [4, 9]
 ```
@@ -76,7 +76,7 @@ impl Callable for Object = {
 }
 
 // accessor function
-fn call(...args) = this::(this[Callable].call)(...args)
+fn call(...args) = this[[Callable]].call(...args)
 
 { a: 10 }::call("a") // 10
 ```
@@ -84,24 +84,10 @@ fn call(...args) = this::(this[Callable].call)(...args)
 Now we can bring it together by modifying the definition of `map` to use `::call`
 
 ```
-fn map(callable) = this::(this[Iter].map)(callable::call)
+fn map(callable) = this[[Iter]].map(callable::call)
 ```
 
 Now we have to `impl` Callable for all things we want to use as a map function, but that's quite straightforward, you can see the full implementation of `Iter` and `Callable` in ./src/std
-
-### Note on defining polymorphic functions
-
-I'll admit the definition of `map` and `call` is dense & requires deep understanding of JavaScript "this" semantics, but it is also hiding _nothing_, if you understand these functions, you understand polymorphism. If its still not desirable to have the boilerplate, you can also easily define a helper to take care of some of the details.
-
-```
-fn get_protocol_method(Protocol, method_name) = this::(this[Protocol])[method_name]
-
-fn map(f) = this::get_protocol_method(Iter, "map")(f)
-```
-
-But I've left that out of the standard library because I think understanding the boilerplate enables you to do new kinds of polymorphism most languages can't dream of (think of a parameterized protocol for example.)
-
-This kind of direct manipulation of protocols is core to what makes `protej` so powerful.
 
 ## JavaScript's rough edges
 
