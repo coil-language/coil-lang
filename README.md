@@ -66,12 +66,12 @@ But I can't yet do this from the implementation above
 ["won"]::map({ won: 10 }) // hoping to get [10]
 ```
 
-The reason is we haven't implemented the `Callable` protocol. So lets do it for objects
+The reason is we haven't implemented the `Callable` protocol. So lets do it for object literals
 
 ```
 protocol Callable
 
-impl Callable for Object = {
+impl Callable for ObjectLiteral = {
   fn call(key) = this[key]
 }
 
