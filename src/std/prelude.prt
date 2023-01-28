@@ -1,0 +1,288 @@
+// CALLABLE PROTOCOL
+
+protocol Callable
+
+impl Callable for Function = {
+  fn call(...args) = this(...args)
+}
+
+impl Callable for Set = {
+  fn call(key) = this.has(key)
+}
+
+impl Callable for Map = {
+  fn call(key) = this.get(key)
+}
+
+impl Callable for ObjectLiteral = {
+  fn call(key) = this[key]
+}
+
+impl Callable for String = {
+  fn call(collection) = collection::call(this)
+}
+
+impl Callable for Array = {
+  fn call(index) = this.at(index)
+}
+
+fn call(...args) = this::(this[Callable].call)(...args)
+fn pipe(callable) = callable::call(this)
+fn compose(second_fn) {
+  let first_fn = this
+  return fn (...args) = second_fn::call(first_fn::call(...args))
+}
+
+// EQUAL PROTOCOl
+
+protocol Equal
+
+impl Equal for Number = {
+  fn eq?(other) = this === other
+}
+
+impl Equal for String = {
+  fn eq?(other) = this === other
+}
+
+impl Equal for BigInt = {
+  fn eq?(other) = this === other
+}
+
+impl Equal for Array = {
+  fn eq?(other) {
+    if other is not Array {
+      return false
+    }
+    if this.length !== other.length {
+      return false
+    }
+    return this.every(fn(value, index) = value[Equal](other[index]))
+  }
+}
+
+impl Equal for Map = {
+  fn eq?(other) {
+    if other is not Map {
+      return false
+    }
+    if this.size !== other.size {
+      return false
+    }
+    for let [key, value] of this.entries() {
+      if !other.get(key)[Equal](value) {
+        return false
+      }
+    }
+    return true
+  }
+}
+
+impl Equal for ObjectLiteral = {
+  fn eq?(other) {
+    for let [key, value] of Object.entries(this) {
+      if !value[Equal](other[key]) {
+        return false
+      }
+    }
+    return true
+  }
+}
+
+fn eq?(a, b) = a::(a[Equal].eq?)(b)
+
+// ITER PROTOCOL
+protocol Iter
+
+impl Iter for ObjectLiteral = {
+  fn each(f) = this::entries().forEach(fn ([k, v]) = f(k, v))
+  fn map(f) = this::entries().map(fn ([k, v]) = f(k, v))::from_entries()
+  fn filter(f) = this::entries().filter(fn ([k, v]) = !!f(k, v))::from_entries()
+  fn some?(f) = this::entries().some(fn ([k, v]) = !!f(k, v))::from_entries()
+  fn every?(f) = this::entries().every(fn ([k, v]) = !!f(k, v))::from_entries()
+  fn reduce(f, start) = this::entries().reduce(f, start)
+  fn insert(key, value) = { ...this, [key]: value }
+  fn sum() = this::entries().map(fn ([_, v]) = v).reduce(+, 0)
+}
+
+impl Iter for Array = {
+  fn each(f) = this.forEach(f)
+  fn map(f) = this.map(f)
+  fn filter(f) = this.filter(f::compose(truthy))
+  fn reduce(f, start) = this.reduce(f, start)
+  fn insert(value) = [...this, value]
+  fn sum() = this.reduce(+, 0)
+  fn some?(f) = this.some(f::compose(truthy))
+  fn every?(f) = this.every(f::compose(truthy))
+}
+
+impl Iter for Set = {
+  fn each(f) {
+    for let elem of this {
+      f(elem)
+    }
+  }
+  fn map(f) {
+    let out = new Set([])
+    for let elem of this {
+      out.add(f(elem))
+    }
+    return out
+  }
+  fn reduce(f, start) {
+    let acc = start
+    for let elem of this {
+      acc = f(acc, elem)
+    }
+    return acc
+  }
+  fn filter(f) {
+    let out = new Set([])
+    for let elem of this {
+      if f(elem) {
+        out.add(elem)
+      }
+    }
+    return out
+  }
+  fn insert(elem) = new Set(this).add(elem)
+  fn sum() = this::reduce(+, 0)
+  fn some?(f) {
+    for let elem of this {
+      if f(elem) {
+        return true
+      }
+    }
+    return false
+  }
+  fn every?(f) {
+    for let elem of this {
+      if !f(elem) {
+        return false
+      }
+    }
+    return true
+  }
+}
+
+fn each(f) = this::(this[Iter].each)(f::call)
+fn map(f) = this::(this[Iter].map)(f::call)
+fn filter(f) = this::(this[Iter].filter)(f::call)
+fn some?(f) = this::(this[Iter].some?)(f::call)
+fn every?(f) = this::(this[Iter].every?)(f::call)
+fn reduce(f, start) = this::(this[Iter].reduce)(f::call, start)
+fn insert(...args) = this::(this[Iter].insert)(...args)
+fn sum() = this::(this[Iter].sum)()
+
+// OPERATORS
+
+protocol Plus
+protocol Minus
+protocol Times
+protocol Divide
+protocol Exponent
+protocol Comparable
+protocol LessThan
+
+impl Plus for Number = {
+  fn plus(other) {
+    assert! typeof(other) === "number"
+    return js_plus(this, other)
+  }
+}
+
+impl Minus for Number = {
+  fn minus(other) {
+    assert! typeof(other) === "number"
+    return js_minus(this, other)
+  }
+}
+
+impl Times for Number = {
+  fn times(other) {
+    assert! typeof(other) === "number"
+    return js_times(this, other)
+  }
+}
+
+impl Divide for Number = {
+  fn divide_by(other) {
+    assert! typeof(other) === "number"
+    return js_divide(this, other)
+  }
+}
+
+impl Exponent for Number = {
+  fn exponent(other) {
+    assert! typeof(other) === "number"
+    return js_exponent(this, other)
+  }
+}
+
+impl Comparable for Object = {
+  fn greater_than_eq(other) = this::greater_than(other) || this == other
+  fn less_than_eq(other) = this::greater_than(other) || this == other
+}
+
+impl Comparable for Number = {
+  fn greater_than(other) {
+    assert! typeof(other) === "number"
+    return js_greater_than(this, other)
+  }
+  fn less_than(other) {
+    assert! typeof(other) === "number"
+    return js_less_than(this, other)
+  }
+}
+
+impl Plus for String = {
+  fn plus(other) {
+    assert! typeof(other) === "string"
+    return js_plus(this, other)
+  }
+}
+
+impl Times for String = {
+  fn times(amount) {
+    assert! typeof(amount) === "number"
+    let s = ""
+    for let _ of Array.from({length: amount}) {
+      s = s + this
+    }
+    return s
+  }
+}
+
+impl Comparable for String = {
+  fn greater_than(other) {
+    assert! typeof(other) === "string"
+    return js_greater_than(this, other)
+  }
+  fn less_than(other) {
+    assert! typeof(other) === "string"
+    return js_less_than(this, other)
+  }
+}
+
+fn plus(other) = this::(this[Plus].plus)(other)
+fn minus(other) = this::(this[Minus].minus)(other)
+fn times(other) = this::(this[Times].times)(other)
+fn divide_by(other) = this::(this[Divide].divide_by)(other)
+fn exponent(other) = this::(this[Exponent].exponent)(other)
+fn greater_than(other) = this::(this[Comparable].greater_than)(other)
+fn greater_than_eq(other) = this::(this[Comparable].greater_than_eq)(other)
+fn less_than(other) = this::(this[Comparable].less_than)(other)
+fn less_than_eq(other) = this::(this[Comparable].less_than_eq)(other)
+
+// ideally we use ::each, but the order of compiling the 
+// standard library is kind of weird
+// maybe I should put it all in a single file & call it prelude.prt
+[plus minus times divide_by exponent greater_than greater_than_eq less_than less_than_eq]
+  .forEach(fn (op) = op[Callable] = { fn call(a, b) = a::op(b) })
+
+// GENERAL HELPERS
+
+fn log() {
+  console.log(this)
+  return this
+}

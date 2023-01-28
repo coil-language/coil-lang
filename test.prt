@@ -1,1 +1,8 @@
-fn _insert(k, v) = {...this [k]: v}
+//[1 2 3]::every?(even? && odd?)
+
+
+[0]::some?(fn (x) = x)::log()
+
+{a: 10}
+  ::pipe("a")::log()
+  ::pipe({ 10: 20 })::log()
