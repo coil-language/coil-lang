@@ -145,7 +145,9 @@ We redefine all math operators to make sure that there is no automatic type conv
 
 ### Conclusion
 
-The JavaScript hate is really poorly founded, the problems I've mentioned above are very easy to fix using protocols (prototypes with syntax sugar) and we get to the shining gem that is the core of JavaScript.
+Protej is very much "a JavaScript", just with a shiny new syntax.
+
+This new syntax is here to establish idioms for how we can leverage JavaScript's OO system at scale.
 
 ## Inspiration
 
