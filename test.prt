@@ -1,3 +1,6 @@
-//[1 2 3]::every?(even? && odd?)
+fn int?(x) = Number.isInteger(x)
+fn even?(x) = (x / 2)::pipe(int?)
+fn pos?(x) = x > 0
 
-{won?: 10}::log()
+[2 4 6]::every?(even? && pos?)::log()
+

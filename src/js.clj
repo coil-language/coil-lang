@@ -86,8 +86,10 @@
 (defn- eval-math-op [{:keys [lhs op rhs]}]
   (str
    (math-op-to-method op)
-   ".bind(" (eval-expr lhs) ")"
-   "(" (eval-expr rhs) ")"))
+   ".call("
+   (eval-expr lhs) ","
+   (eval-expr rhs)
+   ")"))
 
 (defn- eval-fn [{:keys [async? generator? name args body]}]
   (str
@@ -171,7 +173,7 @@
   (str (eval-expr lhs) " instanceof " (eval-expr rhs)))
 
 (defn- eval-and-and [{:keys [lhs rhs]}]
-  (str "and(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
+  (str "and.call(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
 
 (defn- eval-or-or [{:keys [lhs rhs]}]
   (str "or(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
@@ -219,6 +221,12 @@
 (defn- eval-unapplied-math-op [{op :op}]
   (str (math-op-to-method op)))
 
+(defn- eval-unapplied-and-and [_]
+  (str "and"))
+
+(defn- eval-unapplied-or-or [_]
+  (str "or"))
+
 (defn- eval-keyword [{value :value}]
   (str \" (subs (resolve-name value) 1) \"))
 
@@ -254,7 +262,9 @@
     :yield (eval-yield node)
     :jsx-tag (eval-jsx-tag node)
     :paren-expr (eval-paren-expr node)
-    :unapplied-math-op (eval-unapplied-math-op node)))
+    :unapplied-math-op (eval-unapplied-math-op node)
+    :unapplied-and-and (eval-unapplied-and-and node)
+    :unapplied-or-or (eval-unapplied-or-or node)))
 
 (defn- eval-return [{:keys [expr]}]
   (str "return " (eval-expr expr)))

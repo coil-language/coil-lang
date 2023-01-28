@@ -1,3 +1,7 @@
+function Nil() {}
+
+let nil = new Nil();
+
 function ObjectLiteral(obj) {
   Object.assign(this, obj);
 }
@@ -7,18 +11,18 @@ function negate(val) {
 }
 
 function truthy(val) {
-  return val !== null && val !== undefined && val !== false;
+  return val !== nil && val !== null && val !== undefined && val !== false;
 }
 
-function and(a, b) {
-  if (!truthy(a)) {
-    return b;
-  } else {
+function js_and(a, b) {
+  if (!truthy(b)) {
     return a;
+  } else {
+    return b;
   }
 }
 
-function or(a, b) {
+function js_or(a, b) {
   if (truthy(a)) {
     return a;
   }

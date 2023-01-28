@@ -371,6 +371,14 @@
   (->> (p/from {:type :keyword} tokens)
        (p/one :keyword :value)))
 
+(defn- parse-unapplied-and-and [tokens]
+  (->> (p/from {:type :unapplied-and-and} tokens)
+       (p/skip :and-and)))
+
+(defn- parse-unapplied-or-or [tokens]
+  (->> (p/from {:type :unapplied-or-or} tokens)
+       (p/skip :or-or)))
+
 (defn- parse-single-expr [tokens]
   (->> (p/null tokens)
        (p/one-case
@@ -381,6 +389,8 @@
          :await parse-await,
          :id parse-id,
          math-ops parse-unapplied-math-op,
+         :and-and parse-unapplied-and-and,
+         :or-or parse-unapplied-or-or,
          :num parse-num,
          :open-sq parse-array,
          :spread parse-spread,

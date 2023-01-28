@@ -186,6 +186,23 @@ protocol Divide
 protocol Exponent
 protocol Comparable
 protocol LessThan
+protocol And
+protocol Or
+
+impl And for Object = {
+  fn and(other) = js_and(this, other)
+}
+
+impl And for Function = {
+  fn and(snd_fn) {
+    let first_fn = this
+    return fn(...args) = first_fn(...args) && snd_fn(...args)
+  }
+}
+
+impl Or for Object = {
+  fn or(other) = js_or(this, other)
+}
 
 impl Plus for Number = {
   fn plus(other) {
@@ -276,11 +293,25 @@ fn greater_than(other) = this::(this[Comparable].greater_than)(other)
 fn greater_than_eq(other) = this::(this[Comparable].greater_than_eq)(other)
 fn less_than(other) = this::(this[Comparable].less_than)(other)
 fn less_than_eq(other) = this::(this[Comparable].less_than_eq)(other)
+fn and(other) {
+  if this {
+    return this::(this[And].and)(other)
+  } else {
+    return this
+  }
+}
+fn or(other) {
+  if this {
+    return this::(this[Or].or)(other)
+  } else {
+    return other
+  }
+}
 
 // ideally we use ::each, but the order of compiling the 
 // standard library is kind of weird
 // maybe I should put it all in a single file & call it prelude.prt
-[plus minus times divide_by exponent greater_than greater_than_eq less_than less_than_eq]
+[plus minus times divide_by exponent greater_than greater_than_eq less_than less_than_eq and or]
   .forEach(fn (op) = op[Callable] = { fn call(a, b) = a::op(b) })
 
 // Printable
@@ -298,7 +329,13 @@ impl Printable for ObjectLiteral = {
   })
 }
 
-fn printable() = this::(this[Printable].printable)()
+fn printable() {
+  if this {  
+    return this::(this[Printable].printable)()
+  } else {
+    return this
+  }
+}
 
 fn log() {  
   console.log(this::printable())
