@@ -136,8 +136,8 @@
        (string/join ", " (map eval-obj-entry entries))
        "})"))
 
-(defn- eval-bind-this [{:keys [fn-name]}]
-  (str (resolve-name fn-name) ".bind(this)"))
+(defn- eval-bind-this [{:keys [expr]}]
+  (str (eval-expr expr) ".bind(this)"))
 
 (defn- eval-id-lookup [node]
   (-> node :name resolve-name))
@@ -230,6 +230,11 @@
 (defn- eval-keyword [{value :value}]
   (str \" (subs (resolve-name value) 1) \"))
 
+(defn- eval-protocol-access [{:keys [lhs protocol-name method-name]}]
+  (str
+   (eval-expr lhs) "[" protocol-name "]."
+   (resolve-name method-name) ".bind(" (eval-expr lhs) ")"))
+
 (defn- eval-expr [node]
   (case (:type node)
     :str (eval-str node)
@@ -264,7 +269,8 @@
     :paren-expr (eval-paren-expr node)
     :unapplied-math-op (eval-unapplied-math-op node)
     :unapplied-and-and (eval-unapplied-and-and node)
-    :unapplied-or-or (eval-unapplied-or-or node)))
+    :unapplied-or-or (eval-unapplied-or-or node)
+    :protocol-access (eval-protocol-access node)))
 
 (defn- eval-return [{:keys [expr]}]
   (str "return " (eval-expr expr)))

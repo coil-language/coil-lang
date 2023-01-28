@@ -85,12 +85,30 @@
        (p/then parse-expr :rhs)))
 
 (defn- parse-dynamic-access [lhs tokens]
+  (->> (p/from {:type :dynamic-access, :lhs lhs} tokens)
+       (p/skip :open-sq)
+       (p/then parse-expr :expr)
+       (p/skip :close-sq)))
+
+(defn- parse-protocol-access [lhs tokens]
+  (->> (p/from {:type :protocol-access, :lhs lhs} tokens)
+       (p/skip :open-sq)
+       (p/skip :open-sq)
+       (p/one :id :protocol-name)
+       (p/skip :close-sq)
+       (p/skip :close-sq)
+       (p/skip :dot)
+       (p/one :id :method-name)))
+
+(defn- parse-open-sq-modifier [lhs tokens]
   (when-on-same-line-as-previous-token
    (first tokens)
-   #(->> (p/from {:type :dynamic-access, :lhs lhs} tokens)
-         (p/skip :open-sq)
-         (p/then parse-expr :expr)
-         (p/skip :close-sq))))
+   (fn []
+     (->> (p/null tokens)
+          (p/one-case
+           (array-map
+            [:open-sq :open-sq] #(parse-protocol-access lhs %)
+            :open-sq #(parse-dynamic-access lhs %)))))))
 
 (defn- parse-triple-eq [lhs tokens]
   (->> (p/from {:type :triple-equals, :lhs lhs} tokens)
@@ -145,7 +163,7 @@
                :triple-eq (parse-triple-eq lhs tokens)
                :triple-not-eq (parse-triple-not-eq lhs tokens)
                :not-eq (parse-not-eq lhs tokens)
-               :open-sq (parse-dynamic-access lhs tokens)
+               :open-sq (parse-open-sq-modifier lhs tokens)
                :and-and (parse-and-and lhs tokens)
                :or-or (parse-or-or lhs tokens)
                :is (parse-is-or-is-not lhs tokens)
@@ -279,7 +297,11 @@
 (defn- parse-bind-this [tokens]
   (->> (p/from {:type :bind-this} tokens)
        (p/skip :double-colon)
-       (p/one :id :fn-name)))
+       (p/one-case
+        {:id parse-id,
+         :fn parse-fn,
+         :open-p parse-paren-expr}
+        :expr)))
 
 (defn- parse-not [tokens]
   (->> (p/from {:type :not} tokens)

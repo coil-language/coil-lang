@@ -26,12 +26,9 @@ impl Callable for Array = {
   fn call(index) = this.at(index)
 }
 
-fn call(...args) = this::(this[Callable].call)(...args)
+fn call(...args) = this[[Callable]].call(...args)
 fn pipe(callable) = callable::call(this)
-fn compose(second_fn) {
-  let first_fn = this
-  return fn (...args) = second_fn::call(first_fn::call(...args))
-}
+fn compose(snd_fn) = ::fn(...args) = snd_fn::call(this::call(...args))
 
 // EQUAL PROTOCOl
 
@@ -89,7 +86,7 @@ impl Equal for ObjectLiteral = {
   }
 }
 
-fn eq?(a, b) = a::(a[Equal].eq?)(b)
+fn eq?(a, b) = a[[Equal]].eq?(b)
 
 // ITER PROTOCOL
 protocol Iter
@@ -112,11 +109,11 @@ impl Iter for Array = {
   fn each(f) = this.forEach(f)
   fn map(f) = this.map(f)
   fn filter(f) = this.filter(f::compose(truthy))
+  fn some?(f) = this.some(f::compose(truthy))
+  fn every?(f) = this.every(f::compose(truthy))
   fn reduce(f, start) = this.reduce(f, start)
   fn insert(value) = [...this, value]
   fn sum() = this.reduce(+, 0)
-  fn some?(f) = this.some(f::compose(truthy))
-  fn every?(f) = this.every(f::compose(truthy))
 }
 
 impl Iter for Set = {
@@ -168,14 +165,14 @@ impl Iter for Set = {
   }
 }
 
-fn each(f) = this::(this[Iter].each)(f::call)
-fn map(f) = this::(this[Iter].map)(f::call)
-fn filter(f) = this::(this[Iter].filter)(f::call)
-fn some?(f) = this::(this[Iter].some?)(f::call)
-fn every?(f) = this::(this[Iter].every?)(f::call)
-fn reduce(f, start) = this::(this[Iter].reduce)(f::call, start)
-fn insert(...args) = this::(this[Iter].insert)(...args)
-fn sum() = this::(this[Iter].sum)()
+fn each(f) = this[[Iter]].each(f::call)
+fn map(f) = this[[Iter]].map(f::call)
+fn filter(f) = this[[Iter]].filter(f::call)
+fn some?(f) = this[[Iter]].some?(f::call)
+fn every?(f) = this[[Iter]].every?(f::call)
+fn reduce(f, start) = this[[Iter]].reduce(f::call, start)
+fn insert(...args) = this[[Iter]].insert(...args)
+fn sum() = this[[Iter]].sum()
 
 // OPERATORS
 
@@ -194,10 +191,7 @@ impl And for Object = {
 }
 
 impl And for Function = {
-  fn and(snd_fn) {
-    let first_fn = this
-    return fn(...args) = first_fn(...args) && snd_fn(...args)
-  }
+  fn and(snd_fn) = ::fn(...args) = this(...args) && snd_fn(...args)
 }
 
 impl Or for Object = {
@@ -284,25 +278,25 @@ impl Comparable for String = {
   }
 }
 
-fn plus(other) = this::(this[Plus].plus)(other)
-fn minus(other) = this::(this[Minus].minus)(other)
-fn times(other) = this::(this[Times].times)(other)
-fn divide_by(other) = this::(this[Divide].divide_by)(other)
-fn exponent(other) = this::(this[Exponent].exponent)(other)
-fn greater_than(other) = this::(this[Comparable].greater_than)(other)
-fn greater_than_eq(other) = this::(this[Comparable].greater_than_eq)(other)
-fn less_than(other) = this::(this[Comparable].less_than)(other)
-fn less_than_eq(other) = this::(this[Comparable].less_than_eq)(other)
+fn plus(other) = this[[Plus]].plus(other)
+fn minus(other) = this[[Minus]].minus(other)
+fn times(other) = this[[Times]].times(other)
+fn divide_by(other) = this[[Divide]].divide_by(other)
+fn exponent(other) = this[[Exponent]].exponent(other)
+fn greater_than(other) = this[[Comparable]].greater_than(other)
+fn greater_than_eq(other) = this[[Comparable]].greater_than_eq(other)
+fn less_than(other) = this[[Comparable]].less_than(other)
+fn less_than_eq(other) = this[[Comparable]].less_than_eq(other)
 fn and(other) {
   if this {
-    return this::(this[And].and)(other)
+    return this[[And]].and(other)
   } else {
     return this
   }
 }
 fn or(other) {
   if this {
-    return this::(this[Or].or)(other)
+    return this[[Or]].or(other)
   } else {
     return other
   }
@@ -331,7 +325,7 @@ impl Printable for ObjectLiteral = {
 
 fn printable() {
   if this {  
-    return this::(this[Printable].printable)()
+    return this[[Printable]].printable()
   } else {
     return this
   }
