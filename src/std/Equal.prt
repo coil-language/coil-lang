@@ -41,7 +41,7 @@ impl Equal for Map = {
   }
 }
 
-impl Equal for Object = {
+impl Equal for ObjectLiteral = {
   fn eq?(other) {
     for let [key, value] of Object.entries(this) {
       if !value[Equal](other[key]) {

@@ -1,3 +1,9 @@
+function ObjectLiteral(obj) {
+  for (let key in obj) {
+    this[key] = obj[key];
+  }
+}
+
 function negate(val) {
   return !truthy(val);
 }
@@ -33,7 +39,7 @@ function js_divide(a, b) {
   return a / b;
 }
 
-function js_multiply(a, b) {
+function js_times(a, b) {
   return a * b;
 }
 

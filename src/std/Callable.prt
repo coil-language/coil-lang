@@ -12,7 +12,7 @@ impl Callable for Map = {
   fn call(key) = this.get(key)
 }
 
-impl Callable for Object = {
+impl Callable for ObjectLiteral = {
   fn call(key) = this[key]
 }
 

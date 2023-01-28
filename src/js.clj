@@ -126,9 +126,9 @@
     :fn (eval-obj-fn entry)))
 
 (defn- eval-obj-lit [{:keys [entries]}]
-  (str "{"
+  (str "new ObjectLiteral({"
        (string/join ", " (map eval-obj-entry entries))
-       "}"))
+       "})"))
 
 (defn- eval-bind-this [{:keys [fn-name]}]
   (str (resolve-name fn-name) ".bind(this)"))
@@ -215,6 +215,9 @@
 (defn- eval-paren-expr [{expr :expr}]
   (str "(" (eval-expr expr) ")"))
 
+(defn- eval-unapplied-math-op [{op :op}]
+  (str (math-op-to-method op)))
+
 (defn- eval-expr [node]
   (case (:type node)
     :str (eval-str node)
@@ -245,7 +248,8 @@
     :await (eval-await node)
     :yield (eval-yield node)
     :jsx-tag (eval-jsx-tag node)
-    :paren-expr (eval-paren-expr node)))
+    :paren-expr (eval-paren-expr node)
+    :unapplied-math-op (eval-unapplied-math-op node)))
 
 (defn- eval-return [{:keys [expr]}]
   (str "return " (eval-expr expr)))

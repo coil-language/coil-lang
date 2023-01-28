@@ -1,4 +1,4 @@
 
 let b = 20
-let a = {a: 10, b, " a b": "wow"}
+let a = new ObjectLiteral({a: 10, b, " a b": "wow"})
 console.log(a)

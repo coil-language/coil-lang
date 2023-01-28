@@ -3,7 +3,7 @@ protocol Iter
 fn entries() = Object.entries(this)
 fn from_entries() = Object.fromEntries(this)
 
-impl Iter for Object = {
+impl Iter for ObjectLiteral = {
   fn each(f) = this::entries().forEach(fn ([k, v]) = f(k, v))
   fn map(f) = this::entries().map(fn ([k, v]) = f(k, v))::from_entries()
   fn filter(f) = this::entries().filter(fn ([k, v]) = f(k, v))::from_entries()
@@ -20,7 +20,7 @@ impl Iter for Array = {
   fn filter(f) = this.filter(f)
   fn reduce(f, start) = this.reduce(f, start)
   fn insert(value) = [...this, value]
-  fn sum() = this.reduce(fn (acc, x) = acc + x, 0)
+  fn sum() = this.reduce(+, 0)
   fn some?(f) = this.some(f)
   fn every?(f) = this.every(f)
 }

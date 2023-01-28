@@ -52,6 +52,10 @@
        (p/either math-ops :op)
        (p/then parse-expr :rhs)))
 
+(defn- parse-unapplied-math-op [tokens]
+  (->> (p/from {:type :unapplied-math-op} tokens)
+       (p/either math-ops :op)))
+
 (defn- parse-paren-expr [tokens]
   (->> (p/from {:type :paren-expr} tokens)
        (p/skip :open-p)
@@ -360,6 +364,7 @@
          :yield parse-yield,
          :await parse-await,
          :id parse-id,
+         math-ops parse-unapplied-math-op,
          :num parse-num,
          :open-sq parse-array,
          :spread parse-spread,
