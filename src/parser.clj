@@ -262,12 +262,13 @@
 (defn- parse-obj-entry [tokens]
   (->> (p/null tokens)
        (p/one-case
-        {[:id :colon] parse-reg-obj-entry,
-         [:num :colon] parse-reg-obj-entry,
-         :id parse-obj-shorthand-entry,
+        (array-map
          :open-sq parse-dynamic-obj-entry,
          :spread parse-spread-obj-entry,
-         :fn parse-fn})))
+         :fn parse-fn
+         [:id :colon] parse-reg-obj-entry,
+         [:num :colon] parse-reg-obj-entry,
+         :id parse-obj-shorthand-entry))))
 
 (defn- parse-obj [tokens]
   (->> (p/from {:type :obj-lit} tokens)

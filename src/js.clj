@@ -220,7 +220,7 @@
   (str (math-op-to-method op)))
 
 (defn- eval-keyword [{value :value}]
-  (str \" (subs value 1) \"))
+  (str \" (subs (resolve-name value) 1) \"))
 
 (defn- eval-expr [node]
   (case (:type node)
