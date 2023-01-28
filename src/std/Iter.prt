@@ -10,7 +10,7 @@ impl Iter for ObjectLiteral = {
   fn some?(f) = this::entries().some(fn ([k, v]) = f(k, v))::from_entries()
   fn every?(f) = this::entries().every(fn ([k, v]) = f(k, v))::from_entries()
   fn reduce(f, start) = this::entries().reduce(f, start)
-  fn insert(key, value) = Object.assign(this, {[key]: value})
+  fn insert(key, value) = { ...this, [key]: value }
   fn sum() = this::entries().map(fn ([_, v]) = v).reduce(+, 0)
 }
 

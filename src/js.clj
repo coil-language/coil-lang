@@ -63,6 +63,9 @@
        "}"))
 
 
+(defn- eval-spread [{:keys [expr]}]
+  (str "..." (eval-expr expr)))
+
 (defn- eval-let [{:keys [assign-expr rhs]}]
   (str "let " (eval-assign-expr assign-expr) " = " (eval-expr rhs)))
 
@@ -109,7 +112,7 @@
   (resolve-name id))
 
 (defn- eval-dynamic-obj-entry [{:keys [key-expr value]}]
-  (str (eval-expr key-expr) ": " (eval-expr value)))
+  (str "[" (eval-expr key-expr) "]: " (eval-expr value)))
 
 (defn- eval-obj-fn [{:keys [name args body]}]
   (assert name)
@@ -123,6 +126,7 @@
     :reg-obj-entry (eval-reg-obj-entry entry)
     :obj-shorthand-entry (eval-obj-shorthand-entry entry)
     :dynamic-obj-entry (eval-dynamic-obj-entry entry)
+    :spread-obj-entry (eval-spread entry)
     :fn (eval-obj-fn entry)))
 
 (defn- eval-obj-lit [{:keys [entries]}]
@@ -159,9 +163,6 @@
 
 (defn- eval-triple-not-equals [{:keys [lhs rhs]}]
   (str (eval-expr lhs) " !== " (eval-expr rhs)))
-
-(defn- eval-spread [{:keys [expr]}]
-  (str "..." (eval-expr expr)))
 
 (defn- eval-is-not [{:keys [lhs rhs]}]
   (str "!(" (eval-expr lhs) " instanceof " (eval-expr rhs) ")"))

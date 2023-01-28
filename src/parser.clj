@@ -10,13 +10,17 @@
 (declare parse-single-expr)
 
 (defn- when-on-same-line-as-previous-token [token body]
-  (let [token'
+  (let [prev-token
         (loop [[prev-token token' & rest] @globals/tokens]
           (cond
             (= token' token) prev-token
             (nil? prev-token) nil
             :else (recur (concat [token'] rest))))]
-    (when (and token' (= (token' :line) (token :line)))
+    (when (and prev-token
+               (= (prev-token :line) (token :line))
+              ;;  prev-token[:col] + prev-token[:value] == token[:col]
+               (= (+ (prev-token :col) (count (prev-token :value)))
+                  (token :col)))
       (body))))
 
 (defn- parse-str [tokens]
@@ -250,6 +254,11 @@
        (p/skip :colon)
        (p/then parse-expr :value)))
 
+(defn- parse-spread-obj-entry [tokens]
+  (->> (p/from {:type :spread-obj-entry} tokens)
+       (p/skip :spread)
+       (p/then parse-expr :expr)))
+
 (defn- parse-obj-entry [tokens]
   (->> (p/null tokens)
        (p/one-case
@@ -257,6 +266,7 @@
          [:num :colon] parse-reg-obj-entry,
          :id parse-obj-shorthand-entry,
          :open-sq parse-dynamic-obj-entry,
+         :spread parse-spread-obj-entry,
          :fn parse-fn})))
 
 (defn- parse-obj [tokens]
