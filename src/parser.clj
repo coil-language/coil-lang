@@ -366,10 +366,15 @@
          :id parse-jsx-id
          'otherwise parse-jsx-tag})))
 
+(defn- parse-keyword [tokens]
+  (->> (p/from {:type :keyword} tokens)
+       (p/one :keyword :value)))
+
 (defn- parse-single-expr [tokens]
   (->> (p/null tokens)
        (p/one-case
         {:string-lit parse-str,
+         :keyword parse-keyword,
          :open-p parse-paren-expr,
          :yield parse-yield,
          :await parse-await,

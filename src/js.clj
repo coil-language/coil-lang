@@ -219,9 +219,13 @@
 (defn- eval-unapplied-math-op [{op :op}]
   (str (math-op-to-method op)))
 
+(defn- eval-keyword [{value :value}]
+  (str \" (subs value 1) \"))
+
 (defn- eval-expr [node]
   (case (:type node)
     :str (eval-str node)
+    :keyword (eval-keyword node)
     :property-lookup (property-lookup node)
     :id-lookup (eval-id-lookup node)
     :fn-call (eval-fn-call node)
