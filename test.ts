@@ -65,6 +65,10 @@ function js_less_than_eq(a, b) {
   return a <= b;
 }
 
+function js_mod(a, b) {
+  return a % b;
+}
+
 class AssertionError extends Error {}
 
 function assert__b(cond, line, column, code_str, msg = "") {
@@ -95,7 +99,13 @@ return this[key]
 }})
 String.prototype[Callable] = new ObjectLiteral({call(collection) {
 
+if (truthy(typeof(collection) === "string")) {
+
+return collection[this]
+} else {
+
 return call.bind(collection)(this)
+}
 }})
 Array.prototype[Callable] = new ObjectLiteral({call(index) {
 
@@ -109,12 +119,15 @@ function pipe(callable) {
 
 return call.bind(callable)(this)
 }
-function compose(snd_fn) {
+function compose(f, ...fns) {
 
 return function (...args) {
 
-return call.bind(snd_fn)(call.bind(this)(...args))
-}.bind(this)
+return reduce.bind(fns)(function (result, f) {
+
+return call.bind(f)(result)
+}, call.bind(f)(...args))
+}
 }
 const Equal = Symbol("Equal")
 Number.prototype[Equal] = new ObjectLiteral({eq__q(other) {
@@ -337,9 +350,9 @@ function each(f) {
 
 return this[Iter].each.bind(this)(call.bind(f))
 }
-function map(f) {
+function map(...fns) {
 
-return this[Iter].map.bind(this)(call.bind(f))
+return this[Iter].map.bind(this)(compose(...fns))
 }
 function filter(f) {
 
@@ -370,6 +383,7 @@ const Minus = Symbol("Minus")
 const Times = Symbol("Times")
 const Divide = Symbol("Divide")
 const Exponent = Symbol("Exponent")
+const Mod = Symbol("Mod")
 const Comparable = Symbol("Comparable")
 const LessThan = Symbol("LessThan")
 const And = Symbol("And")
@@ -382,7 +396,7 @@ Function.prototype[And] = new ObjectLiteral({and(snd_fn) {
 
 return function (...args) {
 
-return and.call(this(...args), snd_fn(...args))
+return and.call(call.bind(this)(...args), call.bind(snd_fn)(...args))
 }.bind(this)
 }})
 Object.prototype[Or] = new ObjectLiteral({or(other) {
@@ -391,53 +405,58 @@ return js_or(this, other)
 }})
 Number.prototype[Plus] = new ObjectLiteral({plus(other) {
 
-assert__b(typeof(other) === "number", 203, 13, `typeof(other) === "number"`,)
+assert__b(typeof(other) === "number", 217, 13, `typeof(other) === "number"`,)
 return js_plus(this, other)
 }})
 Number.prototype[Minus] = new ObjectLiteral({minus(other) {
 
-assert__b(typeof(other) === "number", 210, 13, `typeof(other) === "number"`,)
+assert__b(typeof(other) === "number", 224, 13, `typeof(other) === "number"`,)
 return js_minus(this, other)
 }})
 Number.prototype[Times] = new ObjectLiteral({times(other) {
 
-assert__b(typeof(other) === "number", 217, 13, `typeof(other) === "number"`,)
+assert__b(typeof(other) === "number", 231, 13, `typeof(other) === "number"`,)
 return js_times(this, other)
 }})
 Number.prototype[Divide] = new ObjectLiteral({divide_by(other) {
 
-assert__b(typeof(other) === "number", 224, 13, `typeof(other) === "number"`,)
+assert__b(typeof(other) === "number", 238, 13, `typeof(other) === "number"`,)
 return js_divide(this, other)
 }})
 Number.prototype[Exponent] = new ObjectLiteral({exponent(other) {
 
-assert__b(typeof(other) === "number", 231, 13, `typeof(other) === "number"`,)
+assert__b(typeof(other) === "number", 245, 13, `typeof(other) === "number"`,)
 return js_exponent(this, other)
 }})
-Object.prototype[Comparable] = new ObjectLiteral({greater_than_eq(other) {
+Number.prototype[Mod] = new ObjectLiteral({mod(other) {
+
+assert__b(typeof(other) === "number", 252, 13, `typeof(other) === "number"`,)
+return js_mod(this, other)
+}})
+let ComparableMixin = new ObjectLiteral({greater_than_eq(other) {
 
 return or(greater_than.bind(this)(other), eq__q(this, other))
 }, less_than_eq(other) {
 
 return or(greater_than.bind(this)(other), eq__q(this, other))
 }})
-Number.prototype[Comparable] = new ObjectLiteral({greater_than(other) {
+Number.prototype[Comparable] = new ObjectLiteral({...ComparableMixin, greater_than(other) {
 
-assert__b(typeof(other) === "number", 245, 13, `typeof(other) === "number"`,)
+assert__b(typeof(other) === "number", 267, 13, `typeof(other) === "number"`,)
 return js_greater_than(this, other)
 }, less_than(other) {
 
-assert__b(typeof(other) === "number", 249, 13, `typeof(other) === "number"`,)
+assert__b(typeof(other) === "number", 271, 13, `typeof(other) === "number"`,)
 return js_less_than(this, other)
 }})
 String.prototype[Plus] = new ObjectLiteral({plus(other) {
 
-assert__b(typeof(other) === "string", 256, 13, `typeof(other) === "string"`,)
+assert__b(typeof(other) === "string", 278, 13, `typeof(other) === "string"`,)
 return js_plus(this, other)
 }})
 String.prototype[Times] = new ObjectLiteral({times(amount) {
 
-assert__b(typeof(amount) === "number", 263, 13, `typeof(amount) === "number"`,)
+assert__b(typeof(amount) === "number", 285, 13, `typeof(amount) === "number"`,)
 let s = ""
 for  (let _ of Array.from(new ObjectLiteral({length: amount}))) {
 
@@ -445,13 +464,13 @@ s = plus.call(s,this)
 }
 return s
 }})
-String.prototype[Comparable] = new ObjectLiteral({greater_than(other) {
+String.prototype[Comparable] = new ObjectLiteral({...ComparableMixin, greater_than(other) {
 
-assert__b(typeof(other) === "string", 274, 13, `typeof(other) === "string"`,)
+assert__b(typeof(other) === "string", 297, 13, `typeof(other) === "string"`,)
 return js_greater_than(this, other)
 }, less_than(other) {
 
-assert__b(typeof(other) === "string", 278, 13, `typeof(other) === "string"`,)
+assert__b(typeof(other) === "string", 301, 13, `typeof(other) === "string"`,)
 return js_less_than(this, other)
 }})
 function plus(other) {
@@ -473,6 +492,10 @@ return this[Divide].divide_by.bind(this)(other)
 function exponent(other) {
 
 return this[Exponent].exponent.bind(this)(other)
+}
+function mod(other) {
+
+return this[Mod].mod.bind(this)(other)
 }
 function greater_than(other) {
 
@@ -510,7 +533,7 @@ return this[Or].or.bind(this)(other)
 return other
 }
 }
-[plus, minus, times, divide_by, exponent, greater_than, greater_than_eq, less_than, less_than_eq, and, or].forEach(function (op) {
+each.bind([plus, minus, times, divide_by, exponent, mod, greater_than, greater_than_eq, less_than, less_than_eq, and, or])(function (op) {
 
 return op[Callable] = new ObjectLiteral({call(a, b) {
 
@@ -545,16 +568,26 @@ function log() {
 console.log(printable.bind(this)())
 return this
 }
-function int__q(x) {
+function int__q() {
 
-return Number.isInteger(x)
+return Number.isInteger(this)
 }
-function even__q(x) {
+function even__q() {
 
-return pipe.bind((divide_by.call(x,2)))(int__q)
+return eq__q((mod.call(this,2)), 0)
 }
-function pos__q(x) {
+function pos__q() {
 
-return greater_than.call(x,0)
+return greater_than_eq.call(this,0)
 }
-log.bind(plus[Callable].call.bind(plus)(1, 2))()
+each.bind([int__q, even__q, pos__q])(function (f) {
+
+return f[Callable] = new ObjectLiteral({call(num) {
+
+return f.bind(num)()
+}})
+})
+log.bind(map.bind([new ObjectLiteral({id: 11})])("id", new ObjectLiteral({11: "eleven"}), "length", function (len) {
+
+return eq__q(len, 6)
+}))()

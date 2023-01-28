@@ -81,7 +81,8 @@
    "**" "exponent"
    "/" "divide_by"
    "+" "plus"
-   "-" "minus"})
+   "-" "minus"
+   "%" "mod"})
 
 (defn- eval-math-op [{:keys [lhs op rhs]}]
   (str

@@ -19,7 +19,14 @@ impl Callable for ObjectLiteral = {
 }
 
 impl Callable for String = {
-  fn call(collection) = collection::call(this)
+  fn call(collection) {
+    if typeof(collection) === "string" {
+      // make sure we don't end up in infinite loop  
+      return collection[this]
+    } else {
+      return collection::call(this)
+    }
+  }
 }
 
 impl Callable for Array = {
@@ -28,7 +35,13 @@ impl Callable for Array = {
 
 fn call(...args) = this[[Callable]].call(...args)
 fn pipe(callable) = callable::call(this)
-fn compose(snd_fn) = ::fn(...args) = snd_fn::call(this::call(...args))
+fn compose(f, ...fns) = fn(...args) = 
+  fns::reduce(
+    fn (result, f) = f::call(result),
+    f::call(...args)
+  )
+
+
 
 // EQUAL PROTOCOl
 
@@ -166,7 +179,7 @@ impl Iter for Set = {
 }
 
 fn each(f) = this[[Iter]].each(f::call)
-fn map(f) = this[[Iter]].map(f::call)
+fn map(...fns) = this[[Iter]].map(compose(...fns))
 fn filter(f) = this[[Iter]].filter(f::call)
 fn some?(f) = this[[Iter]].some?(f::call)
 fn every?(f) = this[[Iter]].every?(f::call)
@@ -181,6 +194,7 @@ protocol Minus
 protocol Times
 protocol Divide
 protocol Exponent
+protocol Mod
 protocol Comparable
 protocol LessThan
 protocol And
@@ -191,7 +205,7 @@ impl And for Object = {
 }
 
 impl And for Function = {
-  fn and(snd_fn) = ::fn(...args) = this(...args) && snd_fn(...args)
+  fn and(snd_fn) = ::fn(...args) = this::call(...args) && snd_fn::call(...args)
 }
 
 impl Or for Object = {
@@ -233,12 +247,20 @@ impl Exponent for Number = {
   }
 }
 
-impl Comparable for Object = {
+impl Mod for Number = {
+  fn mod(other) {
+    assert! typeof(other) === "number"
+    return js_mod(this, other)
+  }
+}
+
+let ComparableMixin = {
   fn greater_than_eq(other) = this::greater_than(other) || this == other
   fn less_than_eq(other) = this::greater_than(other) || this == other
 }
 
 impl Comparable for Number = {
+  ...ComparableMixin,
   fn greater_than(other) {
     assert! typeof(other) === "number"
     return js_greater_than(this, other)
@@ -268,6 +290,7 @@ impl Times for String = {
 }
 
 impl Comparable for String = {
+  ...ComparableMixin,
   fn greater_than(other) {
     assert! typeof(other) === "string"
     return js_greater_than(this, other)
@@ -283,6 +306,7 @@ fn minus(other) = this[[Minus]].minus(other)
 fn times(other) = this[[Times]].times(other)
 fn divide_by(other) = this[[Divide]].divide_by(other)
 fn exponent(other) = this[[Exponent]].exponent(other)
+fn mod(other) = this[[Mod]].mod(other)
 fn greater_than(other) = this[[Comparable]].greater_than(other)
 fn greater_than_eq(other) = this[[Comparable]].greater_than_eq(other)
 fn less_than(other) = this[[Comparable]].less_than(other)
@@ -305,8 +329,8 @@ fn or(other) {
 // ideally we use ::each, but the order of compiling the 
 // standard library is kind of weird
 // maybe I should put it all in a single file & call it prelude.prt
-[plus minus times divide_by exponent greater_than greater_than_eq less_than less_than_eq and or]
-  .forEach(fn (op) = op[Callable] = { fn call(a, b) = a::op(b) })
+[plus minus times divide_by exponent mod greater_than greater_than_eq less_than less_than_eq and or]
+  ::each(fn (op) = op[Callable] = { fn call(a, b) = a::op(b) })
 
 // Printable
 
@@ -335,3 +359,13 @@ fn log() {
   console.log(this::printable())
   return this
 }
+
+// Helpers
+
+fn int?() = Number.isInteger(this)
+fn even?() = (this % 2) == 0
+fn pos?() = this >= 0
+
+[int? even? pos?]::each(fn (f) = f[Callable] = {
+  fn call(num) = num::f()
+})

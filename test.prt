@@ -1,1 +1,8 @@
-plus[[Callable]].call(1, 2)::log()
+[{id: 11}]
+  ::map(
+    :id,
+    {11: "eleven"},
+    :length,
+    fn (len) = len == 6
+  )
+  ::log()

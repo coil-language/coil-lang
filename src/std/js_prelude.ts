@@ -65,6 +65,10 @@ function js_less_than_eq(a, b) {
   return a <= b;
 }
 
+function js_mod(a, b) {
+  return a % b;
+}
+
 class AssertionError extends Error {}
 
 function assert__b(cond, line, column, code_str, msg = "") {

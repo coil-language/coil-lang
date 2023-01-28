@@ -42,6 +42,7 @@
    {:regex #"^\>"                    :keyword :gt}
    {:regex #"^\<"                    :keyword :lt}
    {:regex #"^\+"                    :keyword :plus}
+   {:regex #"^\%"                    :keyword :mod}
    {:regex #"^\-"                    :keyword :minus}
    {:regex #"^\*\*"                  :keyword :pow}
    {:regex #"^\*"                    :keyword :times}

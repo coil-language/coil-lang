@@ -49,7 +49,7 @@
          (p/parse-until :close-p parse-expr :args)
          (p/skip :close-p))))
 
-(def math-ops #{:plus :minus :lt :gt :lt-eq :gt-eq :times :pow :div})
+(def math-ops #{:mod :plus :minus :lt :gt :lt-eq :gt-eq :times :pow :div})
 
 (defn- parse-math-op [lhs tokens]
   (->> (p/from {:type :math-op, :lhs lhs} tokens)
