@@ -4,7 +4,7 @@
 
 Protej is a Protege of JavaScript, it doesn't try to fundamentally change the language but instead embrace what it's really good at while polishing a few rough edges.
 
-JavaScript's prototype system is radically underused resulting in no agreed upon idioms for polymorphic design.
+JavaScript's prototype system is radically underused resulting in no agreed upon idioms for polymorphic design outside the limitations of class semantics.
 
 Protej addresses this with a very simple system called Protocols, it combines JavaScript Symbols, prototypes & dynamic `this` semantics to bring a system that can do the following:
 
@@ -161,6 +161,10 @@ function ObjectLiteral(obj) {
 
 There are tradeoffs to this approach, but the result is we can impl protocols specifically for ObjectLiteral's and not worry about messing up the prototype chain for every other object.
 
+### ES6 Classes
+
+ES6 classes are a limited window into the JS prototypal system. There are no agreed upon idiom to go beyond and extend classes after they are defined.
+
 ### Conclusion
 
 Protej is very much "a JavaScript", just with a shiny new syntax.
@@ -177,3 +181,4 @@ This new syntax is here to establish idioms for how we can leverage JavaScript's
 ## Left to do
 
 - Regex support
+- Optimize `&&` and `||` operators to lazily evaluate their arguments
