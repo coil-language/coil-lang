@@ -143,6 +143,24 @@ When you do
 
 We redefine all math operators to make sure that there is no automatic type conversions happening.
 
+### Object Literal distinction
+
+In JavaScript there isn't a clear way to verify an object was created from object literal syntax. We address this in Protej by doing the following boilerplate the compiler generates.
+
+```
+// protej code
+{ a: 10 }
+// JavaScript
+new ObjectLiteral({ a : 10 })
+
+// ...in the js_prelude.ts the definition of ObjectLiteral is the following
+function ObjectLiteral(obj) {
+  Object.assign(this, obj);
+}
+```
+
+There are tradeoffs to this approach, but the result is we can impl protocols specifically for ObjectLiteral's and not worry about messing up the prototype chain for every other object.
+
 ### Conclusion
 
 Protej is very much "a JavaScript", just with a shiny new syntax.
