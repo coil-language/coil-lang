@@ -11,7 +11,7 @@ impl Iter for ObjectLiteral = {
   fn every?(f) = this::entries().every(fn ([k, v]) = f(k, v))::from_entries()
   fn reduce(f, start) = this::entries().reduce(f, start)
   fn insert(key, value) = Object.assign(this, {[key]: value})
-  fn sum() = this::entries().map(fn ([_, v]) = v).reduce(fn (acc, x) = acc + x, 0)
+  fn sum() = this::entries().map(fn ([_, v]) = v).reduce(+, 0)
 }
 
 impl Iter for Array = {
@@ -55,7 +55,7 @@ impl Iter for Set = {
     return out
   }
   fn insert(elem) = new Set(a).add(elem)
-  fn sum() = Array.from(this).reduce(fn (acc, x) = acc + x, 0)
+  fn sum() = Array.from(this).reduce(+, 0)
   fn some?(f) {
     for let elem of this {
       if f(elem) {

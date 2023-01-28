@@ -17,7 +17,7 @@ impl Callable for ObjectLiteral = {
 }
 
 impl Callable for String = {
-  fn call(object) = object::call(this)
+  fn call(collection) = collection::call(this)
 }
 
 impl Callable for Array = {
