@@ -167,7 +167,7 @@ ES6 classes are a limited window into the JS prototypal system. There are no agr
 
 ### Conclusion
 
-Protej is very much "a JavaScript", just with a shiny new syntax.
+Protej is very much "a JavaScript", just with shiny new syntax.
 
 This new syntax is here to establish idioms for how we can leverage JavaScript's OO system at scale.
 
