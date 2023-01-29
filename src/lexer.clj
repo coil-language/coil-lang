@@ -15,6 +15,7 @@
    {:regex #"^for\b"                 :keyword :for}
    {:regex #"^of\b"                  :keyword :of}
    {:regex #"^impl\b"                :keyword :impl}
+   {:regex #"^define\b"              :keyword :define}
    {:regex #"^yield\b"               :keyword :yield}
    {:regex #"^async\b"               :keyword :async}
    {:regex #"^assert\!"              :keyword :assert!}

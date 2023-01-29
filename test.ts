@@ -79,6 +79,23 @@ function assert__b(cond, line, column, code_str, msg = "") {
   }
 }
 
+function Keyword(value) {
+  this.value = value;
+}
+
+Keyword.cache = {};
+
+Keyword.for = function (name) {
+  return (Keyword.cache[name] ||= new Keyword(name));
+};
+
+Keyword.prototype.valueOf = function () {
+  return this.value;
+};
+Keyword.prototype.toString = function () {
+  return this.value;
+};
+
 
 const Callable = Symbol("Callable")
 Function.prototype[Callable] = new ObjectLiteral({call(...args) {
@@ -545,13 +562,20 @@ Object.prototype[Printable] = new ObjectLiteral({printable() {
 
 return this
 }})
+function _resolve_keyword_str(kw) {
+
+return kw.replaceAll("__q", "?").replaceAll("__b", "!")
+}
 ObjectLiteral.prototype[Printable] = new ObjectLiteral({printable() {
 
 return map.bind(this)(function (k, v) {
 
-k = k.replaceAll("__q", "?").replaceAll("__b", "!")
-return [k, v]
+return [_resolve_keyword_str(k), v]
 })
+}})
+Keyword.prototype[Printable] = new ObjectLiteral({printable() {
+
+return plus.call(":",_resolve_keyword_str(this))
 }})
 function printable() {
 
@@ -587,7 +611,19 @@ return f[Callable] = new ObjectLiteral({call(num) {
 return f.bind(num)()
 }})
 })
-log.bind(map.bind([new ObjectLiteral({id: 11})])("id", new ObjectLiteral({11: "eleven"}), "length", function (len) {
+const Viewable = Symbol("Viewable")
+Keyword.for("success")[Viewable] = new ObjectLiteral({view() {
 
-return eq__q(len, 6)
-}))()
+return "ay, we did it :)"
+}})
+Keyword.for("failure")[Viewable] = new ObjectLiteral({view() {
+
+return "dang we did not do it"
+}})
+function view() {
+
+return this[Viewable].view.bind(this)()
+}
+log.bind(view.bind(Keyword.for("success"))())()
+log.bind(view.bind(Keyword.for("failure"))())()
+log.bind(view.bind(Keyword.for("what__q"))())

@@ -1,2 +1,2 @@
 
-"won__q__b"
+Keyword.for("won__q__b")

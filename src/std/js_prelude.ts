@@ -78,3 +78,20 @@ function assert__b(cond, line, column, code_str, msg = "") {
     );
   }
 }
+
+function Keyword(value) {
+  this.value = value;
+}
+
+Keyword.cache = {};
+
+Keyword.for = function (name) {
+  return (Keyword.cache[name] ||= new Keyword(name));
+};
+
+Keyword.prototype.valueOf = function () {
+  return this.value;
+};
+Keyword.prototype.toString = function () {
+  return this.value;
+};

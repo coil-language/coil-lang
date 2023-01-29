@@ -481,6 +481,18 @@
        (p/skip :eq)
        (p/then parse-expr :expr)))
 
+(defn- parse-define [tokens]
+  (->> (p/from {:type :define-for} tokens)
+       (p/skip :define)
+       (p/one :id :symbol-name)
+       (p/skip :for)
+       (p/one-case
+        {:id parse-id,
+         :keyword parse-keyword}
+        :src-expr)
+       (p/skip :eq)
+       (p/then parse-expr :expr)))
+
 (defn- parse-protocol [tokens]
   (->> (p/from {:type :protocol-def} tokens)
        (p/skip :protocol)
@@ -524,16 +536,17 @@
   (->> (p/null tokens)
        (p/one-case
         (array-map
-         [:if :let] parse-if-let,
-         :if parse-if,
-         [:id :eq] parse-id-assign,
          :unless parse-unless,
          :assert! parse-assert,
          :impl parse-impl,
+         :define parse-define,
          :protocol parse-protocol,
          :let parse-let,
          :return parse-return,
          :for parse-for-loop,
+         [:if :let] parse-if-let,
+         :if parse-if,
+         [:id :eq] parse-id-assign,
          'otherwise parse-expr))))
 
 (defn parse [tokens]

@@ -229,7 +229,7 @@
   (str "or"))
 
 (defn- eval-keyword [{value :value}]
-  (str \" (subs (resolve-name value) 1) \"))
+  (str "Keyword.for(" \" (subs (resolve-name value) 1) \" ")"))
 
 (defn- eval-protocol-access [{:keys [lhs protocol-name method-name]}]
   (str
@@ -282,6 +282,9 @@
 (defn- eval-impl-for [{:keys [symbol-name constructor expr]}]
   (str constructor ".prototype[" (resolve-name symbol-name) "] = " (eval-expr expr)))
 
+(defn- eval-define-for [{:keys [symbol-name src-expr expr]}]
+  (str (eval-expr src-expr) "[" (resolve-name symbol-name) "] = " (eval-expr expr)))
+
 (defn- eval-for-loop [{:keys [await? assign-expr iterable-expr body]}]
   (str "for " (when await? "await ") " (let " (eval-assign-expr assign-expr) " of " (eval-expr iterable-expr) ") {\n"
        (eval-ast body) "\n"
@@ -309,6 +312,7 @@
     :return (eval-return node)
     :protocol-def (eval-protocol node)
     :impl-for (eval-impl-for node)
+    :define-for (eval-define-for node)
     :for-loop (eval-for-loop node)
     :id-assign (eval-id-assign node)
     :assert (eval-assert node)

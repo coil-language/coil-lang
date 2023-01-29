@@ -340,11 +340,14 @@ impl Printable for Object = {
   fn printable() = this
 }
 
+fn _resolve_keyword_str(kw) = kw.replaceAll("__q", "?").replaceAll("__b", "!")
+
 impl Printable for ObjectLiteral = {
-  fn printable() = this::map(fn (k, v) {
-    k = k.replaceAll("__q", "?").replaceAll("__b", "!")
-    return [k, v]
-  })
+  fn printable() = this::map(fn (k, v) = [_resolve_keyword_str(k), v])
+}
+
+impl Printable for Keyword = {
+  fn printable() = ":" + _resolve_keyword_str(this)
 }
 
 fn printable() {
