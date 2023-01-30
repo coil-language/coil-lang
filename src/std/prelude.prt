@@ -9,7 +9,7 @@ impl Call for ObjectLiteral = fn(key) = this[key]
 impl Call for Array = fn(index) = this.at(index)
 
 impl Call for String = fn(collection) {
-  if typeof(collection) === "string"
+  if (typeof(collection) === "string")
   || collection is Keyword {
     // make sure we don't end up in infinite loop  
     return collection[this]
@@ -19,7 +19,7 @@ impl Call for String = fn(collection) {
 }
 
 impl Call for Keyword = fn(collection) {
-  if collection is Keyword
+  if (collection is Keyword)
   || typeof(collection) === "string" {
     // again prevent infinite loop
     return collection[this]
