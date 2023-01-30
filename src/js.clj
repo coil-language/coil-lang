@@ -325,8 +325,10 @@
   (->> (file-seq (io/file "./src/std"))
        (map #(. % getPath))
        (filter #(re-matches  #".*\.prt" %))
-       (map slurp)
-       (map #(-> (let [tokens (lexer/tokenize %)]
+       (map #(vector % (slurp %)))
+       (map #(-> (let [[file-name src] %
+                       tokens (lexer/tokenize src)]
+                   (reset! globals/file-name file-name)
                    (reset! globals/tokens tokens)
                    (reset! globals/file-src %)
                    tokens)

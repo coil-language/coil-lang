@@ -1,14 +1,7 @@
-protocol Viewable
+fn valid_scores?() =
+  ::map(:score)
+  ::every?(pos? && even?)
 
-define Viewable for :success = {
-  fn view() = "ay, we did it :)"
-}
-
-define Viewable for :failure = {
-  fn view() = "dang we did not do it"
-}
-
-fn view() = this[[Viewable]].view()
-
-:success::view()::log()
-:failure::view()::log()
+[{score: 10}, {score: 8}]
+  ::valid_scores?()
+  ::log()

@@ -1,39 +1,32 @@
-// CALLABLE PROTOCOL
+// CALL PROTOCOL
 
-protocol Callable
+protocol Call
 
-impl Callable for Function = {
-  fn call(...args) = this(...args)
-}
+impl Call for Function = fn(...args) = this(...args)
+impl Call for Set = fn(key) = this.has(key)
+impl Call for Map = fn(key) = this.get(key)
+impl Call for ObjectLiteral = fn(key) = this[key]
+impl Call for Array = fn(index) = this.at(index)
 
-impl Callable for Set = {
-  fn call(key) = this.has(key)
-}
-
-impl Callable for Map = {
-  fn call(key) = this.get(key)
-}
-
-impl Callable for ObjectLiteral = {
-  fn call(key) = this[key]
-}
-
-impl Callable for String = {
-  fn call(collection) {
-    if typeof(collection) === "string" {
-      // make sure we don't end up in infinite loop  
-      return collection[this]
-    } else {
-      return collection::call(this)
-    }
+impl Call for String = fn(collection) {
+  if typeof(collection) === "string" {
+    // make sure we don't end up in infinite loop  
+    return collection[this]
+  } else {
+    return collection::call(this)
   }
 }
 
-impl Callable for Array = {
-  fn call(index) = this.at(index)
+impl Call for Keyword = fn(collection) {
+  if collection is Keyword {
+    // again prevent infinite loop
+    return collection[this]
+  } else {
+    return collection::call(this)
+  }
 }
 
-fn call(...args) = this[[Callable]].call(...args)
+fn call(...args) = this[Call](...args)
 fn pipe(callable) = callable::call(this)
 fn compose(f, ...fns) = fn(...args) = 
   fns::reduce(
@@ -41,65 +34,51 @@ fn compose(f, ...fns) = fn(...args) =
     f::call(...args)
   )
 
-
-
 // EQUAL PROTOCOl
 
 protocol Equal
 
-impl Equal for Number = {
-  fn eq?(other) = this === other
-}
+fn strict_eq?(other) = this === other
 
-impl Equal for String = {
-  fn eq?(other) = this === other
-}
+impl Equal for Number = strict_eq?
+impl Equal for String = strict_eq?
+impl Equal for BigInt = strict_eq?
 
-impl Equal for BigInt = {
-  fn eq?(other) = this === other
-}
-
-impl Equal for Array = {
-  fn eq?(other) {
-    if other is not Array {
-      return false
-    }
-    if this.length !== other.length {
-      return false
-    }
-    return this.every(fn(value, index) = value[Equal](other[index]))
+impl Equal for Array = fn(other) {
+  if other is not Array {
+    return false
   }
+  if this.length !== other.length {
+    return false
+  }
+  return this.every(fn(value, index) = value == other[index])
 }
 
-impl Equal for Map = {
-  fn eq?(other) {
-    if other is not Map {
+impl Equal for Map = fn(other) {
+  if other is not Map {
+    return false
+  }
+  if this.size !== other.size {
+    return false
+  }
+  for let [key, value] of this.entries() {
+    if other.get(key) != value {
       return false
     }
-    if this.size !== other.size {
+  }
+  return true
+}
+
+impl Equal for ObjectLiteral = fn(other) {
+  for let [key, value] of Object.entries(this) {
+    if value[Equal] != other[key] {
       return false
     }
-    for let [key, value] of this.entries() {
-      if !other.get(key)[Equal](value) {
-        return false
-      }
-    }
-    return true
   }
+  return true
 }
 
-impl Equal for ObjectLiteral = {
-  fn eq?(other) {
-    for let [key, value] of Object.entries(this) {
-      if !value[Equal](other[key]) {
-        return false
-      }
-    }
-    return true
-  }
-}
-
-fn eq?(a, b) = a[[Equal]].eq?(b)
+fn eq?(a, b) = a[Equal](b)
 
 // ITER PROTOCOL
 protocol Iter
@@ -121,9 +100,9 @@ impl Iter for ObjectLiteral = {
 impl Iter for Array = {
   fn each(f) = this.forEach(f)
   fn map(f) = this.map(f)
-  fn filter(f) = this.filter(f::compose(truthy))
-  fn some?(f) = this.some(f::compose(truthy))
-  fn every?(f) = this.every(f::compose(truthy))
+  fn filter(f) = this.filter(compose(f, truthy))
+  fn some?(f) = this.some(compose(f, truthy))
+  fn every?(f) = this.every(compose(f, truthy))
   fn reduce(f, start) = this.reduce(f, start)
   fn insert(value) = [...this, value]
   fn sum() = this.reduce(+, 0)
@@ -181,8 +160,8 @@ impl Iter for Set = {
 fn each(f) = this[[Iter]].each(f::call)
 fn map(...fns) = this[[Iter]].map(compose(...fns))
 fn filter(f) = this[[Iter]].filter(f::call)
-fn some?(f) = this[[Iter]].some?(f::call)
-fn every?(f) = this[[Iter]].every?(f::call)
+fn some?(...fns) = this[[Iter]].some?(compose(...fns))
+fn every?(...fns) = this[[Iter]].every?(compose(...fns))
 fn reduce(f, start) = this[[Iter]].reduce(f::call, start)
 fn insert(...args) = this[[Iter]].insert(...args)
 fn sum() = this[[Iter]].sum()
@@ -200,58 +179,44 @@ protocol LessThan
 protocol And
 protocol Or
 
-impl And for Object = {
-  fn and(other) = js_and(this, other)
+impl And for Object = fn(other) = js_and(this, other)
+
+impl And for Function = fn(callable) =
+  ::fn(...args) = this::call(...args) && callable::call(...args)
+
+impl And for Set = fn(callable) =
+  ::fn(item) = this::call(item) && callable::call(item)
+
+impl Or for Object = fn(other) = js_or(this, other)
+
+impl Plus for Number = fn(other) {
+  assert! typeof(other) === "number"
+  return js_plus(this, other)
 }
 
-impl And for Function = {
-  fn and(snd_fn) = ::fn(...args) = this::call(...args) && snd_fn::call(...args)
+impl Minus for Number = fn(other) {
+  assert! typeof(other) === "number"
+  return js_minus(this, other)
 }
 
-impl Or for Object = {
-  fn or(other) = js_or(this, other)
+impl Times for Number = fn(other) {
+  assert! typeof(other) === "number"
+  return js_times(this, other)
 }
 
-impl Plus for Number = {
-  fn plus(other) {
-    assert! typeof(other) === "number"
-    return js_plus(this, other)
-  }
+impl Divide for Number = fn(other) {
+  assert! typeof(other) === "number"
+  return js_divide(this, other)
 }
 
-impl Minus for Number = {
-  fn minus(other) {
-    assert! typeof(other) === "number"
-    return js_minus(this, other)
-  }
+impl Exponent for Number = fn(other) {
+  assert! typeof(other) === "number"
+  return js_exponent(this, other)
 }
 
-impl Times for Number = {
-  fn times(other) {
-    assert! typeof(other) === "number"
-    return js_times(this, other)
-  }
-}
-
-impl Divide for Number = {
-  fn divide_by(other) {
-    assert! typeof(other) === "number"
-    return js_divide(this, other)
-  }
-}
-
-impl Exponent for Number = {
-  fn exponent(other) {
-    assert! typeof(other) === "number"
-    return js_exponent(this, other)
-  }
-}
-
-impl Mod for Number = {
-  fn mod(other) {
-    assert! typeof(other) === "number"
-    return js_mod(this, other)
-  }
+impl Mod for Number = fn(other) {
+  assert! typeof(other) === "number"
+  return js_mod(this, other)
 }
 
 let ComparableMixin = {
@@ -271,22 +236,18 @@ impl Comparable for Number = {
   }
 }
 
-impl Plus for String = {
-  fn plus(other) {
-    assert! typeof(other) === "string"
-    return js_plus(this, other)
-  }
+impl Plus for String = fn(other) {
+  assert! typeof(other) === "string"
+  return js_plus(this, other)
 }
 
-impl Times for String = {
-  fn times(amount) {
-    assert! typeof(amount) === "number"
-    let s = ""
-    for let _ of Array.from({length: amount}) {
-      s = s + this
-    }
-    return s
+impl Times for String = fn(amount) {
+  assert! typeof(amount) === "number"
+  let s = ""
+  for let _ of Array.from({length: amount}) {
+    s = s + this
   }
+  return s
 }
 
 impl Comparable for String = {
@@ -301,58 +262,51 @@ impl Comparable for String = {
   }
 }
 
-fn plus(other) = this[[Plus]].plus(other)
-fn minus(other) = this[[Minus]].minus(other)
-fn times(other) = this[[Times]].times(other)
-fn divide_by(other) = this[[Divide]].divide_by(other)
-fn exponent(other) = this[[Exponent]].exponent(other)
-fn mod(other) = this[[Mod]].mod(other)
+fn plus(other) = this[Plus](other)
+fn minus(other) = this[Minus](other)
+fn times(other) = this[Times](other)
+fn divide_by(other) = this[Divide](other)
+fn exponent(other) = this[Exponent](other)
+fn mod(other) = this[Mod](other)
 fn greater_than(other) = this[[Comparable]].greater_than(other)
 fn greater_than_eq(other) = this[[Comparable]].greater_than_eq(other)
 fn less_than(other) = this[[Comparable]].less_than(other)
 fn less_than_eq(other) = this[[Comparable]].less_than_eq(other)
 fn and(other) {
   if this {
-    return this[[And]].and(other)
+    return this[And](other)
   } else {
     return this
   }
 }
 fn or(other) {
   if this {
-    return this[[Or]].or(other)
+    return this[Or](other)
   } else {
     return other
   }
 }
 
-// ideally we use ::each, but the order of compiling the 
-// standard library is kind of weird
-// maybe I should put it all in a single file & call it prelude.prt
 [plus minus times divide_by exponent mod greater_than greater_than_eq less_than less_than_eq and or]
-  ::each(fn (op) = op[Callable] = { fn call(a, b) = a::op(b) })
+  ::each(fn (op) = op[Call] = fn call(a, b) = a::op(b))
 
 // Printable
 
 protocol Printable
 
-impl Printable for Object = {
-  fn printable() = this
-}
+impl Printable for Object = fn printable() = this
 
 fn _resolve_keyword_str(kw) = kw.replaceAll("__q", "?").replaceAll("__b", "!")
 
-impl Printable for ObjectLiteral = {
-  fn printable() = this::map(fn (k, v) = [_resolve_keyword_str(k), v])
-}
+impl Printable for ObjectLiteral = fn printable() =
+  this::map(fn (k, v) = [_resolve_keyword_str(k), v])
 
-impl Printable for Keyword = {
-  fn printable() = ":" + _resolve_keyword_str(this)
-}
+impl Printable for Keyword = fn printable() =
+  ":" + _resolve_keyword_str(this)
 
 fn printable() {
   if this {  
-    return this[[Printable]].printable()
+    return this[Printable]()
   } else {
     return this
   }
@@ -366,9 +320,9 @@ fn log() {
 // Helpers
 
 fn int?() = Number.isInteger(this)
-fn even?() = (this % 2) == 0
+fn float?() = typeof(this) === "number" && !int?(this)
+fn even?() = (this % 2) === 0
 fn pos?() = this >= 0
 
-[int? even? pos?]::each(fn (f) = f[Callable] = {
-  fn call(num) = num::f()
-})
+[int? even? pos? float?]::each(fn (f) = f[Call] = fn(num) = num::f())
+
