@@ -108,8 +108,6 @@ fn id() = this
 console.log(111::id()) // 111
 ```
 
-JavaScript's `this` semantics are unusual to most, but its _extremely_ powerful, this is core to what makes protej work.
-
 ### Prefix Bind
 
 Sometimes its useful to use bind an expression to the current context.
