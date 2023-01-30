@@ -57,7 +57,7 @@ Note: This is a regular JavaScript array
 { key: "value" }
 ```
 
-Note: This are ~almost~ identical to JS objects, but they are defined by a constructor `ObjectLiteral` so that we can define protocols specific to Object Literals.
+Note: This are _almost_ identical to JS objects, but they are defined by a constructor `ObjectLiteral` so that we can define protocols specific to Object Literals.
 
 ### Set Notation
 
