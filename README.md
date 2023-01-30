@@ -4,7 +4,7 @@
 
 Protej is a new OO language influenced by JavaScript, Ruby, Clojure and SmallTalk
 
-Protej implements an OO system called Protocols based on the JavaScript prototypal system.
+Protej implements an OO system called Protocols built on JavaScript's prototypal object system.
 
 ## Primer
 
