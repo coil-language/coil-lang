@@ -98,9 +98,9 @@ the [bind operator](https://github.com/tc39/proposal-bind-operator) is something
 pos?.bind(1)()
 ```
 
-If you aren't familiar with `Function.prototype.bind`, all it does, is replace the value for `this` in the functions body.
+If you aren't familiar with `Function.prototype.bind`, all it does is replace the value for `this` in the functions body with the left hand side of the operator.
 
-In the base case to make it clear it works like this
+Lets check out another simple case to make it clear.
 
 ```
 fn id() = this
