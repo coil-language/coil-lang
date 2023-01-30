@@ -319,7 +319,7 @@
     (eval-expr node)))
 
 (defn- eval-ast [ast]
-  (reduce #(str %1 "\n" (eval-statement %2)) "" ast))
+  (reduce #(str %1 ";\n" (eval-statement %2)) "" ast))
 
 (defn- compile-std-lib []
   (->> (file-seq (io/file "./src/std"))

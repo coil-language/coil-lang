@@ -1,0 +1,9 @@
+let input = slurp("q1.txt")
+
+input.split("\n\n")
+  ::map(m(:split " ")
+        b(map as_num)
+        b(reduce + 0))
+  ::sort()
+  ::take_last(3)
+  ::reduce(+, 0)

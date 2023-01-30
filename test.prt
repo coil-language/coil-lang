@@ -1,7 +1,7 @@
-fn valid_scores?() =
-  ::map(:score)
-  ::every?(pos? && even?)
-
-[{score: 10}, {score: 8}]
-  ::valid_scores?()
+["123 2 20"]
+  ::flat_map(
+    method(:split " "),
+    bound(map as_num)
+  )
+  ::reduce(+, 0)
   ::log()

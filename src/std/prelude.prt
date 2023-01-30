@@ -9,7 +9,8 @@ impl Call for ObjectLiteral = fn(key) = this[key]
 impl Call for Array = fn(index) = this.at(index)
 
 impl Call for String = fn(collection) {
-  if typeof(collection) === "string" {
+  if typeof(collection) === "string"
+  || collection is Keyword {
     // make sure we don't end up in infinite loop  
     return collection[this]
   } else {
@@ -18,7 +19,8 @@ impl Call for String = fn(collection) {
 }
 
 impl Call for Keyword = fn(collection) {
-  if collection is Keyword {
+  if collection is Keyword
+  || typeof(collection) === "string" {
     // again prevent infinite loop
     return collection[this]
   } else {
@@ -33,6 +35,28 @@ fn compose(f, ...fns) = fn(...args) =
     fn (result, f) = f::call(result),
     f::call(...args)
   )
+
+// define lazy method & bound calls
+
+fn MethodCall(method_name, ...args) {
+  this.method_name = method_name
+  this.args = args
+}
+
+fn method(method_name, ...args) = new MethodCall(method_name, ...args)
+
+impl Call for MethodCall = fn(object) =
+  object[this.method_name](...this.args)
+
+fn BindCall(f, ...args) {
+  this.f = f
+  this.args = args
+}
+
+fn bound(f, ...args) = new BindCall(f, ...args)
+
+impl Call for BindCall = fn(object) =
+  object::(this.f)(...this.args)
 
 // EQUAL PROTOCOl
 
@@ -100,11 +124,15 @@ impl Iter for ObjectLiteral = {
 impl Iter for Array = {
   fn each(f) = this.forEach(f)
   fn map(f) = this.map(f)
+  fn flat_map(f) = this::map(f).flat()
   fn filter(f) = this.filter(compose(f, truthy))
   fn some?(f) = this.some(compose(f, truthy))
   fn every?(f) = this.every(compose(f, truthy))
   fn reduce(f, start) = this.reduce(f, start)
   fn insert(value) = [...this, value]
+  fn take_last(n) = this.slice(-1 - n, -1)
+  fn take(n) = this.slice(0, n)
+  fn sort() = this.sort()
   fn sum() = this.reduce(+, 0)
 }
 
@@ -159,12 +187,16 @@ impl Iter for Set = {
 
 fn each(f) = this[[Iter]].each(f::call)
 fn map(...fns) = this[[Iter]].map(compose(...fns))
+fn flat_map(...fns) = this[[Iter]].flat_map(compose(...fns))
 fn filter(f) = this[[Iter]].filter(f::call)
 fn some?(...fns) = this[[Iter]].some?(compose(...fns))
 fn every?(...fns) = this[[Iter]].every?(compose(...fns))
 fn reduce(f, start) = this[[Iter]].reduce(f::call, start)
 fn insert(...args) = this[[Iter]].insert(...args)
 fn sum() = this[[Iter]].sum()
+fn sort() = this[[Iter]].sort()
+fn take_last(n) = this[[Iter]].take_last(n)
+fn take(n) = this[[Iter]].take(n)
 
 // OPERATORS
 
@@ -323,6 +355,7 @@ fn int?() = Number.isInteger(this)
 fn float?() = typeof(this) === "number" && !int?(this)
 fn even?() = (this % 2) === 0
 fn pos?() = this >= 0
+fn as_num() = Number(this)
 
-[int? even? pos? float?]::each(fn (f) = f[Call] = fn(num) = num::f())
+[int? even? pos? float? as_num]::each(fn (f) = f[Call] = fn(num) = num::f())
 
