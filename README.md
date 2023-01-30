@@ -152,7 +152,7 @@ We have a protocol called `Iter` to define a standard way to manipulate collecti
 Map and filter among others can take more than one "callable", letting you do stuff like this
 
 ```
-def tie?() =
+fn tie?() =
   ::map(:status {won: 10, lost: 10})
   ::reduce(+, 0) == 0
 
