@@ -1,6 +1,6 @@
 # Protej
 
-[try it out](https://mellifluous-cheesecake-459893.netlify.app/)
+[try it out](https://protej-lang.netlify.app/)
 
 Protej is a new OO language influenced by JavaScript, Ruby, Clojure and SmallTalk
 
@@ -8,7 +8,7 @@ Protej implements an OO system called Protocols built on JavaScript's prototypal
 
 ## Primer
 
-A note on syntax: protej has a unique lexer/parser that ignores tokens it doesn't understand as whitespace. Specifically commas are optional and sometimes are omitted.
+Note on syntax: commas are optional.
 
 ## Data Literals
 
@@ -124,6 +124,65 @@ let add3 = 3::make_adder()
 add3(3) // 6
 ```
 
+## Protocols
+
+A protocol is kind of like a dynamic interface that is not tied to the defintion of the data. Kind of like a dynamic version of traits in rust, or a safe version of monkey-patching.
+
+There's a subtle distinction between function protocols & object protocols we'll dive into, but from a user perspective these have no impact on how you use them.
+
+### Function based Protocol
+
+```
+// this defines the name of a protocol, which we can use
+// to implement on data structures
+protocol Get
+
+impl Get for Array = fn (idx) = this.at(idx)
+
+// public getter for consumers
+fn get(key) = this[Get](key)
+
+[1, 2, 3]::get(-1) // 3
+
+// lets extend this to object literals
+
+impl Get for ObjectLiteral = fn (key) = this[key]
+
+{key: "value"}::get(:key) // "value"
+```
+
+### Object based Protocol
+
+Get approach is fine if your protocol is a single function, but maybe you want to have multiple that work together.
+
+A protocol like this in the prelude is `Iter` we'll do a simplified implementation to see how it works
+
+```
+protocol Iter
+
+impl Iter for Array = {
+  fn map(f) = this.map(f)
+  fn filter(f) = this.filter(f)
+}
+
+// helpers
+fn entries() = Object.entries(this)
+fn from_entries() = Object.fromEntries(this)
+
+impl Iter for ObjectLiteral = {
+  fn map(f) = this::entries().map(fn ([k, v]) = f(k, v))::from_entries
+  fn filter(f) = this::entries().filter(fn ([k, v]) = f(k, v))::from_entries
+}
+
+// Protocol Accessor syntax
+fn map(f) = this[[Iter]].map(f)
+fn filter(f) = this[[Iter]].filter(f)
+```
+
+You'll notice `[[Iter]]` is a new syntax, this is how you access methods on protocol objects.
+
+This is required for protocol objects but not protocol functions because the methods of the object need to be bound to the data its operating on.
+
 ### Callable Protocol
 
 The callable protocol defines a method for "calling" something.
@@ -178,13 +237,7 @@ a && b
 // compiles to
 a::and(b)
 
-// here's a simplified definition of `and`
-
-fn and(other) = this[And](other)
-
-// Basically it's just looking up the `And` protocol on `this` and calling it.
-// Lets implement And for functions
-
+// so lets implement the `And` protocol for Function
 impl And for Function = fn(callable) =
   ::fn(...args) =
     this::call(...args)
@@ -193,64 +246,9 @@ impl And for Function = fn(callable) =
 // That's it!
 ```
 
-## Deep dive into protocols
+### Note on protocols
 
-```
-[{ status: "won" }, { status: "lost" }]
-  ::map(:status, {won: 10, lost: -10})
-  ::reduce(+, 0) == 0
-```
-
-I think this is pure magic, I love it.
-
-But unlike other forms of "magic" we often hear about, this magic is well defined & easy to extend.
-
-The core of what's happening is protocols.
-
-Protocols can be thought of as a safe form of monkey-patching, or highly dynamic interfaces.
-
-The protocols at play here are `Iter` and `Callable`
-
-Lets take a look at a minimal implementation of `Iter` for `Array`
-
-```
-protocol Iter
-
-impl Iter for Array = {
-  fn map(f) = this.map(f)
-}
-
-fn map(f) = this[[Iter]].map(f)
-
-[2, 3]::map(fn (x) = x ** 2) // [4, 9]
-```
-
-```
-["won"]::map({ won: 10 }) // hoping to get [10]
-```
-
-The reason is we haven't implemented the `Callable` protocol. So lets do it for object literals
-
-```
-protocol Callable
-
-impl Callable for ObjectLiteral = {
-  fn call(key) = this[key]
-}
-
-// accessor function
-fn call(...args) = this[[Callable]].call(...args)
-
-{ a: 10 }::call(:a) // 10
-```
-
-Now we can bring it together by modifying the definition of `map` to use `::call`
-
-```
-fn map(callable) = this[[Iter]].map(callable::call)
-```
-
-Now we have to `impl` Callable for all things we want to use as a map function, but that's quite straightforward, you can see the full implementation of `Iter` and `Callable` in ./src/std/prelude.prt
+There are still new design patterns to learn from the basic application of protocols. So far I've found function & object based protocols are good but due to its highly expressive nature it's not limited to just those two.
 
 ## Differences from JavaScript
 
