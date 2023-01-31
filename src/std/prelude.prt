@@ -362,14 +362,6 @@ impl Plus for Number = fn(other) {
   return js_plus(this, other)
 }
 
-impl Plus for Array = fn(other) = this::concat(other)
-
-impl Plus for ObjectLiteral = fn(other) = this::concat(other)
-
-impl Plus for Set = fn(other) = this::concat(other)
-
-impl Plus for Map = fn(other) = this::concat(other)
-
 impl Minus for Number = fn(other) {
   assert! typeof(other) === "number"
   return js_minus(this, other)
@@ -438,7 +430,13 @@ impl Comparable for String = {
   }
 }
 
-fn plus(other) = this[Plus](other)
+fn plus(other) {
+  if this[Plus] {
+    return this[Plus](other)
+  } else { if this[Collection] {
+    return this::concat(other)
+  } }
+}
 fn minus(other) = this[Minus](other)
 fn times(other) = this[Times](other)
 fn divide_by(other) = this[Divide](other)
