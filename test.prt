@@ -1,4 +1,5 @@
-~Map{
-  Collection => fn(other) = this::concat(other),
-  Plus => fn(other) = this[Plus](other)
-}
+
+[[1, ~Map{value: 10, "a" => 10}], [3, {value: 11}]]
+  ::map(-1 :value)
+  ::reduce(+ 0)
+  ::log()

@@ -3,6 +3,7 @@
 protocol ConstructRecord
 
 define ConstructRecord for Map = fn(entries) = new Map(entries)
+define ConstructRecord for ObjectLiteral = fn (entries) = new ObjectLiteral(Object.fromEntries(entries))
 
 fn construct_record(entries) = this[ConstructRecord](entries)
 
@@ -30,6 +31,8 @@ impl Call for String = fn(collection) {
     return collection::call(this)
   }
 }
+
+impl Call for Number = fn(collection) = collection::call(this)
 
 impl Call for Keyword = fn(collection) {
   if (collection is Keyword)
@@ -457,8 +460,8 @@ impl Comparable for String = {
 }
 
 fn plus(other) = ~Map{
-  Collection => fn(other) = this::concat(other),
-  Plus => fn(other) = this[Plus](other)
+  Plus => fn(other) = this[Plus](other),
+  Collection => fn(other) = this::concat(other)
 }
   ::find(::fn(proto, f) = this[proto])
   ::pipe(::fn(f) = this::f(other))
@@ -503,7 +506,7 @@ impl Printable for ObjectLiteral = fn printable() =
   this::map(fn (k, v) = [_resolve_keyword_str(k), v])
 
 impl Printable for Keyword = fn printable() =
-  ":" + _resolve_keyword_str(this)
+  ":" + _resolve_keyword_str(this.value)
 
 fn printable() {
   if this {  

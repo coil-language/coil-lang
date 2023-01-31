@@ -236,8 +236,16 @@
    (eval-expr lhs) "[" protocol-name "]."
    (resolve-name method-name) ".bind(" (eval-expr lhs) ")"))
 
-(defn- eval-record-entry [{:keys [key-expr value-expr]}]
+(defn- eval-regular-record-entry [{:keys [key-expr value-expr]}]
   (str "[" (eval-expr key-expr) ", " (eval-expr value-expr) "]"))
+
+(defn- eval-keyword-record-entry [{:keys [name expr]}]
+  (str "[" (eval-keyword {:value (str ":" name)}) ", " (eval-expr expr) "]"))
+
+(defn- eval-record-entry [node]
+  (case (node :type)
+    :regular-record-entry (eval-regular-record-entry node)
+    :keyword-record-entry (eval-keyword-record-entry node)))
 
 (defn- eval-record-syntax [{:keys [constructor-name entries]}]
   (str "construct_record.bind(" constructor-name ")"

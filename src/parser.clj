@@ -401,11 +401,23 @@
   (->> (p/from {:type :unapplied-or-or} tokens)
        (p/skip :or-or)))
 
-(defn- parse-record-entry [tokens]
-  (->> (p/from {:type :record-entry} tokens)
+(defn- parse-keyword-record-entry [tokens]
+  (->> (p/from {:type :keyword-record-entry} tokens)
+       (p/one :id :name)
+       (p/skip :colon)
+       (p/then parse-expr :expr)))
+
+(defn- parse-regular-record-entry [tokens]
+  (->> (p/from {:type :regular-record-entry} tokens)
        (p/then parse-expr :key-expr)
        (p/skip :arrow)
        (p/then parse-expr :value-expr)))
+
+(defn- parse-record-entry [tokens]
+  (->> (p/null tokens)
+       (p/one-case
+        {[:id :colon] parse-keyword-record-entry
+         'otherwise parse-regular-record-entry})))
 
 (defn- parse-record-syntax [tokens]
   (->> (p/from {:type :record-syntax} tokens)
