@@ -155,12 +155,12 @@ impl Get for ObjectLiteral = fn (key) = this[key]
 
 Get approach is fine if your protocol is a single function, but maybe you want to have multiple that work together.
 
-A protocol like this in the prelude is `Iter` we'll do a simplified implementation to see how it works
+A protocol like this in the prelude is `Collection` we'll do a simplified implementation to see how it works
 
 ```
-protocol Iter
+protocol Collection
 
-impl Iter for Array = {
+impl Collection for Array = {
   fn map(f) = this.map(f)
   fn filter(f) = this.filter(f)
 }
@@ -169,17 +169,17 @@ impl Iter for Array = {
 fn entries() = Object.entries(this)
 fn from_entries() = Object.fromEntries(this)
 
-impl Iter for ObjectLiteral = {
+impl Collection for ObjectLiteral = {
   fn map(f) = this::entries().map(fn ([k, v]) = f(k, v))::from_entries
   fn filter(f) = this::entries().filter(fn ([k, v]) = f(k, v))::from_entries
 }
 
 // Protocol Accessor syntax
-fn map(f) = this[[Iter]].map(f)
-fn filter(f) = this[[Iter]].filter(f)
+fn map(f) = this[[Collection]].map(f)
+fn filter(f) = this[[Collection]].filter(f)
 ```
 
-You'll notice `[[Iter]]` is a new syntax, this is how you access methods on protocol objects.
+You'll notice `[[protocol_name]]` is a new syntax, this is how you access methods on protocol objects.
 
 This is required for protocol objects but not protocol functions because the methods of the object need to be bound to the data its operating on.
 
@@ -196,9 +196,9 @@ The callable protocol defines a method for "calling" something.
 #{1 2 3}::call(2) // true
 ```
 
-### Iter Protocol
+### Collection Protocol
 
-We have a protocol called `Iter` to define a standard way to manipulate collections.
+We have a protocol called `Collection` to define a standard way to manipulate collections.
 
 ```
 [1 2 3]

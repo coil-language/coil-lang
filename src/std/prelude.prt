@@ -3,9 +3,13 @@
 protocol Call
 
 impl Call for Function = fn(...args) = this(...args)
+
 impl Call for Set = fn(key) = this.has(key)
+
 impl Call for Map = fn(key) = this.get(key)
+
 impl Call for ObjectLiteral = fn(key) = this[key]
+
 impl Call for Array = fn(index) = this.at(index)
 
 impl Call for String = fn(collection) {
@@ -29,12 +33,16 @@ impl Call for Keyword = fn(collection) {
 }
 
 fn call(...args) = this[Call](...args)
+
 fn pipe(callable) = callable::call(this)
+
 fn compose(f, ...fns) = fn(...args) = 
   fns::reduce(
     fn (result, f) = f::call(result),
     f::call(...args)
   )
+
+fn impl_call_for_bound(f) = f[Call] = fn(first, ...rest) = first::f(...rest)
 
 // define lazy method & bound calls
 
@@ -65,7 +73,9 @@ protocol Equal
 fn strict_eq?(other) = this === other
 
 impl Equal for Number = strict_eq?
+
 impl Equal for String = strict_eq?
+
 impl Equal for BigInt = strict_eq?
 
 impl Equal for Array = fn(other) {
@@ -104,24 +114,62 @@ impl Equal for ObjectLiteral = fn(other) {
 
 fn eq?(a, b) = a[Equal](b)
 
-// ITER PROTOCOL
-protocol Iter
+// CLONE PROTOCOL
+protocol Clone
+
+impl Clone for ObjectLiteral = {
+  fn clone() = {...this}
+  fn deep_clone() {
+    let output = {}
+    for let [k, v] of this::entries() {
+      output[k] = v::deep_clone()
+    }
+    return output
+  }
+}
+
+impl Clone for Array = {
+  fn clone() = this.slice()
+  fn deep_clone() = this::map(deep_clone)
+}
+
+impl Clone for Map = {
+  fn clone() = new Map(this)
+  fn deep_clone() = this::map(deep_clone)
+}
+
+impl Clone for Set = {
+  fn clone() = new Set(this)
+  fn deep_clone() = this::map(deep_clone)
+}
+
+fn clone() = this[[Clone]].clone()
+
+fn deep_clone() = this[[Clone]].deep_clone()
+
+[clone deep_clone].forEach(impl_call_for_bound)
+
+// COLLECTION PROTOCOL
+protocol Collection
 
 fn entries() = Object.entries(this)
+
 fn from_entries() = Object.fromEntries(this)
 
-impl Iter for ObjectLiteral = {
+fn values() = Object.values(this)
+
+impl Collection for ObjectLiteral = {
   fn each(f) = this::entries().forEach(fn ([k, v]) = f(k, v))
   fn map(f) = this::entries().map(fn ([k, v]) = f(k, v))::from_entries()
+  fn flat_map(f) = this::entries().map(fn ([k, v]) = f(k, v)::entries()).flat()::from_entries()
   fn filter(f) = this::entries().filter(fn ([k, v]) = !!f(k, v))::from_entries()
   fn some?(f) = this::entries().some(fn ([k, v]) = !!f(k, v))::from_entries()
   fn every?(f) = this::entries().every(fn ([k, v]) = !!f(k, v))::from_entries()
   fn reduce(f, start) = this::entries().reduce(f, start)
-  fn insert(key, value) = { ...this, [key]: value }
-  fn sum() = this::entries().map(fn ([_, v]) = v).reduce(+, 0)
+  fn push(key, value) = { ...this, [key]: value }
 }
 
-impl Iter for Array = {
+impl Collection for Array = {
   fn each(f) = this.forEach(f)
   fn map(f) = this.map(f)
   fn flat_map(f) = this::map(f).flat()
@@ -129,14 +177,67 @@ impl Iter for Array = {
   fn some?(f) = this.some(compose(f, truthy))
   fn every?(f) = this.every(compose(f, truthy))
   fn reduce(f, start) = this.reduce(f, start)
-  fn insert(value) = [...this, value]
-  fn take_last(n) = this.slice(-1 - n, -1)
-  fn take(n) = this.slice(0, n)
-  fn sort() = this.sort()
-  fn sum() = this.reduce(+, 0)
+  fn push(value) = [...this, value]
 }
 
-impl Iter for Set = {
+impl Collection for Map = {
+  fn each(f) {
+    for let [k, v] of this {
+      f(k, v)
+    }
+  }
+  fn map(f) {
+    let new_map = new Map([])
+    for let [k, v] of this {
+      new_map.set(k, f(v))
+    }
+    return new_map
+  }
+  fn flat_map(f) {
+    let new_map = new Map([])
+    for let [k, v] of this {
+      for let [_k, _v] of f(k, v) {
+        new_map.set(k, f(v))
+      }
+    }
+    return new_map
+  }
+  fn filter(f) {
+    let new_map = new Map([])
+    for let [k, v] of this {
+      if f(k, v) {
+        new_map.set(k, f(v))
+      }
+    }
+    return new_map
+  }
+  fn some?(f) {
+    for let [k, v] of this {
+      if f(k, v) {
+        return true
+      }
+    }
+    return false
+  }
+  fn every?(f) {
+    for let [k, v] of this {
+      if !f(k, v) {
+        return false
+      }
+    }
+    return true
+  }
+  fn reduce(f, start) {
+    let acc = start
+    for let [k, v] of this {
+      acc = f(acc, k, v)
+    }
+    return acc
+  }
+  fn push(k, v) = this::clone().set(key, value)
+}
+
+impl Collection for Set = {
   fn each(f) {
     for let elem of this {
       f(elem)
@@ -146,6 +247,15 @@ impl Iter for Set = {
     let out = new Set([])
     for let elem of this {
       out.add(f(elem))
+    }
+    return out
+  }
+  fn flat_map(f) {
+    let out = new Set([])
+    for let elem of this {
+      for let x of f(elem) {
+        out.add(x)
+      }
     }
     return out
   }
@@ -165,8 +275,7 @@ impl Iter for Set = {
     }
     return out
   }
-  fn insert(elem) = new Set(this).add(elem)
-  fn sum() = this::reduce(+, 0)
+  fn push(elem) = this::clone().add(elem)
   fn some?(f) {
     for let elem of this {
       if f(elem) {
@@ -185,18 +294,27 @@ impl Iter for Set = {
   }
 }
 
-fn each(f) = this[[Iter]].each(f::call)
-fn map(...fns) = this[[Iter]].map(compose(...fns))
-fn flat_map(...fns) = this[[Iter]].flat_map(compose(...fns))
-fn filter(f) = this[[Iter]].filter(f::call)
-fn some?(...fns) = this[[Iter]].some?(compose(...fns))
-fn every?(...fns) = this[[Iter]].every?(compose(...fns))
-fn reduce(f, start) = this[[Iter]].reduce(f::call, start)
-fn insert(...args) = this[[Iter]].insert(...args)
-fn sum() = this[[Iter]].sum()
-fn sort() = this[[Iter]].sort()
-fn take_last(n) = this[[Iter]].take_last(n)
-fn take(n) = this[[Iter]].take(n)
+fn each(f) = this[[Collection]].each(f::call)
+fn map(...fns) = this[[Collection]].map(compose(...fns))
+fn flat_map(...fns) = this[[Collection]].flat_map(compose(...fns))
+fn filter(f) = this[[Collection]].filter(f::call)
+fn some?(...fns) = this[[Collection]].some?(compose(...fns))
+fn every?(...fns) = this[[Collection]].every?(compose(...fns))
+fn reduce(f, start) = this[[Collection]].reduce(f::call, start)
+fn push(...args) = this[[Collection]].push(...args)
+
+protocol OrderableCollection
+
+impl OrderableCollection for Array = {
+  fn take_last(n) = this.slice(-1 - n, -1)
+  fn take(n) = this.slice(0, n)
+  fn sort() = this::clone().sort()
+  fn reversed() = this::clone().reverse()
+}
+
+fn sort() = this[[OrderableCollection]].sort()
+fn take_last(n) = this[[OrderableCollection]].take_last(n)
+fn take(n) = this[[OrderableCollection]].take(n)
 
 // OPERATORS
 
@@ -320,7 +438,7 @@ fn or(other) {
 }
 
 [plus minus times divide_by exponent mod greater_than greater_than_eq less_than less_than_eq and or]
-  ::each(fn (op) = op[Call] = fn call(a, b) = a::op(b))
+  ::each(impl_call_for_bound)
 
 // Printable
 
@@ -357,5 +475,5 @@ fn even?() = (this % 2) === 0
 fn pos?() = this >= 0
 fn as_num() = Number(this)
 
-[int? even? pos? float? as_num]::each(fn (f) = f[Call] = fn(num) = num::f())
+[int? even? pos? float? as_num]::each(impl_call_for_bound)
 
