@@ -353,15 +353,20 @@ fn concat(other) = this[[Collection]].concat(other)
 protocol OrderableCollection
 
 impl OrderableCollection for Array = {
+  fn first() = this[0]
+  fn last() = this.at(-1)
   fn take_last(n) = this.slice(-1 - n, -1)
   fn take(n) = this.slice(0, n)
   fn sort() = this::clone().sort()
-  fn reversed() = this::clone().reverse()
+  fn reverse() = this::clone().reverse()
 }
 
-fn sort() = this[[OrderableCollection]].sort()
+fn first() = this[[OrderableCollection]].first()
+fn last() = this[[OrderableCollection]].last()
 fn take_last(n) = this[[OrderableCollection]].take_last(n)
 fn take(n) = this[[OrderableCollection]].take(n)
+fn sort() = this[[OrderableCollection]].sort()
+fn reverse() = this[[OrderableCollection]].reverse()
 
 // OPERATORS
 
