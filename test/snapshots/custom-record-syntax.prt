@@ -1,0 +1,4 @@
+~Map{
+  Collection => fn(other) = this::concat(other),
+  Plus => fn(other) = this[Plus](other)
+}
