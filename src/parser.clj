@@ -401,10 +401,25 @@
   (->> (p/from {:type :unapplied-or-or} tokens)
        (p/skip :or-or)))
 
+(defn- parse-record-entry [tokens]
+  (->> (p/from {:type :record-entry} tokens)
+       (p/then parse-expr :key-expr)
+       (p/skip :arrow)
+       (p/then parse-expr :value-expr)))
+
+(defn- parse-record-syntax [tokens]
+  (->> (p/from {:type :record-syntax} tokens)
+       (p/skip :tilde)
+       (p/one :id :constructor-name)
+       (p/skip :open-b)
+       (p/parse-until :close-b parse-record-entry :entries)
+       (p/skip :close-b)))
+
 (defn- parse-single-expr [tokens]
   (->> (p/null tokens)
        (p/one-case
         {:string-lit parse-str,
+         :tilde parse-record-syntax,
          :keyword parse-keyword,
          :open-p parse-paren-expr,
          :yield parse-yield,

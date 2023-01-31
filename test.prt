@@ -1,1 +1,4 @@
-({ a: 10 } + { b: 20 })::log()
+~Map{
+  Collection => fn(other) = this::concat(other),
+  Plus => fn(other) = this[Plus](other)
+}

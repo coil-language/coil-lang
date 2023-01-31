@@ -4,6 +4,7 @@
 (def ^:private tokens
   [{:regex #"\/\/.*"                 :ignore true}
    {:regex #"^#"                     :keyword :hash}
+   {:regex #"^\~"                    :keyword :tilde}
    {:regex #"^if\b"                  :keyword :if}
    {:regex #"^is\b"                  :keyword :is}
    {:regex #"^not\b"                 :keyword :not}
@@ -21,6 +22,7 @@
    {:regex #"^assert\!"              :keyword :assert!}
    {:regex #"^await\b"               :keyword :await}
    {:regex #"^new\b"                 :keyword :new}
+   {:regex #"^\=\>"                  :keyword :arrow}
    {:regex #"^\&\&"                  :keyword :and-and}
    {:regex #"^\|\|"                  :keyword :or-or}
    {:regex #"^\=\=\="                :keyword :triple-eq}
@@ -53,7 +55,7 @@
    {:regex #"^\/"                    :keyword :div}
    {:regex #"^\["                    :keyword :open-sq}
    {:regex #"^\]"                    :keyword :close-sq}
-   {:regex #"(?s)\"([^\\\"]|\\.)*\"" :keyword :string-lit}
+   {:regex #"(?s)^\"([^\\\"]|\\.)*\"" :keyword :string-lit}
    {:regex #"^[a-zA-Z_\?\!\$]+"      :keyword :id}])
 
 (def tokenize (make-tokenizer tokens))

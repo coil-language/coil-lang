@@ -236,6 +236,15 @@
    (eval-expr lhs) "[" protocol-name "]."
    (resolve-name method-name) ".bind(" (eval-expr lhs) ")"))
 
+(defn- eval-record-entry [{:keys [key-expr value-expr]}]
+  (str "[" (eval-expr key-expr) ", " (eval-expr value-expr) "]"))
+
+(defn- eval-record-syntax [{:keys [constructor-name entries]}]
+  (str "construct_record.bind(" constructor-name ")"
+       "(["
+       (->> entries (map eval-record-entry) (string/join ","))
+       "])"))
+
 (defn- eval-expr [node]
   (case (:type node)
     :str (eval-str node)
@@ -267,6 +276,7 @@
     :await (eval-await node)
     :yield (eval-yield node)
     :jsx-tag (eval-jsx-tag node)
+    :record-syntax (eval-record-syntax node)
     :paren-expr (eval-paren-expr node)
     :unapplied-math-op (eval-unapplied-math-op node)
     :unapplied-and-and (eval-unapplied-and-and node)

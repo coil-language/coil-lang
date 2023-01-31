@@ -1,3 +1,12 @@
+// CONSTRUCT RECORD PROTOCOL
+
+protocol ConstructRecord
+
+define ConstructRecord for Map = fn(entries) = new Map(entries)
+
+fn construct_record(entries) = this[ConstructRecord](entries)
+
+
 // CALL PROTOCOL
 
 protocol Call
@@ -447,10 +456,10 @@ impl Comparable for String = {
   }
 }
 
-fn plus(other) = new Map([
-  [Collection fn(other) = this::concat(other)]
-  [Plus fn(other) = this[Plus](other)]
-])
+fn plus(other) = ~Map{
+  Collection => fn(other) = this::concat(other),
+  Plus => fn(other) = this[Plus](other)
+}
   ::find(::fn(proto, f) = this[proto])
   ::pipe(::fn(f) = this::f(other))
 
