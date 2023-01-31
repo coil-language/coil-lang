@@ -170,8 +170,8 @@ fn entries() = Object.entries(this)
 fn from_entries() = Object.fromEntries(this)
 
 impl Collection for ObjectLiteral = {
-  fn map(f) = this::entries().map(fn ([k, v]) = f(k, v))::from_entries
-  fn filter(f) = this::entries().filter(fn ([k, v]) = f(k, v))::from_entries
+  fn map(f) = this::entries().map(fn ([k, v]) = f(k, v))::from_entries()
+  fn filter(f) = this::entries().filter(fn ([k, v]) = f(k, v))::from_entries()
 }
 
 // Protocol Accessor syntax
