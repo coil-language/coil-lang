@@ -154,17 +154,18 @@ protocol Collection
 
 fn entries() = Object.entries(this)
 
-fn from_entries() = Object.fromEntries(this)
+fn from_entries() = new ObjectLiteral(Object.fromEntries(this))
 
 fn values() = Object.values(this)
 
 impl Collection for ObjectLiteral = {
   fn each(f) = this::entries().forEach(fn ([k, v]) = f(k, v))
+  fn find(f) = this::entries().find(fn ([k, v]) = f(k, v)::pipe(truthy))
   fn map(f) = this::entries().map(fn ([k, v]) = f(k, v))::from_entries()
   fn flat_map(f) = this::entries().map(fn ([k, v]) = f(k, v)::entries()).flat()::from_entries()
-  fn filter(f) = this::entries().filter(fn ([k, v]) = !!f(k, v))::from_entries()
-  fn some?(f) = this::entries().some(fn ([k, v]) = !!f(k, v))::from_entries()
-  fn every?(f) = this::entries().every(fn ([k, v]) = !!f(k, v))::from_entries()
+  fn filter(f) = this::entries().filter(fn ([k, v]) = f(k, v)::pipe(truthy))::from_entries()
+  fn some?(f) = this::entries().some(fn ([k, v]) = f(k, v)::pipe(truthy))::from_entries()
+  fn every?(f) = this::entries().every(fn ([k, v]) = f(k, v)::pipe(truthy))::from_entries()
   fn reduce(f, start) = this::entries().reduce(f, start)
   fn push(key, value) = {...this, [key]: value}
   fn concat(other) = {...this, ...other}
@@ -172,6 +173,7 @@ impl Collection for ObjectLiteral = {
 
 impl Collection for Array = {
   fn each(f) = this.forEach(f)
+  fn find(f) = this.find(compose(f, truthy))
   fn map(f) = this.map(f)
   fn flat_map(f) = this::map(f).flat()
   fn filter(f) = this.filter(compose(f, truthy))
@@ -194,6 +196,13 @@ impl Collection for Map = {
       new_map.set(k, f(v))
     }
     return new_map
+  }
+  fn find(f) {
+    for let [k, v] of this {
+      if f(k, v) {
+        return v
+      }
+    }
   }
   fn flat_map(f) {
     let new_map = new Map([])
@@ -259,6 +268,13 @@ impl Collection for Set = {
     }
     return out
   }
+  fn find(f) {
+    for let elem of this {
+      if f(elem) {
+        return elem
+      }
+    }
+  }
   fn flat_map(f) {
     let out = new Set([])
     for let elem of this {
@@ -314,6 +330,7 @@ impl Collection for Set = {
 fn each(f) = this[[Collection]].each(f::call)
 fn map(...fns) = this[[Collection]].map(compose(...fns))
 fn flat_map(...fns) = this[[Collection]].flat_map(compose(...fns))
+fn find(f) = this[[Collection]].find(f::call)
 fn filter(f) = this[[Collection]].filter(f::call)
 fn some?(...fns) = this[[Collection]].some?(compose(...fns))
 fn every?(...fns) = this[[Collection]].every?(compose(...fns))
@@ -430,13 +447,13 @@ impl Comparable for String = {
   }
 }
 
-fn plus(other) {
-  if this[Plus] {
-    return this[Plus](other)
-  } else { if this[Collection] {
-    return this::concat(other)
-  } }
-}
+fn plus(other) = new Map([
+  [Collection fn(other) = this::concat(other)]
+  [Plus fn(other) = this[Plus](other)]
+])
+  ::find(::fn(proto, f) = this[proto])
+  ::pipe(::fn(f) = this::f(other))
+
 fn minus(other) = this[Minus](other)
 fn times(other) = this[Times](other)
 fn divide_by(other) = this[Divide](other)
@@ -446,6 +463,7 @@ fn greater_than(other) = this[[Comparable]].greater_than(other)
 fn greater_than_eq(other) = this[[Comparable]].greater_than_eq(other)
 fn less_than(other) = this[[Comparable]].less_than(other)
 fn less_than_eq(other) = this[[Comparable]].less_than_eq(other)
+
 fn and(other) {
   if this {
     return this[And](other)

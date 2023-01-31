@@ -1,7 +1,1 @@
-["123 2 20"]
-  ::flat_map(
-    method(:split " "),
-    bound(map as_num)
-  )
-  ::reduce(+, 0)
-  ::log()
+({ a: 10 } + { b: 20 })::log()
