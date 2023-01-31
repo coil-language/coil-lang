@@ -166,7 +166,8 @@ impl Collection for ObjectLiteral = {
   fn some?(f) = this::entries().some(fn ([k, v]) = !!f(k, v))::from_entries()
   fn every?(f) = this::entries().every(fn ([k, v]) = !!f(k, v))::from_entries()
   fn reduce(f, start) = this::entries().reduce(f, start)
-  fn push(key, value) = { ...this, [key]: value }
+  fn push(key, value) = {...this, [key]: value}
+  fn concat(other) = {...this, ...other}
 }
 
 impl Collection for Array = {
@@ -178,6 +179,7 @@ impl Collection for Array = {
   fn every?(f) = this.every(compose(f, truthy))
   fn reduce(f, start) = this.reduce(f, start)
   fn push(value) = [...this, value]
+  fn concat(other) = [...this, ...other]
 }
 
 impl Collection for Map = {
@@ -235,6 +237,13 @@ impl Collection for Map = {
     return acc
   }
   fn push(k, v) = this::clone().set(key, value)
+  fn concat(other) {
+    let new_map = this::clone()
+    for let [k, v] of other {
+      new_map.set(k, v)
+    }
+    return new_map
+  }
 }
 
 impl Collection for Set = {
@@ -275,7 +284,7 @@ impl Collection for Set = {
     }
     return out
   }
-  fn push(elem) = this::clone().add(elem)
+
   fn some?(f) {
     for let elem of this {
       if f(elem) {
@@ -292,6 +301,14 @@ impl Collection for Set = {
     }
     return true
   }
+  fn push(elem) = this::clone().add(elem)
+  fn concat(other) {
+    let new_set = this::clone()
+    for let item of other {
+      new_set.add(item)
+    }
+    return new_set
+  }
 }
 
 fn each(f) = this[[Collection]].each(f::call)
@@ -302,6 +319,7 @@ fn some?(...fns) = this[[Collection]].some?(compose(...fns))
 fn every?(...fns) = this[[Collection]].every?(compose(...fns))
 fn reduce(f, start) = this[[Collection]].reduce(f::call, start)
 fn push(...args) = this[[Collection]].push(...args)
+fn concat(other) = this[[Collection]].concat(other)
 
 protocol OrderableCollection
 
@@ -343,6 +361,14 @@ impl Plus for Number = fn(other) {
   assert! typeof(other) === "number"
   return js_plus(this, other)
 }
+
+impl Plus for Array = fn(other) = this::concat(other)
+
+impl Plus for ObjectLiteral = fn(other) = this::concat(other)
+
+impl Plus for Set = fn(other) = this::concat(other)
+
+impl Plus for Map = fn(other) = this::concat(other)
 
 impl Minus for Number = fn(other) {
   assert! typeof(other) === "number"
