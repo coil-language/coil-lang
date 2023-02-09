@@ -1,7 +1,3 @@
-function Nil() {}
-
-let nil = new Nil();
-
 function ObjectLiteral(obj) {
   Object.assign(this, obj);
 }
@@ -11,22 +7,27 @@ function negate(val) {
 }
 
 function truthy(val) {
-  return val !== nil && val !== null && val !== undefined && val !== false;
+  return val !== null && val !== undefined && val !== false;
 }
 
 function js_and(a, b) {
-  if (!truthy(b)) {
+  if (!truthy(a)) {
     return a;
   } else {
-    return b;
+    return b();
   }
+}
+
+function js_object_delete(object, key) {
+  delete object[key];
 }
 
 function js_or(a, b) {
   if (truthy(a)) {
     return a;
+  } else {
+    return b();
   }
-  return b;
 }
 
 function js_plus(a, b) {
@@ -83,10 +84,14 @@ function Keyword(value) {
   this.value = value;
 }
 
-Keyword.cache = {};
+Keyword.cache = new Map();
 
 Keyword.for = function (name) {
-  return (Keyword.cache[name] ||= new Keyword(name));
+  if (Keyword.cache.get(name)) {
+    return Keyword.cache.get(name);
+  } else {
+    return new Keyword(name);
+  }
 };
 
 Keyword.prototype.valueOf = function () {
