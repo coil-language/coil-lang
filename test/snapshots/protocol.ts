@@ -4,4 +4,4 @@ Object.prototype[get] = function (key) {
 ;
 return this[key]
 };
-console.log(new ObjectLiteral({a: 10})[get]("a"))
+console.log(new ObjectLiteral({a: (10)})[get]("a"))

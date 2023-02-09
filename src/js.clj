@@ -144,7 +144,7 @@
   (-> node :name resolve-name))
 
 (defn- eval-num [node]
-  (node :value))
+  (str \( (node :value) \)))
 
 (defn- eval-double-equals [{:keys [lhs rhs]}]
   (str (resolve-name "eq?") "(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
@@ -174,10 +174,10 @@
   (str (eval-expr lhs) " instanceof " (eval-expr rhs)))
 
 (defn- eval-and-and [{:keys [lhs rhs]}]
-  (str "and.call(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
+  (str "and.call(" (eval-expr lhs) ", () => " (eval-expr rhs) ")"))
 
 (defn- eval-or-or [{:keys [lhs rhs]}]
-  (str "or(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
+  (str "or.call(" (eval-expr lhs) ", () => " (eval-expr rhs) ")"))
 
 (defn- eval-snd-assign [{:keys [lhs rhs]}]
   (str (eval-expr lhs) " = " (eval-expr rhs)))
@@ -231,11 +231,6 @@
 (defn- eval-keyword [{value :value}]
   (str "Keyword.for(" \" (subs (resolve-name value) 1) \" ")"))
 
-(defn- eval-protocol-access [{:keys [lhs protocol-name method-name]}]
-  (str
-   (eval-expr lhs) "[" protocol-name "]."
-   (resolve-name method-name) ".bind(" (eval-expr lhs) ")"))
-
 (defn- eval-regular-record-entry [{:keys [key-expr value-expr]}]
   (str "[" (eval-expr key-expr) ", " (eval-expr value-expr) "]"))
 
@@ -253,6 +248,24 @@
        (->> entries (map eval-record-entry) (string/join ","))
        "])"))
 
+(defn- eval-inclusive-range [{:keys [lhs rhs]}]
+  (str "new Range(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
+
+(defn- eval-exclusive-range [{:keys [lhs rhs]}]
+  (str "new Range(" (eval-expr lhs) ", " (eval-expr rhs) ", true)"))
+
+(defn- eval-bound-call [{:keys [lhs args]}]
+  (str (eval-expr lhs)
+       ".call(this, "
+       (->> args (map eval-expr) (string/join ", "))
+       ")"))
+
+(defn- eval-shorthand-anon-fn [{expr :expr}]
+  (str "(...__args) => " (eval-expr expr)))
+
+(defn- eval-anon-arg-id [{arg-num :arg-num}]
+  (str "__args[" (dec arg-num) "]"))
+
 (defn- eval-expr [node]
   (case (:type node)
     :str (eval-str node)
@@ -268,6 +281,8 @@
     :not (eval-not node)
     :fn (eval-fn node)
     :bind (eval-bind node)
+    :bound-call (eval-bound-call node)
+    :anon-arg-id (eval-anon-arg-id node)
     :set (eval-set node)
     :obj-lit (eval-obj-lit node)
     :bind-this (eval-bind-this node)
@@ -289,7 +304,9 @@
     :unapplied-math-op (eval-unapplied-math-op node)
     :unapplied-and-and (eval-unapplied-and-and node)
     :unapplied-or-or (eval-unapplied-or-or node)
-    :protocol-access (eval-protocol-access node)))
+    :shorthand-anon-fn (eval-shorthand-anon-fn node)
+    :inclusive-range (eval-inclusive-range node)
+    :exclusive-range (eval-exclusive-range node)))
 
 (defn- eval-return [{:keys [expr]}]
   (str "return " (eval-expr expr)))

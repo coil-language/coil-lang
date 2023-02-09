@@ -37,7 +37,8 @@
    {:regex #"^\("                    :keyword :open-p}
    {:regex #"^\)"                    :keyword :close-p}
    {:regex #"^[\-\+]?(\d*\.)?\d+"    :keyword :num}
-   {:regex #"^\.\.\."                :keyword :spread}
+   {:regex #"^\.\.\."                :keyword :dot-dot-dot}
+   {:regex #"^\.\."                  :keyword :dot-dot}
    {:regex #"^\."                    :keyword :dot}
    {:regex #"^\>\="                  :keyword :gt-eq}
    {:regex #"^\<\="                  :keyword :lt-eq}
@@ -49,13 +50,14 @@
    {:regex #"^\-"                    :keyword :minus}
    {:regex #"^\*\*"                  :keyword :pow}
    {:regex #"^\*"                    :keyword :times}
+   {:regex #"^\&"                    :keyword :single-and}
    {:regex #"^\:\:"                  :keyword :double-colon}
-   {:regex #"^\:[a-zA-Z_\?\!\$]+"    :keyword :keyword}
+   {:regex #"^\:[a-zA-Z_\?\!\$0-9]+" :keyword :keyword}
    {:regex #"^\:"                    :keyword :colon}
    {:regex #"^\/"                    :keyword :div}
    {:regex #"^\["                    :keyword :open-sq}
    {:regex #"^\]"                    :keyword :close-sq}
    {:regex #"(?s)^\"([^\\\"]|\\.)*\"" :keyword :string-lit}
-   {:regex #"^[a-zA-Z_\?\!\$]+"      :keyword :id}])
+   {:regex #"^[a-zA-Z_\?\!\$0-9]+"    :keyword :id}])
 
 (def tokenize (make-tokenizer tokens))

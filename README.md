@@ -2,7 +2,7 @@
 
 [try it out](https://protej-lang.netlify.app/)
 
-Protej is a new OO language influenced by JavaScript, Ruby, Clojure and SmallTalk
+Protej is a new OO and functional language influenced by Clojure, Ruby and JavaScript.
 
 Protej implements an OO system called Protocols built on JavaScript's prototypal object system.
 
@@ -174,12 +174,11 @@ impl Collection for ObjectLiteral = {
   fn filter(f) = this::entries().filter(fn ([k, v]) = f(k, v))::from_entries()
 }
 
-// Protocol Accessor syntax
-fn map(f) = this[[Collection]].map(f)
-fn filter(f) = this[[Collection]].filter(f)
+fn map(f) = this[Collection].map.call(this, f)
+fn filter(f) = this[Collection].filter.call(this, f)
 ```
 
-You'll notice `[[protocol_name]]` is a new syntax, this is how you access methods on protocol objects.
+You'll notice the .call, this is javascript's Function.prototype.call which lets us call a function with a custom `this` value.
 
 This is required for protocol objects but not protocol functions because the methods of the object need to be bound to the data its operating on.
 
@@ -215,35 +214,6 @@ fn tie?() =
 
 [{ status: "won" }, { status: "lost" }]
   ::tie?() // true
-```
-
-### Operator Overloading
-
-```
-fn valid_scores?() =
-  ::map(:score)
-  // we are &&'ing 2 functions as a way to compose them and apply && to the result
-  ::every?(pos? && even?)
-
-[{score: 10}, {score: 8}]
-  ::valid_scores?()
-  ::log() // true
-```
-
-Here's how we extended the && operator.
-
-```
-a && b
-// compiles to
-a::and(b)
-
-// so lets implement the `And` protocol for Function
-impl And for Function = fn(callable) =
-  ::fn(...args) =
-    this::call(...args)
-    && callable::call(...args)
-
-// That's it!
 ```
 
 ### Note on protocols

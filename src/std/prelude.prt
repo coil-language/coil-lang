@@ -1,12 +1,26 @@
+// Range
+
+// this needs more thought
+fn Range(start, end, exclusive?) {
+  assert! Number.isInteger(start)
+  assert! Number.isInteger(end)
+  this.start = start
+  this.end = end
+  this.exclusive? = truthy(exclusive?)
+}
+
 // CONSTRUCT RECORD PROTOCOL
 
-protocol ConstructRecord
+protocol Record
 
-define ConstructRecord for Map = fn(entries) = new Map(entries)
-define ConstructRecord for ObjectLiteral = fn (entries) = new ObjectLiteral(Object.fromEntries(entries))
+define Record for Map = {
+  fn construct(entries) = new Map(entries)
+}
+define Record for ObjectLiteral = {
+  fn construct(entries) = new ObjectLiteral(Object.fromEntries(entries))
+}
 
-fn construct_record(entries) = this[ConstructRecord](entries)
-
+fn construct_record(entries) = this[Record].construct.call(this, entries)
 
 // CALL PROTOCOL
 
@@ -32,7 +46,13 @@ impl Call for String = fn(collection) {
   }
 }
 
-impl Call for Number = fn(collection) = collection::call(this)
+impl Call for Number = fn(collection) {
+  if collection is Keyword {
+    return this[collection]
+  } else {
+    return collection::call(this)
+  }
+}
 
 impl Call for Keyword = fn(collection) {
   if (collection is Keyword)
@@ -55,28 +75,6 @@ fn compose(f, ...fns) = fn(...args) =
   )
 
 fn impl_call_for_bound(f) = f[Call] = fn(first, ...rest) = first::f(...rest)
-
-// define lazy method & bound calls
-
-fn MethodCall(method_name, ...args) {
-  this.method_name = method_name
-  this.args = args
-}
-
-fn method(method_name, ...args) = new MethodCall(method_name, ...args)
-
-impl Call for MethodCall = fn(object) =
-  object[this.method_name](...this.args)
-
-fn BindCall(f, ...args) {
-  this.f = f
-  this.args = args
-}
-
-fn bound(f, ...args) = new BindCall(f, ...args)
-
-impl Call for BindCall = fn(object) =
-  object::(this.f)(...this.args)
 
 // EQUAL PROTOCOl
 
@@ -129,6 +127,11 @@ fn eq?(a, b) = a[Equal](b)
 // CLONE PROTOCOL
 protocol Clone
 
+impl Clone for Range = {
+  fn clone() = new Range(this.start, this.end, this.exclusive?)
+  fn deep_clone() = new Range(this.start::clone(), this.end::clone(), this.exclusive?)
+}
+
 impl Clone for ObjectLiteral = {
   fn clone() = {...this}
   fn deep_clone() {
@@ -155,11 +158,25 @@ impl Clone for Set = {
   fn deep_clone() = this::map(deep_clone)
 }
 
-fn clone() = this[[Clone]].clone()
+fn clone() = this[Clone].clone.call(this)
 
-fn deep_clone() = this[[Clone]].deep_clone()
+fn deep_clone() = this[Clone].deep_clone.call(this)
 
 [clone deep_clone].forEach(impl_call_for_bound)
+
+// IDENTITY PROTOCOL
+// this defines the monoid identity for a given type (group)
+protocol Identity
+
+impl Identity for Number = 0
+impl Identity for String = ""
+impl Identity for Array = []
+impl Identity for ObjectLiteral = {}
+impl Identity for Map = ~Map{}
+impl Identity for Set = #{}
+
+fn identity() = this[Identity]
+
 
 // COLLECTION PROTOCOL
 protocol Collection
@@ -171,6 +188,7 @@ fn from_entries() = new ObjectLiteral(Object.fromEntries(this))
 fn values() = Object.values(this)
 
 impl Collection for ObjectLiteral = {
+  fn sample() = this::values()[0]
   fn each(f) = this::entries().forEach(fn ([k, v]) = f(k, v))
   fn find(f) = this::entries().find(fn ([k, v]) = f(k, v)::pipe(truthy))
   fn map(f) = this::entries().map(fn ([k, v]) = f(k, v))::from_entries()
@@ -184,6 +202,7 @@ impl Collection for ObjectLiteral = {
 }
 
 impl Collection for Array = {
+  fn sample() = this[0]
   fn each(f) = this.forEach(f)
   fn find(f) = this.find(compose(f, truthy))
   fn map(f) = this.map(f)
@@ -197,6 +216,7 @@ impl Collection for Array = {
 }
 
 impl Collection for Map = {
+  fn sample() = this.values().next().value
   fn each(f) {
     for let [k, v] of this {
       f(k, v)
@@ -268,6 +288,7 @@ impl Collection for Map = {
 }
 
 impl Collection for Set = {
+  fn sample() = this.values().next().value
   fn each(f) {
     for let elem of this {
       f(elem)
@@ -339,34 +360,49 @@ impl Collection for Set = {
   }
 }
 
-fn each(f) = this[[Collection]].each(f::call)
-fn map(...fns) = this[[Collection]].map(compose(...fns))
-fn flat_map(...fns) = this[[Collection]].flat_map(compose(...fns))
-fn find(f) = this[[Collection]].find(f::call)
-fn filter(f) = this[[Collection]].filter(f::call)
-fn some?(...fns) = this[[Collection]].some?(compose(...fns))
-fn every?(...fns) = this[[Collection]].every?(compose(...fns))
-fn reduce(f, start) = this[[Collection]].reduce(f::call, start)
-fn push(...args) = this[[Collection]].push(...args)
-fn concat(other) = this[[Collection]].concat(other)
+fn sample() = this[Collection].sample.call(this)
+fn each(f) = this[Collection].each.call(this, f::call)
+fn map(...fns) = this[Collection].map.call(this, compose(...fns))
+fn flat_map(...fns) = this[Collection].flat_map.call(this, compose(...fns))
+fn find(f) = this[Collection].find.call(this, f::call)
+fn filter(f) = this[Collection].filter.call(this, f::call)
+fn some?(...fns) = this[Collection].some?.call(this, compose(...fns))
+fn every?(...fns) = this[Collection].every?.call(this, compose(...fns))
+fn reduce(f, start) {
+  if !start {
+    start = this::sample()::identity()
+  }
+  return this[Collection].reduce.call(this, f::call, start)
+}
+fn push(...args) = this[Collection].push.call(this, ...args)
+fn concat(other) = this[Collection].concat.call(this, other)
 
-protocol OrderableCollection
+protocol OrderedCollection
 
-impl OrderableCollection for Array = {
+impl OrderedCollection for Array = {
   fn first() = this[0]
   fn last() = this.at(-1)
   fn take_last(n) = this.slice(-1 - n, -1)
   fn take(n) = this.slice(0, n)
-  fn sort() = this::clone().sort()
+  fn sort(f) = this::clone().sort(f)
   fn reverse() = this::clone().reverse()
 }
 
-fn first() = this[[OrderableCollection]].first()
-fn last() = this[[OrderableCollection]].last()
-fn take_last(n) = this[[OrderableCollection]].take_last(n)
-fn take(n) = this[[OrderableCollection]].take(n)
-fn sort() = this[[OrderableCollection]].sort()
-fn reverse() = this[[OrderableCollection]].reverse()
+impl OrderedCollection for Map = {
+  fn first() = this.entries().next().value
+  fn last() = Array.from(this).at(-1)
+  fn take_last() = new Map(Array.from(this).slice(-1 - n, -1))
+  fn take() = new Map(Array.from(this).slice(0, n))
+  fn sort() = new Map(Array.from(this).sort(fn ([_k1, v1], [_k2, v2]) = v2 - v1))
+  fn reverse() = new Map(Array.from(this).reverse())
+}
+
+fn first() = this[OrderedCollection].first.call(this)
+fn last() = this[OrderedCollection].last.call(this)
+fn take_last(n) = this[OrderedCollection].take_last.call(this, n)
+fn take(n) = this[OrderedCollection].take.call(this, n)
+fn sort() = this[OrderedCollection].sort.call(this)
+fn reverse() = this[OrderedCollection].reverse.call(this)
 
 // OPERATORS
 
@@ -381,15 +417,18 @@ protocol LessThan
 protocol And
 protocol Or
 
-impl And for Object = fn(other) = js_and(this, other)
+impl And for Object = fn(thunk) = js_and(this, thunk)
 
-impl And for Function = fn(callable) =
-  ::fn(...args) = this::call(...args) && callable::call(...args)
+//impl And for Function = fn(thunk) =
+//  ::fn(...args) = this(...args) && thunk()::call(...args)
+//
+//impl Or for Function = fn(thunk) =
+//  ::fn(...args) = this(...args) || thunk()::call(...args)
+//
+//impl And for Set = fn(thunk) =
+//  ::fn(item) = this::call(item) && thunk()::call(item)
 
-impl And for Set = fn(callable) =
-  ::fn(item) = this::call(item) && callable::call(item)
-
-impl Or for Object = fn(other) = js_or(this, other)
+impl Or for Object = fn(thunk) = js_or(this, thunk)
 
 impl Plus for Number = fn(other) {
   assert! typeof(other) === "number"
@@ -445,11 +484,7 @@ impl Plus for String = fn(other) {
 
 impl Times for String = fn(amount) {
   assert! typeof(amount) === "number"
-  let s = ""
-  for let _ of Array.from({length: amount}) {
-    s = s + this
-  }
-  return s
+  return this.repeat(amount)
 }
 
 impl Comparable for String = {
@@ -476,10 +511,10 @@ fn times(other) = this[Times](other)
 fn divide_by(other) = this[Divide](other)
 fn exponent(other) = this[Exponent](other)
 fn mod(other) = this[Mod](other)
-fn greater_than(other) = this[[Comparable]].greater_than(other)
-fn greater_than_eq(other) = this[[Comparable]].greater_than_eq(other)
-fn less_than(other) = this[[Comparable]].less_than(other)
-fn less_than_eq(other) = this[[Comparable]].less_than_eq(other)
+fn greater_than(other) = this[Comparable].greater_than.call(this, other)
+fn greater_than_eq(other) = this[Comparable].greater_than_eq.call(this, other)
+fn less_than(other) = this[Comparable].less_than.call(this, other)
+fn less_than_eq(other) = this[Comparable].less_than_eq.call(this, other)
 
 fn and(other) {
   if this {
@@ -488,11 +523,13 @@ fn and(other) {
     return this
   }
 }
-fn or(other) {
-  if this {
-    return this[Or](other)
-  } else {
-    return other
+fn or(thunk) {
+  // TODO: this can't be inlined for some reason
+  fn null?() = this === null
+  if js_or(this === undefined, this::null?) {
+    return thunk()
+  } else { 
+    return this[Or](thunk)
   }
 }
 
@@ -503,19 +540,41 @@ fn or(other) {
 
 protocol Printable
 
-impl Printable for Object = fn printable() = this
-
 fn _resolve_keyword_str(kw) = kw.replaceAll("__q", "?").replaceAll("__b", "!")
 
-impl Printable for ObjectLiteral = fn printable() =
-  this::map(fn (k, v) = [_resolve_keyword_str(k), v])
+impl Printable for ObjectLiteral = fn() =
+  this::map(fn (k, v) = [_resolve_keyword_str(k), v]) 
 
-impl Printable for Keyword = fn printable() =
+fn print_for_generic_clone_object() {
+  let out = this::clone()
+  for let [key, value] of this::entries() {
+    let new_key = _resolve_keyword_str(key)
+    out[new_key] = value
+    if new_key != key {
+      js_object_delete(out, key)
+    }
+  }
+  return out
+}
+
+impl Printable for Keyword = fn() =
   ":" + _resolve_keyword_str(this.value)
 
+impl Printable for Boolean = fn() = this
+
+fn when_exists(f) = this && f::call(this)
+
+fn otherwise(val) = this || val
+
 fn printable() {
-  if this {  
-    return this[Printable]()
+  if this {
+    return ~Map{
+      Printable => fn() = this[Printable]()
+      Clone => print_for_generic_clone_object
+    }
+      ::find(::fn(proto) = this[proto])
+      ::when_exists(::fn(printf) = ::printf())
+      ::otherwise(this)
   } else {
     return this
   }
@@ -532,7 +591,10 @@ fn int?() = Number.isInteger(this)
 fn float?() = typeof(this) === "number" && !int?(this)
 fn even?() = (this % 2) === 0
 fn pos?() = this >= 0
-fn as_num() = Number(this)
+fn to_f() = Number(this)
+fn to_i() = Math.floor(Number(this))
+fn to_s() = this.toString()
+fn to_b() = truthy(this)
 
-[int? even? pos? float? as_num]::each(impl_call_for_bound)
+[int? even? pos? float? to_f to_i to_s to_b]::each(impl_call_for_bound)
 

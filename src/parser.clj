@@ -46,7 +46,7 @@
    (first tokens)
    #(->> (p/from {:type :fn-call, :lhs lhs} tokens)
          (p/skip :open-p)
-         (p/parse-until :close-p parse-expr :args)
+         (p/until :close-p parse-expr :args)
          (p/skip :close-p))))
 
 (def math-ops #{:mod :plus :minus :lt :gt :lt-eq :gt-eq :times :pow :div})
@@ -66,13 +66,20 @@
        (p/then parse-expr :expr)
        (p/skip :close-p)))
 
-(defn- parse-double-colon [lhs tokens]
+(defn- parse-infix-bind [lhs tokens]
   (->> (p/from {:type :bind, :lhs lhs} tokens)
        (p/skip :double-colon)
        (p/one-case
         {:id parse-id,
+         math-ops parse-unapplied-math-op,
          :open-p parse-paren-expr}
         :expr)))
+
+(defn- parse-double-colon [lhs tokens]
+  (->> (p/null tokens)
+       (p/one-case
+        {;;[:double-colon :open-p] #(parse-infix-bound-call lhs %)
+         'otherwise #(parse-infix-bind lhs %)})))
 
 (defn- parse-double-eq [lhs tokens]
   (->> (p/from {:type :double-equals, :lhs lhs} tokens)
@@ -84,31 +91,13 @@
        (p/skip :not-eq)
        (p/then parse-expr :rhs)))
 
-(defn- parse-dynamic-access [lhs tokens]
-  (->> (p/from {:type :dynamic-access, :lhs lhs} tokens)
-       (p/skip :open-sq)
-       (p/then parse-expr :expr)
-       (p/skip :close-sq)))
-
-(defn- parse-protocol-access [lhs tokens]
-  (->> (p/from {:type :protocol-access, :lhs lhs} tokens)
-       (p/skip :open-sq)
-       (p/skip :open-sq)
-       (p/one :id :protocol-name)
-       (p/skip :close-sq)
-       (p/skip :close-sq)
-       (p/skip :dot)
-       (p/one :id :method-name)))
-
-(defn- parse-open-sq-modifier [lhs tokens]
+(defn- parse-object-dynamic-access [lhs tokens]
   (when-on-same-line-as-previous-token
    (first tokens)
-   (fn []
-     (->> (p/null tokens)
-          (p/one-case
-           (array-map
-            [:open-sq :open-sq] #(parse-protocol-access lhs %)
-            :open-sq #(parse-dynamic-access lhs %)))))))
+   #(->> (p/from {:type :dynamic-access, :lhs lhs} tokens)
+         (p/skip :open-sq)
+         (p/then parse-expr :expr)
+         (p/skip :close-sq))))
 
 (defn- parse-triple-eq [lhs tokens]
   (->> (p/from {:type :triple-equals, :lhs lhs} tokens)
@@ -152,18 +141,34 @@
        (p/skip :eq)
        (p/then parse-expr :rhs)))
 
+(defn- parse-inclusive-range [lhs tokens]
+  (when-on-same-line-as-previous-token
+   (first tokens)
+   #(->> (p/from {:type :inclusive-range, :lhs lhs} tokens)
+         (p/skip :dot-dot)
+         (p/then parse-expr :rhs))))
+
+(defn- parse-exclusive-range [lhs tokens]
+  (when-on-same-line-as-previous-token
+   (first tokens)
+   #(->> (p/from {:type :exclusive-range, :lhs lhs} tokens)
+         (p/skip :dot-dot-dot)
+         (p/then parse-expr :rhs))))
+
 (defn- parse-snd-expr [[lhs tokens]]
   (loop [lhs lhs, tokens tokens]
     (if-let [[expr tokens]
              (case (p/peek-next tokens)
                :dot (parse-dot lhs tokens)
+               :dot-dot (parse-inclusive-range lhs tokens)
+               :dot-dot-dot (parse-exclusive-range lhs tokens)
                :open-p (parse-fn-call lhs tokens)
                :double-colon (parse-double-colon lhs tokens)
                :double-eq (parse-double-eq lhs tokens)
                :triple-eq (parse-triple-eq lhs tokens)
                :triple-not-eq (parse-triple-not-eq lhs tokens)
                :not-eq (parse-not-eq lhs tokens)
-               :open-sq (parse-open-sq-modifier lhs tokens)
+               :open-sq (parse-object-dynamic-access lhs tokens)
                :and-and (parse-and-and lhs tokens)
                :or-or (parse-or-or lhs tokens)
                :is (parse-is-or-is-not lhs tokens)
@@ -175,7 +180,7 @@
 (defn- parse-array [tokens]
   (->> (p/from {:type :array} tokens)
        (p/skip :open-sq)
-       (p/parse-until :close-sq parse-expr :elements)
+       (p/until :close-sq parse-expr :elements)
        (p/skip :close-sq)))
 
 (defn- parse-assign-id [tokens]
@@ -190,12 +195,12 @@
 (defn- parse-assign-array [tokens]
   (->> (p/from {:type :array-deconstruction} tokens)
        (p/skip :open-sq)
-       (p/parse-until :close-sq parse-simple-name :names)
+       (p/until :close-sq parse-simple-name :names)
        (p/skip :close-sq)))
 
 (defn- parse-spread-assign [tokens]
   (->> (p/from {:type :spread-assign} tokens)
-       (p/skip :spread)
+       (p/skip :dot-dot-dot)
        (p/one :id :name)))
 
 (defn- parse-assign-expr [tokens]
@@ -203,7 +208,7 @@
        (p/one-case
         {:id parse-assign-id,
          :open-sq parse-assign-array,
-         :spread parse-spread-assign})))
+         :dot-dot-dot parse-spread-assign})))
 
 (defn- parse-fn-name [tokens]
   (->> (p/null tokens)
@@ -211,9 +216,9 @@
        (p/fmap :name)))
 
 (defn- parse-args-def [tokens]
-  (->> (p/from {:type :args} tokens)
+  (->> (p/null tokens)
        (p/skip :open-p)
-       (p/parse-until :close-p parse-assign-expr)
+       (p/until :close-p parse-assign-expr)
        (p/skip :close-p)))
 
 (defn- parse-fn-expr-body [tokens]
@@ -225,7 +230,7 @@
 (defn- parse-fn-body [tokens]
   (->> (p/null tokens)
        (p/skip :open-b)
-       (p/parse-until :close-b parse-statement)
+       (p/until :close-b parse-statement)
        (p/skip :close-b)))
 
 (defn- parse-gen-modifier [tokens]
@@ -242,7 +247,7 @@
        (p/skip :fn)
        (p/one-case {:times parse-gen-modifier} :generator? false)
        (p/one-case {:id parse-fn-name} :name nil)
-       (p/then parse-args-def :args)
+       (p/one-case {:open-p parse-args-def} :args)
        (p/one-case
         {:eq parse-fn-expr-body,
          :open-b parse-fn-body} :body)))
@@ -251,7 +256,7 @@
   (->> (p/from {:type :set} tokens)
        (p/skip :hash)
        (p/skip :open-b)
-       (p/parse-until :close-b parse-expr :elements)
+       (p/until :close-b parse-expr :elements)
        (p/skip :close-b)))
 
 (defn- parse-reg-obj-entry [tokens]
@@ -274,7 +279,7 @@
 
 (defn- parse-spread-obj-entry [tokens]
   (->> (p/from {:type :spread-obj-entry} tokens)
-       (p/skip :spread)
+       (p/skip :dot-dot-dot)
        (p/then parse-expr :expr)))
 
 (defn- parse-obj-entry [tokens]
@@ -282,7 +287,7 @@
        (p/one-case
         (array-map
          :open-sq parse-dynamic-obj-entry,
-         :spread parse-spread-obj-entry,
+         :dot-dot-dot parse-spread-obj-entry,
          :fn parse-fn
          [:id :colon] parse-reg-obj-entry,
          [:num :colon] parse-reg-obj-entry,
@@ -291,7 +296,7 @@
 (defn- parse-obj [tokens]
   (->> (p/from {:type :obj-lit} tokens)
        (p/skip :open-b)
-       (p/parse-until :close-b parse-obj-entry :entries)
+       (p/until :close-b parse-obj-entry :entries)
        (p/skip :close-b)))
 
 (defn- parse-bind-this [tokens]
@@ -300,6 +305,7 @@
        (p/one-case
         {:id parse-id,
          :fn parse-fn,
+         math-ops parse-unapplied-math-op,
          :open-p parse-paren-expr}
         :expr)))
 
@@ -315,7 +321,7 @@
 
 (defn- parse-spread [tokens]
   (->> (p/from {:type :spread} tokens)
-       (p/skip :spread)
+       (p/skip :dot-dot-dot)
        (p/then parse-single-expr :expr)))
 
 (defn- parse-yield [tokens]
@@ -362,9 +368,9 @@
   (->> (p/from {:type :jsx-tag} tokens)
        (p/skip :lt)
        (p/one :id :name)
-       (p/parse-until :gt parse-jsx-attr :attrs)
+       (p/until :gt parse-jsx-attr :attrs)
        (p/skip :gt)
-       (p/parse-until :jsx-close parse-jsx-expr :children)
+       (p/until :jsx-close parse-jsx-expr :children)
        (p/skip :jsx-close)
        (p/one :id :closing-name)
        (p/fmap (fn [node]
@@ -424,13 +430,31 @@
        (p/skip :tilde)
        (p/one :id :constructor-name)
        (p/skip :open-b)
-       (p/parse-until :close-b parse-record-entry :entries)
+       (p/until :close-b parse-record-entry :entries)
        (p/skip :close-b)))
+
+(defn- parse-shorthand-anon-fn [tokens]
+  (->> (p/from {:type :shorthand-anon-fn} tokens)
+       (p/skip :hash)
+       (p/skip :open-p)
+       (p/then parse-expr :expr)
+       (p/skip :close-p)))
+
+(defn- parse-num-raw [tokens]
+  (->> (parse-num tokens)
+       (p/fmap :value)
+       (p/fmap read-string)))
+
+(defn- parse-anon-arg-id [tokens]
+  (->> (p/from {:type :anon-arg-id} tokens)
+       (p/skip :single-and)
+       (p/one-case {:num parse-num-raw} :arg-num 1)))
 
 (defn- parse-single-expr [tokens]
   (->> (p/null tokens)
        (p/one-case
-        {:string-lit parse-str,
+        (array-map
+         :string-lit parse-str,
          :tilde parse-record-syntax,
          :keyword parse-keyword,
          :open-p parse-paren-expr,
@@ -442,15 +466,17 @@
          :or-or parse-unapplied-or-or,
          :num parse-num,
          :open-sq parse-array,
-         :spread parse-spread,
+         :dot-dot-dot parse-spread,
          :double-colon parse-bind-this,
          :bang parse-not,
          :new parse-new,
+         [:hash :open-p] parse-shorthand-anon-fn,
+         :single-and parse-anon-arg-id,
          [:hash :open-b] parse-set,
          :open-b parse-obj,
          [:async :fn] parse-fn,
          :fn parse-fn,
-         [:lt :id] parse-jsx-tag})))
+         [:lt :id] parse-jsx-tag))))
 
 (defn- parse-expr [tokens]
   (->> (parse-single-expr tokens)
@@ -460,7 +486,7 @@
   (->> (p/null tokens)
        (p/skip :else)
        (p/skip :open-b)
-       (p/parse-until :close-b parse-statement)
+       (p/until :close-b parse-statement)
        (p/skip :close-b)))
 
 (defn- parse-if [tokens]
@@ -468,7 +494,7 @@
        (p/skip :if)
        (p/then parse-expr :expr)
        (p/skip :open-b)
-       (p/parse-until :close-b parse-statement :pass)
+       (p/until :close-b parse-statement :pass)
        (p/skip :close-b)
        (p/one-case {:else parse-else-branch} :fail [])))
 
@@ -477,7 +503,7 @@
        (p/skip :unless)
        (p/then parse-expr :expr)
        (p/skip :open-b)
-       (p/parse-until :close-b parse-statement :body)
+       (p/until :close-b parse-statement :body)
        (p/skip :close-b)))
 
 (defn- parse-let [tokens]
@@ -495,7 +521,7 @@
        (p/skip :eq)
        (p/then parse-expr :expr)
        (p/skip :open-b)
-       (p/parse-until :close-b parse-statement :pass)
+       (p/until :close-b parse-statement :pass)
        (p/skip :close-b)
        (p/one-case {:else parse-else-branch} :fail [])))
 
@@ -543,7 +569,7 @@
        (p/skip :of)
        (p/then parse-expr :iterable-expr)
        (p/skip :open-b)
-       (p/parse-until :close-b parse-statement :body)
+       (p/until :close-b parse-statement :body)
        (p/skip :close-b)))
 
 (defn- parse-id-assign [tokens]

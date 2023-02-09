@@ -8,7 +8,7 @@ define Viewable for :failure = {
   fn view() = "dang we did not do it"
 }
 
-fn view() = this[[Viewable]].view()
+fn view() = this[Viewable].view.call(this)
 
 :success::view()::log()
 :failure::view()::log()

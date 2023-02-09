@@ -66,7 +66,7 @@
   ([parse-map [expr tokens]]
    (many-case-until nil parse-map [expr tokens])))
 
-(defn parse-until
+(defn until
   ([token-type parse-fn kw [prev-expr tokens]]
    (loop [exprs [], tokens tokens]
      (if (-> tokens first :type (= token-type))
@@ -74,7 +74,7 @@
        (let [[expr tokens] (parse-fn tokens)]
          (recur (conj exprs expr) tokens)))))
   ([token-type parse-fn [prev-expr tokens]]
-   (->> (parse-until token-type parse-fn :temp [prev-expr tokens])
+   (->> (until token-type parse-fn :temp [prev-expr tokens])
         (fmap :temp))))
 
 (defn one [token-type kw [expr tokens]]
