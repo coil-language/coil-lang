@@ -564,7 +564,6 @@
   (->> (p/from {:type :for-loop} tokens)
        (p/skip :for)
        (p/one-case {:await parse-await-modifier} :await? false)
-       (p/skip :let)
        (p/then parse-assign-expr :assign-expr)
        (p/skip :of)
        (p/then parse-expr :iterable-expr)

@@ -1,3 +1,13 @@
+protocol Hash
+
+impl Hash for String = fn() = js_str_hash(this)
+impl Hash for Number = this
+impl Hash for Keyword = fn() = ("____protej_keyword:" + this)::hash()
+impl Hash for Array = fn() =
+  this::reduce(fn(hash, elem) = hash * 31 + elem::hash(), 7)
+
+fn hash() = this[Hash]()
+
 // Range
 
 // this needs more thought
@@ -105,7 +115,7 @@ impl Equal for Map = fn(other) {
   if this.size !== other.size {
     return false
   }
-  for let [key, value] of this.entries() {
+  for [key, value] of this.entries() {
     if other.get(key) != value {
       return false
     }
@@ -114,7 +124,7 @@ impl Equal for Map = fn(other) {
 }
 
 impl Equal for ObjectLiteral = fn(other) {
-  for let [key, value] of Object.entries(this) {
+  for [key, value] of Object.entries(this) {
     if value[Equal] != other[key] {
       return false
     }
@@ -136,7 +146,7 @@ impl Clone for ObjectLiteral = {
   fn clone() = {...this}
   fn deep_clone() {
     let output = {}
-    for let [k, v] of this::entries() {
+    for [k, v] of this::entries() {
       output[k] = v::deep_clone()
     }
     return output
@@ -218,19 +228,19 @@ impl Collection for Array = {
 impl Collection for Map = {
   fn sample() = this.values().next().value
   fn each(f) {
-    for let [k, v] of this {
+    for [k, v] of this {
       f(k, v)
     }
   }
   fn map(f) {
     let new_map = new Map([])
-    for let [k, v] of this {
+    for [k, v] of this {
       new_map.set(k, f(v))
     }
     return new_map
   }
   fn find(f) {
-    for let [k, v] of this {
+    for [k, v] of this {
       if f(k, v) {
         return v
       }
@@ -238,8 +248,8 @@ impl Collection for Map = {
   }
   fn flat_map(f) {
     let new_map = new Map([])
-    for let [k, v] of this {
-      for let [_k, _v] of f(k, v) {
+    for [k, v] of this {
+      for [_k, _v] of f(k, v) {
         new_map.set(k, f(v))
       }
     }
@@ -247,7 +257,7 @@ impl Collection for Map = {
   }
   fn filter(f) {
     let new_map = new Map([])
-    for let [k, v] of this {
+    for [k, v] of this {
       if f(k, v) {
         new_map.set(k, f(v))
       }
@@ -255,7 +265,7 @@ impl Collection for Map = {
     return new_map
   }
   fn some?(f) {
-    for let [k, v] of this {
+    for [k, v] of this {
       if f(k, v) {
         return true
       }
@@ -263,7 +273,7 @@ impl Collection for Map = {
     return false
   }
   fn every?(f) {
-    for let [k, v] of this {
+    for [k, v] of this {
       if !f(k, v) {
         return false
       }
@@ -272,7 +282,7 @@ impl Collection for Map = {
   }
   fn reduce(f, start) {
     let acc = start
-    for let [k, v] of this {
+    for [k, v] of this {
       acc = f(acc, k, v)
     }
     return acc
@@ -280,7 +290,7 @@ impl Collection for Map = {
   fn push(k, v) = this::clone().set(key, value)
   fn concat(other) {
     let new_map = this::clone()
-    for let [k, v] of other {
+    for [k, v] of other {
       new_map.set(k, v)
     }
     return new_map
@@ -290,19 +300,19 @@ impl Collection for Map = {
 impl Collection for Set = {
   fn sample() = this.values().next().value
   fn each(f) {
-    for let elem of this {
+    for elem of this {
       f(elem)
     }
   }
   fn map(f) {
     let out = new Set([])
-    for let elem of this {
+    for elem of this {
       out.add(f(elem))
     }
     return out
   }
   fn find(f) {
-    for let elem of this {
+    for elem of this {
       if f(elem) {
         return elem
       }
@@ -310,8 +320,8 @@ impl Collection for Set = {
   }
   fn flat_map(f) {
     let out = new Set([])
-    for let elem of this {
-      for let x of f(elem) {
+    for elem of this {
+      for x of f(elem) {
         out.add(x)
       }
     }
@@ -319,14 +329,14 @@ impl Collection for Set = {
   }
   fn reduce(f, start) {
     let acc = start
-    for let elem of this {
+    for elem of this {
       acc = f(acc, elem)
     }
     return acc
   }
   fn filter(f) {
     let out = new Set([])
-    for let elem of this {
+    for elem of this {
       if f(elem) {
         out.add(elem)
       }
@@ -335,7 +345,7 @@ impl Collection for Set = {
   }
 
   fn some?(f) {
-    for let elem of this {
+    for elem of this {
       if f(elem) {
         return true
       }
@@ -343,7 +353,7 @@ impl Collection for Set = {
     return false
   }
   fn every?(f) {
-    for let elem of this {
+    for elem of this {
       if !f(elem) {
         return false
       }
@@ -353,10 +363,77 @@ impl Collection for Set = {
   fn push(elem) = this::clone().add(elem)
   fn concat(other) {
     let new_set = this::clone()
-    for let item of other {
+    for item of other {
       new_set.add(item)
     }
     return new_set
+  }
+}
+
+impl Collection for String = {
+  fn sample() = this[0]
+  fn each(f) {
+    for char of this {
+      f(char)
+    }
+  }
+  fn map(f) {
+    let out = ""
+    for char of this {
+      out = out + f(char)
+    }
+    return out
+  }
+  fn flat_map(f) {
+    let out = ""
+    for char of this {
+      out = out + f(char)
+    }
+    return out
+  }
+  fn find(f) {
+    for char of this {
+      if f(char) {
+        return char
+      }
+    }
+  }
+  fn filter(f) {
+    let out = ""  
+    for char of this {
+      if f(char) {
+        out = out + char
+      }
+    }
+  }
+  fn some?(f) {
+    for char of this {
+      if f(char) {
+        return true
+      }
+    }
+    return false
+  }
+  fn every?(f) {
+    for char of this {
+      if !f(char) {
+        return false
+      }
+    }
+    return true
+  }
+  fn reduce(f, start) {
+    let out = start
+    for char of this {
+      out = f(out, char)
+    }
+    return out
+  }
+  fn push(char) {
+    return this + char
+  }
+  fn concat(str) {
+    return this + str
   }
 }
 
@@ -386,6 +463,16 @@ impl OrderedCollection for Array = {
   fn take(n) = this.slice(0, n)
   fn sort(f) = this::clone().sort(f)
   fn reverse() = this::clone().reverse()
+}
+
+impl OrderedCollection for String = {
+  fn first() = this[0]
+  fn last() = this.at(-1)
+  fn take_last(n) = this.slice(-1 - n, -1)
+  fn take(n) = this.slice(0, n)
+  // TODO: don't rely on Array for these
+  fn sort(f) = Array.from(this).sort(f).join("")
+  fn reverse() = Array.from(this).reverse().join("")
 }
 
 impl OrderedCollection for Map = {
@@ -547,7 +634,7 @@ impl Printable for ObjectLiteral = fn() =
 
 fn print_for_generic_clone_object() {
   let out = this::clone()
-  for let [key, value] of this::entries() {
+  for [key, value] of this::entries() {
     let new_key = _resolve_keyword_str(key)
     out[new_key] = value
     if new_key != key {

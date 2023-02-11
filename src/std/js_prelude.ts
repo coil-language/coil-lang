@@ -100,3 +100,13 @@ Keyword.prototype.valueOf = function () {
 Keyword.prototype.toString = function () {
   return this.value;
 };
+
+function js_num_hash(num) {
+  return num;
+}
+
+function js_str_hash(str) {
+  let hash = 7;
+  for (let char of str) hash = hash * 31 + char.charCodeAt();
+  return hash;
+}
