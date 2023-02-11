@@ -4,9 +4,11 @@ impl Hashable for String = fn() = js_str_hash(this)
 impl Hashable for Number = fn() = this
 impl Hashable for Keyword = fn() = ("____protej_keyword:" + this.value)::hash()
 impl Hashable for Array = fn() =
-  this::reduce(fn(value, elem, idx) = (value * 31n) + elem::hash(), 7n)
+  ::reduce(fn(value, elem, idx) = (value * 31n) + elem::hash(), 7n)
 impl Hashable for ObjectLiteral = fn() =
-  this::reduce(fn(value, entry) = (value * 31n) + entry::hash(), 7n)
+  ::reduce(fn(value, entry) = (value * 31n) + entry::hash(), 7n)
+impl Hashable for Map = fn() =
+  ::reduce(fn(hash_value, key, value) = (hash_value * 31n) + [key value]::hash(), 7n)
 
 fn hash() = this[Hashable]()
 
@@ -14,6 +16,8 @@ fn Hash(entries) {
   this.raw_entries = entries  
   this.map = new Map(entries.map(fn([key, value]) = [key::hash(), value]))
 }
+
+impl Hashable for Hash = fn() = this.map::hash()
 
 // Range
 
@@ -109,6 +113,8 @@ impl Equal for Number = strict_eq?
 impl Equal for String = strict_eq?
 
 impl Equal for BigInt = strict_eq?
+
+impl Equal for Boolean = strict_eq?
 
 impl Equal for Array = fn(other) {
   if other is not Array {
@@ -788,7 +794,9 @@ impl Printable for Keyword = fn() =
 
 impl Printable for Boolean = fn() = this
 
-fn when_exists(f) = this && f::call(this)
+impl Printable for String = fn() = this
+
+fn when_exists(f) = (this || (this == false)) && f::call(this)
 
 fn otherwise(val) = this || val
 
