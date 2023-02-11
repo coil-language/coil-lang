@@ -146,6 +146,9 @@
 (defn- eval-num [node]
   (str \( (node :value) \)))
 
+(defn- eval-big-int [node]
+  (node :value))
+
 (defn- eval-double-equals [{:keys [lhs rhs]}]
   (str (resolve-name "eq?") "(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
 
@@ -274,6 +277,7 @@
     :id-lookup (eval-id-lookup node)
     :fn-call (eval-fn-call node)
     :num (eval-num node)
+    :big-int (eval-big-int node)
     :array (eval-array node)
     :math-op (eval-math-op node)
     :double-equals (eval-double-equals node)

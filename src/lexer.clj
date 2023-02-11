@@ -36,6 +36,7 @@
    {:regex #"^\}"                    :keyword :close-b}
    {:regex #"^\("                    :keyword :open-p}
    {:regex #"^\)"                    :keyword :close-p}
+   {:regex #"^[\-\+]?\d+n"           :keyword :big-int}
    {:regex #"^[\-\+]?(\d*\.)?\d+"    :keyword :num}
    {:regex #"^\.\.\."                :keyword :dot-dot-dot}
    {:regex #"^\.\."                  :keyword :dot-dot}

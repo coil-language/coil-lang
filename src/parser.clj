@@ -36,6 +36,10 @@
   (->> (p/from {:type :num} tokens)
        (p/one :num :value)))
 
+(defn- parse-big-int [tokens]
+  (->> (p/from {:type :big-int} tokens)
+       (p/one :big-int :value)))
+
 (defn- parse-dot [lhs tokens]
   (->> (p/from {:type :property-lookup, :lhs lhs} tokens)
        (p/skip :dot)
@@ -465,6 +469,7 @@
          :and-and parse-unapplied-and-and,
          :or-or parse-unapplied-or-or,
          :num parse-num,
+         :big-int parse-big-int,
          :open-sq parse-array,
          :dot-dot-dot parse-spread,
          :double-colon parse-bind-this,

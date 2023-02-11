@@ -1,12 +1,22 @@
-protocol Hash
+protocol Hashable
 
-impl Hash for String = fn() = js_str_hash(this)
-impl Hash for Number = this
-impl Hash for Keyword = fn() = ("____protej_keyword:" + this)::hash()
-impl Hash for Array = fn() =
-  this::reduce(fn(hash, elem) = hash * 31 + elem::hash(), 7)
+impl Hashable for String = fn() = js_str_hash(this)
+impl Hashable for Number = fn() = this
+impl Hashable for Keyword = fn() = ("____protej_keyword:" + this.value)::hash()
+impl Hashable for Array = fn() =
+  this::reduce(fn(value, elem, idx) = (value * 31n) + elem::hash(), 7n)
+impl Hashable for ObjectLiteral = fn() =
+  this::reduce(fn(value, entry) = (value * 31n) + entry::hash(), 7n)
 
-fn hash() = this[Hash]()
+fn hash() = this[Hashable]()
+
+fn Hash(entries) {
+  this.raw_entries = entries  
+  this.map = ~Map{}
+  for [key value] of entries {
+    this.map.set(key::hash(), value)
+  } 
+}
 
 // Range
 
@@ -29,6 +39,9 @@ define Record for Map = {
 define Record for ObjectLiteral = {
   fn construct(entries) = new ObjectLiteral(Object.fromEntries(entries))
 }
+define Record for Hash = {
+  fn construct(entries) = new Hash(entries)
+}
 
 fn construct_record(entries) = this[Record].construct.call(this, entries)
 
@@ -45,6 +58,8 @@ impl Call for Map = fn(key) = this.get(key)
 impl Call for ObjectLiteral = fn(key) = this[key]
 
 impl Call for Array = fn(index) = this.at(index)
+
+impl Call for Hash = fn(key) = this::at(key)
 
 impl Call for String = fn(collection) {
   if (typeof(collection) === "string")
@@ -198,6 +213,7 @@ fn from_entries() = new ObjectLiteral(Object.fromEntries(this))
 fn values() = Object.values(this)
 
 impl Collection for ObjectLiteral = {
+  fn at(key) = this[key]
   fn sample() = this::values()[0]
   fn each(f) = this::entries().forEach(fn ([k, v]) = f(k, v))
   fn find(f) = this::entries().find(fn ([k, v]) = f(k, v)::pipe(truthy))
@@ -207,11 +223,12 @@ impl Collection for ObjectLiteral = {
   fn some?(f) = this::entries().some(fn ([k, v]) = f(k, v)::pipe(truthy))::from_entries()
   fn every?(f) = this::entries().every(fn ([k, v]) = f(k, v)::pipe(truthy))::from_entries()
   fn reduce(f, start) = this::entries().reduce(f, start)
-  fn push(key, value) = {...this, [key]: value}
+  fn insert(key, value) = {...this, [key]: value}
   fn concat(other) = {...this, ...other}
 }
 
 impl Collection for Array = {
+  fn at(idx) = this.at(idx)
   fn sample() = this[0]
   fn each(f) = this.forEach(f)
   fn find(f) = this.find(compose(f, truthy))
@@ -221,11 +238,85 @@ impl Collection for Array = {
   fn some?(f) = this.some(compose(f, truthy))
   fn every?(f) = this.every(compose(f, truthy))
   fn reduce(f, start) = this.reduce(f, start)
-  fn push(value) = [...this, value]
+  fn insert(value) = [...this, value]
   fn concat(other) = [...this, ...other]
 }
 
+impl Collection for Hash = {
+  fn at(key) = this.map.get(key::hash())
+  fn sample() = this.raw_entries[0]
+  fn each(f) {
+    for [k, v] of this.raw_entries {
+      f(k, v)
+    }
+  }
+  fn map(f) {
+    let new_hash = new Hash([])
+    for [k, v] of this.raw_entries {
+      new_hash = new_hash::insert(k, f(v))
+    }
+    return new_hash
+  }
+  fn find(f) {
+    for [k, v] of this.raw_entries {
+      if f(k, v) {
+        return v
+      }
+    }
+  }
+  fn flat_map(f) {
+    let new_hash = new Hash([])
+    for [k, v] of this {
+      for [_k, _v] of f(k, v) {
+        new_hash = new_hash::insert(k, f(v))
+      }
+    }
+    return new_hash
+  }
+  fn filter(f) {
+    let new_hash = new Hash([])
+    for [k, v] of this.raw_entries {
+      if f(k, v) {
+        new_hash = new_hash::insert(k, f(v))
+      }
+    }
+    return new_hash
+  }
+  fn some?(f) {
+    for [k, v] of this.raw_entries {
+      if f(k, v) {
+        return true
+      }
+    }
+    return false
+  }
+  fn every?(f) {
+    for [k, v] of this.raw_entries {
+      if !f(k, v) {
+        return false
+      }
+    }
+    return true
+  }
+  fn reduce(f, start) {
+    let acc = start
+    for [k, v] of this.raw_entries {
+      acc = f(acc, k, v)
+    }
+    return acc
+  }
+  fn insert(k, v) = new Hash([...this.raw_entries, [k, v]])
+  fn concat(other) {
+    let new_hash = this::clone()
+    for [k, v] of other {
+      new_hash = new_hash::insert(k, v)
+    }
+    return new_hash
+  }
+}
+
 impl Collection for Map = {
+  fn at(key) = this.get(key)
   fn sample() = this.values().next().value
   fn each(f) {
     for [k, v] of this {
@@ -287,7 +378,7 @@ impl Collection for Map = {
     }
     return acc
   }
-  fn push(k, v) = this::clone().set(key, value)
+  fn insert(k, v) = this::clone().set(k, v)
   fn concat(other) {
     let new_map = this::clone()
     for [k, v] of other {
@@ -298,6 +389,11 @@ impl Collection for Map = {
 }
 
 impl Collection for Set = {
+  fn at(val) {
+    if this.has(val) {
+      return val
+    }
+  }
   fn sample() = this.values().next().value
   fn each(f) {
     for elem of this {
@@ -360,7 +456,7 @@ impl Collection for Set = {
     }
     return true
   }
-  fn push(elem) = this::clone().add(elem)
+  fn insert(elem) = this::clone().add(elem)
   fn concat(other) {
     let new_set = this::clone()
     for item of other {
@@ -371,6 +467,7 @@ impl Collection for Set = {
 }
 
 impl Collection for String = {
+  fn at(idx) = this.at(idx)
   fn sample() = this[0]
   fn each(f) {
     for char of this {
@@ -429,7 +526,7 @@ impl Collection for String = {
     }
     return out
   }
-  fn push(char) {
+  fn insert(char) {
     return this + char
   }
   fn concat(str) {
@@ -437,6 +534,7 @@ impl Collection for String = {
   }
 }
 
+fn at(key_or_idx) = this[Collection].at.call(this, key_or_idx)
 fn sample() = this[Collection].sample.call(this)
 fn each(f) = this[Collection].each.call(this, f::call)
 fn map(...fns) = this[Collection].map.call(this, compose(...fns))
@@ -451,7 +549,7 @@ fn reduce(f, start) {
   }
   return this[Collection].reduce.call(this, f::call, start)
 }
-fn push(...args) = this[Collection].push.call(this, ...args)
+fn insert(...args) = this[Collection].insert.call(this, ...args)
 fn concat(other) = this[Collection].concat.call(this, other)
 
 protocol OrderedCollection
@@ -547,6 +645,36 @@ impl Mod for Number = fn(other) {
   return js_mod(this, other)
 }
 
+impl Plus for BigInt = fn(other) {
+  assert! typeof(other) === "bigint"
+  return js_plus(this, other)
+}
+
+impl Minus for BigInt = fn(other) {
+  assert! typeof(other) === "bigint"
+  return js_minus(this, other)
+}
+
+impl Times for BigInt = fn(other) {
+  assert! typeof(other) === "bigint"
+  return js_times(this, other)
+}
+
+impl Divide for BigInt = fn(other) {
+  assert! typeof(other) === "bigint"
+  return js_divide(this, other)
+}
+
+impl Exponent for BigInt = fn(other) {
+  assert! typeof(other) === "bigint"
+  return js_exponent(this, other)
+}
+
+impl Mod for BigInt = fn(other) {
+  assert! typeof(other) === "bigint"
+  return js_mod(this, other)
+}
+
 let ComparableMixin = {
   fn greater_than_eq(other) = this::greater_than(other) || this == other
   fn less_than_eq(other) = this::greater_than(other) || this == other
@@ -560,6 +688,18 @@ impl Comparable for Number = {
   }
   fn less_than(other) {
     assert! typeof(other) === "number"
+    return js_less_than(this, other)
+  }
+}
+
+impl Comparable for BigInt = {
+  ...ComparableMixin,
+  fn greater_than(other) {
+    assert! typeof(other) === "bigint"
+    return js_greater_than(this, other)
+  }
+  fn less_than(other) {
+    assert! typeof(other) === "bigint"
     return js_less_than(this, other)
   }
 }

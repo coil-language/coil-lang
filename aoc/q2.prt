@@ -1,0 +1,40 @@
+
+let points_for = {lose: 0,
+                  draw: 3,
+                  won: 6,
+                  rock: 1,
+                  paper: 2,
+                  scissors: 3}
+
+let op_types = {A: :rock, B: :paper, C: :scissors}
+
+let my_types = {X: :rock,
+                Y: :paper
+                Z: :scissors}
+
+let determine_round = ~Hash{
+  [:rock :rock] => :draw
+  [:rock :paper] => :lose
+  [:rock :scissors] => :won
+  [:paper :paper] => :draw
+  [:paper :scissors] => :lose
+  [:paper :rock] => :won
+  [:scissors :scissors] => :draw
+  [:scissors :paper] => :won
+  [:scissors :rock] => :lose
+}
+
+let input = slurp("q2.txt")
+
+fn rounds() =
+  input.split("\n")
+    ::map(fn(line) {
+      let [op me] = line.split(" ")
+      op = op_types::at(op)
+      me = my_types::at(me)
+      let result = [me op]::pipe(determine_round)
+      let choice_points = points_for::at(me)
+      let result_points = points_for::at(result)
+      return choice_points + result_points
+    })
+    ::reduce(+)
