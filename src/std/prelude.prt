@@ -150,7 +150,13 @@ impl Equal for ObjectLiteral = fn(other) {
   return true
 }
 
-fn eq?(a, b) = a[Equal](b)
+fn eq?(a, b) {
+  if (a === null) || (a === undefined) {
+    return a === b
+  } else {
+    return a[Equal](b)
+  }
+}
 
 // CLONE PROTOCOL
 protocol Clone
@@ -796,6 +802,14 @@ impl Printable for Boolean = fn() = this
 
 impl Printable for String = fn() = this
 
+fn when(cond, f) {
+  if cond(this) {
+    return f(this)
+  } else {
+    return this
+  }
+}
+
 fn when_exists(f) = (this || (this == false)) && f::call(this)
 
 fn otherwise(val) = this || val
@@ -831,6 +845,7 @@ fn to_f() = Number(this)
 fn to_i() = this::to_f()::pipe(Math.floor)
 fn to_s() = this.toString()
 fn to_b() = truthy(this)
+fn exists?() = (this || (this == false))::to_b()
 
 [int? bigint? even? nan? pos? float? to_f to_i to_s to_b]::each(impl_call_for_bound)
 
