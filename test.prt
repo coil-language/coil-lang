@@ -3,6 +3,16 @@
   2 => "two"
 }
 
+~Map{key: "value"}
+  ::pipe(~Hash{
+    ~Map{key: "value"} => false
+  })
+  ::when(exists? fn (value) {
+    console.log("we here", value)
+    return "my value"
+  })
+  ::log()
+
 // me vs other
 [:rock :rock]
   ::pipe(~Hash{

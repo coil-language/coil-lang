@@ -70,20 +70,17 @@
        (p/then parse-expr :expr)
        (p/skip :close-p)))
 
+(declare parse-fn)
+
 (defn- parse-infix-bind [lhs tokens]
   (->> (p/from {:type :bind, :lhs lhs} tokens)
        (p/skip :double-colon)
        (p/one-case
         {:id parse-id,
+         :fn parse-fn,
          math-ops parse-unapplied-math-op,
          :open-p parse-paren-expr}
         :expr)))
-
-(defn- parse-double-colon [lhs tokens]
-  (->> (p/null tokens)
-       (p/one-case
-        {;;[:double-colon :open-p] #(parse-infix-bound-call lhs %)
-         'otherwise #(parse-infix-bind lhs %)})))
 
 (defn- parse-double-eq [lhs tokens]
   (->> (p/from {:type :double-equals, :lhs lhs} tokens)
@@ -167,7 +164,7 @@
                :dot-dot (parse-inclusive-range lhs tokens)
                :dot-dot-dot (parse-exclusive-range lhs tokens)
                :open-p (parse-fn-call lhs tokens)
-               :double-colon (parse-double-colon lhs tokens)
+               :double-colon (parse-infix-bind lhs tokens)
                :double-eq (parse-double-eq lhs tokens)
                :triple-eq (parse-triple-eq lhs tokens)
                :triple-not-eq (parse-triple-not-eq lhs tokens)
