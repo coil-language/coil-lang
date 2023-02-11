@@ -12,10 +12,7 @@ fn hash() = this[Hashable]()
 
 fn Hash(entries) {
   this.raw_entries = entries  
-  this.map = ~Map{}
-  for [key value] of entries {
-    this.map.set(key::hash(), value)
-  } 
+  this.map = new Map(entries.map(fn([key, value]) = [key::hash(), value]))
 }
 
 // Range
@@ -194,10 +191,12 @@ fn deep_clone() = this[Clone].deep_clone.call(this)
 protocol Identity
 
 impl Identity for Number = 0
+impl Identity for BigInt = 0n
 impl Identity for String = ""
 impl Identity for Array = []
 impl Identity for ObjectLiteral = {}
 impl Identity for Map = ~Map{}
+impl Identity for Hash = ~Hash{}
 impl Identity for Set = #{}
 
 fn identity() = this[Identity]
@@ -815,13 +814,15 @@ fn log() {
 // Helpers
 
 fn int?() = Number.isInteger(this)
+fn bigint?() = typeof(this) === "bigint"
 fn float?() = typeof(this) === "number" && !int?(this)
 fn even?() = (this % 2) === 0
-fn pos?() = this >= 0
+fn pos?() = this >= this::identity()
+fn nan?() = Number.isNaN(this)
 fn to_f() = Number(this)
-fn to_i() = Math.floor(Number(this))
+fn to_i() = this::to_f()::pipe(Math.floor)
 fn to_s() = this.toString()
 fn to_b() = truthy(this)
 
-[int? even? pos? float? to_f to_i to_s to_b]::each(impl_call_for_bound)
+[int? bigint? even? nan? pos? float? to_f to_i to_s to_b]::each(impl_call_for_bound)
 
