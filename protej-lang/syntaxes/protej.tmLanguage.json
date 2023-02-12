@@ -44,7 +44,23 @@
       "patterns": [
         {
           "name": "keyword.control.protej",
-          "match": "\\b(if|fn|for|typeof|else|of|return|is|not|await|async|let|impl|protocol)\\b"
+          "match": "\\b(if|else|of|return|async)\\b"
+        },
+        {
+          "name": "keyword.other",
+          "match": "impl.*\\b(for)\\b"
+        },
+        {
+          "name": "keyword.control",
+          "match": "\\b(for)\\b"
+        },
+        {
+          "name": "keyword.other",
+          "match": "\\b(fn|impl|let|protocol)\\b"
+        },
+        {
+          "name": "keyword",
+          "match": "\\b(is|not|typeof|await)\\b"
         },
         {
           "match": "\\bnew\\b",
