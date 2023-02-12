@@ -1,0 +1,25 @@
+{
+    "name": "protej-lang",
+    "displayName": "protej-lang",
+    "description": "protej language support",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.75.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "protej",
+            "aliases": ["protej", "protej"],
+            "extensions": [".prt"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "protej",
+            "scopeName": "source.protej",
+            "path": "./syntaxes/protej.tmLanguage.json"
+        }]
+    }
+}

@@ -1,0 +1,147 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "protej",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#properties"
+    },
+    {
+      "include": "#bind"
+    },
+    {
+      "include": "#record_constructor"
+    },
+    {
+      "include": "#lang_constants"
+    },
+    {
+      "include": "#variables"
+    },
+    {
+      "include": "#numbers"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.peacock",
+          "begin": "(\\/\\/).*",
+          "end": "\n"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.protej",
+          "match": "\\b(if|fn|for|typeof|else|of|return|is|not|await|async|let|impl|protocol)\\b"
+        },
+        {
+          "match": "\\bnew\\b",
+          "name": "keyword.operator.new"
+        }
+      ]
+    },
+    "variables": {
+      "patterns": [
+        {
+          "match": "\\b([A-Z][a-zA-Z1-9_\\!\\?]*)\\b",
+          "name": "entity.name.type"
+        },
+        {
+          "match": "\\b([a-z][a-zA-Z1-9_\\!\\?]*)\\b",
+          "name": "variable.name"
+        },
+        {
+          "name": "variable",
+          "match": "&"
+        }
+      ]
+    },
+    "record_constructor": {
+      "patterns": [
+        {
+          "match": "\\~([a-zA-Z][a-zA-Z1-9_\\!\\?]*)\\{",
+          "captures": {
+            "1": {
+              "name": "entity.name.type"
+            }
+          }
+        }
+      ]
+    },
+    "lang_constants": {
+      "match": "\\b(true|false|null|undefined|this)\\b",
+      "name": "constant.language"
+    },
+    "properties": {
+      "patterns": [
+        {
+          "match": "\\.([a-zA-Z][a-zA-Z1-9_\\!\\?]*)\\(\\b",
+          "name": "entity.name.function"
+        }
+      ]
+    },
+    "bind": {
+      "patterns": [
+        {
+          "match": "::([a-zA-Z][a-zA-Z1-9_\\!\\?]*)\\b",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        },
+        {
+          "match": "([a-zA-Z][a-zA-Z1-9_\\!\\?]*)\\(",
+          "captures": {
+            "1": {
+              "name": "entity.name.function"
+            }
+          }
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.protej",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.protej",
+          "match": "\\\\."
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "match": "[\\-\\+]?(\\d+)(n)",
+          "captures": {
+            "1": {
+              "name": "constant.numeric"
+            },
+            "2": {
+              "name": "emphasis"
+            }
+          }
+        },
+        {
+          "name": "constant.numeric",
+          "match": "[\\-\\+]?(\\d*\\.)?\\d+"
+        }
+      ]
+    }
+  },
+  "scopeName": "source.protej"
+}

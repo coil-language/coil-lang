@@ -106,7 +106,7 @@
    "])"))
 
 (defn- eval-bind [{:keys [lhs expr]}]
-  (str (eval-expr expr) ".bind(" (eval-expr lhs) ")"))
+  (str \( (eval-expr expr) ".bind(" (eval-expr lhs) ")" \)))
 
 (defn- eval-reg-obj-entry [{:keys [key value]}]
   (str (resolve-name key) ": " (eval-expr value)))

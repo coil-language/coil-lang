@@ -615,15 +615,6 @@ protocol Or
 
 impl And for Object = fn(thunk) = js_and(this, thunk)
 
-//impl And for Function = fn(thunk) =
-//  ::fn(...args) = this(...args) && thunk()::call(...args)
-//
-//impl Or for Function = fn(thunk) =
-//  ::fn(...args) = this(...args) || thunk()::call(...args)
-//
-//impl And for Set = fn(thunk) =
-//  ::fn(item) = this::call(item) && thunk()::call(item)
-
 impl Or for Object = fn(thunk) = js_or(this, thunk)
 
 impl Plus for Number = fn(other) {
