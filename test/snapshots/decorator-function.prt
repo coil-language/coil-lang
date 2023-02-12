@@ -1,0 +1,9 @@
+fn deconstruct_this(f) {
+  return fn() = f(this::deconstruct())
+}
+
+@deconstruct_this
+fn my_name({ name }) = name
+
+~Hash{name: 10}::my_name()::log()
+

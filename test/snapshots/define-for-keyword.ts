@@ -12,5 +12,5 @@ function view() {
 ;
 return this[Viewable].view.call(this)
 };
-log.bind(view.bind(Keyword.for("success"))())();
-log.bind(view.bind(Keyword.for("failure"))())()
+(log.bind((view.bind(Keyword.for("success")))()))();
+(log.bind((view.bind(Keyword.for("failure")))()))()

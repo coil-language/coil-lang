@@ -38,25 +38,25 @@ return target[method].bind(self)
 };
 function iter() {
 ;
-return get_protocol.bind(this)(Iterator)
+return (get_protocol.bind(this))(Iterator)
 };
 function each(f) {
 ;
-return iter.bind(this)().each(f)
+return (iter.bind(this))().each(f)
 };
 function map(f) {
 ;
-return iter.bind(this)().map(f)
+return (iter.bind(this))().map(f)
 };
 function filter(f) {
 ;
-return iter.bind(this)().filter(f)
+return (iter.bind(this))().filter(f)
 };
-console.log(filter.bind(new ObjectLiteral({a: (10), b: (20)}))(function (k, v) {
+console.log((filter.bind(new ObjectLiteral({a: (10), b: (20)})))(function (k, v) {
 ;
 return greater_than.call(v,(10))
 }));
-console.log(filter.bind([(1), (2), (3)])(function (x) {
+console.log((filter.bind([(1), (2), (3)]))(function (x) {
 ;
 return greater_than.call(x,(1))
 }))
