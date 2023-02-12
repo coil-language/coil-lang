@@ -199,6 +199,12 @@
        (p/until :close-sq parse-simple-name :names)
        (p/skip :close-sq)))
 
+(defn- parse-assign-obj [tokens]
+  (->> (p/from {:type :object-deconstruction} tokens)
+       (p/skip :open-b)
+       (p/until :close-b parse-simple-name :names)
+       (p/skip :close-b)))
+
 (defn- parse-spread-assign [tokens]
   (->> (p/from {:type :spread-assign} tokens)
        (p/skip :dot-dot-dot)
@@ -209,6 +215,7 @@
        (p/one-case
         {:id parse-assign-id,
          :open-sq parse-assign-array,
+         :open-b parse-assign-obj,
          :dot-dot-dot parse-spread-assign})))
 
 (defn- parse-fn-name [tokens]
@@ -451,6 +458,12 @@
        (p/skip :single-and)
        (p/one-case {:num parse-num-raw} :arg-num 1)))
 
+(defn- parse-decorator [tokens]
+  (->> (p/from {:type :decorator} tokens)
+       (p/skip :at)
+       (p/one :id :name)
+       (p/then parse-fn :fn-def)))
+
 (defn- parse-single-expr [tokens]
   (->> (p/null tokens)
        (p/one-case
@@ -462,6 +475,7 @@
          :yield parse-yield,
          :await parse-await,
          :id parse-id,
+         :at parse-decorator,
          math-ops parse-unapplied-math-op,
          :and-and parse-unapplied-and-and,
          :or-or parse-unapplied-or-or,

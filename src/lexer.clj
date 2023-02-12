@@ -23,6 +23,7 @@
    {:regex #"^await\b"               :keyword :await}
    {:regex #"^new\b"                 :keyword :new}
    {:regex #"^\=\>"                  :keyword :arrow}
+   {:regex #"^\@"                    :keyword :at}
    {:regex #"^\&\&"                  :keyword :and-and}
    {:regex #"^\|\|"                  :keyword :or-or}
    {:regex #"^\=\=\="                :keyword :triple-eq}

@@ -1,29 +1,9 @@
-~Map{
-  1 => "one"
-  2 => "two"
+fn deconstruct_this(f) {
+  return fn() = f(this::deconstruct())
 }
 
-~Map{key: "value"}
-  ::pipe(~Hash{
-    ~Map{key: "value"} => false
-  })
-  ::when(exists? fn (value) {
-    console.log("we here", value)
-    return "my value"
-  })
-  ::log()
+@deconstruct_this
+fn my_name({ name }) = name
 
-// me vs other
-[:rock :rock]
-  ::pipe(~Hash{
-    [:rock :scissors] => :won
-    [:rock :paper] => :lost
-    [:rock :rock] => :tie
-    [:scissors :scissors] => :tie
-    [:scissors :paper] => :won
-    [:scissors :rock] => :lost
-    [:paper :paper] => :tie
-    [:paper :rock] => :won
-    [:paper :scissors] => :lost
-  })
-  ::log()
+~Hash{name: 10}::my_name()::log()
+

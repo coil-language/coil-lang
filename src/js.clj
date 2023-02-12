@@ -45,6 +45,9 @@
 (defn- eval-array-deconstruction-names [{:keys [names]}]
   (str "[" (string/join ", " (map resolve-name names)) "]"))
 
+(defn- eval-object-deconstruction-names [{:keys [names]}]
+  (str "{" (string/join ", " (map resolve-name names)) "}"))
+
 (defn- eval-spread-assign [{:keys [name]}]
   (str "..." name))
 
@@ -52,7 +55,8 @@
   (case (node :type)
     :id-assign (eval-id-assign-name node)
     :spread-assign (eval-spread-assign node)
-    :array-deconstruction (eval-array-deconstruction-names node)))
+    :array-deconstruction (eval-array-deconstruction-names node)
+    :object-deconstruction (eval-object-deconstruction-names node)))
 
 (defn- eval-if-let [{:keys [assign-expr expr pass fail]}]
   (str "if (truthy(" (eval-expr expr) ")) {\n"
@@ -269,9 +273,13 @@
 (defn- eval-anon-arg-id [{arg-num :arg-num}]
   (str "__args[" (dec arg-num) "]"))
 
+(defn- eval-decorator [{:keys [name fn-def]}]
+  (str "let " (fn-def :name) " = " name "(" (eval-fn fn-def) ")"))
+
 (defn- eval-expr [node]
   (case (:type node)
     :str (eval-str node)
+    :decorator (eval-decorator node)
     :keyword (eval-keyword node)
     :property-lookup (property-lookup node)
     :id-lookup (eval-id-lookup node)

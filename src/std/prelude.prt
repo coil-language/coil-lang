@@ -46,6 +46,16 @@ define Record for Hash = {
 
 fn construct_record(entries) = this[Record].construct.call(this, entries)
 
+protocol Deconstruct
+
+impl Deconstruct for Map = fn() = this.entries()::from_entries()
+impl Deconstruct for ObjectLiteral = fn() = this
+impl Deconstruct for Hash = fn() = this.raw_entries::from_entries()
+impl Deconstruct for Array = fn() = this
+
+fn deconstruct() = this[Deconstruct]()
+
+
 // CALL PROTOCOL
 
 protocol Call
@@ -212,7 +222,6 @@ impl Identity for Hash = ~Hash{}
 impl Identity for Set = #{}
 
 fn identity() = this[Identity]
-
 
 // COLLECTION PROTOCOL
 protocol Collection
@@ -753,9 +762,7 @@ fn and(other) {
   }
 }
 fn or(thunk) {
-  // TODO: this can't be inlined for some reason
-  fn null?() = this === null
-  if js_or(this === undefined, this::null?) {
+  if js_or(this === undefined, this::fn() = this === null) {
     return thunk()
   } else { 
     return this[Or](thunk)
