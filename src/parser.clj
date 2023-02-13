@@ -476,10 +476,17 @@
        (p/skip :single-and)
        (p/one-case {:num parse-num-raw} :arg-num 1)))
 
+(defn- parse-call-expr [tokens]
+  (->> (p/null tokens)
+       (p/skip :open-p)
+       (p/until :close-p parse-expr)
+       (p/skip :close-p)))
+
 (defn- parse-decorator [tokens]
   (->> (p/from {:type :decorator} tokens)
        (p/skip :at)
        (p/one :id :name)
+       (p/one-case {:open-p parse-call-expr} :args [])
        (p/then parse-fn :fn-def)))
 
 (defn- parse-single-expr [tokens]

@@ -281,8 +281,13 @@
 (defn- eval-anon-arg-id [{arg-num :arg-num}]
   (str "__args[" (dec arg-num) "]"))
 
-(defn- eval-decorator [{:keys [name fn-def]}]
-  (str "let " (fn-def :name) " = " name "(" (eval-fn fn-def) ")"))
+(defn- eval-decorator [{:keys [name fn-def args]}]
+  (str "let " (fn-def :name) " = "
+       name "("
+       (when (not= (count args) 0)
+         (str
+          (string/join ", " (map eval-expr args)) ", "))
+       (eval-fn fn-def) ")"))
 
 (defn- eval-expr [node]
   (case (:type node)

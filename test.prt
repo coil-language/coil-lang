@@ -2,6 +2,24 @@
 fn my_name({ name }) = name
 
 @deconstruct_args
-fn arg_name({ name: name1 }, { name: name2 }) = name1 + ", " + name2
+fn arg_name({ name: name1 }, { name: name2 }) =
+  name1 + ", " + name2
 
-arg_name(~Map{name: "marcelle"}, ~Hash{name: "dog"})::log()
+fn pre(...args) {
+  let conds = args.slice(0, -1)
+  let f = args.at(-1)
+  return fn(...args) {
+    assert! conds::every?(fn(f) = f(args))
+    return f(...args)
+  }
+}
+
+@pre(#(&::at(1) != 0))
+fn div(a, b) = a / b
+
+div(1, 2)::log()
+
+fn spread_pipe(f) = f::call(...this)
+
+[~Map{name: "marcelle"}, ~Hash{name: "dog"}]
+  ::spread_pipe(arg_name)::log()
