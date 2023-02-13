@@ -34,17 +34,17 @@ fn Range(start, end, exclusive?) {
 
 protocol Record
 
-define Record for Map = {
-  fn construct(entries) = new Map(entries)
-}
-define Record for ObjectLiteral = {
-  fn construct(entries) = new ObjectLiteral(Object.fromEntries(entries))
-}
-define Record for Hash = {
-  fn construct(entries) = new Hash(entries)
-}
+define Record for Map = fn(entries) = new Map(entries)
+define Record for ObjectLiteral = fn(entries) = entries::from_entries()
+define Record for Hash = fn(entries) = new Hash(entries)
 
-fn construct_record(entries) = this[Record].construct.call(this, entries)
+fn construct_record(entries) = this[Record](entries)
+
+protocol Vector
+
+define Vector for Array = fn(entries) = entries
+
+fn construct_vector(entries) = this[Vector](entries)
 
 protocol Deconstruct
 
@@ -107,7 +107,7 @@ fn call(...args) = this[Call](...args)
 
 fn pipe(callable) = callable::call(this)
 
-fn compose(f, ...fns) = fn(...args) = 
+fn compose(f, ...fns) = fn(...args) =
   fns::reduce(
     fn (result, f) = f::call(result),
     f::call(...args)
@@ -130,7 +130,7 @@ impl Equal for BigInt = strict_eq?
 impl Equal for Boolean = strict_eq?
 
 impl Equal for Array = fn(other) {
-  if other is not Array {
+  if !(other is Array) {
     return false
   }
   if this.length !== other.length {
@@ -140,7 +140,7 @@ impl Equal for Array = fn(other) {
 }
 
 impl Equal for Map = fn(other) {
-  if other is not Map {
+  if !(other is Map) {
     return false
   }
   if this.size !== other.size {
@@ -567,7 +567,7 @@ fn filter(f) = this[Collection].filter.call(this, f::call)
 fn some?(...fns) = this[Collection].some?.call(this, compose(...fns))
 fn every?(...fns) = this[Collection].every?.call(this, compose(...fns))
 fn reduce(f, start) {
-  if !start {
+  if start === undefined {
     start = this::sample()::identity()
   }
   return this[Collection].reduce.call(this, f::call, start)
@@ -615,6 +615,7 @@ fn reverse() = this[OrderedCollection].reverse.call(this)
 // OPERATORS
 
 protocol Plus
+protocol Not
 protocol Minus
 protocol Times
 protocol Divide
@@ -624,6 +625,8 @@ protocol Comparable
 protocol LessThan
 protocol And
 protocol Or
+
+impl Not for Object = fn() = negate(this)
 
 impl And for Object = fn(thunk) = js_and(this, thunk)
 
@@ -747,6 +750,7 @@ fn plus(other) = ~Map{
   ::find(::fn(proto, f) = this[proto])
   ::pipe(::fn(f) = this::f(other))
 
+fn not() = this[Not]()
 fn minus(other) = this[Minus](other)
 fn times(other) = this[Times](other)
 fn divide_by(other) = this[Divide](other)

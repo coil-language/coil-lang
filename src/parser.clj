@@ -110,22 +110,10 @@
        (p/skip :triple-not-eq)
        (p/then parse-expr :rhs)))
 
-(defn- parse-is-not [lhs tokens]
-  (->> (p/from {:type :is-not, :lhs lhs} tokens)
-       (p/skip :is)
-       (p/skip :not)
-       (p/then parse-expr :rhs)))
-
 (defn- parse-is [lhs tokens]
   (->> (p/from {:type :is, :lhs lhs} tokens)
        (p/skip :is)
        (p/then parse-expr :rhs)))
-
-(defn- parse-is-or-is-not [lhs tokens]
-  (->> (p/null tokens)
-       (p/one-case
-        {[:is :not] #(parse-is-not lhs %),
-         :is #(parse-is lhs %)})))
 
 (defn- parse-and-and [lhs tokens]
   (->> (p/from {:type :and-and, :lhs lhs} tokens)
@@ -172,7 +160,7 @@
                :open-sq (parse-object-dynamic-access lhs tokens)
                :and-and (parse-and-and lhs tokens)
                :or-or (parse-or-or lhs tokens)
-               :is (parse-is-or-is-not lhs tokens)
+               :is (parse-is lhs tokens)
                :eq (parse-snd-assign lhs tokens)
                (when (math-ops (p/peek-next tokens)) (parse-math-op lhs tokens)))]
       (recur expr tokens)
@@ -459,6 +447,14 @@
        (p/until :close-b parse-record-entry :entries)
        (p/skip :close-b)))
 
+(defn- parse-vector-syntax [tokens]
+  (->> (p/from {:type :vector-syntax} tokens)
+       (p/skip :tilde)
+       (p/one :id :constructor-name)
+       (p/skip :open-sq)
+       (p/until :close-sq parse-expr :entries)
+       (p/skip :close-sq)))
+
 (defn- parse-shorthand-anon-fn [tokens]
   (->> (p/from {:type :shorthand-anon-fn} tokens)
        (p/skip :hash)
@@ -494,7 +490,8 @@
        (p/one-case
         (array-map
          :string-lit parse-str,
-         :tilde parse-record-syntax,
+         [:tilde :id :open-b] parse-record-syntax,
+         [:tilde :id :open-sq] parse-vector-syntax,
          :keyword parse-keyword,
          :open-p parse-paren-expr,
          :yield parse-yield,

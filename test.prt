@@ -1,25 +1,42 @@
-@deconstruct_this
-fn my_name({ name }) = name
-
-@deconstruct_args
-fn arg_name({ name: name1 }, { name: name2 }) =
-  name1 + ", " + name2
-
 fn pre(...args) {
-  let conds = args.slice(0, -1)
+  let cond_fns = args.slice(0, -1)
   let f = args.at(-1)
   return fn(...args) {
-    assert! conds::every?(fn(f) = f(args))
+    assert! cond_fns::every?(fn(f) = f::call(...args))
     return f(...args)
   }
 }
 
-@pre(#(&::at(1) != 0))
-fn div(a, b) = a / b
+impl Not for Set = fn() = #(!this.has(&))
 
-div(1, 2)::log()
+fn Args(schemas) {
+  this.schemas = schemas
+}
 
-fn spread_pipe(f) = f::call(...this)
+define Vector for Args = fn(schemas) = new Args(schemas)
 
-[~Map{name: "marcelle"}, ~Hash{name: "dog"}]
-  ::spread_pipe(arg_name)::log()
+impl Call for Args = fn(...args) =
+  this.schemas::every?(fn(schema, i) = schema::call(args[i]))
+
+fn Lit(value) {
+  this.value = value
+}
+
+impl Call for Lit = fn(other) = this.value == other
+impl Not for Lit = fn() = #(& != this.value)
+
+fn lit(x) = new Lit(x)
+
+fn any() = true
+
+fn inf?(x) = !Number.isFinite(x)
+
+impl Not for Args = fn() = ::fn(...args) = !this::call(...args)
+
+@pre(
+  !~Args[inf? inf?]
+  ~Args[any !lit(0)]
+)
+fn safe_divide(a, b) = a / b
+
+safe_divide(Infinity, Infinity)::log() // throw AssertionError

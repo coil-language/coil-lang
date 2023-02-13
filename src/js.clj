@@ -168,7 +168,7 @@
   (str "!" (resolve-name "eq?") "(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
 
 (defn- eval-not [{:keys [expr]}]
-  (str "negate(" (eval-expr expr) ")"))
+  (str "not.call(" (eval-expr expr) ")"))
 
 (defn- eval-dynamic-access [{:keys [lhs expr]}]
   (str (eval-expr lhs) "[" (eval-expr expr) "]"))
@@ -181,9 +181,6 @@
 
 (defn- eval-triple-not-equals [{:keys [lhs rhs]}]
   (str (eval-expr lhs) " !== " (eval-expr rhs)))
-
-(defn- eval-is-not [{:keys [lhs rhs]}]
-  (str "!(" (eval-expr lhs) " instanceof " (eval-expr rhs) ")"))
 
 (defn- eval-is [{:keys [lhs rhs]}]
   (str (eval-expr lhs) " instanceof " (eval-expr rhs)))
@@ -263,6 +260,10 @@
        (->> entries (map eval-record-entry) (string/join ","))
        "])"))
 
+(defn- eval-vector-syntax [{:keys [constructor-name entries]}]
+  (str "construct_vector.bind(" constructor-name ")"
+       "([" (string/join ", " (map eval-expr entries)) "])"))
+
 (defn- eval-inclusive-range [{:keys [lhs rhs]}]
   (str "new Range(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
 
@@ -316,7 +317,6 @@
     :triple-equals (eval-triple-equals node)
     :triple-not-equals (eval-triple-not-equals node)
     :spread (eval-spread node)
-    :is-not (eval-is-not node)
     :is (eval-is node)
     :and-and (eval-and-and node)
     :or-or (eval-or-or node)
@@ -325,6 +325,7 @@
     :yield (eval-yield node)
     :jsx-tag (eval-jsx-tag node)
     :record-syntax (eval-record-syntax node)
+    :vector-syntax (eval-vector-syntax node)
     :paren-expr (eval-paren-expr node)
     :unapplied-math-op (eval-unapplied-math-op node)
     :unapplied-and-and (eval-unapplied-and-and node)

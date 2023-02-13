@@ -7,7 +7,6 @@
    {:regex #"^\~"                    :keyword :tilde}
    {:regex #"^if\b"                  :keyword :if}
    {:regex #"^is\b"                  :keyword :is}
-   {:regex #"^not\b"                 :keyword :not}
    {:regex #"^unless\b"              :keyword :unless}
    {:regex #"^else\b"                :keyword :else}
    {:regex #"^return\b"              :keyword :return}

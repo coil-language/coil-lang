@@ -47,8 +47,32 @@
           "match": "\\b(if|else|of|return|assert|async)\\b"
         },
         {
-          "name": "keyword.other",
-          "match": "impl.*\\b(for)\\b"
+          "match": "(impl)\\b(.*)\\b(for)\\b",
+          "captures": {
+            "1": {
+              "name": "keyword.other"
+            },
+            "2": {
+              "name": "entity.name.type"
+            },
+            "3": {
+              "name": "keyword.other"
+            }
+          }
+        },
+        {
+          "match": "(define)\\b(.*)\\b(for)\\b",
+          "captures": {
+            "1": {
+              "name": "keyword.other"
+            },
+            "2": {
+              "name": "entity.name.type"
+            },
+            "3": {
+              "name": "keyword.other"
+            }
+          }
         },
         {
           "name": "keyword.control",
@@ -61,10 +85,6 @@
         {
           "name": "keyword",
           "match": "\\b(is|typeof|await)\\b"
-        },
-        {
-          "name": "keyword",
-          "match": "\\bis\\b(not)\\b"
         },
         {
           "match": "\\bnew\\b",
