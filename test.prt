@@ -1,9 +1,7 @@
-fn deconstruct_this(f) {
-  return fn() = f(this::deconstruct())
-}
-
 @deconstruct_this
 fn my_name({ name }) = name
 
-~Hash{name: 10}::my_name()::log()
+@deconstruct_args
+fn arg_name({ name: name1 }, { name: name2 }) = name1 + ", " + name2
 
+arg_name(~Map{name: "marcelle"}, ~Hash{name: "dog"})::log()

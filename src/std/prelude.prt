@@ -55,6 +55,9 @@ impl Deconstruct for Array = fn() = this
 
 fn deconstruct() = this[Deconstruct]()
 
+// decorators
+fn deconstruct_this(f) = fn() = ::f(this::deconstruct())
+fn deconstruct_args(f) = fn(...args) = ::f(...args::map(#(&::deconstruct())))
 
 // CALL PROTOCOL
 

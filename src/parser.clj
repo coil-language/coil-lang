@@ -199,16 +199,34 @@
        (p/until :close-sq parse-simple-name :names)
        (p/skip :close-sq)))
 
-(defn- parse-assign-obj [tokens]
-  (->> (p/from {:type :object-deconstruction} tokens)
-       (p/skip :open-b)
-       (p/until :close-b parse-simple-name :names)
-       (p/skip :close-b)))
-
 (defn- parse-spread-assign [tokens]
   (->> (p/from {:type :spread-assign} tokens)
        (p/skip :dot-dot-dot)
        (p/one :id :name)))
+
+(defn- parse-obj-entry-rename [tokens]
+  (->> (p/from {:type :obj-entry-rename} tokens)
+       (p/one :id :old-name)
+       (p/skip :colon)
+       (p/one :id :new-name)))
+
+(defn- parse-reg-obj-assign-entry [tokens]
+  (->> (p/from {:type :obj-reg-entry} tokens)
+       (p/one :id :name)))
+
+(defn- parse-obj-assign-entry [tokens]
+  (->> (p/null tokens)
+       (p/one-case
+        (array-map
+         [:id :colon] parse-obj-entry-rename
+         :id parse-reg-obj-assign-entry
+         :dot-dot-dot parse-spread-assign))))
+
+(defn- parse-assign-obj [tokens]
+  (->> (p/from {:type :object-deconstruction} tokens)
+       (p/skip :open-b)
+       (p/until :close-b parse-obj-assign-entry :entries)
+       (p/skip :close-b)))
 
 (defn- parse-assign-expr [tokens]
   (->> (p/null tokens)
@@ -330,7 +348,7 @@
 (defn- parse-spread [tokens]
   (->> (p/from {:type :spread} tokens)
        (p/skip :dot-dot-dot)
-       (p/then parse-single-expr :expr)))
+       (p/then parse-expr :expr)))
 
 (defn- parse-yield [tokens]
   (->> (p/from {:type :yield} tokens)
