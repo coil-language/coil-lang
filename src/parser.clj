@@ -8,6 +8,7 @@
 (declare parse-statement)
 (declare parse-expr)
 (declare parse-single-expr)
+(declare parse-1-2-expr)
 
 (defn- when-on-same-line-as-previous-token [token body]
   (let [prev-token
@@ -53,16 +54,27 @@
          (p/until :close-p parse-expr :args)
          (p/skip :close-p))))
 
-(def math-ops #{:mod :plus :minus :lt :gt :lt-eq :gt-eq :times :pow :div})
+(def math-ops #{:mod :plus :minus :times :pow :div})
+
+(def comparison-ops #{:lt :gt :lt-eq :gt-eq})
+
+(def all-math-ops (merge math-ops comparison-ops))
 
 (defn- parse-math-op [lhs tokens]
   (->> (p/from {:type :math-op, :lhs lhs} tokens)
        (p/either math-ops :op)
-       (p/then parse-expr :rhs)))
+       (p/then parse-1-2-expr :rhs)))
+
+
+(defn- parse-comparison-op [lhs tokens]
+  (->> (p/from {:type :math-op, :lhs lhs} tokens)
+       (p/either comparison-ops :op)
+       (p/then parse-1-2-expr :rhs)))
+
 
 (defn- parse-unapplied-math-op [tokens]
   (->> (p/from {:type :unapplied-math-op} tokens)
-       (p/either math-ops :op)))
+       (p/either all-math-ops :op)))
 
 (defn- parse-paren-expr [tokens]
   (->> (p/from {:type :paren-expr} tokens)
@@ -78,7 +90,7 @@
        (p/one-case
         {:id parse-id,
          :fn parse-fn,
-         math-ops parse-unapplied-math-op,
+         all-math-ops parse-unapplied-math-op,
          :open-p parse-paren-expr}
         :expr)))
 
@@ -113,7 +125,7 @@
 (defn- parse-is [lhs tokens]
   (->> (p/from {:type :is, :lhs lhs} tokens)
        (p/skip :is)
-       (p/then parse-expr :rhs)))
+       (p/then parse-1-2-expr :rhs)))
 
 (defn- parse-and-and [lhs tokens]
   (->> (p/from {:type :and-and, :lhs lhs} tokens)
@@ -135,14 +147,28 @@
    (first tokens)
    #(->> (p/from {:type :inclusive-range, :lhs lhs} tokens)
          (p/skip :dot-dot)
-         (p/then parse-expr :rhs))))
+         (p/then parse-1-2-expr :rhs))))
 
 (defn- parse-exclusive-range [lhs tokens]
   (when-on-same-line-as-previous-token
    (first tokens)
    #(->> (p/from {:type :exclusive-range, :lhs lhs} tokens)
          (p/skip :dot-dot-dot)
-         (p/then parse-expr :rhs))))
+         (p/then parse-1-2-expr :rhs))))
+
+(defn- parse-third-expr [[lhs tokens]]
+  (loop [lhs lhs, tokens tokens]
+    (if-let [[expr tokens]
+             (case (p/peek-next tokens)
+               :double-eq (parse-double-eq lhs tokens)
+               :triple-eq (parse-triple-eq lhs tokens)
+               :triple-not-eq (parse-triple-not-eq lhs tokens)
+               :not-eq (parse-not-eq lhs tokens)
+               :and-and (parse-and-and lhs tokens)
+               :or-or (parse-or-or lhs tokens)
+               (when (comparison-ops (p/peek-next tokens)) (parse-comparison-op lhs tokens)))]
+      (recur expr tokens)
+      (p/from lhs tokens))))
 
 (defn- parse-snd-expr [[lhs tokens]]
   (loop [lhs lhs, tokens tokens]
@@ -153,13 +179,7 @@
                :dot-dot-dot (parse-exclusive-range lhs tokens)
                :open-p (parse-fn-call lhs tokens)
                :double-colon (parse-infix-bind lhs tokens)
-               :double-eq (parse-double-eq lhs tokens)
-               :triple-eq (parse-triple-eq lhs tokens)
-               :triple-not-eq (parse-triple-not-eq lhs tokens)
-               :not-eq (parse-not-eq lhs tokens)
                :open-sq (parse-object-dynamic-access lhs tokens)
-               :and-and (parse-and-and lhs tokens)
-               :or-or (parse-or-or lhs tokens)
                :is (parse-is lhs tokens)
                :eq (parse-snd-assign lhs tokens)
                (when (math-ops (p/peek-next tokens)) (parse-math-op lhs tokens)))]
@@ -319,7 +339,7 @@
        (p/one-case
         {:id parse-id,
          :fn parse-fn,
-         math-ops parse-unapplied-math-op,
+         all-math-ops parse-unapplied-math-op,
          :open-p parse-paren-expr}
         :expr)))
 
@@ -498,7 +518,7 @@
          :await parse-await,
          :id parse-id,
          :at parse-decorator,
-         math-ops parse-unapplied-math-op,
+         all-math-ops parse-unapplied-math-op,
          :and-and parse-unapplied-and-and,
          :or-or parse-unapplied-or-or,
          :num parse-num,
@@ -516,9 +536,14 @@
          :fn parse-fn,
          [:lt :id] parse-jsx-tag))))
 
-(defn- parse-expr [tokens]
+(defn- parse-1-2-expr [tokens]
   (->> (parse-single-expr tokens)
        parse-snd-expr))
+
+(defn- parse-expr [tokens]
+  (->> (parse-single-expr tokens)
+       parse-snd-expr
+       parse-third-expr))
 
 (defn- parse-else-branch [tokens]
   (->> (p/null tokens)

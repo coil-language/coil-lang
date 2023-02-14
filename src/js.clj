@@ -165,7 +165,7 @@
   (str (resolve-name "eq?") "(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
 
 (defn- eval-not-equals [{:keys [lhs rhs]}]
-  (str "!" (resolve-name "eq?") "(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
+  (str "not.call(" (resolve-name "eq?") "(" (eval-expr lhs) ", " (eval-expr rhs) ")" ")"))
 
 (defn- eval-not [{:keys [expr]}]
   (str "not.call(" (eval-expr expr) ")"))
@@ -283,7 +283,7 @@
   (str "__args[" (dec arg-num) "]"))
 
 (defn- eval-decorator [{:keys [name fn-def args]}]
-  (str "let " (fn-def :name) " = "
+  (str "let " (resolve-name (fn-def :name)) " = "
        name "("
        (when (not= (count args) 0)
          (str
