@@ -103,9 +103,21 @@ impl Call for Keyword = fn(collection) {
   }
 }
 
+impl Call for Range = fn(value) {
+  if this.exclusive? {  
+    return value >= this.start && value < this.end
+  } else {
+    return value >= this.start && value <= this.end
+  }
+}
+
 fn call(...args) = this[Call](...args)
 
-fn pipe(callable) = callable::call(this)
+protocol Pipe
+
+impl Pipe for Object = fn(callable) = callable::call(this)
+
+fn pipe(callable) = this[Pipe](callable::call)
 
 fn compose(f, ...fns) = fn(...args) =
   fns::reduce(
@@ -114,6 +126,11 @@ fn compose(f, ...fns) = fn(...args) =
   )
 
 fn impl_call_for_bound(f) = f[Call] = fn(first, ...rest) = first::f(...rest)
+
+fn impl_callable(f) {
+  impl_call_for_bound(f)  
+  return f
+}
 
 // EQUAL PROTOCOl
 
@@ -224,7 +241,13 @@ impl Identity for Map = ~Map{}
 impl Identity for Hash = ~Hash{}
 impl Identity for Set = #{}
 
-fn identity() = this[Identity]
+fn identity() {
+  if this === undefined {
+    return this
+  } else {
+    return this[Identity]
+  }
+}
 
 // COLLECTION PROTOCOL
 protocol Collection
@@ -243,8 +266,8 @@ impl Collection for ObjectLiteral = {
   fn map(f) = this::entries().map(fn ([k, v]) = f(k, v))::from_entries()
   fn flat_map(f) = this::entries().map(fn ([k, v]) = f(k, v)::entries()).flat()::from_entries()
   fn filter(f) = this::entries().filter(fn ([k, v]) = f(k, v)::pipe(truthy))::from_entries()
-  fn some?(f) = this::entries().some(fn ([k, v]) = f(k, v)::pipe(truthy))::from_entries()
-  fn every?(f) = this::entries().every(fn ([k, v]) = f(k, v)::pipe(truthy))::from_entries()
+  fn some?(f) = this::entries().some(fn ([k, v]) = f(k, v)::pipe(truthy))
+  fn every?(f) = this::entries().every(fn ([k, v]) = f(k, v)::pipe(truthy))
   fn reduce(f, start) = this::entries().reduce(f, start)
   fn insert(key, value) = {...this, [key]: value}
   fn concat(other) = {...this, ...other}
@@ -693,8 +716,8 @@ impl Mod for BigInt = fn(other) {
 }
 
 let ComparableMixin = {
-  fn greater_than_eq(other) = this::greater_than(other) || this == other
-  fn less_than_eq(other) = this::greater_than(other) || this == other
+  fn greater_than_eq(other) = this::greater_than(other) || (this == other)
+  fn less_than_eq(other) = this::less_than(other) || (this == other)
 }
 
 impl Comparable for Number = {
@@ -769,7 +792,7 @@ fn and(other) {
   }
 }
 fn or(thunk) {
-  if js_or(this === undefined, this::fn() = this === null) {
+  if js_or(this === undefined, (this::fn() = this === null)) {
     return thunk()
   } else { 
     return this[Or](thunk)
@@ -833,24 +856,158 @@ fn printable() {
   }
 }
 
-fn log() {  
-  console.log(this::printable())
+fn log(...args) {  
+  console.log(...args, this::printable())
   return this
 }
 
 // Helpers
 
+
+@impl_callable
 fn int?() = Number.isInteger(this)
+
+@impl_callable
 fn bigint?() = typeof(this) === "bigint"
+
+@impl_callable
 fn float?() = typeof(this) === "number" && !int?(this)
+
+@impl_callable
 fn even?() = (this % 2) === 0
+
+@impl_callable
 fn pos?() = this >= this::identity()
+
+@impl_callable
 fn nan?() = Number.isNaN(this)
+
+@impl_callable
 fn to_f() = Number(this)
+
+@impl_callable
 fn to_i() = this::to_f()::pipe(Math.floor)
+
+@impl_callable
 fn to_s() = this.toString()
+
+@impl_callable
 fn to_b() = truthy(this)
+
+@impl_callable
 fn exists?() = (this || (this == false))::to_b()
 
-[int? bigint? even? nan? pos? float? to_f to_i to_s to_b]::each(impl_call_for_bound)
+@impl_callable
+fn finite?() = this::bigint?() || Number.isFinite(this)
 
+@impl_callable
+fn inf?() = !this::finite?()
+
+@impl_callable
+fn to_lowercase() = this.toLowerCase()
+
+@impl_callable
+fn as_set() = new Set(this)
+
+// Schema / Schema related stuff
+impl Not for Set = fn() = #(!this.has(&))
+
+fn pre(...args) {
+  let cond_fns = args.slice(0, -1)
+  let f = args.at(-1)
+  return fn(...args) {
+    assert! cond_fns::every?(fn(f) = f::call(...args))
+    return f(...args)
+  }
+}
+
+fn Args(schemas) {
+  this.schemas = schemas
+}
+
+define Vector for Args = fn(schemas) = new Args(schemas)
+
+impl Call for Args = fn(...args) =
+  this.schemas::every?(fn(schema, i) = schema::call(args[i]))
+
+fn Lit(value) {
+  this.value = value
+}
+
+impl Call for Lit = fn(other) = this.value == other
+impl Not for Lit = fn() = #(& != this.value)
+
+fn lit(val) = new Lit(val)
+
+fn any(_) = true
+
+impl Not for Args = fn() = ::fn(...args) = !this::call(...args)
+
+fn Schema(entries) {
+  this.entries = entries::from_entries()
+}
+
+define Record for Schema = fn(entries) = new Schema(entries)
+
+impl Call for Schema = fn(record) =
+  record::every?(::fn(k, v) {
+    if this.entries::at(k) {
+      return this.entries::at(k)::call(v)
+    } else {
+      return true
+    }
+  })
+
+impl Not for Schema = fn() = ::fn(record) = !this::call(record)
+
+fn Underscore(transforms) {
+  this.transforms = transforms
+}
+
+let _ = Object.freeze(new Underscore([]))
+
+impl Call for Underscore = fn(value) = 
+  compose(...this.transforms)::call(value)
+
+impl Comparable for Underscore = {
+  fn less_than(val) = new Underscore([...this.transforms, fn(my_value) = my_value < val])
+  fn greater_than(val) = new Underscore([...this.transforms, fn(my_value) = my_value > val])
+  fn greater_than_eq(val) = new Underscore([...this.transforms, fn(my_value) = my_value >= val])
+  fn less_than_eq(val) = new Underscore([...this.transforms, fn(my_value) = my_value <= val])
+}
+
+impl Not for Underscore = fn() =
+  ::fn(val) = !this::call(val)
+
+impl Equal for Underscore = fn(other) =
+  new Underscore([...this.transforms, fn(my_value) = my_value == other])
+
+impl Collection for Underscore = {
+  fn at(idx) = new Underscore([...this.transforms, fn(self) = self::at(idx)])
+  fn sample() = new Underscore([...this.transforms, fn(self) = self::sample()])
+  fn each(f) = new Underscore([...this.transforms, fn(self) = self::each(f)])
+  fn find(f) = new Underscore([...this.transforms, fn(self) = self::find(f)])
+  fn map(f) = new Underscore([...this.transforms, fn(self) = self::map(f)])
+  fn flat_map(f) = new Underscore([...this.transforms, fn(self) = self::flat_map(f)])
+  fn filter(f) = new Underscore([...this.transforms, fn(self) = self::filter(f)])
+  fn some?(f) = new Underscore([...this.transforms, fn(self) = self::some?(f)])
+  fn every?(f) = new Underscore([...this.transforms, fn(self) = self::every?(f)])
+  fn reduce(f, start) = new Underscore([...this.transforms, fn(self) = self::reduce(f, start)])
+  fn insert(value) = new Underscore([...this.transforms, fn(self) = self::insert(value)])
+  fn concat(other) = new Underscore([...this.transforms, fn(self) = self::concat(other)])
+}
+
+impl Pipe for Underscore = fn(f) = new Underscore([...this.transforms, f])
+
+impl And for Underscore = fn(other) =
+  ::fn(value) = this::call(value) && other::call(value)
+
+impl Or for Underscore = fn(other) =
+  ::fn(value) = this::call(value) || other::call(value)
+
+impl Plus for Underscore = fn(other) = new Underscore([...this.transforms, fn(my_value) = my_value + other])
+impl Minus for Underscore = fn(other) = new Underscore([...this.transforms, fn(my_value) = my_value - other])
+impl Times for Underscore = fn(other) = new Underscore([...this.transforms, fn(my_value) = my_value * other])
+impl Divide for Underscore = fn(other) = new Underscore([...this.transforms, fn(my_value) = my_value / other])
+impl Exponent for Underscore = fn(other) = new Underscore([...this.transforms, fn(my_value) = my_value ** other])
+impl Mod for Underscore = fn(other) = new Underscore([...this.transforms, fn(my_value) = my_value % other])

@@ -1,42 +1,9 @@
-fn pre(...args) {
-  let cond_fns = args.slice(0, -1)
-  let f = args.at(-1)
-  return fn(...args) {
-    assert! cond_fns::every?(fn(f) = f::call(...args))
-    return f(...args)
-  }
-}
 
-impl Not for Set = fn() = #(!this.has(&))
+let vowel_only_word? = _::pipe(to_lowercase)::every?("aeiou"::as_set())
 
-fn Args(schemas) {
-  this.schemas = schemas
-}
-
-define Vector for Args = fn(schemas) = new Args(schemas)
-
-impl Call for Args = fn(...args) =
-  this.schemas::every?(fn(schema, i) = schema::call(args[i]))
-
-fn Lit(value) {
-  this.value = value
-}
-
-impl Call for Lit = fn(other) = this.value == other
-impl Not for Lit = fn() = #(& != this.value)
-
-fn lit(x) = new Lit(x)
-
-fn any() = true
-
-fn inf?(x) = !Number.isFinite(x)
-
-impl Not for Args = fn() = ::fn(...args) = !this::call(...args)
-
-@pre(
-  !~Args[inf? inf?]
-  ~Args[any !lit(0)]
-)
-fn safe_divide(a, b) = a / b
-
-safe_divide(Infinity, Infinity)::log() // throw AssertionError
+let User = ~Schema{
+  name: _::pipe(:length) <= 10
+  age: 0..100
+[5 7 29 3]
+  ::filter(_ * 10 <= 100)
+  ::log()
