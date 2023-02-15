@@ -14,7 +14,7 @@
             (str/split #"\.")
             first)]
     (spit
-     (str "failed-" base-file-name ".ts")
+     (str "failed-" base-file-name ".js")
      actual-js)))
 
 (deftest snapshot-tests
@@ -27,7 +27,7 @@
     (doseq [file files]
       (try
         (let [src (slurp file)
-              expected-js (slurp (str/replace file #"\.prt" ".ts"))
+              expected-js (slurp (str/replace file #"\.prt" ".js"))
               actual-js (main/compile-from-str src)]
           (when (not= expected-js actual-js)
             (write-failed-test-file file actual-js))

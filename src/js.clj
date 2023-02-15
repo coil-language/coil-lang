@@ -399,7 +399,7 @@
 (defn eval-js [ast]
   (let [output (eval-ast ast)]
     (if @globals/emit-std
-      (str (slurp "./src/std/js_prelude.ts") "\n"
+      (str (slurp "./src/std/js_prelude.js") "\n"
            (compile-std-lib)
            output)
       output)))

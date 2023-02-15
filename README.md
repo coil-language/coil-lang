@@ -284,7 +284,7 @@ In JavaScript there isn't a clear way to verify an object was created from objec
 // JavaScript
 new ObjectLiteral({ a : 10 })
 
-// ...in the js_prelude.ts the definition of ObjectLiteral is the following
+// ...in the js_prelude.js the definition of ObjectLiteral is the following
 function ObjectLiteral(obj) {
   Object.assign(this, obj);
 }
