@@ -888,22 +888,20 @@ fn when(cond, f) {
   }
 }
 
-fn when_exists(f) = (this || (this == false)) && f::call(this)
-
 fn otherwise(val) = this || val
 
 @impl_callable
 fn printable() {
-  if this {
+  if nil?::call(this) {
+    return this
+  } else {  
     return ~Map{
-      Printable => fn() = this[Printable]()
-      Clone => print_for_generic_clone_object
+      Printable => ::fn() = this[Printable]()
+      Clone => ::print_for_generic_clone_object
     }
       ::find(::fn(proto) = this[proto])
-      ::when_exists(::fn(printf) = ::printf())
+      ::call()
       ::otherwise(this)
-  } else {
-    return this
   }
 }
 
