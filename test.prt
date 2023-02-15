@@ -1,9 +1,12 @@
-
-let vowel_only_word? = _::pipe(to_lowercase)::every?("aeiou"::as_set())
-
 let User = ~Schema{
-  name: _::pipe(:length) <= 10
-  age: 0..100
-[5 7 29 3]
-  ::filter(_ * 10 <= 100)
+  name: ~All[str? _::pipe(:length) <= 100]
+  age: ~All[int? pos?]
+}
+
+let Teenager = User && ~Schema{age: _ < 19}
+let Adult = User && ~Schema{age: 19...50}
+let Senior = User && ~Schema{age: _ >= 50}
+
+[{name: "marcelle", age: 49, years_of_experience: 6} {years_of_experience: 5}]
+  ::keep(~Schema{years_of_experience: _ >= 5})
   ::log()

@@ -38,6 +38,9 @@ define Record for Map = fn(entries) = new Map(entries)
 define Record for ObjectLiteral = fn(entries) = entries::from_entries()
 define Record for Hash = fn(entries) = new Hash(entries)
 
+fn truthy?() = truthy(this)
+
+fn record?() = this.constructor[Record]::truthy?()
 fn construct_record(entries) = this[Record](entries)
 
 protocol Vector
@@ -111,13 +114,29 @@ impl Call for Range = fn(value) {
   }
 }
 
-fn call(...args) = this[Call](...args)
+fn call(...args) {
+  if nil?[Call](this) {
+    return this
+  } else {
+    return this[Call](...args)
+  }
+}
 
 protocol Pipe
 
 impl Pipe for Object = fn(callable) = callable::call(this)
 
-fn pipe(callable) = this[Pipe](callable::call)
+fn freeze() = Object.freeze(this)
+
+let nil? = #{undefined null}::freeze()
+
+fn pipe(callable) {
+  if nil?::call(this) {
+    return this
+  } else {
+    return this[Pipe](callable::call)
+  }
+}
 
 fn compose(f, ...fns) = fn(...args) =
   fns::reduce(
@@ -180,11 +199,12 @@ impl Equal for ObjectLiteral = fn(other) {
   return true
 }
 
-fn eq?(a, b) {
-  if (a === null) || (a === undefined) {
-    return a === b
+@impl_callable
+fn eq?(other) {
+  if nil?::call(this) {
+    return this === other
   } else {
-    return a[Equal](b)
+    return this[Equal](other)
   }
 }
 
@@ -242,7 +262,7 @@ impl Identity for Hash = ~Hash{}
 impl Identity for Set = #{}
 
 fn identity() {
-  if this === undefined {
+  if nil?::call(this) {
     return this
   } else {
     return this[Identity]
@@ -590,13 +610,19 @@ fn filter(f) = this[Collection].filter.call(this, f::call)
 fn some?(...fns) = this[Collection].some?.call(this, compose(...fns))
 fn every?(...fns) = this[Collection].every?.call(this, compose(...fns))
 fn reduce(f, start) {
-  if start === undefined {
+  if nil?::call(start) {
     start = this::sample()::identity()
   }
   return this[Collection].reduce.call(this, f::call, start)
 }
 fn insert(...args) = this[Collection].insert.call(this, ...args)
 fn concat(other) = this[Collection].concat.call(this, other)
+
+// aliases for readability
+
+fn keep(callable) = this::filter(callable)
+fn discard(callable) = this::filter(compose(callable, !_))
+
 
 protocol OrderedCollection
 
@@ -638,7 +664,7 @@ fn reverse() = this[OrderedCollection].reverse.call(this)
 // OPERATORS
 
 protocol Plus
-protocol Not
+protocol Negate
 protocol Minus
 protocol Times
 protocol Divide
@@ -649,7 +675,7 @@ protocol LessThan
 protocol And
 protocol Or
 
-impl Not for Object = fn() = negate(this)
+impl Negate for Object = fn() = js_negate(this)
 
 impl And for Object = fn(thunk) = js_and(this, thunk)
 
@@ -766,6 +792,7 @@ impl Comparable for String = {
   }
 }
 
+@impl_callable
 fn plus(other) = ~Map{
   Plus => fn(other) = this[Plus](other),
   Collection => fn(other) = this::concat(other)
@@ -773,34 +800,48 @@ fn plus(other) = ~Map{
   ::find(::fn(proto, f) = this[proto])
   ::pipe(::fn(f) = this::f(other))
 
-fn not() = this[Not]()
-fn minus(other) = this[Minus](other)
-fn times(other) = this[Times](other)
-fn divide_by(other) = this[Divide](other)
-fn exponent(other) = this[Exponent](other)
-fn mod(other) = this[Mod](other)
-fn greater_than(other) = this[Comparable].greater_than.call(this, other)
-fn greater_than_eq(other) = this[Comparable].greater_than_eq.call(this, other)
-fn less_than(other) = this[Comparable].less_than.call(this, other)
-fn less_than_eq(other) = this[Comparable].less_than_eq.call(this, other)
-
-fn and(other) {
-  if this {
-    return this[And](other)
+@impl_callable
+fn negate() {
+  if nil?::call(this) {
+    return true
   } else {
-    return this
+    return this[Negate]()
   }
 }
+@impl_callable
+fn minus(other) = this[Minus](other)
+@impl_callable
+fn times(other) = this[Times](other)
+@impl_callable
+fn divide_by(other) = this[Divide](other)
+@impl_callable
+fn exponent(other) = this[Exponent](other)
+@impl_callable
+fn mod(other) = this[Mod](other)
+@impl_callable
+fn greater_than(other) = this[Comparable].greater_than.call(this, other)
+@impl_callable
+fn greater_than_eq(other) = this[Comparable].greater_than_eq.call(this, other)
+@impl_callable
+fn less_than(other) = this[Comparable].less_than.call(this, other)
+@impl_callable
+fn less_than_eq(other) = this[Comparable].less_than_eq.call(this, other)
+@impl_callable
+fn and(thunk) {
+  if nil?::call(this) {
+    return this
+  } else {
+    return this[And](thunk)
+  }
+}
+@impl_callable
 fn or(thunk) {
-  if js_or(this === undefined, (this::fn() = this === null)) {
+  if nil?::call(this) {
     return thunk()
-  } else { 
+  } else {
     return this[Or](thunk)
   }
 }
-
-[plus minus times divide_by exponent mod greater_than greater_than_eq less_than less_than_eq and or]
-  ::each(impl_call_for_bound)
 
 // Printable
 
@@ -892,6 +933,9 @@ fn to_i() = this::to_f()::pipe(Math.floor)
 fn to_s() = this.toString()
 
 @impl_callable
+fn str?() = typeof(this) == "string"
+
+@impl_callable
 fn to_b() = truthy(this)
 
 @impl_callable
@@ -910,7 +954,7 @@ fn to_lowercase() = this.toLowerCase()
 fn as_set() = new Set(this)
 
 // Schema / Schema related stuff
-impl Not for Set = fn() = #(!this.has(&))
+impl Negate for Set = fn() = #(!this.has(&))
 
 fn pre(...args) {
   let cond_fns = args.slice(0, -1)
@@ -935,13 +979,13 @@ fn Lit(value) {
 }
 
 impl Call for Lit = fn(other) = this.value == other
-impl Not for Lit = fn() = #(& != this.value)
+impl Negate for Lit = fn() = #(& != this.value)
 
 fn lit(val) = new Lit(val)
 
 fn any(_) = true
 
-impl Not for Args = fn() = ::fn(...args) = !this::call(...args)
+impl Negate for Args = fn() = ::fn(...args) = !this::call(...args)
 
 fn Schema(entries) {
   this.entries = entries::from_entries()
@@ -949,22 +993,26 @@ fn Schema(entries) {
 
 define Record for Schema = fn(entries) = new Schema(entries)
 
-impl Call for Schema = fn(record) =
-  record::every?(::fn(k, v) {
-    if this.entries::at(k) {
-      return this.entries::at(k)::call(v)
-    } else {
-      return true
-    }
-  })
+impl Call for Schema = fn(record) = 
+  record::record?() &&
+  this.entries::every?(fn(k, schema) = schema::call(record::at(k)))
 
-impl Not for Schema = fn() = ::fn(record) = !this::call(record)
+impl Negate for Schema = fn() = ::fn(record) = !this::call(record)
+
+impl And for Schema = fn(thunk) = new Schema({
+  ...this.entries,
+  ...thunk().entries
+}::entries())
+
+
+impl Or for Schema = fn(thunk) =
+  ::fn(record) = (this::call(record) || thunk()::call(record))::to_b()
 
 fn Underscore(transforms) {
   this.transforms = transforms
 }
 
-let _ = Object.freeze(new Underscore([]))
+let _ = new Underscore([fn(x) = x])::freeze()
 
 impl Call for Underscore = fn(value) = 
   compose(...this.transforms)::call(value)
@@ -972,11 +1020,11 @@ impl Call for Underscore = fn(value) =
 impl Comparable for Underscore = {
   fn less_than(val) = new Underscore([...this.transforms, fn(my_value) = my_value < val])
   fn greater_than(val) = new Underscore([...this.transforms, fn(my_value) = my_value > val])
-  fn greater_than_eq(val) = new Underscore([...this.transforms, fn(my_value) = my_value >= val])
   fn less_than_eq(val) = new Underscore([...this.transforms, fn(my_value) = my_value <= val])
+  fn greater_than_eq(val) = new Underscore([...this.transforms, fn(my_value) = my_value >= val])
 }
 
-impl Not for Underscore = fn() =
+impl Negate for Underscore = fn() =
   ::fn(val) = !this::call(val)
 
 impl Equal for Underscore = fn(other) =
@@ -1011,3 +1059,15 @@ impl Times for Underscore = fn(other) = new Underscore([...this.transforms, fn(m
 impl Divide for Underscore = fn(other) = new Underscore([...this.transforms, fn(my_value) = my_value / other])
 impl Exponent for Underscore = fn(other) = new Underscore([...this.transforms, fn(my_value) = my_value ** other])
 impl Mod for Underscore = fn(other) = new Underscore([...this.transforms, fn(my_value) = my_value % other])
+
+fn All(conds) { this.conds = conds }
+
+define Vector for All = fn(conds) = new All(conds)
+
+impl Call for All = fn(val) = this.conds::every?(fn(f) = f::call(val))
+
+fn Any(conds) { this.conds = conds }
+
+define Vector for Any = fn(conds) = new Any(conds)
+
+impl Call for Any = fn(val) = this.conds::some?(fn(f) = f::call(val))

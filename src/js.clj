@@ -22,7 +22,7 @@
        "}"))
 
 (defn- eval-unless [{:keys [expr body]}]
-  (str "if (not(" (eval-expr expr) ")) {\n"
+  (str "if (negate.call(" (eval-expr expr) ")) {\n"
        (eval-ast body) "\n"
        "}"))
 
@@ -162,13 +162,13 @@
   (node :value))
 
 (defn- eval-double-equals [{:keys [lhs rhs]}]
-  (str (resolve-name "eq?") "(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
+  (str (resolve-name "eq?") ".call(" (eval-expr lhs) ", " (eval-expr rhs) ")"))
 
 (defn- eval-not-equals [{:keys [lhs rhs]}]
-  (str "not.call(" (resolve-name "eq?") "(" (eval-expr lhs) ", " (eval-expr rhs) ")" ")"))
+  (str "negate.call(" (resolve-name "eq?") ".call(" (eval-expr lhs) ", " (eval-expr rhs) ")" ")"))
 
 (defn- eval-not [{:keys [expr]}]
-  (str "not.call(" (eval-expr expr) ")"))
+  (str "negate.call(" (eval-expr expr) ")"))
 
 (defn- eval-dynamic-access [{:keys [lhs expr]}]
   (str (eval-expr lhs) "[" (eval-expr expr) "]"))

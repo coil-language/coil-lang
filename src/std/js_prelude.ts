@@ -2,7 +2,7 @@ function ObjectLiteral(obj) {
   Object.assign(this, obj);
 }
 
-function negate(val) {
+function js_negate(val) {
   return !truthy(val);
 }
 
