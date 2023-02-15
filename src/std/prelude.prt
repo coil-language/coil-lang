@@ -165,6 +165,8 @@ impl Equal for BigInt = strict_eq?
 
 impl Equal for Boolean = strict_eq?
 
+impl Equal for Keyword = strict_eq?
+
 impl Equal for Array = fn(other) {
   if !(other is Array) {
     return false
@@ -988,7 +990,7 @@ fn any(_) = true
 impl Negate for Args = fn() = ::fn(...args) = !this::call(...args)
 
 fn Schema(entries) {
-  this.entries = entries::from_entries()
+  this.entries = new Map(entries)
 }
 
 define Record for Schema = fn(entries) = new Schema(entries)
@@ -999,10 +1001,10 @@ impl Call for Schema = fn(record) =
 
 impl Negate for Schema = fn() = ::fn(record) = !this::call(record)
 
-impl And for Schema = fn(thunk) = new Schema({
-  ...this.entries,
-  ...thunk().entries
-}::entries())
+impl And for Schema = fn(thunk) = new Schema([
+  ...this.entries.entries(),
+  ...thunk().entries.entries()
+])
 
 
 impl Or for Schema = fn(thunk) =

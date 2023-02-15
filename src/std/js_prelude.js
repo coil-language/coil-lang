@@ -90,7 +90,9 @@ Keyword.for = function (name) {
   if (Keyword.cache.get(name)) {
     return Keyword.cache.get(name);
   } else {
-    return new Keyword(name);
+    let kw = new Keyword(name);
+    Keyword.cache.set(name, kw);
+    return kw;
   }
 };
 

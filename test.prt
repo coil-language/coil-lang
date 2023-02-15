@@ -7,6 +7,7 @@ let Teenager = User && ~Schema{age: _ < 19}
 let Adult = User && ~Schema{age: 19...50}
 let Senior = User && ~Schema{age: _ >= 50}
 
-[{name: "marcelle", age: 49, years_of_experience: 6} {years_of_experience: 5}]
+[{name: "marcelle", age: 49, years_of_experience: 6}
+ ~Map{years_of_experience: 5}]
   ::keep(~Schema{years_of_experience: _ >= 5})
   ::log()
