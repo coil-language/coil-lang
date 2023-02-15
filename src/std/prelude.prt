@@ -321,7 +321,7 @@ impl Collection for Hash = {
   fn map(f) {
     let new_hash = new Hash([])
     for [k, v] of this.raw_entries {
-      new_hash = new_hash::insert(k, f(v))
+      new_hash = new_hash::insert(...f(k, v))
     }
     return new_hash
   }
@@ -796,11 +796,11 @@ impl Comparable for String = {
 
 @impl_callable
 fn plus(other) = ~Map{
-  Plus => fn(other) = this[Plus](other),
-  Collection => fn(other) = this::concat(other)
+  Plus => ::fn() = this[Plus](other),
+  Collection => ::fn() = this::concat(other)
 }
   ::find(::fn(proto, f) = this[proto])
-  ::pipe(::fn(f) = this::f(other))
+  ::call()
 
 @impl_callable
 fn negate() {
@@ -854,6 +854,13 @@ fn _resolve_keyword_str(kw) = kw.replaceAll("__q", "?").replaceAll("__b", "!")
 impl Printable for ObjectLiteral = fn() =
   this::map(fn (k, v) = [_resolve_keyword_str(k), v]) 
 
+impl Printable for Hash = fn() =
+  this::map(fn (k, v) = [k::printable(), v::printable()])
+    .raw_entries::pipe(#(new Map(&)))
+
+impl Printable for Array = fn() =
+  this::map(printable)
+
 fn print_for_generic_clone_object() {
   let out = this::clone()
   for [key, value] of this::entries() {
@@ -885,6 +892,7 @@ fn when_exists(f) = (this || (this == false)) && f::call(this)
 
 fn otherwise(val) = this || val
 
+@impl_callable
 fn printable() {
   if this {
     return ~Map{
@@ -1043,7 +1051,7 @@ impl Collection for Underscore = {
   fn some?(f) = new Underscore([...this.transforms, fn(self) = self::some?(f)])
   fn every?(f) = new Underscore([...this.transforms, fn(self) = self::every?(f)])
   fn reduce(f, start) = new Underscore([...this.transforms, fn(self) = self::reduce(f, start)])
-  fn insert(value) = new Underscore([...this.transforms, fn(self) = self::insert(value)])
+  fn insert(...args) = new Underscore([...this.transforms, fn(self) = self::insert(...args)])
   fn concat(other) = new Underscore([...this.transforms, fn(self) = self::concat(other)])
 }
 

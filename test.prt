@@ -1,13 +1,5 @@
-let User = ~Schema{
-  name: ~All[str? _::pipe(:length) <= 100]
-  age: ~All[int? pos?]
-}
+let data_transform =
+  _::map(_ + 1)::map(_ + 2)
 
-let Teenager = User && ~Schema{age: _ < 19}
-let Adult = User && ~Schema{age: 19...50}
-let Senior = User && ~Schema{age: _ >= 50}
-
-[{name: "marcelle", age: 49, years_of_experience: 6}
- ~Map{years_of_experience: 5}]
-  ::keep(~Schema{years_of_experience: _ >= 5})
+plus::call(1 2 3)
   ::log()
