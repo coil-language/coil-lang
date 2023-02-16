@@ -2,9 +2,7 @@
 
 [try it out](https://protej-lang.netlify.app/)
 
-Coil Lang is functional language influenced by Clojure, Ruby and JavaScript.
-
-Coil is a class-less polymorphism-first language.
+Coil-lang is functional language with OO super powers
 
 ## Data Literals
 
