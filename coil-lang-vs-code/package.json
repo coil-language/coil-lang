@@ -1,0 +1,34 @@
+{
+  "name": "coil-lang",
+  "displayName": "coil-lang",
+  "description": "coil language support",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "coil",
+        "aliases": [
+          "coil",
+          "coil"
+        ],
+        "extensions": [
+          ".prt"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "coil",
+        "scopeName": "source.coil",
+        "path": "./syntaxes/coil.tmLanguage.json"
+      }
+    ]
+  }
+}

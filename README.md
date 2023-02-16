@@ -1,14 +1,10 @@
-# Protej
+# Coil-Lang
 
 [try it out](https://protej-lang.netlify.app/)
 
-Protej is a new OO and functional language influenced by Clojure, Ruby and JavaScript.
+Coil Lang is functional language influenced by Clojure, Ruby and JavaScript.
 
-Protej implements an OO system called Protocols built on JavaScript's prototypal object system.
-
-## Primer
-
-Note on syntax: commas are optional.
+Coil is a class-less polymorphism-first language.
 
 ## Data Literals
 
@@ -233,7 +229,7 @@ if 0 {
 }
 ```
 
-In protej, truthiness is defined like so
+In coil, truthiness is defined like so
 
 ```js
 function truthy(val) {
@@ -245,7 +241,7 @@ This means there's no surprises in the `0` or `""` cases.
 
 ### Value Equality
 
-In protej, we maintain the `===` strict equality operator without changes but we redefine `==` to be the following
+In coil, we maintain the `===` strict equality operator without changes but we redefine `==` to be the following
 
 ```
 a == b
@@ -276,10 +272,10 @@ We redefine all math operators to make sure that there is no automatic type conv
 
 ### Object Literal distinction
 
-In JavaScript there isn't a clear way to verify an object was created from object literal syntax. We address this in Protej by doing the following boilerplate the compiler generates.
+In JavaScript there isn't a clear way to verify an object was created from object literal syntax. We address this in Coil by doing the following boilerplate the compiler generates.
 
 ```
-// protej code
+// Coil code
 { a: 10 }
 // JavaScript
 new ObjectLiteral({ a : 10 })

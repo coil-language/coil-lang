@@ -2,7 +2,7 @@ protocol Hashable
 
 impl Hashable for String = fn() = js_str_hash(this)
 impl Hashable for Number = fn() = this
-impl Hashable for Keyword = fn() = ("____protej_keyword:" + this.value)::hash()
+impl Hashable for Keyword = fn() = ("____coil_keyword:" + this.value)::hash()
 impl Hashable for Array = fn() =
   ::reduce(fn(value, elem, idx) = (value * 31n) + elem::hash(), 7n)
 impl Hashable for ObjectLiteral = fn() =
@@ -293,6 +293,8 @@ impl Collection for ObjectLiteral = {
   fn reduce(f, start) = this::entries().reduce(f, start)
   fn insert(key, value) = {...this, [key]: value}
   fn concat(other) = {...this, ...other}
+  fn update(key, update_fn) = this::insert(key, update_fn::call(this::at(key)))
+  fn empty?() = Object.keys(this).length == 0
 }
 
 impl Collection for Array = {
@@ -308,6 +310,14 @@ impl Collection for Array = {
   fn reduce(f, start) = this.reduce(f, start)
   fn insert(value) = [...this, value]
   fn concat(other) = [...this, ...other]
+  fn update(val, update_fn) = this::map(fn(v) {
+    if val == v {
+      return update_fn::call(val)
+    } else {
+      return v
+    }
+  })
+  fn empty?() = this.length == 0
 }
 
 impl Collection for Hash = {
@@ -381,6 +391,8 @@ impl Collection for Hash = {
     }
     return new_hash
   }
+  fn update(key, update_fn) = this::insert(key, update_fn::call(this::at(key)))
+  fn empty?() = this.raw_entries.length == 0
 }
 
 impl Collection for Map = {
@@ -454,6 +466,8 @@ impl Collection for Map = {
     }
     return new_map
   }
+  fn update(key, update_fn) = this::insert(key, update_fn::call(this::at(key)))
+  fn empty?() = this.size == 0
 }
 
 impl Collection for Set = {
@@ -532,6 +546,13 @@ impl Collection for Set = {
     }
     return new_set
   }
+  fn update(key, update_fn) {
+    let new_set = this::clone()
+    new_set.remove(key)
+    new_set.add(update_fn::call(key))
+    return new_set
+  }
+  fn empty?() = this.size == 0
 }
 
 impl Collection for String = {
@@ -600,6 +621,11 @@ impl Collection for String = {
   fn concat(str) {
     return this + str
   }
+  fn update(idx, update_fn) {
+    let [before, after] = [this.slice(0, idx), this.slice(idx, -1)]
+    return before + update_fn::call(this::at(idx)) + after
+  }
+  fn empty?() = this.length == 0
 }
 
 fn at(key_or_idx) = this[Collection].at.call(this, key_or_idx)
@@ -619,6 +645,8 @@ fn reduce(f, start) {
 }
 fn insert(...args) = this[Collection].insert.call(this, ...args)
 fn concat(other) = this[Collection].concat.call(this, other)
+fn update(key, update_fn) = this[Collection].update.call(this, key, update_fn)
+fn empty?() = this[Collection].empty.call(this)
 
 // aliases for readability
 
@@ -852,7 +880,7 @@ protocol Printable
 fn _resolve_keyword_str(kw) = kw.replaceAll("__q", "?").replaceAll("__b", "!")
 
 impl Printable for ObjectLiteral = fn() =
-  this::map(fn (k, v) = [_resolve_keyword_str(k), v]) 
+  this::map(fn (k, v) = [_resolve_keyword_str(k), v::printable()]) 
 
 impl Printable for Hash = fn() =
   this::map(fn (k, v) = [k::printable(), v::printable()])
@@ -982,17 +1010,6 @@ define Vector for Args = fn(schemas) = new Args(schemas)
 impl Call for Args = fn(...args) =
   this.schemas::every?(fn(schema, i) = schema::call(args[i]))
 
-fn Lit(value) {
-  this.value = value
-}
-
-impl Call for Lit = fn(other) = this.value == other
-impl Negate for Lit = fn() = #(& != this.value)
-
-fn lit(val) = new Lit(val)
-
-fn any(_) = true
-
 impl Negate for Args = fn() = ::fn(...args) = !this::call(...args)
 
 fn Schema(entries) {
@@ -1051,6 +1068,9 @@ impl Collection for Underscore = {
   fn reduce(f, start) = new Underscore([...this.transforms, fn(self) = self::reduce(f, start)])
   fn insert(...args) = new Underscore([...this.transforms, fn(self) = self::insert(...args)])
   fn concat(other) = new Underscore([...this.transforms, fn(self) = self::concat(other)])
+  fn update(key, update_fn) = 
+    new Underscore([...this.transforms, fn(self) = self::update(key, update_fn)])
+  fn empty?() = new Underscore([...this.transforms, fn(self) = self::empty?()])
 }
 
 impl Pipe for Underscore = fn(f) = new Underscore([...this.transforms, f])

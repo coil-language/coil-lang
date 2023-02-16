@@ -1,9 +1,12 @@
 {
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-  "name": "protej",
+  "name": "coil",
   "patterns": [
     {
       "include": "#comments"
+    },
+    {
+      "include": "#lang_constants"
     },
     {
       "include": "#keywords"
@@ -19,9 +22,6 @@
     },
     {
       "include": "#record_constructor"
-    },
-    {
-      "include": "#lang_constants"
     },
     {
       "include": "#variables"
@@ -43,7 +43,7 @@
     "keywords": {
       "patterns": [
         {
-          "name": "keyword.control.protej",
+          "name": "keyword.control.coil",
           "match": "\\b(if|else|of|return|assert|async)\\b"
         },
         {
@@ -121,8 +121,16 @@
       ]
     },
     "lang_constants": {
-      "match": "\\b(true|false|null|undefined|this)\\b",
-      "name": "constant.language"
+      "patterns": [
+        {
+          "match": "\\b(true|false|null|undefined|this)\\b",
+          "name": "constant.language"
+        },
+        {
+          "match": "(:[a-zA-Z][a-zA-Z1-9_!?]*)",
+          "name": "constant.language"
+        }
+      ]
     },
     "properties": {
       "patterns": [
@@ -153,12 +161,12 @@
       ]
     },
     "strings": {
-      "name": "string.quoted.double.protej",
+      "name": "string.quoted.double.coil",
       "begin": "\"",
       "end": "\"",
       "patterns": [
         {
-          "name": "constant.character.escape.protej",
+          "name": "constant.character.escape.coil",
           "match": "\\\\."
         }
       ]
@@ -183,5 +191,5 @@
       ]
     }
   },
-  "scopeName": "source.protej"
+  "scopeName": "source.coil"
 }
