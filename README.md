@@ -292,10 +292,6 @@ There are tradeoffs to this approach, but the result is we can impl protocols sp
 
 - Clojure
 - lodash
+- Ruby
 - JavaScript
 - [Bind Operator](https://github.com/tc39/proposal-bind-operator)
-
-## Left to do
-
-- Regex support
-- Optimize `&&` and `||` operators to lazily evaluate their arguments

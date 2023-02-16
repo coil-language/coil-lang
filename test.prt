@@ -1,5 +1,0 @@
-let data_transform =
-  _::map(_ + 1)::map(_ + 2)
-
-plus::call(1 2 3)
-  ::log()

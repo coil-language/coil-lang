@@ -1,0 +1,16 @@
+fn Lit(value) { this.value = value }
+
+impl Call for Lit = fn(other) = this.value == other
+impl Negate for Lit = fn() = #(& != this.value)
+
+fn lit(val) = new Lit(val)
+
+fn any(_) = true
+
+@pre(
+  ~Args[any _ != 0]
+  !~Args[inf? inf?]
+)
+fn safe_divide_by(a, b) = a / b
+
+safe_divide_by(Infinity, Infinity)::log()

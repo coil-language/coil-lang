@@ -1,0 +1,42 @@
+fn parse_id_assign(tokens) =
+  from({type: :id_assign} tokens)
+    ::one(:id :name)
+    ::skip(:eq)
+    ::then(parse_expr :expr)
+
+fn parse_assert(tokens) 
+  from({type: :assert} tokens)
+    ::skip(:assert!)
+    ::then(fn(tokens) = from(tokens::first() tokens) :token)
+    ::then(parse_expr :expr)
+    ::pipe(~ParseMap{:string_lit parse_str} :msg null)
+
+fn parse_statement(tokens) =
+  tokens::pipe(~ParseMap{
+    :unless => parse_unless
+    :assert! => parse_assert
+    :impl => parse_impl
+    :define => parse_define
+    :protocol => parse_protocol,
+    :let => parse_let,
+    :return => parse_return,
+    :for => parse_for_loop,
+    [:if :let] => parse_if_let
+    :if => parse_if,
+    [:id :eq] => parse_id_assign,
+    _ => parse_expr
+  })
+
+fn parse(tokens) = tokens::reduce(fn({ast, tokens, done}) {
+    if done || tokens::empty?() {
+      return {ast, done: true, tokens}
+    } else {
+      let [node, rest_tokens] = parse_statement(tokens)
+      return {
+        ast: [...ast, node],
+        tokens: rest_tokens,
+        done
+      }
+    }
+  }, {ast: [], tokens, done: false})
+  ::pipe(:ast)

@@ -385,7 +385,7 @@
 (defn- compile-std-lib []
   (->> (file-seq (io/file "./src/std"))
        (map #(. % getPath))
-       (filter #(re-matches  #".*\.prt" %))
+       (filter #(re-matches  #".*\.coil" %))
        (map #(vector % (slurp %)))
        (map #(-> (let [[file-name src] %
                        tokens (lexer/tokenize src)]

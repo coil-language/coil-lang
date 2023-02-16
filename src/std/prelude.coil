@@ -294,7 +294,9 @@ impl Collection for ObjectLiteral = {
   fn insert(key, value) = {...this, [key]: value}
   fn concat(other) = {...this, ...other}
   fn update(key, update_fn) = this::insert(key, update_fn::call(this::at(key)))
-  fn empty?() = Object.keys(this).length == 0
+  fn empty?() = this::len() == 0
+  fn has?(key) = this[key]::truthy?()
+  fn len() = Object.keys(this).length
 }
 
 impl Collection for Array = {
@@ -318,6 +320,8 @@ impl Collection for Array = {
     }
   })
   fn empty?() = this.length == 0
+  fn has?(val) = this.includes(val) || this::some?(fn(v) = v == val)
+  fn len() = this.length
 }
 
 impl Collection for Hash = {
@@ -393,6 +397,8 @@ impl Collection for Hash = {
   }
   fn update(key, update_fn) = this::insert(key, update_fn::call(this::at(key)))
   fn empty?() = this.raw_entries.length == 0
+  fn has?(key) = this::at(key)::truthy?()
+  fn len() = this.raw_entries.length
 }
 
 impl Collection for Map = {
@@ -468,6 +474,8 @@ impl Collection for Map = {
   }
   fn update(key, update_fn) = this::insert(key, update_fn::call(this::at(key)))
   fn empty?() = this.size == 0
+  fn has?(key) = this::at(key)::truthy?()
+  fn len() = this.size
 }
 
 impl Collection for Set = {
@@ -553,6 +561,8 @@ impl Collection for Set = {
     return new_set
   }
   fn empty?() = this.size == 0
+  fn has?(val) = this.has(val)
+  fn len() = this.size
 }
 
 impl Collection for String = {
@@ -626,12 +636,19 @@ impl Collection for String = {
     return before + update_fn::call(this::at(idx)) + after
   }
   fn empty?() = this.length == 0
+  fn has?(substr) = this.includes(substr)
+  fn len() = this.length
 }
+
+// TODO: make this more general
+fn zip(other) = this::map_with_index(fn(val, i) = [val, other::at(i)])
 
 fn at(key_or_idx) = this[Collection].at.call(this, key_or_idx)
 fn sample() = this[Collection].sample.call(this)
 fn each(f) = this[Collection].each.call(this, f::call)
 fn map(...fns) = this[Collection].map.call(this, compose(...fns))
+// TODO: implement this
+fn map_with_index(...fns) = this::map(...fns)
 fn flat_map(...fns) = this[Collection].flat_map.call(this, compose(...fns))
 fn find(f) = this[Collection].find.call(this, f::call)
 fn filter(f) = this[Collection].filter.call(this, f::call)
@@ -645,8 +662,12 @@ fn reduce(f, start) {
 }
 fn insert(...args) = this[Collection].insert.call(this, ...args)
 fn concat(other) = this[Collection].concat.call(this, other)
+// alias
+fn merge(other) = this::concat(other)
 fn update(key, update_fn) = this[Collection].update.call(this, key, update_fn)
 fn empty?() = this[Collection].empty.call(this)
+fn has?(key_or_value) = this[Collection].has?.call(this, key_or_value)
+fn len() = this[Collection].len.call(this)
 
 // aliases for readability
 
@@ -1071,6 +1092,8 @@ impl Collection for Underscore = {
   fn update(key, update_fn) = 
     new Underscore([...this.transforms, fn(self) = self::update(key, update_fn)])
   fn empty?() = new Underscore([...this.transforms, fn(self) = self::empty?()])
+  fn has?(k) = new Underscore([...this.transforms, fn(self) = self::has?(k)])
+  fn len() = new Underscore([...this.transforms, fn(self) = self::len()])
 }
 
 impl Pipe for Underscore = fn(f) = new Underscore([...this.transforms, f])
