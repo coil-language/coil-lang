@@ -1,4 +1,4 @@
-let API = { todos: "https://jsonplaceholder.typicode.com/tooos" }
+let API = { todos: "https://jsonplaceholder.typicode.com/todos" }
 
 define Effect for ~Fetch[:get API.todos :error] = fn() =
   console.log("error")
