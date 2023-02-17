@@ -13,6 +13,9 @@
    {:regex #"^let\b"                 :keyword :let}
    {:regex #"^protocol\b"            :keyword :protocol}
    {:regex #"^for\b"                 :keyword :for}
+   {:regex #"^try\b"                 :keyword :try}
+   {:regex #"^catch\b"               :keyword :catch}
+   {:regex #"^finally\b"             :keyword :finally}
    {:regex #"^while\b"               :keyword :while}
    {:regex #"^continue\b"            :keyword :continue}
    {:regex #"^break\b"               :keyword :break}
@@ -24,6 +27,7 @@
    {:regex #"^assert\!"              :keyword :assert!}
    {:regex #"^await\b"               :keyword :await}
    {:regex #"^new\b"                 :keyword :new}
+   {:regex #"^keyof\b"                  :keyword :keyof}
    {:regex #"^\=\>"                  :keyword :arrow}
    {:regex #"^\@"                    :keyword :at}
    {:regex #"^\&\&"                  :keyword :and-and}

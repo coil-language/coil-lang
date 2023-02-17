@@ -44,7 +44,7 @@
       "patterns": [
         {
           "name": "keyword.control.coil",
-          "match": "\\b(if|while|else|yield|return|assert|continue|break|export|default|import|from)\\b"
+          "match": "\\b(if|while|try|catch|finally|else|yield|return|assert|continue|break|export|default|import|from)\\b"
         },
         {
           "match": "(impl)\\b(.*)\\b(for)\\b",
@@ -80,7 +80,7 @@
         },
         {
           "name": "keyword.other",
-          "match": "\\b(async|fn|of|impl|define|let|protocol)\\b"
+          "match": "\\b(async|fn|keyof|of|impl|define|let|protocol)\\b"
         },
         {
           "name": "keyword",
@@ -127,7 +127,7 @@
           "name": "constant.language"
         },
         {
-          "match": "(:[a-zA-Z][a-zA-Z1-9_!?]*)",
+          "match": "(:[a-zA-Z_?!$0-9]+)",
           "name": "constant.language"
         }
       ]
@@ -135,7 +135,7 @@
     "properties": {
       "patterns": [
         {
-          "match": "\\.([a-zA-Z][a-zA-Z1-9_\\!\\?]*)\\(\\b",
+          "match": "\\.([a-zA-Z][a-zA-Z0-9_\\!\\?]*)\\(\\b",
           "name": "entity.name.function"
         }
       ]

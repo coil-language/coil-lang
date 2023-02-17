@@ -1,25 +1,68 @@
 @intern_vec
-fn Fetch(url, code) {
+fn Fetch(method, url, status) {
+  this.method = method  
   this.url = url
-  this.code = code
+  this.status = status
+}
+
+fn as_keyword() = Keyword["for"](this.toString())
+
+fn HttpError(code, message) {
+    this.name = 'HttpError'
+    this.message = message
+    this.stack = (new Error()).stack
+    this.code = code::as_keyword()
+}
+HttpError.prototype = new Error()
+
+let http = {
+  async fn* get(url) {
+    if Effect keyof ~Fetch[:get url :init] {
+      yield ~Fetch[:get url :init]
+    }
+    let promise = fetch(url).then(async fn(res) {
+      if !res.ok {
+        let text = await res.text()
+        return Promise.reject(new HttpError(res.status, text))
+      }
+      return res.json()
+    })
+    if Effect keyof ~Fetch[:get url :loading] {
+      yield ~Fetch[:get url :loading]
+    }
+    try {
+      return await promise
+    } catch error {
+      if Effect keyof ~Fetch[:get url error.code] {
+        yield ~Fetch[:get url error.code]::with(error)
+      } else {
+        yield ~Fetch[:get url :error]::with(error)
+      }
+      return error
+    }
+  }
 }
 
 let state = null
-let API = { user: "/user/" }
+let API = { todos: "https://jsonplaceholder.typicode.com/todos" }
 
-define Effect for :inc = fn(by) = state = state + (by || 1)
-define Effect for :get = fn() = state
-define Effect for :init = fn(start) = state = start || 0
-
-define Effect for ~Fetch[API.user :loading] = fn() = "blah"
-
-fn* main() {
-  // let user = yield* load_user()
-  yield :init::with(3)
-  yield :inc::with(2)
-  yield ~Fetch[API.user :loading]
-  yield :inc
-  return yield :get
+define Effect for ~Fetch[:get API.todos :error] = fn() {
+  console.log("error")
 }
 
-run(main)::log()
+define Effect for ~Fetch[:get API.todos :error] = fn() {
+  console.log("404")
+}
+
+define Effect for ~Fetch[:get API.todos :loading] = fn() {
+  console.log("loading")
+}
+
+async fn* main() {
+  let result = yield* http.get(API.todos)
+  if result::error?() { return null }
+  result::at(-1)::log("LAST")
+  return result
+}
+
+run(main)

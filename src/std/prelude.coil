@@ -1041,6 +1041,10 @@ fn to_lowercase() = this.toLowerCase()
 @impl_callable
 fn as_set() = new Set(this)
 
+@impl_callable
+fn error?() = this is Error
+
+
 // Schema / Schema related stuff
 impl Negate for Set = fn() = #(!this.has(&))
 
@@ -1159,24 +1163,30 @@ impl Call for Any = fn(val) = this.conds::some?(fn(f) = f::call(val))
 
 protocol Effect
 
-fn run_effect() = this[Effect]()
+fn run_effect() {
+  if this[Effect] {
+    return this[Effect]()
+  } else {
+    raise(this)
+  }
+}
 
-fn spawn(generator_fn) {
+async fn spawn(generator_fn) {
   let generator = generator_fn()
   let state = {done: false}
   let yield_result = null
   let effects = []
   while !state.done {
-    state = generator.next(yield_result)
+    state = await generator.next(yield_result)
     if state.done { break }
     let effect = state.value
-    yield_result = effect::run_effect()
+    yield_result = await effect::run_effect()
     effects.push(effect)
   }
   return {effects, value: state.value}
 }
 
-fn run(generator_fn) = spawn(generator_fn)::at(:value)
+async fn run(generator_fn) = (await spawn(generator_fn))::at(:value)
 
 // builtin effects
 

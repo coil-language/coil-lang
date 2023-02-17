@@ -112,3 +112,8 @@ function js_str_hash(str) {
   for (let char of str) hash = hash * 31n + BigInt(char.charCodeAt());
   return hash;
 }
+
+function raise(err) {
+  console.log(err);
+  throw err;
+}

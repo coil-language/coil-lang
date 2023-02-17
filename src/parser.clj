@@ -156,6 +156,11 @@
          (p/skip :dot-dot-dot)
          (p/then parse-1-2-expr :rhs))))
 
+(defn- parse-keyof [lhs tokens]
+  (->> (p/from {:type :keyof, :lhs lhs} tokens)
+       (p/skip :keyof)
+       (p/then parse-1-2-expr :rhs)))
+
 (defn- parse-third-expr [[lhs tokens]]
   (loop [lhs lhs, tokens tokens]
     (if-let [[expr tokens]
@@ -166,6 +171,7 @@
                :not-eq (parse-not-eq lhs tokens)
                :and-and (parse-and-and lhs tokens)
                :or-or (parse-or-or lhs tokens)
+               :keyof (parse-keyof lhs tokens)
                (when (comparison-ops (p/peek-next tokens)) (parse-comparison-op lhs tokens)))]
       (recur expr tokens)
       (p/from lhs tokens))))
@@ -323,6 +329,7 @@
          :open-sq parse-dynamic-obj-entry,
          :dot-dot-dot parse-spread-obj-entry,
          :fn parse-fn
+         [:async :fn] parse-fn
          [:id :colon] parse-reg-obj-entry,
          [:num :colon] parse-reg-obj-entry,
          :id parse-obj-shorthand-entry))))
@@ -361,6 +368,7 @@
 (defn- parse-yield [tokens]
   (->> (p/from {:type :yield} tokens)
        (p/skip :yield)
+       (p/one-case {:times parse-gen-modifier} :star? false)
        (p/then parse-expr :expr)))
 
 (defn- parse-await [tokens]
@@ -503,6 +511,10 @@
        (p/skip :at)
        (p/one :id :name)
        (p/one-case {:open-p parse-call-expr} :args [])
+      ;;  need to handle
+      ;;  - decorating a decorator,
+      ;;  - decorating a let?
+      ;;  - anything else?
        (p/then parse-fn :fn-def)))
 
 (defn- parse-single-expr [tokens]
@@ -660,6 +672,30 @@
   (->> (p/from {:type :break} tokens)
        (p/skip :break)))
 
+(defn- parse-catch [tokens]
+  (->> (p/from {:type :catch} tokens)
+       (p/skip :catch)
+       (p/one :id :name)
+       (p/skip :open-b)
+       (p/until :close-b parse-statement :body)
+       (p/skip :close-b)))
+
+(defn- parse-finally [tokens]
+  (->> (p/from {:type :finally} tokens)
+       (p/skip :finally)
+       (p/skip :open-b)
+       (p/until :close-b parse-statement :body)
+       (p/skip :close-b)))
+
+(defn- parse-try [tokens]
+  (->> (p/from {:type :try} tokens)
+       (p/skip :try)
+       (p/skip :open-b)
+       (p/until :close-b parse-statement :body)
+       (p/skip :close-b)
+       (p/one-case {:catch parse-catch} :catch nil)
+       (p/one-case {:finally parse-finally} :finally nil)))
+
 (defn- parse-statement [tokens]
   (->> (p/null tokens)
        (p/one-case
@@ -668,6 +704,7 @@
          :assert! parse-assert,
          :impl parse-impl,
          :define parse-define,
+         :try parse-try,
          :protocol parse-protocol,
          :let parse-let,
          :return parse-return,

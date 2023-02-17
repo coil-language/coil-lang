@@ -131,9 +131,11 @@
 (defn- eval-dynamic-obj-entry [{:keys [key-expr value]}]
   (str "[" (eval-expr key-expr) "]: " (eval-expr value)))
 
-(defn- eval-obj-fn [{:keys [name args body]}]
+(defn- eval-obj-fn [{:keys [name generator? async? args body]}]
   (assert name)
   (str
+   (when async? "async")
+   (when generator? "*")
    (resolve-name name) "(" (string/join ", " (map eval-assign-expr args)) ") {\n"
    (eval-ast body) "\n"
    "}"))
@@ -199,8 +201,8 @@
 (defn- eval-await [{:keys [expr]}]
   (str "await " (eval-expr expr)))
 
-(defn- eval-yield [{:keys [expr]}]
-  (str "yield " (eval-expr expr)))
+(defn- eval-yield [{:keys [star? expr]}]
+  (str "yield" (when star? "*") " " (eval-expr expr)))
 
 (defn- eval-jsx-attr-reg [{:keys [name expr]}]
   (str name ": " (eval-expr expr)))
@@ -292,6 +294,9 @@
           (string/join ", " (map eval-expr args)) ", "))
        (eval-fn fn-def) ")"))
 
+(defn- eval-keyof [{:keys [lhs rhs]}]
+  (str (eval-expr lhs) " in " (eval-expr rhs)))
+
 (defn- eval-expr [node]
   (case (:type node)
     :str (eval-str node)
@@ -334,7 +339,8 @@
     :unapplied-or-or (eval-unapplied-or-or node)
     :shorthand-anon-fn (eval-shorthand-anon-fn node)
     :inclusive-range (eval-inclusive-range node)
-    :exclusive-range (eval-exclusive-range node)))
+    :exclusive-range (eval-exclusive-range node)
+    :keyof (eval-keyof node)))
 
 (defn- eval-return [{:keys [expr]}]
   (str "return " (eval-expr expr)))
@@ -377,6 +383,19 @@
 (defn- eval-break [_]
   "break")
 
+(defn- eval-try [{:keys [body catch finally]}]
+  (str "try {\n"
+       (eval-ast body) "\n"
+       "}"
+       (when catch
+         (str " catch (" (catch :name) ") {\n"
+              (eval-ast (catch :body)) "\n"
+              "} "))
+       (when finally
+         (str " finally {\n"
+              (eval-ast (finally :body)) "\n"
+              "}"))))
+
 (defn- eval-statement [node]
   (case (:type node)
     :if (eval-if node)
@@ -393,6 +412,7 @@
     :while-loop (eval-while-loop node)
     :continue (eval-continue node)
     :break (eval-break node)
+    :try (eval-try node)
     (eval-expr node)))
 
 (defn- eval-ast [ast]
