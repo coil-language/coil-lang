@@ -591,7 +591,7 @@
 (defn- parse-impl [tokens]
   (->> (p/from {:type :impl-for} tokens)
        (p/skip :impl)
-       (p/then parse-expr :proto-expr)
+       (p/then parse-single-expr :proto-expr)
        (p/skip :for)
        (p/one :id :constructor)
        (p/skip :eq)
@@ -600,12 +600,9 @@
 (defn- parse-define [tokens]
   (->> (p/from {:type :define-for} tokens)
        (p/skip :define)
-       (p/one :id :symbol-name)
+       (p/then parse-single-expr :proto-expr)
        (p/skip :for)
-       (p/one-case
-        {:id parse-id,
-         :keyword parse-keyword}
-        :src-expr)
+       (p/then parse-single-expr :src-expr)
        (p/skip :eq)
        (p/then parse-expr :expr)))
 

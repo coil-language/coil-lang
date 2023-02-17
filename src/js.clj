@@ -345,8 +345,8 @@
 (defn- eval-impl-for [{:keys [proto-expr constructor expr]}]
   (str constructor ".prototype[" (eval-expr proto-expr) "] = " (eval-expr expr)))
 
-(defn- eval-define-for [{:keys [symbol-name src-expr expr]}]
-  (str (eval-expr src-expr) "[" (resolve-name symbol-name) "] = " (eval-expr expr)))
+(defn- eval-define-for [{:keys [proto-expr src-expr expr]}]
+  (str (eval-expr src-expr) "[" (eval-expr proto-expr) "] = " (eval-expr expr)))
 
 (defn- eval-for-loop [{:keys [await? assign-expr iterable-expr body]}]
   (str "for " (when await? "await ") " (let " (eval-assign-expr assign-expr) " of " (eval-expr iterable-expr) ") {\n"

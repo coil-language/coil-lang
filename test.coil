@@ -1,20 +1,23 @@
+@intern_vec
+fn Fetch(url, code) {
+  this.url = url
+  this.code = code
+}
+
 let state = null
+let API = { user: "/user/" }
 
-define Effect for :inc = fn() {
-  state = state + 1
-  return state
-}
-
+define Effect for :inc = fn(by) = state = state + (by || 1)
 define Effect for :get = fn() = state
+define Effect for :init = fn(start) = state = start || 0
 
-define Effect for :init = fn(start) {
-  state = start || 0
-  return state
-}
+define Effect for ~Fetch[API.user :loading] = fn() = "blah"
 
 fn* main() {
-  yield :init
-  yield :inc
+  // let user = yield* load_user()
+  yield :init::with(3)
+  yield :inc::with(2)
+  yield ~Fetch[API.user :loading]
   yield :inc
   return yield :get
 }

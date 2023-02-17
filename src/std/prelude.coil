@@ -1189,3 +1189,25 @@ fn with(...args) = new CallEffectWith(this, ...args)
 
 impl Effect for CallEffectWith = fn() =
   this.effect[Effect](...this.args)
+
+protocol InternHash
+
+fn intern_vec(klass) {
+  if !klass.cache {
+    klass.cache = ~Map{}
+    define Vector for klass = fn(args) {
+      let h = args::hash()
+      if let obj = klass.cache.get(h) {
+        return obj
+      } else {
+        let obj = new klass(...args)
+        obj[InternHash] = h
+        klass.cache.set(h, obj)
+        return obj
+      }
+    }
+    define :toString for klass = fn() = this[InternHash]
+    define :valueOf for klass = fn() = this[InternHash]
+  }
+  return klass
+}

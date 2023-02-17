@@ -44,7 +44,7 @@
       "patterns": [
         {
           "name": "keyword.control.coil",
-          "match": "\\b(if|while|else|of|yield|return|assert|continue|break|export|default|import|from)\\b"
+          "match": "\\b(if|while|else|yield|return|assert|continue|break|export|default|import|from)\\b"
         },
         {
           "match": "(impl)\\b(.*)\\b(for)\\b",
@@ -80,7 +80,7 @@
         },
         {
           "name": "keyword.other",
-          "match": "\\b(async|fn|impl|define|let|protocol)\\b"
+          "match": "\\b(async|fn|of|impl|define|let|protocol)\\b"
         },
         {
           "name": "keyword",
