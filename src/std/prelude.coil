@@ -1042,6 +1042,9 @@ fn to_lowercase() = this.toLowerCase()
 fn as_set() = new Set(this)
 
 @impl_callable
+fn as_keyword() = Keyword["for"](this.toString())
+
+@impl_callable
 fn error?() = this is Error
 
 
@@ -1220,4 +1223,49 @@ fn intern_vec(klass) {
     define :valueOf for klass = fn() = this[InternHash]
   }
   return klass
+}
+
+// HTTP
+
+@intern_vec
+fn Fetch(method, url, status) {
+  this.method = method  
+  this.url = url
+  this.status = status
+}
+
+fn HttpError(code, message) {
+    this.name = 'HttpError'
+    this.message = message
+    this.stack = (new Error()).stack
+    this.code = code::as_keyword()
+}
+HttpError.prototype = new Error()
+
+let http = {
+  async fn* get(url) {
+    if Effect keyof ~Fetch[:get url :init] {
+      yield ~Fetch[:get url :init]
+    }
+    let promise = fetch(url).then(async fn(res) {
+      if !res.ok {
+        let text = await res.text()
+        return Promise.reject(new HttpError(res.status, text))
+      }
+      return res.json()
+    })
+    if Effect keyof ~Fetch[:get url :loading] {
+      yield ~Fetch[:get url :loading]
+    }
+    try {
+      return await promise
+    } catch error {
+      if Effect keyof ~Fetch[:get url error.code] {
+        yield ~Fetch[:get url error.code]::with(error)
+      } else {
+        yield ~Fetch[:get url :error]::with(error)
+      }
+      return error
+    }
+  }
 }
