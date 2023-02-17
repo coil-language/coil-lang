@@ -149,10 +149,8 @@ fn compose(f, ...fns) = fn(...args) =
     f::call(...args)
   )
 
-fn impl_call_for_bound(f) = f[Call] = fn(first, ...rest) = first::f(...rest)
-
-fn impl_callable(f) {
-  impl_call_for_bound(f)  
+fn impl_callable(f) {  
+  f[Call] = fn(first, ...rest) = first::f(...rest)
   return f
 }
 
@@ -249,11 +247,11 @@ impl Clone for Set = {
   fn deep_clone() = this::map(deep_clone)
 }
 
+@impl_callable
 fn clone() = this[Clone].clone.call(this)
 
+@impl_callable
 fn deep_clone() = this[Clone].deep_clone.call(this)
-
-[clone deep_clone].forEach(impl_call_for_bound)
 
 // IDENTITY PROTOCOL
 // this defines the monoid identity for a given type (group)
