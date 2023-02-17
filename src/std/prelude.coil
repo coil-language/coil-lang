@@ -1183,7 +1183,13 @@ async fn spawn(generator_fn) {
     state = await generator.next(yield_result)
     if state.done { break }
     let effect = state.value
-    yield_result = await effect::run_effect()
+    try {
+      yield_result = await effect::run_effect()
+    } catch error {
+      state = await generator.throw(error);
+      yield_result = await state.value::run_effect()
+      effects.push(state.value)
+    }
     effects.push(effect)
   }
   return {effects, value: state.value}
@@ -1242,23 +1248,30 @@ fn HttpError(code, message) {
 }
 HttpError.prototype = new Error()
 
+fn JSONRequest(url) {
+  this.url = url
+}
+
+impl Effect for JSONRequest = fn() = fetch(this.url).then(async fn(res) {
+  if !res.ok {
+    let text = await res.text()
+    return Promise.reject(new HttpError(res.status, text))
+  }
+  return res.json()
+})
+
+fn json_req(url) = new JSONRequest(url)
+
 let http = {
   async fn* get(url) {
     if Effect keyof ~Fetch[:get url :init] {
       yield ~Fetch[:get url :init]
     }
-    let promise = fetch(url).then(async fn(res) {
-      if !res.ok {
-        let text = await res.text()
-        return Promise.reject(new HttpError(res.status, text))
-      }
-      return res.json()
-    })
     if Effect keyof ~Fetch[:get url :loading] {
       yield ~Fetch[:get url :loading]
     }
     try {
-      return await promise
+      return yield json_req(url)
     } catch error {
       if Effect keyof ~Fetch[:get url error.code] {
         yield ~Fetch[:get url error.code]::with(error)

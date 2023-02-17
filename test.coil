@@ -1,16 +1,13 @@
-let API = { todos: "https://jsonplaceholder.typicode.com/todos" }
+let API = { todos: "https://jsonplaceholder.typicode.com/tooos" }
 
-define Effect for ~Fetch[:get API.todos :error] = fn() {
+define Effect for ~Fetch[:get API.todos :error] = fn() =
   console.log("error")
-}
 
-define Effect for ~Fetch[:get API.todos :error] = fn() {
-  console.log("404")
-}
+define Effect for ~Fetch[:get API.todos :404] = fn(error) =
+  console.log("404", error.message)
 
-define Effect for ~Fetch[:get API.todos :loading] = fn() {
+define Effect for ~Fetch[:get API.todos :loading] = fn() =
   console.log("loading")
-}
 
 async fn* main() {
   let result = yield* http.get(API.todos)
