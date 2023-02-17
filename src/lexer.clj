@@ -13,6 +13,9 @@
    {:regex #"^let\b"                 :keyword :let}
    {:regex #"^protocol\b"            :keyword :protocol}
    {:regex #"^for\b"                 :keyword :for}
+   {:regex #"^while\b"               :keyword :while}
+   {:regex #"^continue\b"            :keyword :continue}
+   {:regex #"^break\b"               :keyword :break}
    {:regex #"^of\b"                  :keyword :of}
    {:regex #"^impl\b"                :keyword :impl}
    {:regex #"^define\b"              :keyword :define}

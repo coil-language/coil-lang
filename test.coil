@@ -1,16 +1,22 @@
-fn Lit(value) { this.value = value }
+let state = null
 
-impl Call for Lit = fn(other) = this.value == other
-impl Negate for Lit = fn() = #(& != this.value)
+define Effect for :inc = fn() {
+  state = state + 1
+  return state
+}
 
-fn lit(val) = new Lit(val)
+define Effect for :get = fn() = state
 
-fn any(_) = true
+define Effect for :init = fn(start) {
+  state = start || 0
+  return state
+}
 
-@pre(
-  ~Args[any _ != 0]
-  !~Args[inf? inf?]
-)
-fn safe_divide_by(a, b) = a / b
+fn* main() {
+  yield :init
+  yield :inc
+  yield :inc
+  return yield :get
+}
 
-safe_divide_by(Infinity, Infinity)::log()
+run(main)::log()

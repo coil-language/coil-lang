@@ -9,9 +9,6 @@
       "include": "#lang_constants"
     },
     {
-      "include": "#keywords"
-    },
-    {
       "include": "#strings"
     },
     {
@@ -22,6 +19,9 @@
     },
     {
       "include": "#record_constructor"
+    },
+    {
+      "include": "#keywords"
     },
     {
       "include": "#variables"
@@ -44,7 +44,7 @@
       "patterns": [
         {
           "name": "keyword.control.coil",
-          "match": "\\b(if|while|else|of|return|assert|async)\\b"
+          "match": "\\b(if|while|else|of|yield|return|assert|continue|break|export|default|import|from)\\b"
         },
         {
           "match": "(impl)\\b(.*)\\b(for)\\b",
@@ -80,7 +80,7 @@
         },
         {
           "name": "keyword.other",
-          "match": "\\b(fn|impl|define|let|protocol)\\b"
+          "match": "\\b(async|fn|impl|define|let|protocol)\\b"
         },
         {
           "name": "keyword",

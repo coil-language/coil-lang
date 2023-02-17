@@ -591,7 +591,7 @@
 (defn- parse-impl [tokens]
   (->> (p/from {:type :impl-for} tokens)
        (p/skip :impl)
-       (p/one :id :symbol-name)
+       (p/then parse-expr :proto-expr)
        (p/skip :for)
        (p/one :id :constructor)
        (p/skip :eq)
@@ -647,6 +647,22 @@
        (p/then parse-expr :expr)
        (p/one-case {:string-lit parse-str} :msg nil)))
 
+(defn- parse-while-loop [tokens]
+  (->> (p/from {:type :while-loop} tokens)
+       (p/skip :while)
+       (p/then parse-expr :test-expr)
+       (p/skip :open-b)
+       (p/until :close-b parse-statement :body)
+       (p/skip :close-b)))
+
+(defn- parse-continue [tokens]
+  (->> (p/from {:type :continue} tokens)
+       (p/skip :continue)))
+
+(defn- parse-break [tokens]
+  (->> (p/from {:type :break} tokens)
+       (p/skip :break)))
+
 (defn- parse-statement [tokens]
   (->> (p/null tokens)
        (p/one-case
@@ -659,6 +675,9 @@
          :let parse-let,
          :return parse-return,
          :for parse-for-loop,
+         :while parse-while-loop,
+         :continue parse-continue,
+         :break parse-break,
          [:if :let] parse-if-let,
          :if parse-if,
          [:id :eq] parse-id-assign,

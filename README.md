@@ -2,7 +2,7 @@
 
 [try it out](https://protej-lang.netlify.app/)
 
-Coil-lang is functional language with OO super powers
+Coil is functional language with OO super powers
 
 ## Data Literals
 

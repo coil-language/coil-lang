@@ -1,7 +1,8 @@
+import make_tokenizer from "./utils/lexing"
+
 fn r(regex) = new RegExp(regex)
 
-
-let tokens = 
+let tokens =
   [{:regex r("\/\/.*")                  :ignore true}
    {:regex r("^#")                      :keyword :hash}
    {:regex r("^\~")                     :keyword :tilde}
@@ -62,3 +63,5 @@ let tokens =
    {:regex r("^[a-zA-Z_\?\!\$0-9]+")    :keyword :id}]
 
 let tokenize = make_tokenizer(tokens)
+
+export default tokenize

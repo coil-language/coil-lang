@@ -1,0 +1,63 @@
+fn r(s) = new RegExp(s)
+
+fn match_token(program_str {regex keyword ignore}) {
+  let result = program_str.match(regex)
+  if !result || result.index != 0 { return null }
+  return {
+    ignore,
+    type: keyword,
+    value: result::first()
+  }
+}
+
+fn has_new_line?() = r(".*[\r\n|\r|\n]".test(this)
+
+fn tokens_to_skip(result) {
+  if result::nil?() {
+    return 1
+  } else {
+    return result::at(:value)::len()
+  }
+}
+
+fn line_and_col(prev_line, prev_col, program_str, skip_count) {
+  let current_str = program_str.slice(0, skip_count)
+  let line = prev_line
+  if current_string::has_new_line?() {
+    line = line + 1
+  }
+  let col = prev_col
+  if line == prev_line {
+    col = current_str::len() + prev_col
+  } else {
+    col = current_str.split("\n")::last() + 1
+  }
+  return [line, col]
+}
+
+fn partial(...args) {
+  return this.bind(null, ...args)
+}
+
+fn make_tokenizer(tokens) {
+  return fn(program_str) {
+    let rest_of_program = program_str
+    let token_list = []
+    let line = 1
+    let col = 1
+    while !rest_of_program::empty?() {
+      let result = tokens::find(program_str::partial(rest_of_program))
+      if result::nil?() || result::has?(:ignore) {
+        continue
+      }
+      let skip_count = tokens_to_skip(result)
+      rest_of_program = rest_of_program.slice(skip_count)
+      // TODO parse let-less assign like this
+      [line col] = line_and_col(line, col, rest_of_program, skip_count)
+      token_list.push(result::merge({line, col}))
+    } 
+    return token_list
+  }
+}
+
+export default make_tokenizer

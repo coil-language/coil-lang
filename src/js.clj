@@ -9,10 +9,12 @@
 (declare eval-ast)
 
 (defn- resolve-name [name]
-  (when name
-    (-> name
-        (string/replace "?" "__q")
-        (string/replace "!" "__b"))))
+  (if (= name "with")
+    "__coil_with"
+    (when name
+      (-> name
+          (string/replace "?" "__q")
+          (string/replace "!" "__b")))))
 
 (defn- eval-if [{:keys [expr pass fail]}]
   (str "if (truthy(" (eval-expr expr) ")) {\n"
@@ -340,8 +342,8 @@
 (defn- eval-protocol [{:keys [name]}]
   (str "const " (resolve-name name) " = Symbol(\"" name "\")"))
 
-(defn- eval-impl-for [{:keys [symbol-name constructor expr]}]
-  (str constructor ".prototype[" (resolve-name symbol-name) "] = " (eval-expr expr)))
+(defn- eval-impl-for [{:keys [proto-expr constructor expr]}]
+  (str constructor ".prototype[" (eval-expr proto-expr) "] = " (eval-expr expr)))
 
 (defn- eval-define-for [{:keys [symbol-name src-expr expr]}]
   (str (eval-expr src-expr) "[" (resolve-name symbol-name) "] = " (eval-expr expr)))
@@ -364,6 +366,17 @@
    msg
    ")"))
 
+(defn- eval-while-loop [{:keys [test-expr body]}]
+  (str "while (" (eval-expr test-expr) ") {\n"
+       (eval-ast body) "\n"
+       "}"))
+
+(defn- eval-continue [_]
+  "continue")
+
+(defn- eval-break [_]
+  "break")
+
 (defn- eval-statement [node]
   (case (:type node)
     :if (eval-if node)
@@ -377,6 +390,9 @@
     :for-loop (eval-for-loop node)
     :id-assign (eval-id-assign node)
     :assert (eval-assert node)
+    :while-loop (eval-while-loop node)
+    :continue (eval-continue node)
+    :break (eval-break node)
     (eval-expr node)))
 
 (defn- eval-ast [ast]

@@ -115,12 +115,17 @@ impl Call for Range = fn(value) {
 }
 
 fn call(...args) {
+  // this::nil?() calls Call, we have to write it 
+  // explicitly to avoid an infinite loop
   if nil?[Call](this) {
     return this
   } else {
     return this[Call](...args)
   }
 }
+
+// make sets callable using bind syntax
+impl :bind for Set = fn(val) = ::fn() = this::call(val)
 
 protocol Pipe
 
@@ -131,7 +136,7 @@ fn freeze() = Object.freeze(this)
 let nil? = #{undefined null}::freeze()
 
 fn pipe(callable) {
-  if nil?::call(this) {
+  if this::nil?() {
     return this
   } else {
     return this[Pipe](callable::call)
@@ -203,7 +208,7 @@ impl Equal for ObjectLiteral = fn(other) {
 
 @impl_callable
 fn eq?(other) {
-  if nil?::call(this) {
+  if this::nil?() {
     return this === other
   } else {
     return this[Equal](other)
@@ -264,7 +269,7 @@ impl Identity for Hash = ~Hash{}
 impl Identity for Set = #{}
 
 fn identity() {
-  if nil?::call(this) {
+  if this::nil?() {
     return this
   } else {
     return this[Identity]
@@ -297,6 +302,11 @@ impl Collection for ObjectLiteral = {
   fn empty?() = this::len() == 0
   fn has?(key) = this[key]::truthy?()
   fn len() = Object.keys(this).length
+  fn remove(key) {
+    let obj = this::clone()
+    js_object_delete(obj, key)
+    return obj
+  }
 }
 
 impl Collection for Array = {
@@ -322,6 +332,7 @@ impl Collection for Array = {
   fn empty?() = this.length == 0
   fn has?(val) = this.includes(val) || this::some?(fn(v) = v == val)
   fn len() = this.length
+  fn remove(val) = this::filter(fn(v) = v != val)
 }
 
 impl Collection for Hash = {
@@ -399,6 +410,7 @@ impl Collection for Hash = {
   fn empty?() = this.raw_entries.length == 0
   fn has?(key) = this::at(key)::truthy?()
   fn len() = this.raw_entries.length
+  fn remove(key) = this::filter(fn (k, v) = k != key)
 }
 
 impl Collection for Map = {
@@ -476,6 +488,11 @@ impl Collection for Map = {
   fn empty?() = this.size == 0
   fn has?(key) = this::at(key)::truthy?()
   fn len() = this.size
+  fn remove(key) {
+    let map = this::clone()
+    map.remove(key)
+    return map
+  }
 }
 
 impl Collection for Set = {
@@ -563,6 +580,11 @@ impl Collection for Set = {
   fn empty?() = this.size == 0
   fn has?(val) = this.has(val)
   fn len() = this.size
+  fn remove(key) {
+    let set = this::clone()
+    set.remove(key)
+    return set
+  }
 }
 
 impl Collection for String = {
@@ -638,6 +660,10 @@ impl Collection for String = {
   fn empty?() = this.length == 0
   fn has?(substr) = this.includes(substr)
   fn len() = this.length
+  fn remove(substr) {
+    let idx = this.indexOf(substr)
+    return this.slice(0, idx) + this.slice(idx + substr::len())
+  }
 }
 
 // TODO: make this more general
@@ -655,7 +681,7 @@ fn filter(f) = this[Collection].filter.call(this, f::call)
 fn some?(...fns) = this[Collection].some?.call(this, compose(...fns))
 fn every?(...fns) = this[Collection].every?.call(this, compose(...fns))
 fn reduce(f, start) {
-  if nil?::call(start) {
+  if start::nil?() {
     start = this::sample()::identity()
   }
   return this[Collection].reduce.call(this, f::call, start)
@@ -668,6 +694,7 @@ fn update(key, update_fn) = this[Collection].update.call(this, key, update_fn)
 fn empty?() = this[Collection].empty.call(this)
 fn has?(key_or_value) = this[Collection].has?.call(this, key_or_value)
 fn len() = this[Collection].len.call(this)
+fn remove(key_or_val) = this[Collection].remove.call(this, key_or_val)
 
 // aliases for readability
 
@@ -680,6 +707,7 @@ protocol OrderedCollection
 impl OrderedCollection for Array = {
   fn first() = this[0]
   fn last() = this.at(-1)
+  fn skip(n) = this.slice(n)
   fn take_last(n) = this.slice(-1 - n, -1)
   fn take(n) = this.slice(0, n)
   fn sort(f) = this::clone().sort(f)
@@ -689,6 +717,7 @@ impl OrderedCollection for Array = {
 impl OrderedCollection for String = {
   fn first() = this[0]
   fn last() = this.at(-1)
+  fn skip(n) = this.slice(n)
   fn take_last(n) = this.slice(-1 - n, -1)
   fn take(n) = this.slice(0, n)
   // TODO: don't rely on Array for these
@@ -699,6 +728,7 @@ impl OrderedCollection for String = {
 impl OrderedCollection for Map = {
   fn first() = this.entries().next().value
   fn last() = Array.from(this).at(-1)
+  fn skip(n) = new Map(Array.from(this).slice(n))
   fn take_last() = new Map(Array.from(this).slice(-1 - n, -1))
   fn take() = new Map(Array.from(this).slice(0, n))
   fn sort() = new Map(Array.from(this).sort(fn ([_k1, v1], [_k2, v2]) = v2 - v1))
@@ -707,6 +737,7 @@ impl OrderedCollection for Map = {
 
 fn first() = this[OrderedCollection].first.call(this)
 fn last() = this[OrderedCollection].last.call(this)
+fn skip(n) = this[OrderedCollection].skip.call(this, n)
 fn take_last(n) = this[OrderedCollection].take_last.call(this, n)
 fn take(n) = this[OrderedCollection].take.call(this, n)
 fn sort() = this[OrderedCollection].sort.call(this)
@@ -853,7 +884,7 @@ fn plus(other) = ~Map{
 
 @impl_callable
 fn negate() {
-  if nil?::call(this) {
+  if this::nil?() {
     return true
   } else {
     return this[Negate]()
@@ -879,7 +910,7 @@ fn less_than(other) = this[Comparable].less_than.call(this, other)
 fn less_than_eq(other) = this[Comparable].less_than_eq.call(this, other)
 @impl_callable
 fn and(thunk) {
-  if nil?::call(this) {
+  if this::nil?() {
     return this
   } else {
     return this[And](thunk)
@@ -887,7 +918,7 @@ fn and(thunk) {
 }
 @impl_callable
 fn or(thunk) {
-  if nil?::call(this) {
+  if this::nil?() {
     return thunk()
   } else {
     return this[Or](thunk)
@@ -941,7 +972,7 @@ fn otherwise(val) = this || val
 
 @impl_callable
 fn printable() {
-  if nil?::call(this) {
+  if this::nil?() {
     return this
   } else {  
     return ~Map{
@@ -1094,6 +1125,7 @@ impl Collection for Underscore = {
   fn empty?() = new Underscore([...this.transforms, fn(self) = self::empty?()])
   fn has?(k) = new Underscore([...this.transforms, fn(self) = self::has?(k)])
   fn len() = new Underscore([...this.transforms, fn(self) = self::len()])
+  fn remove(key_or_val) = new Underscore([...this.transforms, fn(self) = self::remove(key_or_val)])
 }
 
 impl Pipe for Underscore = fn(f) = new Underscore([...this.transforms, f])
@@ -1122,3 +1154,38 @@ fn Any(conds) { this.conds = conds }
 define Vector for Any = fn(conds) = new Any(conds)
 
 impl Call for Any = fn(val) = this.conds::some?(fn(f) = f::call(val))
+
+// Effect system
+
+protocol Effect
+
+fn run_effect() = this[Effect]()
+
+fn spawn(generator_fn) {
+  let generator = generator_fn()
+  let state = {done: false}
+  let yield_result = null
+  let effects = []
+  while !state.done {
+    state = generator.next(yield_result)
+    if state.done { break }
+    let effect = state.value
+    yield_result = effect::run_effect()
+    effects.push(effect)
+  }
+  return {effects, value: state.value}
+}
+
+fn run(generator_fn) = spawn(generator_fn)::at(:value)
+
+// builtin effects
+
+fn CallEffectWith(effect, ...args) {
+  this.effect = effect
+  this.args = args
+}
+
+fn with(...args) = new CallEffectWith(this, ...args)
+
+impl Effect for CallEffectWith = fn() =
+  this.effect[Effect](...this.args)

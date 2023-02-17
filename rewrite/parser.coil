@@ -1,15 +1,623 @@
+import {result, nothing, one, fmap, skip, then, ParseMap} result "./utils/parsing"
+
+fn remove_quotes(s) = s.slice(1, -1)
+
+fn parse_str(tokens) =
+  result({type: :str} tokens)
+    ::one(:string_lit :value)
+    ::fmap(_::update(:value, remove_quotes))
+
+fn parse_id(tokens) =
+  result({type: :id_lookup} tokens)
+    ::one(:id :name)
+
+fn parse_num(tokens) =
+  result({type: :num} tokens)::one(:num :value)
+
+fn parse_big_int(tokens) =
+  result({type: :big_int} tokens)::one(:big_int :value)
+
+fn parse_dot(lhs tokens) =
+  result({type: :property_lookup, lhs} tokens)
+    ::skip(:dot)
+    ::one(:id :property)
+
+fn parse_fn_call(lhs tokens) =
+  when_on_same_line_as_previous_token(
+    tokens::first()
+    #(result({type: :fn_call, lhs} tokens)
+        ::skip(:open_p)
+        ::until(:close_p parse_expr :args)
+        ::skip(:close_p)))
+
+let math_ops = #{:mod :plus :minus :times :pow :div}
+
+let comparison_ops = #{:lt :gt :lt_eq :gt_eq}
+
+let all_math_ops = math_ops + comparison_ops
+
+fn parse_math_op(lhs tokens) =
+  result({type: :math_op, lhs} tokens)
+    ::either(math_ops :op)
+    ::then(parse_1_2_expr :rhs)
+
+fn parse_comparison_op(lhs, tokens) =
+  result({type: :math_op, lhs} tokens)
+    ::either(comparison_ops, :op)
+    ::then(parse_1_2_expr :rhs)
+
+fn parse_unapplied_math_op(tokens) =
+  result({type: :unapplied_math_op} tokens)
+    ::either(all_math_ops :op)
+
+fn parse_paren_expr(tokens) =
+  result({type: :paren_expr} tokens)
+    ::skip(:open_p)
+    ::then(parse_expr :expr)
+    ::skip(:close_p)
+
+fn parse_infix_bind(lhs tokens) =
+  result({type: :bind, lhs} tokens)
+    ::skip(:double_colon)
+    ::one_case(~ParseMap{
+      :id => parse_id,
+      :fn => parse_fn,
+      :open_p => parse_paren_expr,
+      all_math_ops => parse_unapplied_math_op,
+    } :expr)
+
+fn parse_double_eq(lhs tokens) =
+  result({type: :double_equals, lhs} tokens)
+    ::skip(:double_eq)
+    ::then(parse_expr :rhs)
+
+fn parse_not_eq(lhs tokens) =
+  result({type: :not_equals, lhs} tokens)
+    ::skip(:not_eq)
+    ::then(parse_expr :rhs)
+
+fn parse_object_dynamic_access(lhs tokens) =
+  when_on_same_line_as_previous_token(
+    tokens::first()
+    #(result({type: :dynamic_access lhs} tokens)
+        ::skip(:open_sq)
+        ::then(parse_expr :expr)
+        ::skip(:close_sq)))
+
+fn parse_triple_eq(lhs tokens) =
+  result({type: :triple_equals, lhs} tokens)
+    ::skip(:triple_eq)
+    ::then(parse_1_2_expr :rhs)
+
+fn parse_triple_not_eq(lhs tokens) =
+  result({type: :triple_not_equals, lhs} tokens)
+    ::skip(:triple_eq)
+    ::then(parse_1_2_expr :rhs)
+
+fn parse_is(lhs tokens) =
+  result({type: :is, lhs} tokens)
+    ::skip(:is)
+    ::then(parse_1_2_expr)
+
+
+fn parse_and_and(lhs tokens) =
+  result({type: :and_and, lhs} tokens)
+    ::skip(:and_and)
+    ::then(parse_expr :rhs)
+
+fn parse_or_or(lhs tokens) =
+  result({type: :or_or, lhs} tokens)
+    ::skip(:or_or)
+    ::then(parse_expr :rhs)
+
+fn parse_snd_assign(lhs tokens) =
+  result({type: :snd_assign, lhs} tokens)
+    ::skip(:eq)
+    ::then(parse_expr :rhs)
+
+fn parse_inclusive_range(lhs tokens) =
+  when_on_same_line_as_previous_token(
+    tokens::first()
+    #(result({type: :inclusive_range, lhs} tokens)
+      ::skip(:dot_dot)
+      ::then(parse_1_2_expr :rhs)))
+
+fn parse_exclusive_range(lhs tokens) =
+  when_on_same_line_as_previous_token(
+    tokens::first()
+    #(result({type: :exclusive_range, lhs} tokens)
+      ::skip(:dot_dot_dot)
+      ::then(parse_1_2_expr :rhs)))
+
+fn parse_third_expr() {
+  let tokens = this.tokens
+  let value = this.value
+
+  while let f = ~ParseMap{
+    :double_eq => parse_double_eq,
+    :triple_eq => parse_triple_eq,
+    :triple_not_eq => parse_triple_not_eq,
+    :not_eq => parse_not_eq,
+    :and_and => parse_and_and,
+    :or_or => parse_or_or,
+    comparison_ops => parse_comparison_op
+  }::call(tokens) {
+    {value, tokens} = f(value, tokens)
+  }
+  return result(value, tokens)
+}
+
+fn parse_snd_expr([lhs tokens]) {
+  let tokens = this.tokens
+  let value = this.value
+
+  while let f = ~ParseMap{
+    :dot => parse_dot
+    :dot_dot => parse_inclusive_range
+    :dot_dot_dot => parse_exclusive_range
+    :open_p => parse_fn_call
+    :double_colon => parse_infix_bind
+    :open_sq => parse_object_dynamic_access
+    :is => parse_is
+    :eq => parse_snd_assign
+    math_ops => parse_math_op
+  }::call(tokens) {
+    {value, tokens} = f(value, tokens)
+  }
+  return result(value, tokens)
+}
+
+fn parse_array(tokens) =
+  result({type: :array} tokens)
+    ::skip(:open_sq)
+    ::until(:close_sq parse_expr :elements)
+    ::skip(:close_sq)
+
+fn parse_assign_id(tokens) =
+  result({type: :id_assign} tokens)
+    ::one(:id :name)
+
+fn parse_simple_name(tokens) =
+  nothing(tokens)
+    ::one(:id :name)
+    ::fmap(:name)
+
+fn parse_assign_array(tokens) =
+  result({type: :array_deconstruction} tokens)
+       ::skip(:open_sq)
+       ::until(:close_sq parse_simple_name :names)
+       ::skip(:close_sq)))
+
+fn parse_spread_assign(tokens) =
+  result({type: :spread_assign} tokens)
+       ::skip(:dot_dot_dot)
+    ::one(:id :name)))
+
+fn parse_obj_entry_rename(tokens) =
+  result({type: :obj_entry_rename} tokens)
+    ::one(:id :old_name)
+    ::skip(:colon)
+    ::one(:id :new_name)))
+
+fn parse_reg_obj_assign_entry(tokens) =
+  result({type: :obj_reg_entry} tokens)
+    ::one(:id :name)
+
+fn parse_obj_assign_entry(tokens) =
+  nothing(tokens)
+    ::one_case(~ParseMap{
+      [:id :colon] => parse_obj_entry_rename
+      :id => parse_reg_obj_assign_entry
+      :dot_dot_dot => parse_spread_assign
+    })
+
+fn parse_assign_obj(tokens) =
+  result({type: :object_deconstruction} tokens)
+    ::skip(:open_b)
+    ::until(:close_b parse_obj_assign_entry :entries)
+    ::skip(:close_b)
+
+fn parse_assign_expr(tokens) =
+  nothing(tokens)::one_case(~ParseMap{
+    :id => parse_assign_id,
+    :open_sq => parse_assign_array,
+    :open_b => parse_assign_obj,
+    :dot_dot_dot => parse_spread_assign
+  })
+
+fn parse_fn_name(tokens) =
+  nothing(tokens)::one(:id :name)::fmap(:name)
+
+fn parse_args_def(tokens) =
+  nothing(tokens)
+    ::skip(:open_p)
+    ::until(:close_p parse_assign_expr)
+    ::skip(:close_p)
+
+fn parse_fn_expr_body(tokens) =
+  result({type: :return} tokens)
+    ::skip(:eq)
+    ::then(parse_expr :expr)
+    ::fmap(vector)
+
+fn parse_fn_body(tokens) =
+  nothing(tokens)
+    ::skip(:open_b)
+    ::until(:close_b parse_statement)
+    ::skip(:close_b)
+
+fn parse_gen_modifier(tokens) =
+  result(true tokens)::skip(:times)
+
+fn parse_async_modifier(tokens) =
+  result(true tokens)::skip(:async)
+
+fn parse_fn(tokens) =
+  result({type: :fn} tokens)
+    ::one_case({async: parse_async_modifier} :async? false)
+    ::skip(:fn)
+    ::one_case({times: parse_gen_modifier} :generator? false)
+    ::one_case({id: parse_fn_name} :name null)
+    ::one_case({open_p: parse_args_def} :args)
+    ::one_case(~ParseMap{
+      :eq => parse_fn_expr_body,
+      :open_b => parse_fn_body
+    } :body)
+
+fn parse_set(tokens) =
+  result({type: :set} tokens)
+    ::skip(:hash)
+    ::skip(:open_b)
+    ::until(:close_b parse_expr :elements)
+    ::skip(:close_b)
+
+fn parse_reg_obj_entry(tokens) =
+  result({type: :reg_obj_entry} tokens)
+    ::either(#{:id :num} :key)
+    ::skip(:colon)
+    ::then(parse_expr :value)
+
+fn parse_obj_shorthand_entry(tokens) =
+  result({type: :obj_shorthand_entry} tokens)
+    ::one(:id :id)))
+
+fn parse_dynamic_obj_entry(tokens) =
+  result({type: :dynamic_obj_entry} tokens)
+    ::skip(:open_sq)
+    ::then(parse_expr :key_expr)
+    ::skip(:close_sq)
+    ::skip(:colon)
+    ::then(parse_expr :value)
+
+fn parse_spread_obj_entry(tokens) =
+  result({type: :spread_obj_entry} tokens)
+    ::skip(:dot_dot_dot)
+    ::then(parse_expr :expr)
+
+fn parse_obj_entry(tokens) =
+  nothing(tokens)
+    ::one_case(~ParseMap{
+      :open_sq => parse_dynamic_obj_entry,
+      :dot_dot_dot => parse_spread_obj_entry,
+      :fn => parse_fn
+      [:id :colon] => parse_reg_obj_entry,
+      [:num :colon] => parse_reg_obj_entry,
+      :id => parse_obj_shorthand_entry
+    })
+
+fn parse_obj(tokens) =
+  result({type: :obj_lit} tokens)
+    ::skip(:open_b)
+    ::until(:close_b parse_obj_entry :entries)
+    ::skip(:close_b)
+
+fn parse_bind_this(tokens) =
+  result({type: :bind_this} tokens)
+    ::skip(:double_colon)
+    ::one_case(~ParseMap{
+      :id => parse_id,
+      :fn => parse_fn,
+      all_math_ops => parse_unapplied_math_op,
+      :open_p => parse_paren_expr
+    } :expr)))
+
+fn parse_not(tokens) =
+  result({type: :not} tokens)
+    ::skip(:bang)
+    ::then(parse_expr :expr)
+
+fn parse_new(tokens) =
+  result({type: :new} tokens)
+    ::skip(:new)
+    ::then(parse_single_expr :expr)
+
+fn parse_spread(tokens) =
+  result({type: :spread} tokens)
+    ::skip(:dot_dot_dot)
+    ::then(parse_expr :expr)
+
+fn parse_yield(tokens) =
+  result({type: :yield} tokens)
+    ::skip(:yield)
+    ::then(parse_expr :expr)
+
+fn parse_await(tokens) =
+  result({type: :await} tokens)
+    ::skip(:await)
+    ::then(parse_expr :expr)
+
+fn parse_jsx_attr_shorthand(tokens) =
+  result({type: :jsx_attr_shorthand} tokens)
+    ::skip(:open_b)
+    ::one(:id :name)
+    ::skip(:close_b)
+
+fn parse_jsx_attr_expr(tokens) =
+  nothing(tokens)
+    ::skip(:open_b)
+    ::then(parse_expr :expr)
+    ::skip(:close_b)
+    ::fmap(:expr)
+
+fn parse_jsx_attr_reg(tokens) =
+  result({type: :jsx_attr_reg} tokens)
+    ::one(:id :name)
+    ::skip(:eq)
+    ::one_case(~ParseMap{
+      :string_lit => parse_str,
+      :open_b => parse_jsx_attr_expr
+    } :expr)
+
+fn parse_jsx_attr(tokens) =
+  result({type: :jsx_attr} tokens)
+    ::one_case(~ParseMap{
+      :open_b => parse_jsx_attr_shorthand
+      :id => parse_jsx_attr_reg
+    })
+
+fn parse_jsx_tag(tokens) =
+  result({type: :jsx_tag} tokens)
+    ::skip(:lt)
+    ::one(:id :name)
+    ::until(:gt parse_jsx_attr :attrs)
+    ::skip(:gt)
+    ::until(:jsx_close parse_jsx_expr :children)
+    ::skip(:jsx_close)
+    ::one(:id :closing_name)
+    ::fmap(fn({name, closing_name, ...node}) {
+      assert! name == closing_name
+      return {...node, name}
+    })
+    ::skip(:gt)
+
+fn parse_jsx_quoted_expr(tokens) =
+  result({type: :quoted_expr} tokens)
+    ::skip(:open_b)
+    ::then(parse_expr :expr)
+    ::skip(:close_b)
+
+fn parse_jsx_id(tokens) =
+  result({type: :str} tokens)::one(:id :value)
+
+fn parse_jsx_expr(tokens) =
+  nothing(tokens)
+    ::one_case(~ParseMap{
+      :open_b => parse_jsx_quoted_expr
+      :id => parse_jsx_id
+      _ => parse_jsx_tag
+    })
+
+fn parse_keyword(tokens) =
+  result({type: :keyword} tokens)::one(:keyword :value)
+
+fn parse_unapplied_and_and(tokens) =
+  result({type: :unapplied_and_and} tokens)::skip(:and_and)
+
+fn parse_unapplied_or_or(tokens) =
+  result({type: :unapplied_or_or} tokens)::skip(:or_or)
+
+fn parse_keyword_record_entry(tokens) =
+  result({type: :keyword_record_entry} tokens)
+    ::one(:id :name)
+    ::skip(:colon)
+    ::then(parse_expr :expr)
+
+fn parse_regular_record_entry(tokens) =
+  result({type: :regular_record_entry} tokens)
+    ::then(parse_expr :key_expr)
+    ::skip(:arrow)
+    ::then(parse_expr :value_expr)
+
+fn parse_record_entry(tokens) =
+  nothing(tokens)::one_case(~ParseMap{
+    [:id :colon] => parse_keyword_record_entry
+    _ => parse_regular_record_entry
+  })
+
+fn parse_record_syntax(tokens) =
+  result({type: :record_syntax} tokens)
+    ::skip(:tilde)
+    ::one(:id :constructor_name)
+    ::skip(:open_b)
+    ::until(:close_b parse_record_entry :entries)
+    ::skip(:close_b)
+
+fn parse_vector_syntax(tokens) =
+  result({type: :vector_syntax} tokens)
+    ::skip(:tilde)
+    ::one(:id :constructor_name)
+    ::skip(:open_sq)
+    ::until(:close_sq parse_expr :entries)
+    ::skip(:close_sq)
+
+fn parse_shorthand_anon_fn(tokens) =
+  result({type: :shorthand_anon_fn} tokens)
+    ::skip(:hash)
+    ::skip(:open_p)
+    ::then(parse_expr :expr)
+    ::skip(:close_p)
+
+fn parse_num_raw(tokens) =
+  (parse_num tokens)
+    ::fmap(:value)
+    ::fmap(read_string)
+
+fn parse_anon_arg_id(tokens) =
+  result({type: :anon_arg_id} tokens)
+    ::skip(:single_and)
+    ::one_case({num: parse_num_raw} :arg_num 1)
+
+fn parse_call_expr(tokens) =
+  nothing(tokens)
+    ::skip(:open_p)
+    ::until(:close_p parse_expr)
+    ::skip(:close_p)
+
+fn parse_decorator(tokens) =
+  result({type: :decorator} tokens)
+    ::skip(:at)
+    ::one(:id :name)
+    ::one_case({open_p: parse_call_expr} :args [])
+    ::then(parse_fn :fn_def)))
+
+fn parse_single_expr(tokens) =
+  nothing(tokens)
+    ::one_case(~ParseMap{
+      :string_lit => parse_str,
+      [:tilde :id :open_b] => parse_record_syntax,
+      [:tilde :id :open_sq] => parse_vector_syntax,
+      :keyword => parse_keyword,
+      :open_p => parse_paren_expr,
+      :yield => parse_yield,
+      :await => parse_await,
+      :id => parse_id,
+      :at => parse_decorator,
+      all_math_ops => parse_unapplied_math_op,
+      :and_and => parse_unapplied_and_and,
+      :or_or => parse_unapplied_or_or,
+      :num => parse_num,
+      :big_int => parse_big_int,
+      :open_sq => parse_array,
+      :dot_dot_dot => parse_spread,
+      :double_colon => parse_bind_this,
+      :bang => parse_not,
+      :new => parse_new,
+      [:hash :open_p] => parse_shorthand_anon_fn,
+      :single_and => parse_anon_arg_id,
+      [:hash :open_b] => parse_set,
+      :open_b => parse_obj,
+      [:async :fn] => parse_fn,
+      :fn => parse_fn,
+      [:lt :id] => parse_jsx_tag
+    })
+
+fn parse_1_2_expr(tokens) = parse_single_expr(tokens)::parse_snd_expr()
+
+fn parse_expr(tokens) =
+  parse_single_expr(tokens)
+    ::parse_snd_expr()
+    ::parse_third_expr()
+
+fn parse_else_branch(tokens) =
+  nothing(tokens)
+    ::skip(:else)
+    ::skip(:open_b)
+    ::until(:close_b parse_statement)
+    ::skip(:close_b)))
+
+fn parse_if(tokens) =
+  result({type: :if} tokens)
+    ::skip(:if)
+    ::then(parse_expr :expr)
+    ::skip(:open_b)
+    ::until(:close_b parse_statement :pass)
+    ::skip(:close_b)
+    ::one_case({else: parse_else_branch} :fail [])
+
+fn parse_unless(tokens) =
+  result({type: :unless} tokens)
+    ::skip(:unless)
+    ::then(parse_expr :expr)
+    ::skip(:open_b)
+    ::until(:close_b parse_statement :body)
+    ::skip(:close_b)))
+
+fn parse_let(tokens) =
+  result({type: :let} tokens)
+    ::skip(:let)
+    ::then(parse_assign_expr :assign_expr)
+    ::skip(:eq)
+    ::then(parse_expr :rhs)))
+
+fn parse_if_let(tokens) =
+  result({type: :if_let} tokens)
+    ::skip(:if)
+    ::skip(:let)
+    ::then(parse_assign_expr :assign_expr)
+    ::skip(:eq)
+    ::then(parse_expr :expr)
+    ::skip(:open_b)
+    ::until(:close_b parse_statement :pass)
+    ::skip(:close_b)
+    ::one_case({else: parse_else_branch} :fail [])
+
+fn parse_impl(tokens) =
+  result({type: :impl_for} tokens)
+    ::skip(:impl)
+    ::then(parse_expr :proto_expr)
+    ::skip(:for)
+    ::one(:id :constructor)
+    ::skip(:eq)
+    ::then(parse_expr :expr)
+
+fn parse_define(tokens) =
+  result({type: :define_for} tokens)
+    ::skip(:define)
+    ::one(:id :symbol_name)
+    ::skip(:for)
+    ::one_case(~ParseMap{
+      :id => parse_id,
+      :keyword => parse_keyword
+    } :src_expr)
+    ::skip(:eq)
+    ::then(parse_expr :expr)
+
+fn parse_protocol(tokens) =
+  result({type: :protocol_def} tokens)
+    ::skip(:protocol)
+    ::one(:id :name)
+
+fn parse_return(tokens) =
+  result({type: :return} tokens)
+    ::skip(:return)
+    ::then(parse_expr :expr)
+
+fn parse_await_modifier(tokens) = result(true tokens)::skip(:await)
+
+fn parse_for_loop(tokens) =
+  result({type: :for_loop} tokens)
+    ::skip(:for)
+    ::one_case({await: parse_await_modifier} :await? false)
+    ::then(parse_assign_expr :assign_expr)
+    ::skip(:of)
+    ::then(parse_expr :iterable_expr)
+    ::skip(:open_b)
+    ::until(:close_b parse_statement :body)
+    ::skip(:close_b)
+
+
 fn parse_id_assign(tokens) =
-  from({type: :id_assign} tokens)
+  result({type: :id_assign} tokens)
     ::one(:id :name)
     ::skip(:eq)
     ::then(parse_expr :expr)
 
-fn parse_assert(tokens) 
-  from({type: :assert} tokens)
+fn parse_assert(tokens) =
+  result({type: :assert} tokens)
     ::skip(:assert!)
-    ::then(fn(tokens) = from(tokens::first() tokens) :token)
+    ::then(#(result(&::first() &)) :token)
     ::then(parse_expr :expr)
-    ::pipe(~ParseMap{:string_lit parse_str} :msg null)
+    ::one_case(~ParseMap{:string_lit => parse_str} :msg null)
 
 fn parse_statement(tokens) =
   tokens::pipe(~ParseMap{
