@@ -1207,24 +1207,19 @@ fn with(...args) = new CallEffectWith(this, ...args)
 impl Effect for CallEffectWith = fn() =
   this.effect[Effect](...this.args)
 
-protocol InternHash
-
 fn intern_vec(klass) {
   if !klass.cache {
     klass.cache = ~Map{}
     define Vector for klass = fn(args) {
-      let h = args::hash()
-      if let obj = klass.cache.get(h) {
+      let hash_value = args::hash()
+      if let obj = klass.cache.get(hash_value) {
         return obj
       } else {
         let obj = new klass(...args)
-        obj[InternHash] = h
-        klass.cache.set(h, obj)
+        klass.cache.set(hash_value, obj)
         return obj
       }
     }
-    define :toString for klass = fn() = this[InternHash]
-    define :valueOf for klass = fn() = this[InternHash]
   }
   return klass
 }
