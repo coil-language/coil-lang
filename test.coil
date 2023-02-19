@@ -2,3 +2,4 @@ let data = [{admin?: true, val: 10}, {val: 20}]
 
 ~Exec[_::at(:val) ** 2 :for data :if _::at(:admin?) :verify _ <= 100]
   ::log()
+
