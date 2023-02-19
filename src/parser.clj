@@ -105,6 +105,7 @@
        (p/skip :close-p)))
 
 (declare parse-fn)
+(declare parse-record-syntax)
 
 (defn- parse-infix-bind [lhs tokens]
   (->> (p/from {:type :bind, :lhs lhs} tokens)
@@ -112,6 +113,7 @@
        (p/one-case
         {:id parse-id,
          :fn parse-fn,
+         [:tilde :id :open-b] parse-record-syntax,
          all-math-ops parse-unapplied-math-op,
          :open-p parse-paren-expr}
         :expr)))
@@ -215,6 +217,11 @@
       (recur expr tokens)
       (p/from lhs tokens))))
 
+(defn- parse-spread-assign [tokens]
+  (->> (p/from {:type :spread-assign} tokens)
+       (p/skip :dot-dot-dot)
+       (p/one :id :name)))
+
 (defn- parse-array [tokens]
   (->> (p/from {:type :array} tokens)
        (p/skip :open-sq)
@@ -225,21 +232,17 @@
   (->> (p/from {:type :id-assign} tokens)
        (p/one :id :name)))
 
-(defn- parse-simple-name [tokens]
+(defn- parse-assign-array-entry [tokens]
   (->> (p/null tokens)
-       (p/one :id :name)
-       (p/fmap :name)))
+       (p/one-case
+        {:id parse-assign-id,
+         :dot-dot-dot parse-spread-assign})))
 
 (defn- parse-assign-array [tokens]
   (->> (p/from {:type :array-deconstruction} tokens)
        (p/skip :open-sq)
-       (p/until :close-sq parse-simple-name :names)
+       (p/until :close-sq parse-assign-array-entry :entries)
        (p/skip :close-sq)))
-
-(defn- parse-spread-assign [tokens]
-  (->> (p/from {:type :spread-assign} tokens)
-       (p/skip :dot-dot-dot)
-       (p/one :id :name)))
 
 (defn- parse-obj-entry-rename [tokens]
   (->> (p/from {:type :obj-entry-rename} tokens)
@@ -626,7 +629,7 @@
 (defn- parse-impl [tokens]
   (->> (p/from {:type :impl-for} tokens)
        (p/skip :impl)
-       (p/then parse-single-expr :proto-expr)
+       (p/then parse-expr :proto-expr)
        (p/skip :for)
        (p/one :id :constructor)
        (p/skip :eq)

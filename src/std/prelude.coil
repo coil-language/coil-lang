@@ -21,6 +21,23 @@ impl HashCode for Hash = fn() = this.map::hash()
 
 // Range
 
+// Stepable protocol
+
+protocol Stepable
+
+impl Stepable for Number = {
+  fn inc() = this + 1
+  fn dec() = this - 1
+}
+
+impl Stepable for BigInt = {
+  fn inc() = this + 1n
+  fn dec() = this - 1n
+}
+
+fn inc() = this[Stepable].inc.call(this)
+fn dec() = this[Stepable].dec.call(this)
+
 // this needs more thought
 fn Range(start, end, exclusive?) {
   assert! Number.isInteger(start)
@@ -28,6 +45,16 @@ fn Range(start, end, exclusive?) {
   this.start = start
   this.end = end
   this.exclusive? = truthy(exclusive?)
+}
+
+impl Symbol.iterator for Range = fn*() {
+  let i = this.start
+  let end = this.end
+  if this.exclusive? { end = end::dec() }
+  while i <= end {
+    yield i
+    i = i::inc()
+  }
 }
 
 // CONSTRUCT RECORD PROTOCOL
@@ -1053,7 +1080,9 @@ fn Underscore(transforms) {
   this.transforms = transforms
 }
 
-let _ = new Underscore([fn(x) = x])::freeze()
+let _ = new Underscore([fn(x) = x])
+
+define HashCode for _ = fn() = 2n
 
 impl Call for Underscore = fn(value) = 
   compose(...this.transforms)::call(value)
@@ -1127,6 +1156,7 @@ fn run_effect() {
   if this[Effect] {
     return this[Effect]()
   } else {
+    console.log("No effect found for", this)  
     raise(this)
   }
 }
@@ -1192,6 +1222,44 @@ fn Fetch(method, url, status) {
   this.status = status
 }
 
+@intern_vec
+fn Eff(...descriptors) {
+  this.descriptors = descriptors
+  for i of 0..descriptors.length {
+
+  }
+}
+
+// Idea to allow you do write the following
+// define Effect for ~Eff[:save _] = ...
+// and it would get called even if ~Eff[:save 12] was triggered.
+// In other words, allowing _ to be used as a placeholder.
+// This is a step towards getting to closer to feel like 
+// pattern matching.
+
+// Implementing this as the root handler for Eff is pretty safe
+// performance-wise I imagine since, I won't be reached 
+// in the prototype chain unless an effect hasn't been implemented
+// for the effect that was triggered.
+
+// So the concrete effect handlers will be fast
+// and the placeholders will have O(n) where n is
+// the amount of descriptors which again should be very few.
+
+// impl Effect for Eff = fn(...with_args) {
+//   for i of 0..this.descriptors.length {
+//     let before = this.descriptors.slice(0, i)
+//     let after = this.descriptors.slice(i + 1)
+//     let eff_vec = Eff::construct_vector([...before, _, ...after])
+//     if Effect keyof eff_vec {
+//       return eff_vec[Effect](...with_args)
+//     }
+//   }
+//   console.log("No effect found")
+//   raise(this)
+// }
+
+
 fn HttpError(code, message) {
     this.name = 'HttpError'
     this.message = message
@@ -1233,4 +1301,28 @@ let http = {
       return error
     }
   }
+}
+
+fn Exec() {}
+
+define Vector for Exec = fn([map_fn, _for, collection, ...rest]) {
+  assert! _for == :for
+  assert! Call keyof map_fn
+  let result = collection
+
+  if rest::first() == :if {
+    let [_if filter_fn, ..._rest] = rest
+    rest = _rest
+    assert! Call keyof filter_fn
+    result = result::filter(filter_fn)
+  }
+
+  result = result::map(map_fn)
+
+  if rest::first() == :verify {
+    let [_verify, verify_fn, ..._rest] = rest
+    assert! result::every?(verify_fn)
+  }
+
+  return result
 }

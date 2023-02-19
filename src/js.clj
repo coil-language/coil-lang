@@ -44,12 +44,17 @@
 (defn- eval-id-assign-name [{:keys [name]}]
   (resolve-name name))
 
-(defn- eval-array-deconstruction-names [{:keys [names]}]
-  (str "[" (string/join ", " (map resolve-name names)) "]"))
-
 
 (defn- eval-spread-assign [{:keys [name]}]
   (str "..." name))
+
+(defn- eval-array-deconstruction-entry [node]
+  (case (node :type)
+    :id-assign (eval-id-assign-name node)
+    :spread-assign (eval-spread-assign node)))
+
+(defn- eval-array-deconstruction-names [{:keys [entries]}]
+  (str "[" (string/join ", " (map eval-array-deconstruction-entry entries)) "]"))
 
 (defn- eval-obj-deconstruction-entry [node]
   (case (node :type)

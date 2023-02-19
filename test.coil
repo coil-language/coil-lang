@@ -1,19 +1,4 @@
-let API = { todos: "https://jsonplaceholder.typicode.com/todos" }
+let data = [{admin?: true, val: 10}, {val: 20}]
 
-define Effect for ~Fetch[:get API.todos :error] = fn() =
-  console.log("error")
-
-define Effect for ~Fetch[:get API.todos :404] = fn(error) =
-  console.log("404", error.message)
-
-define Effect for ~Fetch[:get API.todos :loading] = fn() =
-  console.log("loading")
-
-async fn* main() {
-  let result = yield* http.get(API.todos)
-  if result::error?() { return null }
-  result::at(-1)::log("LAST")
-  return result
-}
-
-run(main)
+~Exec[_::at(:val) ** 2 :for data :if _::at(:admin?) :verify _ <= 100]
+  ::log()
