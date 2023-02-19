@@ -18,7 +18,7 @@ impl Call for Lexer = fn(str) {
   }
   let line = 1
   let col = 1
-  while rest_of_string() !== "" {
+  while rest_of_string() != "" {
     let found = false  
     for [pattern type] of this.entries {
       if let value = pattern::scan() {
@@ -41,6 +41,7 @@ impl Call for Lexer = fn(str) {
 
   return tokens
 }
+
 // this is tested & legit
 let lexer = ~Lexer{
   /\n/ => newline
@@ -113,5 +114,4 @@ let lexer = ~Lexer{
   /^[a-zA-Z_\?\!\$0-9]+/ => :id
 }
 
-lexer::call("if else
-=>")::log()
+export default lexer
