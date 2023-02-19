@@ -1,0 +1,74 @@
+fn parse_unless() = ~Parser[
+  type(:unless)
+  skip(:unless)
+  then(parse_expr :expr)
+  skip(:open_b)
+  until(:close_b parse_statement :body)
+  skip(:close_b)
+]
+
+fn parse_while_loop() = ~Parser[
+  type(:while_loop)
+  skip(:while)
+  then(parse_expr :test_expr)
+  skip(:open_b)
+  until(:close_b parse_statement :body)
+  skip(:close_b)
+]
+
+fn parse_continue() = ~Parser[type(:continue) skip(:continue)]
+
+fn parse_break() = ~Parser[type(:break) skip(:break)]
+
+fn parse_catch() = ~Parser[
+  type(:catch)
+  skip(:catch)
+  one(:id :name)
+  skip(:open_b)
+  until(:close_b parse_statement :body)
+  skip(:close_b)
+]
+
+fn parse_finally() = ~Parser[
+  type(:finally)
+  skip(:finally :open-b)
+  until(:close_b parse_statement :body)
+  skip(:close_b)
+]
+
+fn parse_try() = ~Parser[
+  type(:try)
+  skip(:try :open_b)
+  until(:close_b parse_statement :body)
+  skip(:close_b)
+  one(:catch ~ParseMap{ :catch => parse_catch _ => null })
+  one(:finally ~ParseMap{ :finally => parse_finally _ => null })
+]
+
+let parse_statement = ~ParseMap{
+  :unless => parse_unless,
+  :assert! => parse_assert,
+  :impl => parse_impl
+  :define => parse_define
+  :try => parse_try
+  :protocol => parse_protocol
+  :let => parse_let
+  :return => parse_return
+  :for => parse_for_loop
+  :while => parse_while_loop
+  :continue => parse_continue
+  :break => parse_break
+  [:if :let] => parse_if_let
+  :if => parse_if
+  _ => parse_expr
+}
+
+fn parse(tokens) {
+  let ast = []
+  while tokens::len() != 0 {
+    let [statment_or_expr, rest] = parse_statement::call(tokens)
+    ast.push(statement_or_expr)
+    tokens = rest
+  }
+  return ast
+}

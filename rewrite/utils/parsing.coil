@@ -1,114 +1,62 @@
-export fn ParseMap(entries) { this.entries = entries }
+protocol ParseInstruction
 
-protocol Matches
+fn Type(kw) { this.kw = kw }
+fn type(kw) = new Type(kw)
+impl ParseInstruction for Type = fn([_expr, tokens]) =
+  [{type: this.kw} tokens]
 
-fn matches?(tokens) = this[Matches](tokens)
-
-impl Matches for Keyword = fn(token, ...rest) = token == this
-
-impl Matches for Array = fn(tokens) =
-  ::zip(tokens.slice(0, this.length))
-  ::every?(fn(p, t) = p::matches?(t))
-
-impl Matches for Set = fn(token ...rest) = ::has?(token)
-
-impl Matches for Underscore = fn() = true
-
-impl Call for ParseMap = fn(tokens) =
-  this.entries
-    ::find(fn(pattern, _f) = pattern::matches?(tokens))
-    ::call(tokens)
-
-protocol Parser
-
-fn ParseResult(value, tokens) {
-  this.value = value
-  this.tokens = tokens
+fn Skip(...kws) { this.kws = kws }
+fn skip(...kws) = new Skip(kws)
+impl ParseInstruction for Skip = fn([expr tokens]) {
+  for kw of this.kws {  
+    assert! tokens::first() == this.kw
+    tokens = tokens::skip(1)
+  }
+  return [expr, tokens]
 }
 
-export fn result(val, tokens) = new ParseResult(value, tokens)
-export fn nothing(tokens) = result(null tokens)
-
-impl Parser for ParseResult = {
-  fn then(f kw) = f(this.tokens)::update(:value, #(this.value::merge({[kw]: &.value}))))
-  fn fmap(f) = result(f(this.value), this.tokens)
-  fn many_case_until(end_token_type, parse_map) {
-    let exprs = []
-    while tokens::peek_type() != end_token_type {
-      if let [expr tokens_] = parse_map::call(tokens) {
-        exprs.push(expr)
-        tokens = tokens_
-      } else {
-        return result(expr tokens)
-      }
-    }
-    return result(expr tokens)
-  }
-  fn until(end_token_type, parse_fn) {
-    let tokens = this.tokens
-    let exprs = []
-    while tokens::peek_type() != end_token_type {
-      let {value tokens: tokens_} = parse_fn(tokens)
-      exprs.push(value)
-      tokens = tokens_
-    }
-    return result(exprs tokens)
-  }
-  fn one(token_type, kw) {
-    assert! !this.tokens::empty?() "Expected " + token_type + ", but reached end of file"
-    let [token ...rest] = this.tokens
-    assert! token == token_type "Expected " token_type + ", got " token::at(:type)
-    let expr = this.value::merge({[kw]: token::at(:value)})
-    return result(expr rest)
-  }
-  fn case(parse_map, kw, fallback) {
-    if let {value, tokens} = parse_map::call(this.tokens) {
-      return from(this.value::merge({[kw]: value}), tokens)
-    } else {
-      return from(this.value::merge({[kw]: fallback}), tokens)
-    }
-  }
-  fn skip(token_type) {
-    let {tokens} = this::one(token_type :unused)
-    return result(this.value tokens)
-  }
-  fn either(token_set, kw) {
-    assert! token_set::has?(this.tokens::first())
-    return result(expr this.tokens::skip(1))
-  }
+fn Then(parser, kw) {
+  this.parser = parser
+  this.kw = kw
+}
+fn then(parser, kw) = new Then(parser, kw)
+impl ParseInstruction for Then = fn([expr tokens]) {
+  let [new_expr new_tokens] = this.parser::call(tokens)
+  return [expr::merge(new_expr) new_tokens]
 }
 
-export fn then(f kw) = this[Parser].then.call(this, f, kw)
-export fn fmap(f) = this[Parser].fmap.call(this, f)
-export fn many_case_until(end_token_type, ...args) {
-  if args::len() == 2 {
-    let [parse_map kw] = args
-    return this[Parser].many_case_until.call(this, end_token_type, parse_map)
-      ::fmap(#(this.value::merge({[kw]: &})))
-  } else {
-    let [parse_map] = args
-    return this[Parser].many_case_until.call(this, end_token_type, parse_map)
-  }
+fn Until(end_kw, parser, kw) {
+  this.end_kw = end_kw
+  this.parser = parser
+  this.kw = kw
 }
-export fn until(end_token_type, parse_fn, ...args) {
-  if args::len() == 1 {
-    let [kw] = args
-    return this[Parser].until.call(this, end_token_type, parse_fn)
-      ::fmap(#(this.value::merge({[kw]: &})))
-  } else {
-    return this[Parser].until.call(this, end_token_type, parse_fn)
+fn until(end_kw, parser, kw) = new Until(end_kw, parser, kw)
+impl ParseInstruction for Until = fn([expr tokens]) {
+  let exprs = []  
+  while tokens::first() != this.end_kw {
+    let [expr, new_tokens] = this.parser::call(tokens)
+    exprs.push(expr)
+    tokens = new_tokens
   }
+  return [expr::merge({[this.kw]: exprs}) tokens]
 }
-export one(token_type, kw) = this[Parser].one.call(this, token_type, kw)
-export skip(token_type) = this[Parser].skip.call(this, token_type)
-export either(token_set, kw) = this[Parser].either.call(this, token_set, kw)
 
-export fn peek_type(tokens) = tokens::first()::pipe(:type)
+fn parse_step(result) = this[ParseInstruction](result)
 
-export fn many_case(parse_map, kw) {
-  if kw {
-    return ::many_case_until(null, parse_map, kw)
-  } else {
-    return ::many_case_store(null, parse_map)
+fn ParseMap(entries) { this.entries = entries }
+
+define Record for ParseMap = fn(entries) = new ParseMap(entries)
+
+let parse_expr = null
+
+fn Parser(instructions) { this.instructions = instructions }
+
+define Vector for Parser = fn(instructions) = new Parser(instructions)
+
+impl Call for Parser = fn(tokens) {
+  let result = [null tokens]
+  for instruction of this.instructions {
+    result = instruction::parse(result)
   }
+  return result
 }
