@@ -1,23 +1,23 @@
-protocol Hashable
+protocol HashCode
 
-impl Hashable for String = fn() = js_str_hash(this)
-impl Hashable for Number = fn() = this
-impl Hashable for Keyword = fn() = ("____coil_keyword:" + this.value)::hash()
-impl Hashable for Array = fn() =
+impl HashCode for String = fn() = js_str_hash(this)
+impl HashCode for Number = fn() = this
+impl HashCode for Keyword = fn() = ("____coil_keyword:" + this.value)::hash()
+impl HashCode for Array = fn() =
   ::reduce(fn(value, elem, idx) = (value * 31n) + elem::hash(), 7n)
-impl Hashable for ObjectLiteral = fn() =
+impl HashCode for ObjectLiteral = fn() =
   ::reduce(fn(value, entry) = (value * 31n) + entry::hash(), 7n)
-impl Hashable for Map = fn() =
+impl HashCode for Map = fn() =
   ::reduce(fn(hash_value, key, value) = (hash_value * 31n) + [key value]::hash(), 7n)
 
-fn hash() = this[Hashable]()
+fn hash() = this[HashCode]()
 
 fn Hash(entries) {
   this.raw_entries = entries  
   this.map = new Map(entries.map(fn([key, value]) = [key::hash(), value]))
 }
 
-impl Hashable for Hash = fn() = this.map::hash()
+impl HashCode for Hash = fn() = this.map::hash()
 
 // Range
 
@@ -114,15 +114,7 @@ impl Call for Range = fn(value) {
   }
 }
 
-fn call(...args) {
-  // this::nil?() calls Call, we have to write it 
-  // explicitly to avoid an infinite loop
-  if nil?[Call](this) {
-    return this
-  } else {
-    return this[Call](...args)
-  }
-}
+fn call(...args) = this&.[Call](...args)
 
 // make sets callable using bind syntax
 impl :bind for Set = fn(val) = ::fn() = this::call(val)
@@ -135,22 +127,13 @@ fn freeze() = Object.freeze(this)
 
 let nil? = #{undefined null}::freeze()
 
-fn pipe(callable) {
-  if this::nil?() {
-    return this
-  } else {
-    return this[Pipe](callable::call)
-  }
-}
+fn pipe(callable) = this&.[Pipe](callable::call)
 
-fn compose(f, ...fns) = fn(...args) =
-  fns::reduce(
-    fn (result, f) = f::call(result),
-    f::call(...args)
-  )
+fn compose(first_fn, ...fns) = fn(...args) =
+  fns::reduce(fn (result, f) = f::call(result), first_fn::call(...args))
 
-fn impl_callable(f) {  
-  f[Call] = fn(first, ...rest) = first::f(...rest)
+fn impl_callable(f) {
+  define Call for f = fn(first, ...rest) = first::f(...rest)
   return f
 }
 
@@ -161,48 +144,25 @@ protocol Equal
 fn strict_eq?(other) = this === other
 
 impl Equal for Number = strict_eq?
-
 impl Equal for String = strict_eq?
-
 impl Equal for BigInt = strict_eq?
-
 impl Equal for Boolean = strict_eq?
-
 impl Equal for Keyword = strict_eq?
 
-impl Equal for Array = fn(other) {
-  if !(other is Array) {
-    return false
-  }
-  if this.length !== other.length {
-    return false
-  }
-  return this.every(fn(value, index) = value == other[index])
+fn vector_eq?(other) {
+  if this::len() != other::len() { return false }
+  return this::zip(other)::every?(fn([a, b]) = a == b)
 }
 
-impl Equal for Map = fn(other) {
-  if !(other is Map) {
-    return false
-  }
-  if this.size !== other.size {
-    return false
-  }
-  for [key, value] of this.entries() {
-    if other.get(key) != value {
-      return false
-    }
-  }
-  return true
+fn record_eq?(other) {
+  if this::len() != other::len() { return false }
+  return this::every?(fn(key, value) = other::at(key) == value)
 }
 
-impl Equal for ObjectLiteral = fn(other) {
-  for [key, value] of Object.entries(this) {
-    if value[Equal] != other[key] {
-      return false
-    }
-  }
-  return true
-}
+impl Equal for Array = vector_eq?
+impl Equal for Map = record_eq?
+impl Equal for ObjectLiteral = record_eq?
+impl Equal for Hash = record_eq?
 
 @impl_callable
 fn eq?(other) {
@@ -223,13 +183,12 @@ impl Clone for Range = {
 
 impl Clone for ObjectLiteral = {
   fn clone() = {...this}
-  fn deep_clone() {
-    let output = {}
-    for [k, v] of this::entries() {
-      output[k] = v::deep_clone()
-    }
-    return output
-  }
+  fn deep_clone() = this::map(fn(k, v) = [k, v::deep_clone()])
+}
+
+impl Clone for Hash = {
+  fn clone() = new Hash(this.raw_entries.slice())
+  fn deep_clone() = this::map(fn(k, v) = [k, v::deep_clone()])
 }
 
 impl Clone for Array = {

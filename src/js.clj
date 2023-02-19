@@ -297,11 +297,23 @@
 (defn- eval-keyof [{:keys [lhs rhs]}]
   (str (eval-expr lhs) " in " (eval-expr rhs)))
 
+(defn- eval-and-dot [{:keys [lhs rhs]}]
+  (str (eval-expr lhs) "?." (eval-expr rhs)))
+
+(defn- eval-partial-fn-call [{:keys [expr]}]
+  (str "(" (eval-expr expr) ")"))
+
+(defn- eval-partial-obj-dyn-access [{:keys [expr]}]
+  (str "[" (eval-expr expr) "]"))
+
 (defn- eval-expr [node]
   (case (:type node)
     :str (eval-str node)
     :decorator (eval-decorator node)
     :keyword (eval-keyword node)
+    :and-dot (eval-and-dot node)
+    :partial-fn-call (eval-partial-fn-call node)
+    :partial-obj-dyn-access (eval-partial-obj-dyn-access node)
     :property-lookup (property-lookup node)
     :id-lookup (eval-id-lookup node)
     :fn-call (eval-fn-call node)

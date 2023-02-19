@@ -54,6 +54,28 @@
          (p/until :close-p parse-expr :args)
          (p/skip :close-p))))
 
+(defn- parse-partial-obj-dyn-access [tokens]
+  (->> (p/from {:type :partial-obj-dyn-access} tokens)
+       (p/skip :open-sq)
+       (p/then parse-expr :expr)
+       (p/skip :close-sq)))
+
+(defn- parse-partial-fn-call [tokens]
+  (->> (p/from {:type :partial-fn-call} tokens)
+       (p/skip :open-p)
+       (p/until :close-p parse-expr :args)
+       (p/skip :close-p)))
+
+(defn- parse-and-dot [lhs tokens]
+  (->> (p/from {:type :and-dot, :lhs lhs} tokens)
+       (p/skip :single-and)
+       (p/skip :dot)
+       (p/one-case
+        {:id parse-id,
+         :open-sq parse-partial-obj-dyn-access
+         :open-p parse-partial-fn-call}
+        :rhs)))
+
 (def math-ops #{:mod :plus :minus :times :pow :div})
 
 (def comparison-ops #{:lt :gt :lt-eq :gt-eq})
@@ -180,6 +202,7 @@
   (loop [lhs lhs, tokens tokens]
     (if-let [[expr tokens]
              (case (p/peek-next tokens)
+               :single-and (parse-and-dot lhs tokens)
                :dot (parse-dot lhs tokens)
                :dot-dot (parse-inclusive-range lhs tokens)
                :dot-dot-dot (parse-exclusive-range lhs tokens)
