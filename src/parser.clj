@@ -379,7 +379,7 @@
 (defn- parse-not [tokens]
   (->> (p/from {:type :not} tokens)
        (p/skip :bang)
-       (p/then parse-expr :expr)))
+       (p/then parse-1-2-expr :expr)))
 
 (defn- parse-new [tokens]
   (->> (p/from {:type :new} tokens)
@@ -543,11 +543,16 @@
       ;;  - anything else?
        (p/then parse-fn :fn-def)))
 
+(defn- parse-regex [tokens]
+  (->> (p/from {:type :regex-lit} tokens)
+       (p/one :regex-lit :value)))
+
 (defn- parse-single-expr [tokens]
   (->> (p/null tokens)
        (p/one-case
         (array-map
          :string-lit parse-str,
+         :regex-lit parse-regex,
          [:tilde :id :open-b] parse-record-syntax,
          [:tilde :id :open-sq] parse-vector-syntax,
          :keyword parse-keyword,

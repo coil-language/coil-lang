@@ -12,6 +12,9 @@
       "include": "#strings"
     },
     {
+      "include": "#regex"
+    },
+    {
       "include": "#properties"
     },
     {
@@ -157,6 +160,16 @@
               "name": "entity.name.function"
             }
           }
+        }
+      ]
+    },
+    "regex": {
+      "name": "constant.regexp",
+      "match": "(\\/.*\\/)",
+      "patterns": [
+        {
+          "name": "constant.character.escape.coil",
+          "match": "\\\\."
         }
       ]
     },

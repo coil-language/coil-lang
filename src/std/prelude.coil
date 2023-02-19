@@ -175,6 +175,7 @@ impl Equal for String = strict_eq?
 impl Equal for BigInt = strict_eq?
 impl Equal for Boolean = strict_eq?
 impl Equal for Keyword = strict_eq?
+impl Equal for Function = strict_eq?
 
 fn vector_eq?(other) {
   if this::len() != other::len() { return false }

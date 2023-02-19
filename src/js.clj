@@ -74,12 +74,14 @@
     :object-deconstruction (eval-object-deconstruction-names node)))
 
 (defn- eval-if-let [{:keys [assign-expr expr pass fail]}]
-  (str "if (truthy(" (eval-expr expr) ")) {\n"
-       "let " (eval-assign-expr assign-expr) " = " (eval-expr expr) "\n"
-       (eval-ast pass) "\n"
-       "} else {\n"
-       (eval-ast fail) "\n"
-       "}"))
+  (str
+   "let __coil_if_let_temp = " (eval-expr expr) ";\n"
+   "if (truthy(__coil_if_let_temp)) {\n"
+   "let " (eval-assign-expr assign-expr) " = __coil_if_let_temp;\n"
+   (eval-ast pass) "\n"
+   "} else {\n"
+   (eval-ast fail) "\n"
+   "}"))
 
 
 (defn- eval-spread [{:keys [expr]}]
@@ -311,9 +313,13 @@
 (defn- eval-partial-obj-dyn-access [{:keys [expr]}]
   (str "[" (eval-expr expr) "]"))
 
+(defn- eval-regex-lit [{:keys [value]}]
+  value)
+
 (defn- eval-expr [node]
   (case (:type node)
     :str (eval-str node)
+    :regex-lit (eval-regex-lit node)
     :decorator (eval-decorator node)
     :keyword (eval-keyword node)
     :and-dot (eval-and-dot node)

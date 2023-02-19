@@ -48,6 +48,7 @@
    {:regex #"^\.\.\."                :keyword :dot-dot-dot}
    {:regex #"^\.\."                  :keyword :dot-dot}
    {:regex #"^\."                    :keyword :dot}
+   {:regex #"^\/.*\/[a-z]?"          :keyword :regex-lit}
    {:regex #"^\>\="                  :keyword :gt-eq}
    {:regex #"^\<\="                  :keyword :lt-eq}
    {:regex #"^\<\/"                  :keyword :jsx-close}

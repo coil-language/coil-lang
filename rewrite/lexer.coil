@@ -1,67 +1,117 @@
-import make_tokenizer from "./utils/lexing"
+fn Lexer(entries) { this.entries = entries }
 
-fn r(regex) = new RegExp(regex)
+fn ignore() {}
+fn newline() {}
 
-let tokens =
-  [{:regex r("\/\/.*")                  :ignore true}
-   {:regex r("^#")                      :keyword :hash}
-   {:regex r("^\~")                     :keyword :tilde}
-   {:regex r("^if\b")                   :keyword :if}
-   {:regex r("^is\b")                   :keyword :is}
-   {:regex r("^unless\b")               :keyword :unless}
-   {:regex r("^else\b")                 :keyword :else}
-   {:regex r("^return\b")               :keyword :return}
-   {:regex r("^let\b")                  :keyword :let}
-   {:regex r("^protocol\b")             :keyword :protocol}
-   {:regex r("^for\b")                  :keyword :for}
-   {:regex r("^of\b")                   :keyword :of}
-   {:regex r("^impl\b")                 :keyword :impl}
-   {:regex r("^define\b")               :keyword :define}
-   {:regex r("^yield\b")                :keyword :yield}
-   {:regex r("^async\b")                :keyword :async}
-   {:regex r("^assert\!")               :keyword :assert!}
-   {:regex r("^await\b")                :keyword :await}
-   {:regex r("^new\b")                  :keyword :new}
-   {:regex r("^\=\>")                   :keyword :arrow}
-   {:regex r("^\@")                     :keyword :at}
-   {:regex r("^\&\&")                   :keyword :and-and}
-   {:regex r("^\|\|")                   :keyword :or-or}
-   {:regex r("^\=\=\=")                 :keyword :triple-eq}
-   {:regex r("^\!\=\=")                 :keyword :triple-not-eq}
-   {:regex r("^\=\=")                   :keyword :double-eq}
-   {:regex r("^\!\=")                   :keyword :not-eq}
-   {:regex r("^\!")                     :keyword :bang}
-   {:regex r("^\=")                     :keyword :eq}
-   {:regex r("^fn\b")                   :keyword :fn}
-   {:regex r("^\{")                     :keyword :open-b}
-   {:regex r("^\}")                     :keyword :close-b}
-   {:regex r("^\(")                     :keyword :open-p}
-   {:regex r("^\)")                     :keyword :close-p}
-   {:regex r("^[\-\+]?\d+n")            :keyword :big-int}
-   {:regex r("^[\-\+]?(\d*\.)?\d+")     :keyword :num}
-   {:regex r("^\.\.\.")                 :keyword :dot-dot-dot}
-   {:regex r("^\.\.")                   :keyword :dot-dot}
-   {:regex r("^\.")                     :keyword :dot}
-   {:regex r("^\>\=")                   :keyword :gt-eq}
-   {:regex r("^\<\=")                   :keyword :lt-eq}
-   {:regex r("^\<\/")                   :keyword :jsx-close}
-   {:regex r("^\>")                     :keyword :gt}
-   {:regex r("^\<")                     :keyword :lt}
-   {:regex r("^\+")                     :keyword :plus}
-   {:regex r("^\%")                     :keyword :mod}
-   {:regex r("^\-")                     :keyword :minus}
-   {:regex r("^\*\*")                   :keyword :pow}
-   {:regex r("^\*")                     :keyword :times}
-   {:regex r("^\&")                     :keyword :single-and}
-   {:regex r("^\:\:")                   :keyword :double-colon}
-   {:regex r("^\:[a-zA-Z_\?\!\$0-9]+")  :keyword :keyword}
-   {:regex r("^\:")                     :keyword :colon}
-   {:regex r("^\/")                     :keyword :div}
-   {:regex r("^\[")                     :keyword :open-sq}
-   {:regex r("^\]")                     :keyword :close-sq}
-   {:regex r("(?s)^\"([^\\\"]|\\.)*\"") :keyword :string-lit}
-   {:regex r("^[a-zA-Z_\?\!\$0-9]+")    :keyword :id}]
+define Record for Lexer = fn(entries) = new Lexer(entries)
 
-let tokenize = make_tokenizer(tokens)
+impl Call for Lexer = fn(str) {
+  let tokens = []  
+  let index = 0
+  fn rest_of_string() = str.slice(index)
 
-export default tokenize
+  fn scan() {
+    let result = rest_of_string().match(this)
+    if !result || result.index != 0 { return false }
+    index = index + result[0].length
+    return result[0]
+  }
+  let line = 1
+  let col = 1
+  while rest_of_string() !== "" {
+    let found = false  
+    for [pattern type] of this.entries {
+      if let value = pattern::scan() {
+        if type == newline {
+          line = line + 1
+          col = 1
+          found = true
+          break
+        }
+        if type != ignore {
+          tokens.push({type, value, line, col})
+          col = col + value::len()
+          found = true
+          break
+        }
+      }
+    }
+    assert! found
+  }
+
+  return tokens
+}
+// this is tested & legit
+let lexer = ~Lexer{
+  /\n/ => newline
+  /\s+/ => ignore
+  /\/\/.*/ => ignore
+  /,/ => ignore
+  /^\~/ => :tilde
+  /^if\b/ => :if
+  /^is\b/ => :is
+  /^unless\b/ => :unless
+  /^else\b/ => :else
+  /^return\b/ => :return
+  /^let\b/ => :let
+  /^protocol\b/ => :protocol
+  /^for\b/ => :for
+  /^try\b/ => :try
+  /^catch\b/ => :catch
+  /^finally\b/ => :finally
+  /^while\b/ => :while
+  /^continue\b/ => :continue
+  /^break\b/ => :break
+  /^of\b/ => :of
+  /^impl\b/ => :impl
+  /^define\b/ => :define
+  /^yield\b/ => :yield
+  /^async\b/ => :async
+  /^await\b/ => :await
+  /^assert\b/ => :assert
+  /^new\b/ => :new
+  /^keyof\b/ => :keyof
+  /^\=\>/ => :arrow
+  /^\@/ => :at
+  /^\&\&/ => :and_and
+  /^\|\|/ => :or_or
+  /^\=\=\=/ => :triple_eq
+  /^\!\=\=/ => :triple_not_eq
+  /^\=\=/ => :double_eq
+  /^\!\=/ => :not_eq
+  /^\!/ => :bang
+  /^\=/ => :eq
+  /^fn\b/ => :fn
+  /^\{/ => :open_b
+  /^\}/ => :close_b
+  /^\(/ => :open_p
+  /^\)/ => :close_p
+  /^[\-\+]?\d+n/ => :big_int
+  /^[\-\+]?(\d*\.)?\d+/ => :num
+  /^\.\.\./ => :dot_dot_dot
+  /^\.\./ => :dot_dot
+  /^\./ => :dot
+  /^\/.*\// => :regex_lit
+  /^\>\=/ => :gt_eq
+  /^\<\=/ => :lt_eq
+  /^\<\// => :jsx_close
+  /^\>/ => :gt
+  /^\</ => :lt
+  /^\+/ => :plus
+  /^\%/ => :mod
+  /^\-/ => :minus
+  /^\*\*/ => :pow
+  /^\*/ => :times
+  /^\&/ => :single_and
+  /^\:\:/ => :double_colon
+  /^\:[a-zA-Z_\?\!\$0-9]+/ => :keyword
+  /^\:/ => :colon
+  /^\// => :div
+  /^\[/ => :open_sq
+  /^\]/ => :close_sq
+  /^\"([^\\\"]|\\.)*\"/s => :string_lit
+  /^[a-zA-Z_\?\!\$0-9]+/ => :id
+}
+
+lexer::call("if else
+=>")::log()

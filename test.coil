@@ -1,5 +1,117 @@
-let data = [{admin?: true, val: 10}, {val: 20}]
+fn Lexer(entries) { this.entries = entries }
 
-~Exec[_::at(:val) ** 2 :for data :if _::at(:admin?) :verify _ <= 100]
-  ::log()
+fn ignore() {}
+fn newline() {}
 
+define Record for Lexer = fn(entries) = new Lexer(entries)
+
+impl Call for Lexer = fn(str) {
+  let tokens = []  
+  let index = 0
+  fn rest_of_string() = str.slice(index)
+
+  fn scan() {
+    let result = rest_of_string().match(this)
+    if !result || result.index != 0 { return false }
+    index = index + result[0].length
+    return result[0]
+  }
+  let line = 1
+  let col = 1
+  while rest_of_string() !== "" {
+    let found = false  
+    for [pattern type] of this.entries {
+      if let value = pattern::scan() {
+        if type == newline {
+          line = line + 1
+          col = 1
+          found = true
+          break
+        }
+        if type != ignore {
+          tokens.push({type, value, line, col})
+          col = col + value::len()
+          found = true
+          break
+        }
+      }
+    }
+    assert! found
+  }
+
+  return tokens
+}
+
+let lexer = ~Lexer{
+  /\n/ => newline
+  /\s+/ => ignore
+  /\/\/.*/ => ignore
+  /,/ => ignore
+  /^\~/ => :tilde
+  /^if\b/ => :if
+  /^is\b/ => :is
+  /^unless\b/ => :unless
+  /^else\b/ => :else
+  /^return\b/ => :return
+  /^let\b/ => :let
+  /^protocol\b/ => :protocol
+  /^for\b/ => :for
+  /^try\b/ => :try
+  /^catch\b/ => :catch
+  /^finally\b/ => :finally
+  /^while\b/ => :while
+  /^continue\b/ => :continue
+  /^break\b/ => :break
+  /^of\b/ => :of
+  /^impl\b/ => :impl
+  /^define\b/ => :define
+  /^yield\b/ => :yield
+  /^async\b/ => :async
+  /^await\b/ => :await
+  /^assert\b/ => :assert
+  /^new\b/ => :new
+  /^keyof\b/ => :keyof
+  /^\=\>/ => :arrow
+  /^\@/ => :at
+  /^\&\&/ => :and_and
+  /^\|\|/ => :or_or
+  /^\=\=\=/ => :triple_eq
+  /^\!\=\=/ => :triple_not_eq
+  /^\=\=/ => :double_eq
+  /^\!\=/ => :not_eq
+  /^\!/ => :bang
+  /^\=/ => :eq
+  /^fn\b/ => :fn
+  /^\{/ => :open_b
+  /^\}/ => :close_b
+  /^\(/ => :open_p
+  /^\)/ => :close_p
+  /^[\-\+]?\d+n/ => :big_int
+  /^[\-\+]?(\d*\.)?\d+/ => :num
+  /^\.\.\./ => :dot_dot_dot
+  /^\.\./ => :dot_dot
+  /^\./ => :dot
+  /^\/.*\// => :regex_lit
+  /^\>\=/ => :gt_eq
+  /^\<\=/ => :lt_eq
+  /^\<\// => :jsx_close
+  /^\>/ => :gt
+  /^\</ => :lt
+  /^\+/ => :plus
+  /^\%/ => :mod
+  /^\-/ => :minus
+  /^\*\*/ => :pow
+  /^\*/ => :times
+  /^\&/ => :single_and
+  /^\:\:/ => :double_colon
+  /^\:[a-zA-Z_\?\!\$0-9]+/ => :keyword
+  /^\:/ => :colon
+  /^\// => :div
+  /^\[/ => :open_sq
+  /^\]/ => :close_sq
+  /^\"([^\\\"]|\\.)*\"/s => :string_lit
+  /^[a-zA-Z_\?\!\$0-9]+/ => :id
+}
+
+lexer::call("if else
+=>")::log()
