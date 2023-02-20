@@ -51,7 +51,6 @@
    {:regex #"^\/.*\/[a-z]?"          :keyword :regex-lit}
    {:regex #"^\>\="                  :keyword :gt-eq}
    {:regex #"^\<\="                  :keyword :lt-eq}
-   {:regex #"^\<\/"                  :keyword :jsx-close}
    {:regex #"^\>"                    :keyword :gt}
    {:regex #"^\<"                    :keyword :lt}
    {:regex #"^\+"                    :keyword :plus}

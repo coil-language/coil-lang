@@ -402,67 +402,6 @@
        (p/skip :await)
        (p/then parse-expr :expr)))
 
-(defn- parse-jsx-attr-shorthand [tokens]
-  (->> (p/from {:type :jsx-attr-shorthand} tokens)
-       (p/skip :open-b)
-       (p/one :id :name)
-       (p/skip :close-b)))
-
-(defn- parse-jsx-attr-expr [tokens]
-  (->> (p/null tokens)
-       (p/skip :open-b)
-       (p/then parse-expr :expr)
-       (p/skip :close-b)
-       (p/fmap :expr)))
-
-(defn- parse-jsx-attr-reg [tokens]
-  (->> (p/from {:type :jsx-attr-reg} tokens)
-       (p/one :id :name)
-       (p/skip :eq)
-       (p/one-case
-        {:string-lit parse-str,
-         :open-b parse-jsx-attr-expr}
-        :expr)))
-
-(defn- parse-jsx-attr [tokens]
-  (->> (p/from {:type :jsx-attr} tokens)
-       (p/one-case
-        {:open-b parse-jsx-attr-shorthand
-         :id parse-jsx-attr-reg})))
-
-(declare parse-jsx-expr)
-
-(defn- parse-jsx-tag [tokens]
-  (->> (p/from {:type :jsx-tag} tokens)
-       (p/skip :lt)
-       (p/one :id :name)
-       (p/until :gt parse-jsx-attr :attrs)
-       (p/skip :gt)
-       (p/until :jsx-close parse-jsx-expr :children)
-       (p/skip :jsx-close)
-       (p/one :id :closing-name)
-       (p/fmap (fn [node]
-                 (assert (= (node :name) (node :closing-name)))
-                 (dissoc node :closing-name)))
-       (p/skip :gt)))
-
-(defn- parse-jsx-quoted-expr [tokens]
-  (->> (p/from {:type :quoted-expr} tokens)
-       (p/skip :open-b)
-       (p/then parse-expr :expr)
-       (p/skip :close-b)))
-
-(defn- parse-jsx-id [tokens]
-  (->> (p/from {:type :str} tokens)
-       (p/one :id :value)))
-
-(defn- parse-jsx-expr [tokens]
-  (->> (p/null tokens)
-       (p/one-case
-        {:open-b parse-jsx-quoted-expr
-         :id parse-jsx-id
-         'otherwise parse-jsx-tag})))
-
 (defn- parse-keyword [tokens]
   (->> (p/from {:type :keyword} tokens)
        (p/one :keyword :value)))
@@ -576,8 +515,7 @@
          [:hash :open-b] parse-set,
          :open-b parse-obj,
          [:async :fn] parse-fn,
-         :fn parse-fn,
-         [:lt :id] parse-jsx-tag))))
+         :fn parse-fn))))
 
 (defn- parse-1-2-expr [tokens]
   (->> (parse-single-expr tokens)

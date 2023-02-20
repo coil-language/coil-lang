@@ -1329,3 +1329,22 @@ define Vector for Exec = fn([map_fn, _for, collection, ...rest]) {
 
   return result
 }
+
+// CollectionView is an efficent data structure to use
+// the same old Collection protocol methods, without
+// copying the entire array each time you ::skip(1)
+// which happens a lot during parsing.
+fn CollectionView(collection, idx) { this.collection = collection, this.idx = idx }
+
+// Its only partially implemented right now because most use-cases
+// don't require the complete collections api.
+impl OrderedCollection for CollectionView = {
+  fn first() = this.collection::at(this.idx)
+  fn last() = this.collection::last()
+  fn skip(n) = new CollectionView(this.collection, this.idx + n)
+}
+
+impl Collection for CollectionView = {
+  fn at(idx) = this.collection::at(this.idx + idx)
+  fn len() = this.collection::len() - this.idx
+}

@@ -211,33 +211,6 @@
 (defn- eval-yield [{:keys [star? expr]}]
   (str "yield" (when star? "*") " " (eval-expr expr)))
 
-(defn- eval-jsx-attr-reg [{:keys [name expr]}]
-  (str name ": " (eval-expr expr)))
-
-(defn- eval-jsx-attr-shorthand [{:keys [name]}]
-  (str name ": " name))
-
-(defn- eval-jsx-attr [node]
-  (case (node :type)
-    :jsx-attr-reg (eval-jsx-attr-reg node)
-    :jsx-attr-shorthand (eval-jsx-attr-shorthand node)))
-
-(declare eval-jsx-tag)
-
-(defn- eval-jsx-expr [node]
-  (case (node :type)
-    :quoted-expr (eval-expr (node :expr))
-    :str (eval-str node)
-    (do
-      (assert (-> node :type (= :jsx-tag)))
-      (eval-jsx-tag node))))
-
-(defn- eval-jsx-tag [{:keys [name attrs children]}]
-  (str "h(\"" name "\", {"
-       (->> attrs (map eval-jsx-attr) (string/join ", "))
-       "},"
-       (->> children (map eval-jsx-expr) (string/join ", "))
-       ")"))
 
 (defn- eval-paren-expr [{expr :expr}]
   (str "(" (eval-expr expr) ")"))
@@ -353,7 +326,6 @@
     :snd-assign (eval-snd-assign node)
     :await (eval-await node)
     :yield (eval-yield node)
-    :jsx-tag (eval-jsx-tag node)
     :record-syntax (eval-record-syntax node)
     :vector-syntax (eval-vector-syntax node)
     :paren-expr (eval-paren-expr node)
