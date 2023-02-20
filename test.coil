@@ -395,14 +395,11 @@ fn parse_snd_expr_step(tokens, lhs) = ~ParseMap{
 }::call(tokens, lhs)
 
 fn parse_snd_expr([lhs tokens]) {  
-  while true {
-    if let [new_lhs rest] = parse_snd_expr_step(tokens, lhs) {
-      lhs = new_lhs
-      tokens = rest
-    } else {
-      return [lhs tokens]
-    }
+  while let [new_lhs rest] = parse_snd_expr_step(tokens, lhs) {
+    lhs = new_lhs
+    tokens = rest
   }
+  return [lhs tokens]
 }
 
 fn parse_call_expr(tokens) = ~Parser[

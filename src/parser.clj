@@ -633,6 +633,17 @@
        (p/until :close-b parse-statement :body)
        (p/skip :close-b)))
 
+(defn- parse-while-let-loop [tokens]
+  (->> (p/from {:type :while-let-loop} tokens)
+       (p/skip :while)
+       (p/skip :let)
+       (p/then parse-assign-expr :assign-expr)
+       (p/skip :eq)
+       (p/then parse-expr :test-expr)
+       (p/skip :open-b)
+       (p/until :close-b parse-statement :body)
+       (p/skip :close-b)))
+
 (defn- parse-continue [tokens]
   (->> (p/from {:type :continue} tokens)
        (p/skip :continue)))
@@ -678,9 +689,10 @@
          :let parse-let,
          :return parse-return,
          :for parse-for-loop,
-         :while parse-while-loop,
          :continue parse-continue,
          :break parse-break,
+         [:while :let] parse-while-let-loop
+         :while parse-while-loop,
          [:if :let] parse-if-let,
          :if parse-if,
          [:id :eq] parse-id-assign,

@@ -74,6 +74,15 @@
     :array-deconstruction (eval-array-deconstruction-names node)
     :object-deconstruction (eval-object-deconstruction-names node)))
 
+(defn- eval-while-let-loop [{:keys [assign-expr test-expr body]}]
+  (str
+   "let __coil_while_let_temp = " (eval-expr test-expr) ";\n"
+   "while (__coil_while_let_temp) {\n"
+   "let " (eval-assign-expr assign-expr) " = __coil_while_let_temp;\n"
+   (eval-ast body) "\n"
+   "__coil_while_let_temp = " (eval-expr test-expr) ";\n"
+   "}"))
+
 (defn- eval-if-let [{:keys [assign-expr expr pass fail]}]
   (str
    "let __coil_if_let_temp = " (eval-expr expr) ";\n"
@@ -406,6 +415,7 @@
     :id-assign (eval-id-assign node)
     :assert (eval-assert node)
     :while-loop (eval-while-loop node)
+    :while-let-loop (eval-while-let-loop node)
     :continue (eval-continue node)
     :break (eval-break node)
     :try (eval-try node)
