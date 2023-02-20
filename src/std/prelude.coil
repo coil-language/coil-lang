@@ -183,6 +183,7 @@ fn vector_eq?(other) {
 }
 
 fn record_eq?(other) {
+  if !other::record?() { return false }
   if this::len() != other::len() { return false }
   return this::every?(fn(key, value) = other::at(key) == value)
 }
@@ -676,7 +677,8 @@ fn concat(other) = this[Collection].concat.call(this, other)
 // alias
 fn merge(other) = this::concat(other)
 fn update(key, update_fn) = this[Collection].update.call(this, key, update_fn)
-fn empty?() = this[Collection].empty.call(this)
+fn empty?() = this[Collection].empty?.call(this)
+fn not_empty?() = !this::empty?()
 fn has?(key_or_value) = this[Collection].has?.call(this, key_or_value)
 fn len() = this[Collection].len.call(this)
 fn remove(key_or_val) = this[Collection].remove.call(this, key_or_val)

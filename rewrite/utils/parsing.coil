@@ -5,14 +5,33 @@ fn type(kw) = new Type(kw)
 impl ParseInstruction for Type = fn([_expr, tokens]) =
   [{type: this.kw} tokens]
 
+fn One(kw, as) { this.kw = kw, this.as = as }
+fn one(kw, as) = new One(kw, ast)
+impl ParseInstruction for One = fn([expr tokens]) {
+  assert! tokens::first() == this.kw
+  let {value} = tokens::first()
+  return [expr::merge({[this.as]: value}) tokens::skip(1)]
+}
+
+fn Optional(kw, parse_fn, as) { this.kw = kw, this.parse_fn = parse_fn, this.as = as }
+fn optional(kw, parse_fn, as) = new Optional(kw, parse_fn, as)
+impl ParseInstruction for Optional = fn(result) {
+  if tokens::first() == this.kw {
+    return then(this.parse_fn, this.as)::parse_step(result)
+  } else {
+    return result
+  }
+}
+
 fn Skip(...kws) { this.kws = kws }
 fn skip(...kws) = new Skip(kws)
 impl ParseInstruction for Skip = fn([expr tokens]) {
+  let i = 0  
   for kw of this.kws {  
-    assert! tokens::first() == this.kw
-    tokens = tokens::skip(1)
+    assert! tokens::at(i) == this.kw
+    i = i + 1
   }
-  return [expr, tokens]
+  return [expr, tokens::skip(i)]
 }
 
 fn Then(parser, kw) {
@@ -43,20 +62,36 @@ impl ParseInstruction for Until = fn([expr tokens]) {
 
 fn parse_step(result) = this[ParseInstruction](result)
 
-fn ParseMap(entries) { this.entries = entries }
-
-define Record for ParseMap = fn(entries) = new ParseMap(entries)
-
-let parse_expr = null
-
 fn Parser(instructions) { this.instructions = instructions }
 
 define Vector for Parser = fn(instructions) = new Parser(instructions)
 
-impl Call for Parser = fn(tokens) {
-  let result = [null tokens]
+impl Call for Parser = fn(tokens) = this::log("parser")::parse_step([null tokens])
+
+impl ParseInstruction for Parser = fn(result) {
   for instruction of this.instructions {
     result = instruction::parse(result)
   }
   return result
+}
+
+fn ParseMap(entries) { this.entries = entries }
+
+define Record for ParseMap = fn(entries) = new ParseMap(entries)
+
+impl Call for ParseMap = fn(tokens) {
+  for [pattern parser] of tokens {
+    if pattern == _ {
+      return parser::call(tokens)
+    }
+    if pattern == tokens::first() {
+      return parser::call(tokens)
+    }
+    if pattern is Set && pattern::call(tokens::first()) {
+      return parser::call(tokens)
+    }
+    if pattern is Array && pattern::every?(fn(p, i) = p == tokens::at(i)) {
+      return parser::call(tokens)
+    }
+  }
 }

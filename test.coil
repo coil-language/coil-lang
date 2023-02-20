@@ -1,74 +1,505 @@
-fn parse_unless() = ~Parser[
-  type(:unless)
-  skip(:unless)
-  then(parse_expr :expr)
-  skip(:open_b)
-  until(:close_b parse_statement :body)
-  skip(:close_b)
+fn Lexer(entries) { this.entries = entries }
+
+fn pass() {}
+fn newline() {}
+
+define Record for Lexer = fn(entries) = new Lexer(entries)
+
+impl Call for Lexer = fn(str) {
+  let tokens = []  
+  let index = 0
+  fn rest_of_string() = str.slice(index)
+
+  fn scan() {
+    let result = rest_of_string().match(this)
+    if !result || result.index != 0 { return false }
+    index = index + result[0].length
+    return result[0]
+  }
+  let line = 1
+  let col = 1
+  while rest_of_string() != "" {
+    let found = false  
+    for [pattern type] of this.entries {
+      if let value = pattern::scan() {
+        if type == newline {
+          line = line + 1
+          col = 1
+          found = true
+          break
+        }
+        if type != pass {
+          tokens.push({type, value, line, col})
+          col = col + value::len()
+          found = true
+          break
+        }
+      }
+    }
+    assert! found
+  }
+
+  return tokens
+}
+
+// this is tested & legit
+let lexer = ~Lexer{
+  /\n/ => newline
+  /\s+/ => pass
+  /\/\/.*/ => pass
+  /,/ => pass
+  /^\~/ => :tilde
+  /^if\b/ => :if
+  /^is\b/ => :is
+  /^unless\b/ => :unless
+  /^else\b/ => :else
+  /^return\b/ => :return
+  /^let\b/ => :let
+  /^protocol\b/ => :protocol
+  /^for\b/ => :for
+  /^try\b/ => :try
+  /^catch\b/ => :catch
+  /^finally\b/ => :finally
+  /^while\b/ => :while
+  /^continue\b/ => :continue
+  /^break\b/ => :break
+  /^of\b/ => :of
+  /^impl\b/ => :impl
+  /^define\b/ => :define
+  /^yield\b/ => :yield
+  /^async\b/ => :async
+  /^await\b/ => :await
+  /^assert\b/ => :assert
+  /^new\b/ => :new
+  /^keyof\b/ => :keyof
+  /^\=\>/ => :arrow
+  /^\@/ => :at
+  /^\&\&/ => :and_and
+  /^\|\|/ => :or_or
+  /^\=\=\=/ => :triple_eq
+  /^\!\=\=/ => :triple_not_eq
+  /^\=\=/ => :double_eq
+  /^\!\=/ => :not_eq
+  /^\!/ => :bang
+  /^\=/ => :eq
+  /^fn\b/ => :fn
+  /^\{/ => :open_b
+  /^\}/ => :close_b
+  /^\(/ => :open_p
+  /^\)/ => :close_p
+  /^[\-\+]?\d+n/ => :big_int
+  /^[\-\+]?(\d*\.)?\d+/ => :num
+  /^\.\.\./ => :dot_dot_dot
+  /^\.\./ => :dot_dot
+  /^\./ => :dot
+  /^\/.*\// => :regex_lit
+  /^\>\=/ => :gt_eq
+  /^\<\=/ => :lt_eq
+  /^\<\// => :jsx_close
+  /^\>/ => :gt
+  /^\</ => :lt
+  /^\+/ => :plus
+  /^\%/ => :mod
+  /^\-/ => :minus
+  /^\*\*/ => :pow
+  /^\*/ => :times
+  /^\&/ => :single_and
+  /^\:\:/ => :double_colon
+  /^\:[a-zA-Z_\?\!\$0-9]+/ => :keyword
+  /^\:/ => :colon
+  /^\// => :div
+  /^\[/ => :open_sq
+  /^\]/ => :close_sq
+  /^\"([^\\\"]|\\.)*\"/s => :string_lit
+  /^[a-zA-Z_\?\!\$0-9]+/ => :id
+}
+
+fn ArrayView(array, idx) { this.array = array, this.idx = idx }
+
+impl OrderedCollection for ArrayView = {
+  fn first() = this.array::at(this.idx)
+  fn skip(n) = new ArrayView(this.array, this.idx + n)
+}
+
+impl Collection for ArrayView = {
+  fn at(idx) = this.array::at(this.idx + idx)
+  fn len() = this.array::len() - this.idx
+}
+
+fn str(...args) = args.join("")
+
+fn ParseError(expected_token_type, actual_token) {
+  this.stack = (new Error()).stack
+  this.message = str(
+    "Expected: " expected_token_type::printable()
+    " got " actual_token::at(:type)::printable()
+    " @ " actual_token::at(:line)::to_s() ":" actual_token::at(:col)::to_s()
+  )
+}
+ParseError.prototype = new Error()
+
+fn expect_token!(kw) {
+  if this::first()::at(:type) != kw {
+    raise(new ParseError(kw, this::first()))
+  } else {
+    return this
+  }
+}
+
+fn verify_exists!(parser) {
+  if this::nil?() {
+    raise(new Error("Parser Failed - " + parser::printable()))
+  } else {
+    return this
+  }
+}
+
+protocol ParseInstruction
+
+fn Type(kw) { this.kw = kw }
+fn type(kw) = new Type(kw)
+impl ParseInstruction for Type = fn([_expr, tokens]) =
+  [{type: this.kw} tokens]
+
+impl Printable for Type = fn() = "type(" + this.kw::printable() + ")"
+
+fn One(kw, as) { this.kw = kw, this.as = as }
+fn one(kw, as) = new One(kw, as)
+impl ParseInstruction for One = fn([expr tokens]) {  
+  let {value, type} = tokens::expect_token!(this.kw)::first()
+  return [expr::merge({[this.as]: value}) tokens::skip(1)]
+}
+impl Printable for One = fn() = "one(kw: " + this.kw::printable() + ", as: " + this.as::printable() +  ")"
+
+fn Optional(kw, parse_fn, as) {
+  this.kw = kw
+  this.parse_fn = parse_fn
+  this.as = as
+}
+fn optional(kw, parse_fn, as) = new Optional(kw, parse_fn, as)
+impl ParseInstruction for Optional = fn([expr tokens]) {  
+  if tokens::first() && tokens::first()::at(:type) == kw {
+    return then(this.parse_fn, this.as)::parse_step([expr tokens])
+  } else {
+    return [expr tokens]
+  }
+}
+impl Printable for Optional = fn() = "optional(kw: " + this.kw::printable() + ", as: " + this.as::printable() +  ")"
+
+
+fn Ignore(...kws) { this.kws = kws }
+fn ignore(...kws) = new Ignore(...kws)
+impl ParseInstruction for Ignore = fn([expr tokens]) {
+  let i = 0
+  for kw of this.kws {
+    tokens::expect_token!(kw)
+    i = i + 1
+  }
+  return [expr, tokens::skip(i)]
+}
+impl Printable for Ignore = fn() = "ignore(" + this.kws::printable().join(", ") + ")"
+
+
+fn Then(parser, kw) {
+  this.parser = parser
+  this.kw = kw
+}
+fn then(parser, kw) = new Then(parser, kw)
+impl ParseInstruction for Then = fn([expr tokens]) {
+  let [new_expr new_tokens] = this.parser::call(tokens)::verify_exists!(this)
+  return [expr::merge(new_expr) new_tokens]
+}
+impl Printable for Then = fn() = "then(" + this.kw::printable() + ")"
+
+fn Until(end_kw, parser, kw) {
+  this.end_kw = end_kw
+  this.parser = parser
+  this.kw = kw
+}
+fn until(end_kw, parser, kw) = new Until(end_kw, parser, kw)
+impl ParseInstruction for Until = fn([expr tokens]) {
+  let exprs = []  
+  while tokens::first()::at(:type) != this.end_kw {
+    let [expr new_tokens] = this.parser::call(tokens)
+      ::verify_exists!(this)
+    exprs.push(expr)
+    tokens = new_tokens
+  }
+  return [expr::merge({[this.kw]: exprs}) tokens]
+}
+impl Printable for Until = fn() = "then(end:" + this.end_kw::printable() + ", as: " + this.kw::printable() + ")"
+
+fn parse_step(result) = this[ParseInstruction](result)
+
+fn Parser(instructions) { this.instructions = instructions }
+
+impl Printable for Parser = fn() = "~Parser[" + this.instructions::printable().join(", ") + "]"
+
+define Vector for Parser = fn(instructions) = new Parser(instructions)
+
+impl Call for Parser = fn(tokens) {
+  if let result = this::parse_step([null tokens]) {
+    return result
+  } else {
+    return this::log("This one failed")
+  }
+}
+
+impl ParseInstruction for Parser = fn(result) {
+  for instruction of this.instructions {
+    result = instruction::parse_step(result)
+  }
+  return result
+}
+
+fn ParseMap(entries) { this.entries = entries }
+
+define Record for ParseMap = fn(entries) = new ParseMap(entries)
+
+impl Call for ParseMap = fn(tokens) {
+  for [pattern parser] of this.entries {
+    if pattern == _ {
+      return parser::call(tokens)
+    }
+    if pattern == tokens::first()::at(:type) {
+      return parser::call(tokens)
+    }
+    if pattern is Set && pattern::call(tokens::first()::at(:type)) {
+      return parser::call(tokens)
+    }
+    if pattern is Array && pattern::every?(fn(p, i) = p == tokens::at(i)::at(:type)) {
+      return parser::call(tokens)
+    }
+  }
+}
+
+fn parse_call_expr(tokens) = ~Parser[]
+
+// let parse_decorator = ~Parser[
+//   type(:decorator)
+//   ignore(:at)
+//   one(:id :name)
+//   optional(:open_p parse_call_expr :args)
+//   // then(parse_fn :fn_def)
+// ]
+
+let parse_regex = ~Parser[type(:regex_lit) one(:regex_lit :value)]
+
+let parse_str = ~Parser[type(:str) one(:string_lit :value)]
+
+let parse_id = ~Parser[type(:id_lookup) one(:id :name)]
+
+let parse_obj_entry = ~ParseMap{
+  
+}
+
+let parse_obj = ~Parser[
+  type(:obj_lit)
+  ignore(:open_b)
+  until(:close_b parse_obj_entry :entries)
+  ignore(:close_b)
 ]
+
+fn parse_single_expr(tokens) = ~ParseMap{
+  :string_lit => parse_str
+  // :regex_lit => parse_regex
+  // :keyword => parse_keyword
+  // :open_p => parse_paren_expr
+  // :yield => parse_yield
+  // :await => parse_await
+  :id => parse_id
+  // :at => parse_decorator
+  // :num => parse_num
+  // :big_int => parse_big_int
+  // :open_sq => parse_array
+  // :dot_dot_dot => parse_spread
+  // :double_colon => parse_bind_this
+  // :bang => parse_not
+  // :new parse_new
+  // :single_and parse_anon_arg_id
+  :open_b => parse_obj
+  // :and_and => parse_unapplied_and_and
+  // :or_or => parse_unapplied_or_or
+  // all_math_ops => parse_unapplied_math_op
+  // [:hash :open-p] => parse_shorthand_anon_fn
+  // [:async :fn] parse_fn
+  // :fn parse_fn
+  // [:lt :id] parse_jsx_tag
+  // [:tilde :id :open_b] => parse_record_syntax
+  // [:tilde :id :open_sq] => parse_vector_syntax
+}::call(tokens)
+
+fn parse_1_2_expr(tokens) =
+  parse_single_expr(tokens)
+    // ::pipe(parse_snd_expr)
+
+fn parse_expr(tokens) =
+  parse_single_expr(tokens)
+    // ::pipe(parse_snd_expr)
+    // ::pipe(parse_third_expr)
+
+fn parse_else_branch(tokens) = ~Parser[
+  ignore(:else)
+  block()
+]
+
+fn parse_if(tokens) = ~Parser[
+  type(:if)
+  ignore(:if)
+  then(parse_expr :expr)
+  block(:pass)
+  optional(:else parse_else_branch :fail)
+]::call(tokens)
+
+fn parse_unless(tokens) = ~Parser[
+  type(:unless)
+  ignore(:unless)
+  then(parse_expr :expr)
+  block(:body)
+]::call(tokens)
+
+// let parse_let = ~Parser[
+//   type(:let)
+//   ignore(:let)
+//   then(parse_assign_expr :assign_expr)
+//   ignore(:eq)
+//   then(parse_expr :rhs)
+// ]
+
+// fn parse_if_let(tokens) = ~Parser[
+//   type(:if_let)
+//   ignore(:if :let)
+//   then(parse_assign_expr :assign_expr)
+//   ignore(:eq)
+//   then(parse_expr :expr)
+//   ignore(:open_b)
+//   until(:close_b parse_statement :pass)
+//   ignore(:close_b)
+//   optional(:else parse_else_branch :fail)
+// ]::call(tokens)
+
+let parse_impl = ~Parser[
+  type(:impl_for)
+  ignore(:impl)
+  then(parse_expr :proto_expr)
+  ignore(:for)
+  one(:id :constructor)
+  ignore(:eq)
+  then(parse_expr :expr)
+]
+
+let parse_define = ~Parser[
+  type(:define_for)
+  ignore(:define)
+  then(parse_expr :proto_expr)
+  ignore(:for)
+  then(parse_expr :src_expr)
+  ignore(:eq)
+  then(parse_expr :expr)
+]
+
+let parse_protocol = ~Parser[
+  type(:protocol_def)
+  ignore(:protocol)
+  one(:id :name)
+]
+
+let parse_return = ~Parser[
+  type(:return)
+  ignore(:return)
+  then(parse_expr :expr)
+]
+
+let parse_await_modifier = ~Parser[type(:await) ignore(:await)]
+
+fn parse_for_loop(tokens) = ~Parser[
+  type(:for_loop)
+  ignore(:for)
+  optional(:await parse_await_modifier :await?)
+  then(parse_assign_expr :assign_expr)
+  ignore(:of)
+  then(parse_expr :iterable_expr)
+  block(:body)
+]::call(tokens)
+
+fn parse_assert(tokens) = ~Parser[
+  type(:assert)
+  ignore(:assert!)
+  then(fn(tokens) = [tokens::first() tokens] :token)
+  then(parse_expr :expr)
+  optional(:string_lit parse_str :msg)
+]::call(tokens)
 
 fn parse_while_loop() = ~Parser[
   type(:while_loop)
-  skip(:while)
+  ignore(:while)
   then(parse_expr :test_expr)
-  skip(:open_b)
-  until(:close_b parse_statement :body)
-  skip(:close_b)
-]
+  block(:body)
+]::call(tokens)
 
-fn parse_continue() = ~Parser[type(:continue) skip(:continue)]
+fn parse_continue(tokens) = ~Parser[type(:continue) ignore(:continue)]::call(tokens)
 
-fn parse_break() = ~Parser[type(:break) skip(:break)]
+fn parse_break(tokens) = ~Parser[type(:break) ignore(:break)]::call(tokens)
 
-fn parse_catch() = ~Parser[
+fn parse_catch(tokens) = ~Parser[
   type(:catch)
-  skip(:catch)
+  ignore(:catch)
   one(:id :name)
-  skip(:open_b)
-  until(:close_b parse_statement :body)
-  skip(:close_b)
-]
+  block(:body)
+]::call(tokens)
 
-fn parse_finally() = ~Parser[
+fn parse_finally(tokens) = ~Parser[
   type(:finally)
-  skip(:finally :open-b)
-  until(:close_b parse_statement :body)
-  skip(:close_b)
-]
+  ignore(:finally)
+  block(:body)
+]::call(tokens)
 
-fn parse_try() = ~Parser[
+fn parse_try(tokens) = ~Parser[
   type(:try)
-  skip(:try :open_b)
-  until(:close_b parse_statement :body)
-  skip(:close_b)
-  one(:catch ~ParseMap{ :catch => parse_catch _ => null })
-  one(:finally ~ParseMap{ :finally => parse_finally _ => null })
-]
+  ignore(:try)
+  block(:body)
+  optional(:catch parse_catch :catch)
+  optional(:finally parse_finally :finally)
+]::call(tokens)
 
-let parse_statement = ~ParseMap{
+fn parse_statement(tokens) = ~ParseMap{
   :unless => parse_unless,
   :assert! => parse_assert,
   :impl => parse_impl
   :define => parse_define
   :try => parse_try
   :protocol => parse_protocol
-  :let => parse_let
+  // :let => parse_let
   :return => parse_return
   :for => parse_for_loop
   :while => parse_while_loop
   :continue => parse_continue
   :break => parse_break
-  [:if :let] => parse_if_let
-  :if => parse_if
+  // [:if :let] => parse_if_let
+  // :if => parse_if
   _ => parse_expr
-}
+}::call(tokens)
+
+fn block(name) = ~Parser[
+  ignore(:open_b)
+  until(:close_b parse_statement name)
+  ignore(:close_b)
+]
 
 fn parse(tokens) {
   let ast = []
   while tokens::len() != 0 {
-    let [statment_or_expr, rest] = parse_statement::call(tokens)
+    let [statement_or_expr, rest] = parse_statement::call(tokens)
     ast.push(statement_or_expr)
     tokens = rest
   }
   return ast
 }
+
+let tokens = lexer::call("try {
+  protocol Name
+  impl Name for Array = {}
+}")
+
+parse(new ArrayView(tokens, 0))
+  ::log("parse")
