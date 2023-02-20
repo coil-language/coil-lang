@@ -896,8 +896,7 @@ fn block(name) = ~Parser[
 
 fn parse(tokens) {
   let ast = []
-  while tokens::len() != 0 {
-    let [statement_or_expr, rest] = parse_statement::call(tokens)
+  while let [statement_or_expr, rest] = parse_statement::call(tokens) {
     ast.push(statement_or_expr)
     tokens = rest
   }
@@ -905,7 +904,7 @@ fn parse(tokens) {
 }
 
 let tokens = lexer::call("
-if let [a, b] = [] {
+if let [a, b] = [1 2 3] {
   [1, 2]::map(f)
 }
 ")
