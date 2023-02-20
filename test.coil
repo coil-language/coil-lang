@@ -136,7 +136,7 @@ fn expect_token!(kw) {
 
 fn verify_exists!(parser) {
   if this::nil?() {
-    raise(new Error("Parser Failed - " + parser::printable()))
+    raise(new Error("Parser Failed - Expected " + parser::printable()))
   } else {
     return this
   }
@@ -182,7 +182,7 @@ impl ParseInstruction for Chomp = fn([expr tokens]) {
 impl Printable for Chomp = fn() = "Chomp(" + this.kws::printable().join(", ") + ")"
 
 let Then = ~DefVector[:parser :kw]
-impl ParseInstruction for Then = fn([expr tokens]) {
+impl ParseInstruction for Then = fn([expr tokens]) {  
   let [new_expr new_tokens] = this.parser::call(tokens)::verify_exists!(this)
   return [expr::merge({[this.kw]: new_expr}) new_tokens]
 }
@@ -218,7 +218,7 @@ impl Printable for Case = fn() = "Case(" + this.parse_map::printable() + ", as: 
 
 let Either = ~DefVector[:set :kw]
 impl ParseInstruction for Either = fn([expr tokens]) {
-  let op = this.set::at(tokens::first())::verify_exists!(this.set)
+  let op = this.set::at(tokens::first()::at(:type))::verify_exists!(this.set)
   let [new_expr, rest] = [tokens::first(), tokens::skip(1)]
   return [expr::merge({[this.kw]: new_expr::at(:value)}), rest]
 }
@@ -905,7 +905,7 @@ fn parse(tokens) {
 
 let tokens = lexer::call("
 if let [a, b] = [1 2 3] {
-  [1, 2]::map(f)
+  [1, 2]::map(_ + 1)
 }
 ")
 

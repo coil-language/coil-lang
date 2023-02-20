@@ -929,6 +929,8 @@ impl Printable for Hash = fn() =
 impl Printable for Array = fn() =
   this::map(printable)
 
+impl Printable for Set = fn() = "#{" + Array.from(this::map(printable)).join(", ") + "}"
+
 fn print_for_generic_clone_object() {
   let out = this::clone()
   for [key, value] of this::entries() {
