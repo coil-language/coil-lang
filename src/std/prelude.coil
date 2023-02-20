@@ -188,6 +188,7 @@ fn record_eq?(other) {
   return this::every?(fn(key, value) = other::at(key) == value)
 }
 
+impl Equal for Set = vector_eq?
 impl Equal for Array = vector_eq?
 impl Equal for Map = record_eq?
 impl Equal for ObjectLiteral = record_eq?
@@ -1347,4 +1348,37 @@ impl OrderedCollection for CollectionView = {
 impl Collection for CollectionView = {
   fn at(idx) = this.collection::at(this.idx + idx)
   fn len() = this.collection::len() - this.idx
+  fn empty?() = this::len() == 0
+}
+
+impl Printable for CollectionView = fn() = this.collection::skip(this.idx)
+
+fn DefVector() {}
+
+define Vector for DefVector = fn(properties) {  
+  let Constructor = null
+  // TODO: this returns _ itself when its true
+  // that's weird, but it still works.
+  if properties::first() == _ {
+    let kw = properties::at(1)
+    Constructor = fn(...args) {
+      this[kw] = args
+    }
+  } else {
+    Constructor = fn(...args) {
+      for [key, arg] of properties::zip(args) {
+        this[key] = arg
+      }
+    }
+  }
+  define Vector for Constructor = fn(args) = new Constructor(...args)
+  return Constructor
+}
+
+fn DefRecord() {}
+
+define Vector for DefRecord = fn(property_name) {
+  let Constructor = fn (entries) { this[property_name] = entries }
+  define Record for Constructor = fn(entries) = new Constructor(entries)
+  return Constructor
 }

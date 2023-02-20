@@ -9,12 +9,13 @@
 (declare eval-ast)
 
 (defn- resolve-name [name]
-  (if (= name "with")
-    "__coil_with"
-    (when name
-      (-> name
-          (string/replace "?" "__q")
-          (string/replace "!" "__b")))))
+  (cond
+    (= name "with") "__coil_with"
+    (nil? name) ""
+    (= name "case") "__coil_case"
+    :else (-> name
+              (string/replace "?" "__q")
+              (string/replace "!" "__b"))))
 
 (defn- eval-if [{:keys [expr pass fail]}]
   (str "if (truthy(" (eval-expr expr) ")) {\n"
