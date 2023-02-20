@@ -362,7 +362,7 @@ fn parse_exclusive_range(tokens lhs) = ~Parser[
   ~AbortIf[not_adjacent?]
   ~Init[{type: :exclusive_range, lhs}]
   ~Chomp[:dot_dot_dot]
-  ~Then[parse_1_2_expr :rhsg]
+  ~Then[parse_1_2_expr :rhs]
 ]::call(tokens)
 
 fn parse_fn_call(tokens lhs) = ~Parser[
