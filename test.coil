@@ -832,11 +832,20 @@ fn parse_assert(tokens) = ~Parser[
   ~Optional[:string_lit parse_str :msg]
 ]::call(tokens)
 
-fn parse_while_loop() = ~Parser[
+fn parse_while_loop(tokens) = ~Parser[
   ~Init[{type: :while_loop}]
   ~Chomp[:while]
   ~Then[parse_expr :test_expr]
-  ~Block[:body]
+  block(:body)
+]::call(tokens)
+
+fn parse_while_let_loop(tokens) = ~Parser[
+  ~Init[{type: :while_let_loop}]
+  ~Chomp[:while :let]
+  ~Then[parse_assign_expr :assign_expr]
+  ~Chomp[:eq]
+  ~Then[parse_expr :test_expr]
+  block(:body)
 ]::call(tokens)
 
 fn parse_continue(tokens) = ~Parser[
@@ -880,9 +889,10 @@ fn parse_statement(tokens) = ~ParseMap{
   :let => parse_let
   :return => parse_return
   :for => parse_for_loop
-  :while => parse_while_loop
   :continue => parse_continue
   :break => parse_break
+  [:while :let] => parse_while_let_loop
+  :while => parse_while_loop
   [:if :let] => parse_if_let
   :if => parse_if
   _ => parse_expr
@@ -904,7 +914,7 @@ fn parse(tokens) {
 }
 
 let tokens = lexer::call("
-if let [a, b] = [1 2 3] {
+while let [a, b] = [1 2 3] {
   [1, 2]::map(_ + 1)
 }
 ")
