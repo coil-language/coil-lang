@@ -33,8 +33,9 @@ impl Call for Lexer = fn(str) {
           found = true
           break
         } else {
-          col = col + 1
+          col = col + value::len()
           found = true
+          break
         }
       }
     }
@@ -49,6 +50,8 @@ let lexer = ~Lexer{
   /^\s+/ => pass
   /^\/\/.*/ => pass
   /^\,/ => pass
+  /^\;/ => pass
+  /^#/ => :hash
   /^\~/ => :tilde
   /^if\b/ => :if
   /^is\b/ => :is
@@ -70,7 +73,7 @@ let lexer = ~Lexer{
   /^yield\b/ => :yield
   /^async\b/ => :async
   /^await\b/ => :await
-  /^assert\b/ => :assert
+  /^assert\!/ => :assert!
   /^new\b/ => :new
   /^keyof\b/ => :keyof
   /^\=\>/ => :arrow
@@ -147,7 +150,7 @@ protocol ParseInstruction
 let Init = ~DefVector[:expr]
 impl ParseInstruction for Init = fn([_expr, tokens]) =
   [this.expr tokens]
-impl Printable for Init = fn() = "Init(" + this.expr::printable() + ")"
+impl Printable for Init = fn() = str("Init(" this.expr::printable() ")")
 
 let One = ~DefVector[:kw :as]
 impl ParseInstruction for One = fn([expr tokens]) {
@@ -158,8 +161,8 @@ impl Printable for One = fn() = "One(kw: " + this.kw::printable() + ", as: " + t
 
 let Optional = ~DefVector[:kw :parse_fn :as]
 impl ParseInstruction for Optional = fn([expr tokens]) {  
-  if tokens::first() && tokens::first()::at(:type) == kw {
-    return then(this.parse_fn, this.as)::parse_step([expr tokens])
+  if tokens::first() && tokens::first()::at(:type) == this.kw {  
+    return ~Then[this.parse_fn, this.as]::parse_step([expr tokens])
   } else {
     return [expr tokens]
   }
@@ -184,7 +187,11 @@ impl ParseInstruction for Then = fn([expr tokens]) {
   let [new_expr new_tokens] = this.parser::call(tokens)::verify_exists!(this)
   return [expr::merge({[this.kw]: new_expr}) new_tokens]
 }
-impl Printable for Then = fn() = "Then(" + this.kw::printable() + ")"
+impl Printable for Then = fn() = str("Then(" this.parser.name ", " this.kw::printable() ")")
+
+let FMap = ~DefVector[:f]
+impl ParseInstruction for FMap = fn([expr tokens]) = [this.f::call(expr) tokens]
+impl Printable for FMap = fn() = "Fmap(" + this.f.name + ")"
 
 let Until = ~DefVector[:end_kw :parser :kw]
 impl ParseInstruction for Until = fn([expr tokens]) {
@@ -201,7 +208,7 @@ impl ParseInstruction for Until = fn([expr tokens]) {
     return [exprs, tokens]
   }
 }
-impl Printable for Until = fn() = "Until(end:" + this.end_kw::printable() + ", as: " + this.kw::printable() + ")"
+impl Printable for Until = fn() = str("Until(end: " this.end_kw::printable() ", f: " this.parser.name ", as: " this.kw::printable() ")")
 
 let Case = ~DefVector[:parse_map :kw]
 impl ParseInstruction for Case = fn([expr tokens]) {
@@ -231,13 +238,8 @@ fn parse_step(result) {
 
 let Parser = ~DefVector[_ :instructions]
 impl Printable for Parser = fn() = "~Parser[" + this.instructions::printable().join(", ") + "]"
-impl Call for Parser = fn(tokens) {
-  if let result = this::parse_step([null tokens]) {
-    return result
-  } else {
-    return this::log("Parser Failed:")
-  }
-}
+impl Call for Parser = fn(tokens) =
+  this::parse_step([null tokens])
 
 let AbortIf = ~DefVector[:cond_fn]
 impl Printable for AbortIf = fn() = "~AbortIf[" + _resolve_keyword_str(this.cond_fn.name) + "]"
@@ -283,6 +285,73 @@ let math_ops = #{:mod :plus :minus :times :pow :div}
 let comparison_ops = #{:lt :gt :lt_eq :gt_eq}
 let all_math_ops = math_ops::merge(comparison_ops)
 
+fn parse_double_eq(tokens lhs) = ~Parser[
+  ~Init[{type: :double_equals, lhs}]
+  ~Chomp[:double_eq]
+  ~Then[parse_1_2_expr :rhs]
+]::call(tokens)
+
+fn parse_not_eq(tokens lhs) = ~Parser[
+  ~Init[{type: :not_equals, lhs}]
+  ~Chomp[:not_eq]
+  ~Then[parse_1_2_expr :rhs]
+]::call(tokens)
+
+fn parse_triple_eq(tokens lhs) = ~Parser[
+  ~Init[{type: :triple_equals, lhs}]
+  ~Chomp[:triple_eq]
+  ~Then[parse_1_2_expr :rhs]
+]::call(tokens)
+
+fn parse_triple_not_eq(tokens lhs) = ~Parser[
+  ~Init[{type: :triple_not_equals, lhs}]
+  ~Chomp[:triple_not_eq]
+  ~Then[parse_1_2_expr :rhs]
+]::call(tokens)
+
+fn parse_and_and(tokens lhs) = ~Parser[
+  ~Init[{type: :and_and, lhs}]
+  ~Chomp[:and_and]
+  ~Then[parse_expr :rhs]
+]::call(tokens)
+
+fn parse_or_or(tokens lhs) = ~Parser[
+  ~Init[{type: :or_or, lhs}]
+  ~Chomp[:or_or]
+  ~Then[parse_expr :rhs]
+]::call(tokens)
+
+fn parse_keyof(tokens lhs) = ~Parser[
+  ~Init[{type: :keyof, lhs}]
+  ~Chomp[:keyof]
+  ~Then[parse_expr :rhs]
+]::call(tokens)
+
+fn parse_comparison_op(tokens lhs) = ~Parser[
+  ~Init[{type: :math_op, lhs}]
+  ~Either[comparison_ops :op]
+  ~Then[parse_1_2_expr :rhs]
+]::call(tokens)
+
+fn parse_third_expr_step(tokens, lhs) = ~ParseMap{
+  :double_eq => parse_double_eq
+  :triple_eq => parse_triple_eq
+  :triple_not_eq => parse_triple_not_eq
+  :not_eq => parse_not_eq
+  :and_and => parse_and_and
+  :or_or => parse_or_or
+  :keyof => parse_keyof
+  comparison_ops => parse_comparison_op
+}::call(tokens, lhs)
+
+fn parse_third_expr([lhs tokens]) {  
+  while let [new_lhs rest] = parse_third_expr_step(tokens, lhs) {
+    lhs = new_lhs
+    tokens = rest
+  }
+  return [lhs tokens]
+}
+
 fn parse_partial_obj_dyn_access(tokens) = ~Parser[
   ~Init[{type: :partial_obj_dyn_access}]
   ~Chomp[:open_sq]
@@ -291,19 +360,19 @@ fn parse_partial_obj_dyn_access(tokens) = ~Parser[
 ]::call(tokens)
 
 fn parse_partial_fn_call(tokens) = ~Parser[
-  ~Init[{type: :partial_fn_clal}]
+  ~Init[{type: :partial_fn_call}]
   ~Chomp[:open_p]
   ~Until[:close_p parse_expr :args]
   ~Chomp[:close_p]
 ]::call(tokens)
 
-fn parse_and_dot(tokens, lhs) = ~Parser[
+fn parse_and_dot(tokens, lhs) = ~Parser[  
   ~Init[{type: :and_dot, lhs}]
   ~Chomp[:single_and :dot]
   ~Case[~ParseMap{
     :id => parse_id,
     :open_sq => parse_partial_obj_dyn_access
-    :open_p => parse_partial_fn_clal
+    :open_p => parse_partial_fn_call
   } :rhs]
 ]::call(tokens)
 
@@ -346,7 +415,9 @@ fn parse_math_op(tokens lhs) = ~Parser[
 fn not_adjacent?([_expr tokens]) {
   let current = tokens::first()
   let previous = tokens.collection::at(tokens.idx - 1)
-  return current.line != previous.line || ((current.col - previous.col) != 1)
+  if current.line != previous.line { return true }
+  let end_of_prev_token = previous.col + previous.value.length
+  return (current.col - end_of_prev_token) >= 1
 }
 
 fn parse_inclusive_range(tokens lhs) = ~Parser[
@@ -533,21 +604,23 @@ let parse_keyword = ~Parser[
 ]
 
 fn parse_paren_expr(tokens) = ~Parser[
+  ~Init[{type: :paren_expr}]
   ~Chomp[:open_p]
-  parse_expr
+  ~Then[parse_expr :expr]
   ~Chomp[:close_p]
 ]::call(tokens)
 
 fn parse_yield(tokens) = ~Parser[
   ~Init[{type: :yield}]
   ~Chomp[:yield]
-  parse_expr
+  ~Optional[:times parse_gen_modifier :star?]
+  ~Then[parse_expr :expr]
 ]::call(tokens)
 
 fn parse_await(tokens) = ~Parser[
   ~Init[{type: :await}]
   ~Chomp[:await]
-  parse_expr
+  ~Then[parse_expr :expr]
 ]::call(tokens)
 
 let parse_num = ~Parser[
@@ -557,7 +630,7 @@ let parse_num = ~Parser[
 
 let parse_big_int = ~Parser[
   ~Init[{type: :big_int}]
-  ~One[:num :value]
+  ~One[:big_int :value]
 ]
 
 fn parse_array(tokens) = ~Parser[
@@ -602,7 +675,7 @@ fn parse_new(tokens) = ~Parser[
 ]::call(tokens)
 
 fn parse_num_raw(tokens) =
-  parse_num(tokens)::pipe(fn([expr, tokens]) = [expr::at(:value)::to_i(), tokens])
+  parse_num::call(tokens)::pipe(fn([expr, tokens]) = [expr::at(:value)::to_i(), tokens])
 
 let parse_anon_arg_id = ~Parser[
   ~Init[{type: :anon_arg_id}]
@@ -625,7 +698,7 @@ fn parse_shorthand_anon_fn(tokens) = ~Parser[
   ~Chomp[:hash :open_p]
   ~Then[parse_expr :expr]
   ~Chomp[:close_p]
-]
+]::call(tokens)
 
 let parse_async_modifier = ~Parser[
   ~Init[true]
@@ -641,6 +714,7 @@ fn parse_fn_expr_body(tokens) = ~Parser[
   ~Init[{type: :return}]
   ~Chomp[:eq]
   ~Then[parse_expr :expr]
+  ~FMap[fn(node) = [node]]
 ]::call(tokens)
 
 fn parse_args_def(tokens) = ~Parser[
@@ -649,7 +723,7 @@ fn parse_args_def(tokens) = ~Parser[
   ~Chomp[:close_p]
 ]::call(tokens)
 
-fn parse_fn_name(tokens) = parse_id(tokens)::pipe(fn([expr, tokens]) = [expr::at(:name) tokens])
+fn parse_fn_name(tokens) = parse_id::call(tokens)::pipe(fn([expr, tokens]) = [expr::at(:name) tokens])
 
 fn parse_fn(tokens) = ~Parser[
   ~Init[{type: :fn}]
@@ -701,6 +775,13 @@ fn parse_vector_syntax(tokens) = ~Parser[
   ~Chomp[:close_sq]
 ]::call(tokens)
 
+fn parse_set(tokens) = ~Parser[
+  ~Init[{type: :set}]
+  ~Chomp[:hash :open_b]
+  ~Until[:close_b parse_expr :elements]
+  ~Chomp[:close_b]
+]::call(tokens)
+
 fn parse_single_expr(tokens) = ~ParseMap{
   :string_lit => parse_str
   :regex_lit => parse_regex
@@ -723,6 +804,7 @@ fn parse_single_expr(tokens) = ~ParseMap{
   :or_or => parse_unapplied_or_or
   all_math_ops => parse_unapplied_math_op
   [:hash :open_p] => parse_shorthand_anon_fn
+  [:hash :open_b] => parse_set
   [:async :fn] => parse_fn
   :fn => parse_fn
   [:tilde :id :open_b] => parse_record_syntax
@@ -736,9 +818,12 @@ fn parse_1_2_expr(tokens) =
 fn parse_expr(tokens) =
   parse_single_expr(tokens)
     ::pipe(parse_snd_expr)
-    // ::pipe(parse_third_expr)
+    ::pipe(parse_third_expr)
 
-fn parse_else_branch(tokens) = ~Parser[~Chomp[:else] block()]
+fn parse_else_branch(tokens) = ~Parser[
+  ~Chomp[:else]
+  block()
+]::call(tokens)
 
 fn parse_if(tokens) = ~Parser[
   ~Init[{type: :if}]
@@ -790,7 +875,7 @@ let parse_define = ~Parser[
   ~Chomp[:define]
   ~Then[parse_expr :proto_expr]
   ~Chomp[:for]
-  ~Then[parse_expr :src_expr]
+  ~Then[parse_single_expr :src_expr]
   ~Chomp[:eq]
   ~Then[parse_expr :expr]
 ]
@@ -918,7 +1003,10 @@ fn parse(tokens) {
 fn resolve_name(name) {
   if name == "with" { return "__coil_with" }
   if name == "case" { return "__coil_case" }
-  return name.replaceAll("?", "__q").replaceAll("!", "__b")
+  if name {
+    return name.replaceAll("?", "__q").replaceAll("!", "__b")
+  }
+  return name
 }
 
 fn eval_if({expr pass fail}) = str(
@@ -1033,7 +1121,7 @@ fn eval_math_op({lhs op rhs}) = str(
 fn eval_fn({is_async? generator? name args body}) = str(
   is_async?::if_truthy?(#("async "))
   "function "
-    generator::if_truthy?("*")
+    generator?::if_truthy?(#("*"))
     resolve_name(name)
     "(" args::map(eval_assign_expr).join(", ") ") {\n"
     eval_ast(body)
@@ -1045,7 +1133,7 @@ fn eval_set({elements}) =
 fn eval_bind({lhs expr}) =
   str("(" eval_expr(expr) ".bind(" eval_expr(lhs) "))")
 
-fn eval_reg_obj_entry(key, value) =
+fn eval_reg_obj_entry({key, value}) =
   str(resolve_name(key) ": " eval_expr(value))
 
 fn eval_obj_shorthand_entry({id}) = resolve_name(id)
@@ -1117,13 +1205,13 @@ fn eval_record_entry(node) = node::at(:type)::pipe(~Map{
 
 fn eval_record_syntax({constructor_name entries}) =
   str("construct_record.call("
-        constructor_name
+        constructor_name ", "
         "[" entries::map(eval_record_entry).join(", ") "]"
       ")")
 
 fn eval_vector_syntax({constructor_name entries}) =
   str("construct_vector.call("
-        constructor_name
+        constructor_name ", "
         "[" entries::map(eval_expr).join(", ") "]"
       ")")
 
@@ -1143,7 +1231,9 @@ fn eval_decorator({name, fn_def args}) =
   str("let " resolve_name(fn_def::at(:name)) " = "
       name "("
       // yup this is a mess
-        (args::len() != 0)::if_truthy?(#(str(args::map(eval_expr).join(", ") ", ")))
+        ((args || [])::len() != 0)
+          ::if_truthy?(#(str(args::map(eval_expr).join(", ") ", ")))
+          ::otherwise("")
         eval_fn(fn_def)
       ")")
 
@@ -1237,16 +1327,19 @@ fn eval_break() = "break"
 
 fn eval_try(node) =
   str("try {\n"
-      eval_ast(body) "\n"
+      eval_ast(node::at(:body)) "\n"
       "}"
       node::has?(:catch)::if_truthy?(
         #(str(" catch (" node::at(:catch)::at(:name) ") {\n"
               eval_ast(node::at(:catch)::at(:body) "\n"
               "}"))))
+        ::otherwise("")
       node::has?(:finally)::if_truthy?(
         #(str(" finally {\n"
               eval_ast(node::at(:finally)::at(:body) "\n"
-              "}")))))
+              "}"))))
+        ::otherwise("")
+      "}")
 
 fn eval_statement(node) = node::at(:type)::pipe(~Map{  
   :if => eval_if
@@ -1274,7 +1367,6 @@ fn compile(string) = lexer::call(string)
   ::pipe(parse)
   ::pipe(eval_ast)
 
-
 // let tokens = lexer::call("
 // while let [a, b] = [1 2 3] {
 //   [1, 2]::map(_ + 1)
@@ -1284,3 +1376,10 @@ fn compile(string) = lexer::call(string)
 // let ast = parse
 //   ::call(new CollectionView(tokens, 0))
 //   ::log("if let with infix bind")
+
+compile("
+let determine_round = ~Hash{
+  [:rock :rock] => :draw
+  [:rock :paper] => :lose
+}
+")::log()

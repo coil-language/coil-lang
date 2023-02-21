@@ -106,8 +106,7 @@ impl Call for Array = fn(index) = this.at(index)
 impl Call for Hash = fn(key) = this::at(key)
 
 impl Call for String = fn(collection) {
-  if (typeof(collection) === "string")
-  || collection is Keyword {
+  if typeof(collection) === "string" || collection is Keyword {
     // make sure we don't end up in infinite loop  
     return collection[this]
   } else {
@@ -920,7 +919,7 @@ protocol Printable
 fn _resolve_keyword_str(kw) = kw.replaceAll("__q", "?").replaceAll("__b", "!")
 
 impl Printable for ObjectLiteral = fn() =
-  this::map(fn (k, v) = [_resolve_keyword_str(k), v::printable()]) 
+  this::map(fn (k, v) = [_resolve_keyword_str(k), v::printable()])
 
 impl Printable for Hash = fn() =
   this::map(fn (k, v) = [k::printable(), v::printable()])
@@ -1180,7 +1179,7 @@ async fn spawn(generator_fn) {
     try {
       yield_result = await effect::run_effect()
     } catch error {
-      state = await generator.throw(error);
+      state = await generator.throw(error)
       yield_result = await state.value::run_effect()
       effects.push(state.value)
     }
@@ -1268,10 +1267,10 @@ fn Eff(...descriptors) {
 
 
 fn HttpError(code, message) {
-    this.name = 'HttpError'
-    this.message = message
-    this.stack = (new Error()).stack
-    this.code = code::as_keyword()
+  this.name = "HttpError"
+  this.message = message
+  this.stack = (new Error()).stack
+  this.code = code::as_keyword()
 }
 HttpError.prototype = new Error()
 
