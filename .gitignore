@@ -1,9 +1,4 @@
 .DS_Store
-.nrepl-port
-.calva
-.clj-kondo
-.cpcache
-.lsp
 q1.txt
 q1.ts
 test.js
