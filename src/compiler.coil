@@ -96,7 +96,7 @@ let lexer = ~Lexer{
   /^\.\.\./ => :dot_dot_dot
   /^\.\./ => :dot_dot
   /^\./ => :dot
-  /^\/.*\// => :regex_lit
+  /^\/.*\/[a-z]?/ => :regex_lit
   /^\>\=/ => :gt_eq
   /^\<\=/ => :lt_eq
   /^\>/ => :gt
@@ -1157,7 +1157,7 @@ fn eval_obj_entry(node) = node::at(:type)::pipe(~Map{
 
 fn eval_obj_lit({entries}) =
   str("new ObjectLiteral({"
-      entries::map(eval_obj_entry).join(", ") "}")
+      entries::map(eval_obj_entry).join(", ") "})")
 
 fn eval_bind_this({expr}) = str(eval_expr(expr) ".bind(this)")
 fn eval_id_lookup({name}) = resolve_name(name)
@@ -1300,7 +1300,7 @@ fn eval_define_for({proto_expr src_expr expr}) =
 fn eval_for_loop({is_await? assign_expr iterable_expr body}) = 
   str("for "
       is_await?::if_truthy?(#("await "))
-      " (let " eval_assign_expr(assign_expr) " = "
+      " (let " eval_assign_expr(assign_expr) " of "
       eval_expr(iterable_expr) ") {\n"
         eval_ast(body) "\n"
       "}")
@@ -1358,11 +1358,23 @@ fn eval_statement(node) = node::at(:type)::pipe(~Map{
   :continue => eval_continue
   :break => eval_break
   :try => eval_try
-})::otherwise(eval_expr)::call(node)
+})
+  ::if_truthy?(#(compose(&, _ + ";")))
+  ::otherwise(eval_expr)::call(node)
 
-fn eval_ast(ast) = ast::map(eval_statement).join(";\n")
+fn eval_ast(ast) = ast::map(eval_statement).join("\n")
 
 fn compile(string) = lexer::call(string)
   ::pipe(fn(tokens) = new CollectionView(tokens, 0))
   ::pipe(parse)
   ::pipe(eval_ast)
+
+let src_file_name = Deno.args[0]
+let out_name = Deno.args[1]
+
+let prelude = Deno.readTextFileSync("./src/std/js_prelude.js")
+prelude = prelude + compile(Deno.readTextFileSync("./src/std/prelude.coil"))
+
+let src = Deno.readTextFileSync(src_file_name)
+
+Deno.writeTextFile(out_name, prelude + compile(src))
