@@ -34,7 +34,7 @@
     (str \` value \`)
     (str \" value \")))
 
-(defn- property-lookup [{:keys [lhs property]}]
+(defn- eval-property-lookup [{:keys [lhs property]}]
   (str (eval-expr lhs) "." (resolve-name property)))
 
 (defn- eval-fn-call [{:keys [lhs args]}]
@@ -47,7 +47,7 @@
 
 
 (defn- eval-spread-assign [{:keys [name]}]
-  (str "..." name))
+  (str "..." (resolve-name name)))
 
 (defn- eval-array-deconstruction-entry [node]
   (case (node :type)
@@ -59,8 +59,8 @@
 
 (defn- eval-obj-deconstruction-entry [node]
   (case (node :type)
-    :obj-reg-entry (node :name)
-    :obj-entry-rename (str (node :old-name) ": " (node :new-name))
+    :obj-reg-entry (resolve-name (node :name))
+    :obj-entry-rename (str (resolve-name (node :old-name)) ": " (resolve-name (node :new-name)))
     :spread-assign (eval-spread-assign node)))
 
 (defn- eval-object-deconstruction-names [{:keys [entries]}]
@@ -264,12 +264,6 @@
 (defn- eval-exclusive-range [{:keys [lhs rhs]}]
   (str "new Range(" (eval-expr lhs) ", " (eval-expr rhs) ", true)"))
 
-(defn- eval-bound-call [{:keys [lhs args]}]
-  (str (eval-expr lhs)
-       ".call(this, "
-       (->> args (map eval-expr) (string/join ", "))
-       ")"))
-
 (defn- eval-shorthand-anon-fn [{expr :expr}]
   (str "(...__args) => " (eval-expr expr)))
 
@@ -308,7 +302,7 @@
     :and-dot (eval-and-dot node)
     :partial-fn-call (eval-partial-fn-call node)
     :partial-obj-dyn-access (eval-partial-obj-dyn-access node)
-    :property-lookup (property-lookup node)
+    :property-lookup (eval-property-lookup node)
     :id-lookup (eval-id-lookup node)
     :fn-call (eval-fn-call node)
     :num (eval-num node)
@@ -320,7 +314,6 @@
     :not (eval-not node)
     :fn (eval-fn node)
     :bind (eval-bind node)
-    :bound-call (eval-bound-call node)
     :anon-arg-id (eval-anon-arg-id node)
     :set (eval-set node)
     :obj-lit (eval-obj-lit node)

@@ -982,6 +982,7 @@ fn log(...args) {
 
 // Helpers
 
+fn str(...args) = args.join("")
 
 @impl_callable
 fn int?() = Number.isInteger(this)

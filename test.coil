@@ -114,8 +114,6 @@ let lexer = ~Lexer{
   /^[a-zA-Z_\?\!\$0-9]+/ => :id
 }
 
-fn str(...args) = args.join("")
-
 fn ParseError(expected_token_type, actual_token) {
   this.stack = (new Error()).stack
   this.message = str(
@@ -655,7 +653,7 @@ fn parse_fn_name(tokens) = parse_id(tokens)::pipe(fn([expr, tokens]) = [expr::at
 
 fn parse_fn(tokens) = ~Parser[
   ~Init[{type: :fn}]
-  ~Optional[:async parse_async_modifier :async?]
+  ~Optional[:async parse_async_modifier :is_async?]
   ~Chomp[:fn]
   ~Optional[:times parse_gen_modifier :generator?]
   ~Optional[:id parse_fn_name :name]
@@ -817,7 +815,7 @@ let parse_await_modifier = ~Parser[
 fn parse_for_loop(tokens) = ~Parser[
   ~Init[{type: :for_loop}]
   ~Chomp[:for]
-  ~Optional[:await parse_await_modifier :await?]
+  ~Optional[:await parse_await_modifier :is_await?]
   ~Then[parse_assign_expr :assign_expr]
   ~Chomp[:of]
   ~Then[parse_expr :iterable_expr]
@@ -913,12 +911,376 @@ fn parse(tokens) {
   return ast
 }
 
-let tokens = lexer::call("
-while let [a, b] = [1 2 3] {
-  [1, 2]::map(_ + 1)
-}
-")
+// END OF PARSING
 
-let ast = parse
-  ::call(new CollectionView(tokens, 0))
-  ::log("if let with infix bind")
+// START OF EVAL
+
+fn resolve_name(name) {
+  if name == "with" { return "__coil_with" }
+  if name == "case" { return "__coil_case" }
+  return name.replaceAll("?", "__q").replaceAll("!", "__b")
+}
+
+fn eval_if({expr pass fail}) = str(
+  "if (truthy(" eval_expr(expr) ")) {\n"
+    eval_ast(pass) "\n"
+  "} else {\n"
+    eval_ast(fail || []) "\n"
+  "}")
+
+fn eval_unless({expr body}) = str(
+  "if (negate.call(" eval_expr(expr) ")) {\n"
+    eval_ast(body) "\n"
+  "}")
+
+fn eval_str({value}) {
+  value = value.slice(1, -1)    
+  if value.includes("\n") {
+    return str("`" value "`")
+  } else {
+    return str("\"" value "\"")
+  }
+}
+
+fn eval_property_lookup({lhs property}) =
+  str(eval_expr(lhs) "." resolve_name(property))
+
+fn eval_fn_call({lhs args}) =
+  str(eval_expr(lhs) "(" args::map(eval_expr).join(", ") ")")
+
+fn eval_id_assign_name({name}) = resolve_name(name)
+
+fn eval_spread_assign({name}) = str("..." resolve_name(name))
+
+fn eval_array_deconstruction_entry(node) = node::at(:type)::pipe(~Map{
+  :id_assign => eval_id_assign_name
+  :spread_assign => eval_spread_assign
+})::call(node)
+
+fn eval_array_deconstruction_names({entries}) =
+  str("[" entries::map(eval_array_deconstruction_entry).join(", ") "]")
+
+fn eval_obj_deconstruction_entry(node) = node::at(:type)::pipe(~Map{
+  :obj_reg_entry => #(resolve_name(&::at(:name)))
+  :obj_entry_rename => #(str(
+    resolve_name(&::at(:old_name))
+    ": "
+    resolve_name(&::at(:new_name))))
+  :spread_assign => eval_spread_assign
+})::call(node)
+
+fn eval_object_deconstruction_names({entries}) =
+  str("{" entries::map(eval_obj_deconstruction_entry).join(", ") "}")
+
+fn eval_assign_expr(node) = node::at(:type)::pipe(~Map{
+  :id_assign => eval_id_assign_name
+  :spread_assign => eval_spread_assign
+  :array_deconstruction => eval_array_deconstruction_names
+  :object_deconstruction => eval_object_deconstruction_names
+})::call(node)
+
+fn eval_while_let_loop({assign_expr test_expr body}) = str(
+  "let __coil_while_let_temp = " eval_expr(test_expr) ";\n"
+  "while (__coil_while_let_temp) {\n"
+    "let " eval_assign_expr(assign_expr) " = __coil_while_let_temp;\n"
+    eval_ast(body) "\n"
+    "__coil_while_let_temp = " eval_expr(test_expr) ";\n"
+  "}")
+
+fn eval_if_let({assign_expr expr pass fail}) = str(
+  "let __coil_if_let_temp = " eval_expr(expr) ";\n"
+  "if (truthy(__coil_if_let_temp)) {\n"
+  "let " eval_assign_expr(assign_expr) " = __coil_if_let_temp;\n"
+    eval_ast(pass) "\n"
+  "} else {\n"
+    eval_ast(fail || []) "\n"
+  "}")
+
+fn eval_spread({expr}) = str("..." eval_expr(expr))
+
+fn eval_let({assign_expr rhs}) =
+  str("let " eval_assign_expr(assign_expr) " = " eval_expr(rhs))
+
+fn eval_array({elements}) =
+  str("[" elements::map(eval_expr).join(", ") "]")
+
+let math_op_to_method = ~Map{
+  ">" => "greater_than"
+  "<" => "less_than"
+  ">=" => "greater_than_eq"
+  "<=" => "less_than_eq"
+  "*" => "times"
+  "**" => "exponent"
+  "/" => "divide_by"
+  "+" => "plus"
+  "-" => "minus"
+  "%" => "mod"
+}
+
+fn if_truthy?(f) {
+  if this {
+    return f(this)
+  } else {
+    return this
+  }
+}
+
+fn eval_math_op({lhs op rhs}) = str(
+  math_op_to_method::call(op) ".call("
+    eval_expr(lhs) "," eval_expr(rhs)
+  ")")
+
+fn eval_fn({is_async? generator? name args body}) = str(
+  is_async?::if_truthy?(#("async "))
+  "function "
+    generator::if_truthy?("*")
+    resolve_name(name)
+    "(" args::map(eval_assign_expr).join(", ") ") {\n"
+    eval_ast(body)
+  "}")
+
+fn eval_set({elements}) =
+  str("new Set([" elements::map(eval_expr).join(", ") "])")
+
+fn eval_bind({lhs expr}) =
+  str("(" eval_expr(expr) ".bind(" eval_expr(lhs) "))")
+
+fn eval_reg_obj_entry(key, value) =
+  str(resolve_name(key) ": " eval_expr(value))
+
+fn eval_obj_shorthand_entry({id}) = resolve_name(id)
+
+fn eval_dynamic_obj_entry({key_expr value}) =
+  str("[" eval_expr(key_expr)"]: " eval_expr(value))
+
+fn eval_obj_fn({name generator? is_async? args body}) =
+  str(is_async?::if_truthy?(#("async"))
+      generator?::if_truthy?(#("*"))
+      resolve_name(name) "(" args::map(eval_assign_expr).join(", ") ") {\n"
+      eval_ast(body) "\n}")
+
+fn eval_obj_entry(node) = node::at(:type)::pipe(~Map{
+  :reg_obj_entry => eval_reg_obj_entry
+  :obj_shorthand_entry => eval_obj_shorthand_entry
+  :dynamic_obj_entry => eval_dynamic_obj_entry
+  :spread_obj_entry => eval_spread
+  :fn => eval_obj_fn
+})::call(node)
+
+fn eval_obj_lit({entries}) =
+  str("new ObjectLiteral({"
+      entries::map(eval_obj_entry).join(", ") "}")
+
+fn eval_bind_this({expr}) = str(eval_expr(expr) ".bind(this)")
+fn eval_id_lookup({name}) = resolve_name(name)
+fn eval_num({value}) = str("(" value ")")
+fn eval_big_int({value}) = value
+fn eval_double_equals({lhs rhs}) = str(
+  resolve_name("eq?") ".call(" eval_expr(lhs) ", " eval_expr(rhs) ")")
+fn eval_not_equals(node) = str("negate.call(" eval_double_equals(node) ")")
+fn eval_not({expr}) = str("negate.call(" eval_expr(expr) ")")
+fn eval_dynamic_access({lhs expr}) =
+  str(eval_expr(lhs) "[" eval_expr(expr) "]")
+fn eval_new({expr}) = str("new " eval_expr(expr))
+fn eval_triple_equals({lhs rhs}) =
+  str(eval_expr(lhs) " === " eval_expr(rhs))
+fn eval_triple_not_equals({lhs rhs}) =
+  str(eval_expr(lhs) " !== " eval_expr(rhs))
+fn eval_is({lhs rhs}) =
+  str(eval_expr(lhs) " instanceof " eval_expr(rhs))
+fn eval_and_and({lhs rhs}) =
+  str("and.call(" eval_expr(lhs) ", () => " eval_expr(rhs) ")")
+fn eval_or_or({lhs rhs}) =
+  str("or.call(" eval_expr(lhs) ", () => " eval_expr(rhs) ")")
+fn eval_snd_assign({lhs rhs}) =
+  str(eval_expr(lhs) " = " eval_expr(rhs))
+fn eval_await({expr}) = str("await " eval_expr(expr))
+fn eval_yield({star? expr}) =
+  str("yield" star?::if_truthy?(#("*")) " " eval_expr(expr))
+fn eval_paren_expr({expr}) = str("(" eval_expr(expr) ")")
+fn eval_unapplied_math_op({op}) = math_op_to_method::call(op)
+fn eval_unapplied_and_and() = "and"
+fn eval_unapplied_or_or() = "or"
+
+fn eval_keyword({value}) = str("Keyword.for(\"" resolve_name(value).slice(1) "\")")
+
+fn eval_regular_record_entry({key_expr value_expr}) =
+  str("[" eval_expr(key_expr) ", " eval_expr(value_expr) "]")
+
+fn eval_keyword_record_entry({name expr}) =
+  str("[" eval_keyword({value: str(":" name)}) ", " eval_expr(expr) "]")
+
+fn eval_record_entry(node) = node::at(:type)::pipe(~Map{
+  :regular_record_entry => eval_regular_record_entry
+  :keyword_record_entry => eval_keyword_record_entry
+})::call(node)
+
+fn eval_record_syntax({constructor_name entries}) =
+  str("construct_record.call("
+        constructor_name
+        "[" entries::map(eval_record_entry).join(", ") "]"
+      ")")
+
+fn eval_vector_syntax({constructor_name entries}) =
+  str("construct_vector.call("
+        constructor_name
+        "[" entries::map(eval_expr).join(", ") "]"
+      ")")
+
+fn eval_inclusive_range({lhs, rhs}) =
+  str("new Range(" eval_expr(lhs) ", " eval_expr(rhs) ")")
+
+fn eval_exclusive_range({lhs, rhs}) =
+  str("new Range(" eval_expr(lhs) ", " eval_expr(rhs) ", true)")
+
+fn eval_shorthand_anon_fn({expr}) =
+  str("(...__args) => " eval_expr(expr))
+
+fn eval_anon_arg_id({arg_num}) =
+  str("__args[" (arg_num || 1)::dec() "]")
+
+fn eval_decorator({name, fn_def args}) =
+  str("let " resolve_name(fn_def::at(:name)) " = "
+      name "("
+      // yup this is a mess
+        (args::len() != 0)::if_truthy?(#(str(args::map(eval_expr).join(", ") ", ")))
+        eval_fn(fn_def)
+      ")")
+
+fn eval_keyof({lhs rhs}) = str(eval_expr(lhs) " in " eval_expr(rhs))
+fn eval_and_dot({lhs rhs}) = str(eval_expr(lhs) "?." eval_expr(rhs))
+fn eval_partial_fn_call({expr}) = str("(" eval_expr(expr) ")")
+fn eval_partial_obj_dyn_access({expr}) = str("[" eval_expr(expr) "]")
+fn eval_regex_lit({value}) = value
+
+fn eval_expr(node) = node::at(:type)::pipe(~Map{
+  :str => eval_str
+  :regex_lit => eval_regex_lit
+  :decorator => eval_decorator
+  :keyword => eval_keyword
+  :and_dot => eval_and_dot
+  :partial_fn_call => eval_partial_fn_call
+  :partial_obj_dyn_access => eval_partial_obj_dyn_access
+  :property_lookup => eval_property_lookup
+  :id_lookup => eval_id_lookup
+  :fn_call => eval_fn_call
+  :num => eval_num
+  :big_int => eval_big_int
+  :array => eval_array
+  :math_op => eval_math_op
+  :double_equals => eval_double_equals
+  :not_equals => eval_not_equals
+  :not => eval_not
+  :fn => eval_fn
+  :bind => eval_bind
+  :anon_arg_id => eval_anon_arg_id
+  :set => eval_set
+  :obj_lit => eval_obj_lit
+  :bind_this => eval_bind_this
+  :dynamic_access => eval_dynamic_access
+  :new => eval_new
+  :triple_equals => eval_triple_equals
+  :triple_not_equals => eval_triple_not_equals
+  :spread => eval_spread
+  :is => eval_is
+  :and_and => eval_and_and
+  :or_or => eval_or_or
+  :snd_assign => eval_snd_assign
+  :await => eval_await
+  :yield => eval_yield
+  :record_syntax => eval_record_syntax
+  :vector_syntax => eval_vector_syntax
+  :paren_expr => eval_paren_expr
+  :unapplied_math_op => eval_unapplied_math_op
+  :unapplied_and_and => eval_unapplied_and_and
+  :unapplied_or_or => eval_unapplied_or_or
+  :shorthand_anon_fn => eval_shorthand_anon_fn
+  :inclusive_range => eval_inclusive_range
+  :exclusive_range => eval_exclusive_range
+  :keyof => eval_keyof
+})::call(node)
+
+fn eval_return({expr}) = str("return " eval_expr(expr))
+fn eval_protocol({name}) = str("const " resolve_name(name) " = Symbol(\"" name "\")")
+fn eval_impl_for({proto_expr constructor expr}) =
+  str(constructor ".prototype[" eval_expr(proto_expr) "] = " eval_expr(expr))
+fn eval_define_for({proto_expr src_expr expr}) =
+  str(eval_expr(src_expr) "[" eval_expr(proto_expr) "] = " eval_expr(expr))
+
+fn eval_for_loop({is_await? assign_expr iterable_expr body}) = 
+  str("for "
+      is_await?::if_truthy?(#("await "))
+      " (let " eval_assign_expr(assign_expr) " = "
+      eval_expr(iterable_expr) ") {\n"
+        eval_ast(body) "\n"
+      "}")
+
+fn eval_id_assign({name, expr}) =
+  str(resolve_name(name) " = " eval_expr(expr))
+
+fn eval_assert({expr token msg}) =
+  str(resolve_name("assert!") "("
+      eval_expr(expr) ", "
+      token::at(:line) ", "
+      token::at(:col) ", "
+      "`" eval_expr(expr) "`,"
+      msg
+      ")")
+
+fn eval_while_loop({test_expr body}) =
+  str("while (" eval_expr(test_expr) ") {\n"
+      eval_ast(body) "\n"
+      "}")
+
+fn eval_continue() = "continue"
+fn eval_break() = "break"
+
+fn eval_try(node) =
+  str("try {\n"
+      eval_ast(body) "\n"
+      "}"
+      node::has?(:catch)::if_truthy?(
+        #(str(" catch (" node::at(:catch)::at(:name) ") {\n"
+              eval_ast(node::at(:catch)::at(:body) "\n"
+              "}"))))
+      node::has?(:finally)::if_truthy?(
+        #(str(" finally {\n"
+              eval_ast(node::at(:finally)::at(:body) "\n"
+              "}")))))
+
+fn eval_statement(node) = node::at(:type)::pipe(~Map{  
+  :if => eval_if
+  :unless => eval_unless
+  :let => eval_let
+  :if_let => eval_if_let
+  :return => eval_return
+  :protocol_def => eval_protocol
+  :impl_for => eval_impl_for
+  :define_for => eval_define_for
+  :for_loop => eval_for_loop
+  :id_assign => eval_id_assign
+  :assert => eval_assert
+  :while_loop => eval_while_loop
+  :while_let_loop => eval_while_let_loop
+  :continue => eval_continue
+  :break => eval_break
+  :try => eval_try
+})::otherwise(eval_expr)::call(node)
+
+fn eval_ast(ast) = ast::map(eval_statement).join(";\n")
+
+fn compile(string) = lexer::call(string)
+  ::pipe(fn(tokens) = new CollectionView(tokens, 0))
+  ::pipe(parse)
+  ::pipe(eval_ast)
+
+
+// let tokens = lexer::call("
+// while let [a, b] = [1 2 3] {
+//   [1, 2]::map(_ + 1)
+// }
+// ")
+
+// let ast = parse
+//   ::call(new CollectionView(tokens, 0))
+//   ::log("if let with infix bind")
