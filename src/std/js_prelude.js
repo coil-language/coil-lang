@@ -1,3 +1,4 @@
+"use strict";
 function ObjectLiteral(obj) {
   Object.assign(this, obj);
 }

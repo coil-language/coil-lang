@@ -1,3 +1,5 @@
+"use strict";
+
 function ObjectLiteral(obj) {
   Object.assign(this, obj);
 }
@@ -4397,21 +4399,24 @@ function compile(string) {
     )(parse)
   )(eval_ast);
 }
-let src_file_name = Deno.args[0];
-let out_name = Deno.args[1];
 
-// async function compile_prelude() {
-//   try {
-//     await Deno.lstat(".deno_cache/prelude.js");
-//     return Deno.readTextFileSync(".deno_cache/prelude.js");
-//   } catch {
-let prelude = Deno.readTextFileSync("./src/std/js_prelude.js");
-prelude = plus.call(
-  prelude,
-  compile(Deno.readTextFileSync("./src/std/prelude.coil"))
-);
-//   }
-// }
+if (globalThis.Deno) {
+  let src_file_name = Deno.args[0];
+  let out_name = Deno.args[1];
 
-let src = Deno.readTextFileSync(src_file_name);
-Deno.writeTextFile(out_name, plus.call(prelude, compile(src)));
+  // async function compile_prelude() {
+  //   try {
+  //     await Deno.lstat(".deno_cache/prelude.js");
+  //     return Deno.readTextFileSync(".deno_cache/prelude.js");
+  //   } catch {
+  let prelude = Deno.readTextFileSync("./src/std/js_prelude.js");
+  prelude = plus.call(
+    prelude,
+    compile(Deno.readTextFileSync("./src/std/prelude.coil"))
+  );
+  //   }
+  // }
+
+  let src = Deno.readTextFileSync(src_file_name);
+  Deno.writeTextFile(out_name, plus.call(prelude, compile(src)));
+}
