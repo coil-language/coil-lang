@@ -19,8 +19,6 @@ fn Hash(entries) {
 
 impl HashCode for Hash = fn() = this.map::hash()
 
-// Range
-
 // Stepable protocol
 
 protocol Stepable
@@ -37,25 +35,6 @@ impl Stepable for BigInt = {
 
 fn inc() = this[Stepable].inc.call(this)
 fn dec() = this[Stepable].dec.call(this)
-
-// this needs more thought
-fn Range(start, end, exclusive?) {
-  assert! Number.isInteger(start)
-  assert! Number.isInteger(end)
-  this.start = start
-  this.end = end
-  this.exclusive? = truthy(exclusive?)
-}
-
-impl Symbol.iterator for Range = fn*() {
-  let i = this.start
-  let end = this.end
-  if this.exclusive? { end = end::dec() }
-  while i <= end {
-    yield i
-    i = i::inc()
-  }
-}
 
 // CONSTRUCT RECORD PROTOCOL
 
@@ -132,14 +111,6 @@ impl Call for Keyword = fn(collection) {
   }
 }
 
-impl Call for Range = fn(value) {
-  if this.exclusive? {  
-    return value >= this.start && value < this.end
-  } else {
-    return value >= this.start && value <= this.end
-  }
-}
-
 fn call(...args) = this&.[Call](...args)
 
 // make sets callable using bind syntax
@@ -204,11 +175,6 @@ fn eq?(other) {
 
 // CLONE PROTOCOL
 protocol Clone
-
-impl Clone for Range = {
-  fn clone() = new Range(this.start, this.end, this.exclusive?)
-  fn deep_clone() = new Range(this.start::clone(), this.end::clone(), this.exclusive?)
-}
 
 impl Clone for ObjectLiteral = {
   fn clone() = {...this}
@@ -1086,48 +1052,66 @@ fn Underscore(transforms) {
   this.transforms = transforms
 }
 
-let _ = new Underscore([fn(x) = x])
+fn id() = this
+
+protocol UnderscoreInterpreter
+
+let _ = new Underscore([{f: id, args: []}])
+
+impl Symbol.iterator for Underscore = fn*() {
+  for transform of this.transforms {
+    yield transform
+  }
+}
+
+impl :insert for Underscore = fn(f, ...args) =
+  new Underscore([...this.transforms, {f, args}])
 
 define HashCode for _ = fn() = 2n
 
-impl Call for Underscore = fn(value) = 
-  compose(...this.transforms)::call(value)
+impl UnderscoreInterpreter for Object = fn(underscore) {
+  let result = this
+  for {f args} of underscore {
+    result = f.bind(result)::call(...args)
+  }
+  return result
+}
+
+impl Call for Underscore = fn(data, ...args) = data[UnderscoreInterpreter](this, ...args)
 
 impl Comparable for Underscore = {
-  fn less_than(val) = new Underscore([...this.transforms, fn(my_value) = my_value < val])
-  fn greater_than(val) = new Underscore([...this.transforms, fn(my_value) = my_value > val])
-  fn less_than_eq(val) = new Underscore([...this.transforms, fn(my_value) = my_value <= val])
-  fn greater_than_eq(val) = new Underscore([...this.transforms, fn(my_value) = my_value >= val])
+  fn less_than(val) = this.insert(less_than, val)
+  fn greater_than(val) = this.insert(greater_than, val)
+  fn less_than_eq(val) = this.insert(less_than_eq, val)
+  fn greater_than_eq(val) = this.insert(greater_than_eq, val)
 }
 
 impl Negate for Underscore = fn() =
   ::fn(val) = !this::call(val)
 
-impl Equal for Underscore = fn(other) =
-  new Underscore([...this.transforms, fn(my_value) = my_value == other])
+impl Equal for Underscore = fn(other) = this.insert(eq?, other)
 
 impl Collection for Underscore = {
-  fn at(idx) = new Underscore([...this.transforms, fn(self) = self::at(idx)])
-  fn sample() = new Underscore([...this.transforms, fn(self) = self::sample()])
-  fn each(f) = new Underscore([...this.transforms, fn(self) = self::each(f)])
-  fn find(f) = new Underscore([...this.transforms, fn(self) = self::find(f)])
-  fn map(f) = new Underscore([...this.transforms, fn(self) = self::map(f)])
-  fn flat_map(f) = new Underscore([...this.transforms, fn(self) = self::flat_map(f)])
-  fn filter(f) = new Underscore([...this.transforms, fn(self) = self::filter(f)])
-  fn some?(f) = new Underscore([...this.transforms, fn(self) = self::some?(f)])
-  fn every?(f) = new Underscore([...this.transforms, fn(self) = self::every?(f)])
-  fn reduce(f, start) = new Underscore([...this.transforms, fn(self) = self::reduce(f, start)])
-  fn insert(...args) = new Underscore([...this.transforms, fn(self) = self::insert(...args)])
-  fn concat(other) = new Underscore([...this.transforms, fn(self) = self::concat(other)])
-  fn update(key, update_fn) = 
-    new Underscore([...this.transforms, fn(self) = self::update(key, update_fn)])
-  fn empty?() = new Underscore([...this.transforms, fn(self) = self::empty?()])
-  fn has?(k) = new Underscore([...this.transforms, fn(self) = self::has?(k)])
-  fn len() = new Underscore([...this.transforms, fn(self) = self::len()])
-  fn remove(key_or_val) = new Underscore([...this.transforms, fn(self) = self::remove(key_or_val)])
+  fn at(idx) = this.insert(at, idx)
+  fn sample() = this.insert(sample)
+  fn each(f) = this.insert(each, f)
+  fn find(f) = this.insert(find, f)
+  fn map(f) = this.insert(map, f)
+  fn flat_map(f) = this.insert(flat_map, f)
+  fn filter(f) = this.insert(filter, f)
+  fn some?(f) = this.insert(some?, f)
+  fn every?(f) = this.insert(every? f)
+  fn reduce(f, start) = this.insert(reduce, f, start)
+  fn insert(...args) = this.insert(insert, ...args)
+  fn concat(other) = this.insert(concat, other)
+  fn update(key, update_fn) = this.insert(update, key, update_fn)
+  fn empty?() = this.insert(empty?)
+  fn has?(k) = this.insert(has? k)
+  fn len() = this.insert(len)
+  fn remove(key_or_val) = this.insert(remove, key_or_val)
 }
 
-impl Pipe for Underscore = fn(f) = new Underscore([...this.transforms, f])
+impl Pipe for Underscore = fn(f) = this.insert(pipe, f)
 
 impl And for Underscore = fn(other) =
   ::fn(value) = this::call(value) && other::call(value)
@@ -1135,12 +1119,93 @@ impl And for Underscore = fn(other) =
 impl Or for Underscore = fn(other) =
   ::fn(value) = this::call(value) || other::call(value)
 
-impl Plus for Underscore = fn(other) = new Underscore([...this.transforms, fn(my_value) = my_value + other])
-impl Minus for Underscore = fn(other) = new Underscore([...this.transforms, fn(my_value) = my_value - other])
-impl Times for Underscore = fn(other) = new Underscore([...this.transforms, fn(my_value) = my_value * other])
-impl Divide for Underscore = fn(other) = new Underscore([...this.transforms, fn(my_value) = my_value / other])
-impl Exponent for Underscore = fn(other) = new Underscore([...this.transforms, fn(my_value) = my_value ** other])
-impl Mod for Underscore = fn(other) = new Underscore([...this.transforms, fn(my_value) = my_value % other])
+impl Plus for Underscore = fn(other) = this.insert(plus, other)
+impl Minus for Underscore = fn(other) = this.insert(minus, other)
+impl Times for Underscore = fn(other) = this.insert(times, other)
+impl Divide for Underscore = fn(other) = this.insert(divide, other)
+impl Exponent for Underscore = fn(other) = this.insert(exponent, other)
+impl Mod for Underscore = fn(other) = this.insert(mod, other)
+
+// Range
+
+fn Range(start, end, exclusive?, transform) {
+  assert! Number.isInteger(start)
+  assert! Number.isInteger(end)
+  this.start = start
+  this.end = end
+  this.exclusive? = truthy(exclusive?)
+  this.transform = js_or(transform, fn() = _)
+}
+
+impl UnderscoreInterpreter for Range = fn(underscore, val) {
+  let result = val
+  for {f args} of underscore {
+    result = ~Map{
+      map => fn(map_fn) = map_fn(result)
+      filter => fn(filter_fn) {
+        if filter_fn(result) {
+          return result
+        } else {
+          return :filtered
+        }
+      }
+    }::at(f)::call(...args)::otherwise(result)
+  }
+  return result
+}
+
+impl Symbol.iterator for Range = fn*() {
+  let i = this.start
+  let end = this.end
+  if this.exclusive? { end = end::dec() }
+  while i <= end {
+    let result = this.transform::call(this, i)
+    if result != :filtered {
+      yield result
+    }
+    i = i::inc()
+  }
+}
+
+impl :update for Range = fn(new_transform) = new Range(
+  this.start,
+  this.end,
+  this.exclusive?,
+  new_transform
+)
+
+impl Collection for Range = {
+  fn sample() = this.start
+  fn each(f) {
+    for elem of this {
+      f(elem)
+    }
+  }
+  fn reduce(f, start) {
+    let result = start
+    for elem of this {
+      result = f(result, elem)
+    }
+    return result
+  }
+  fn map(f) = this.update(this.transform::map(f))
+  fn filter(f) = this.update(this.transform::filter(f))
+}
+
+impl Call for Range = fn(value) {
+  if this.exclusive? {  
+    return value >= this.start && value < this.end
+  } else {
+    return value >= this.start && value <= this.end
+  }
+}
+
+impl Clone for Range = {
+  fn clone() = new Range(this.start, this.end, this.exclusive?, this.transform)
+  fn deep_clone() = new Range(this.start::deep_clone(), this.end::deep_clone(), this.exclusive?, this.transform::deep_clone())
+}
+
+// Schemas
 
 fn All(conds) { this.conds = conds }
 
