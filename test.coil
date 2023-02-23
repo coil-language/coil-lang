@@ -5,7 +5,7 @@ impl User = {
 }
 
 impl Validation for User = {
-  age: _::len()::pipe(0..10)
+  age: _ > 0 && _ < 13
 }
 
-new User("marcelle" "rusu", "_" * 10).name()::log()
+new User("marcelle" "rusu", 14).name()::log()
