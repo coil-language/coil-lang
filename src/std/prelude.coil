@@ -1449,3 +1449,14 @@ define Vector for DefRecord = fn(property_name) {
   define Record for Constructor = fn(entries) = new Constructor(entries)
   return Constructor
 }
+
+fn Struct(kind, ...properties) {
+  fn Constructor(...args) {
+    for [key, arg] of properties::zip(args) {
+      this[key] = arg
+    }
+  }
+  Object.defineProperty(Constructor, "name", { value: kind })
+  return Constructor
+}
+define Vector for Struct = fn(args) = Struct(...args)

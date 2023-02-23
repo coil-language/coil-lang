@@ -181,25 +181,6 @@ function inc() {
 function dec() {
   return this[Stepable].dec.call(this);
 }
-function Range(start, end, exclusive__q) {
-  assert__b(Number.isInteger(start), 43, 11, `Number.isInteger(start)`);
-  assert__b(Number.isInteger(end), 44, 11, `Number.isInteger(end)`);
-  this.start = start;
-  this.end = end;
-  this.exclusive__q = truthy(exclusive__q);
-}
-Range.prototype[Symbol.iterator] = function* () {
-  let i = this.start;
-  let end = this.end;
-  if (truthy(this.exclusive__q)) {
-    end = dec.bind(end)();
-  } else {
-  }
-  while (less_than_eq.call(i, end)) {
-    yield i;
-    i = inc.bind(i)();
-  }
-};
 const Record = Symbol("Record");
 Map[Record] = function (entries) {
   return new Map(entries);
@@ -276,8 +257,10 @@ Hash.prototype[Call] = function (key) {
 String.prototype[Call] = function (collection) {
   if (
     truthy(
-      typeof collection ===
-        or.call("string", () => collection instanceof Keyword)
+      or.call(
+        typeof collection === "string",
+        () => collection instanceof Keyword
+      )
     )
   ) {
     return collection[this];
@@ -304,17 +287,6 @@ Keyword.prototype[Call] = function (collection) {
     return collection[this];
   } else {
     return call.bind(collection)(this);
-  }
-};
-Range.prototype[Call] = function (value) {
-  if (truthy(this.exclusive__q)) {
-    return and.call(greater_than_eq.call(value, this.start), () =>
-      less_than.call(value, this.end)
-    );
-  } else {
-    return and.call(greater_than_eq.call(value, this.start), () =>
-      less_than_eq.call(value, this.end)
-    );
   }
 };
 function call(...args) {
@@ -394,18 +366,6 @@ let eq__q = impl_callable(function eq__q(other) {
   }
 });
 const Clone = Symbol("Clone");
-Range.prototype[Clone] = new ObjectLiteral({
-  clone() {
-    return new Range(this.start, this.end, this.exclusive__q);
-  },
-  deep_clone() {
-    return new Range(
-      clone.bind(this.start)(),
-      clone.bind(this.end)(),
-      this.exclusive__q
-    );
-  },
-});
 ObjectLiteral.prototype[Clone] = new ObjectLiteral({
   clone() {
     return new ObjectLiteral({ ...this });
@@ -462,8 +422,8 @@ BigInt.prototype[Identity] = 0n;
 String.prototype[Identity] = "";
 Array.prototype[Identity] = [];
 ObjectLiteral.prototype[Identity] = new ObjectLiteral({});
-Map.prototype[Identity] = construct_record.bind(Map)([]);
-Hash.prototype[Identity] = construct_record.bind(Hash)([]);
+Map.prototype[Identity] = construct_record.call(Map, []);
+Hash.prototype[Identity] = construct_record.call(Hash, []);
 Set.prototype[Identity] = new Set([]);
 function identity() {
   if (truthy(nil__q.bind(this)())) {
@@ -1229,51 +1189,51 @@ Object.prototype[Or] = function (thunk) {
   return js_or(this, thunk);
 };
 Number.prototype[Plus] = function (other) {
-  assert__b(typeof other === "number", 757, 11, `typeof(other) === "number"`);
+  assert__b(typeof other === "number", 718, 11, `typeof(other) === "number"`);
   return js_plus(this, other);
 };
 Number.prototype[Minus] = function (other) {
-  assert__b(typeof other === "number", 762, 11, `typeof(other) === "number"`);
+  assert__b(typeof other === "number", 723, 11, `typeof(other) === "number"`);
   return js_minus(this, other);
 };
 Number.prototype[Times] = function (other) {
-  assert__b(typeof other === "number", 767, 11, `typeof(other) === "number"`);
+  assert__b(typeof other === "number", 728, 11, `typeof(other) === "number"`);
   return js_times(this, other);
 };
 Number.prototype[Divide] = function (other) {
-  assert__b(typeof other === "number", 772, 11, `typeof(other) === "number"`);
+  assert__b(typeof other === "number", 733, 11, `typeof(other) === "number"`);
   return js_divide(this, other);
 };
 Number.prototype[Exponent] = function (other) {
-  assert__b(typeof other === "number", 777, 11, `typeof(other) === "number"`);
+  assert__b(typeof other === "number", 738, 11, `typeof(other) === "number"`);
   return js_exponent(this, other);
 };
 Number.prototype[Mod] = function (other) {
-  assert__b(typeof other === "number", 782, 11, `typeof(other) === "number"`);
+  assert__b(typeof other === "number", 743, 11, `typeof(other) === "number"`);
   return js_mod(this, other);
 };
 BigInt.prototype[Plus] = function (other) {
-  assert__b(typeof other === "bigint", 787, 11, `typeof(other) === "bigint"`);
+  assert__b(typeof other === "bigint", 748, 11, `typeof(other) === "bigint"`);
   return js_plus(this, other);
 };
 BigInt.prototype[Minus] = function (other) {
-  assert__b(typeof other === "bigint", 792, 11, `typeof(other) === "bigint"`);
+  assert__b(typeof other === "bigint", 753, 11, `typeof(other) === "bigint"`);
   return js_minus(this, other);
 };
 BigInt.prototype[Times] = function (other) {
-  assert__b(typeof other === "bigint", 797, 11, `typeof(other) === "bigint"`);
+  assert__b(typeof other === "bigint", 758, 11, `typeof(other) === "bigint"`);
   return js_times(this, other);
 };
 BigInt.prototype[Divide] = function (other) {
-  assert__b(typeof other === "bigint", 802, 11, `typeof(other) === "bigint"`);
+  assert__b(typeof other === "bigint", 763, 11, `typeof(other) === "bigint"`);
   return js_divide(this, other);
 };
 BigInt.prototype[Exponent] = function (other) {
-  assert__b(typeof other === "bigint", 807, 11, `typeof(other) === "bigint"`);
+  assert__b(typeof other === "bigint", 768, 11, `typeof(other) === "bigint"`);
   return js_exponent(this, other);
 };
 BigInt.prototype[Mod] = function (other) {
-  assert__b(typeof other === "bigint", 812, 11, `typeof(other) === "bigint"`);
+  assert__b(typeof other === "bigint", 773, 11, `typeof(other) === "bigint"`);
   return js_mod(this, other);
 };
 let ComparableMixin = new ObjectLiteral({
@@ -1289,48 +1249,48 @@ let ComparableMixin = new ObjectLiteral({
 Number.prototype[Comparable] = new ObjectLiteral({
   ...ComparableMixin,
   greater_than(other) {
-    assert__b(typeof other === "number", 826, 13, `typeof(other) === "number"`);
+    assert__b(typeof other === "number", 785, 13, `typeof(other) === "number"`);
     return js_greater_than(this, other);
   },
   less_than(other) {
-    assert__b(typeof other === "number", 830, 13, `typeof(other) === "number"`);
+    assert__b(typeof other === "number", 789, 13, `typeof(other) === "number"`);
     return js_less_than(this, other);
   },
 });
 BigInt.prototype[Comparable] = new ObjectLiteral({
   ...ComparableMixin,
   greater_than(other) {
-    assert__b(typeof other === "bigint", 838, 13, `typeof(other) === "bigint"`);
+    assert__b(typeof other === "bigint", 797, 13, `typeof(other) === "bigint"`);
     return js_greater_than(this, other);
   },
   less_than(other) {
-    assert__b(typeof other === "bigint", 842, 13, `typeof(other) === "bigint"`);
+    assert__b(typeof other === "bigint", 801, 13, `typeof(other) === "bigint"`);
     return js_less_than(this, other);
   },
 });
 String.prototype[Plus] = function (other) {
-  assert__b(typeof other === "string", 848, 11, `typeof(other) === "string"`);
+  assert__b(typeof other === "string", 807, 11, `typeof(other) === "string"`);
   return js_plus(this, other);
 };
 String.prototype[Times] = function (amount) {
-  assert__b(typeof amount === "number", 853, 11, `typeof(amount) === "number"`);
+  assert__b(typeof amount === "number", 812, 11, `typeof(amount) === "number"`);
   return this.repeat(amount);
 };
 String.prototype[Comparable] = new ObjectLiteral({
   ...ComparableMixin,
   greater_than(other) {
-    assert__b(typeof other === "string", 860, 13, `typeof(other) === "string"`);
+    assert__b(typeof other === "string", 819, 13, `typeof(other) === "string"`);
     return js_greater_than(this, other);
   },
   less_than(other) {
-    assert__b(typeof other === "string", 864, 13, `typeof(other) === "string"`);
+    assert__b(typeof other === "string", 823, 13, `typeof(other) === "string"`);
     return js_less_than(this, other);
   },
 });
 let plus = impl_callable(function plus(other) {
   return call.bind(
     find.bind(
-      construct_record.bind(Map)([
+      construct_record.call(Map, [
         [
           Plus,
           function () {
@@ -1462,7 +1422,7 @@ let printable = impl_callable(function printable() {
     return otherwise.bind(
       call.bind(
         find.bind(
-          construct_record.bind(Map)([
+          construct_record.call(Map, [
             [
               Printable,
               function () {
@@ -1494,7 +1454,7 @@ let bigint__q = impl_callable(function bigint__q() {
   return typeof this === "bigint";
 });
 let float__q = impl_callable(function float__q() {
-  return typeof this === and.call("number", () => negate.call(int__q(this)));
+  return and.call(typeof this === "number", () => negate.call(int__q(this)));
 });
 let even__q = impl_callable(function even__q() {
   return mod.call(this, 2) === 0;
@@ -1552,12 +1512,10 @@ function pre(...args) {
       every__q.bind(cond_fns)(function (f) {
         return call.bind(f)(...args);
       }),
-      1056,
+      1010,
       13,
       `(every__q.bind(cond_fns))(function (f) {
-;
-return (call.bind(f))(...args)
-})`
+return (call.bind(f))(...args);})`
     );
     return f(...args);
   };
@@ -1609,49 +1567,44 @@ Schema.prototype[Or] = function (thunk) {
 function Underscore(transforms) {
   this.transforms = transforms;
 }
-let _ = new Underscore([
-  function (x) {
-    return x;
-  },
-]);
+function id() {
+  return this;
+}
+const UnderscoreInterpreter = Symbol("UnderscoreInterpreter");
+let _ = new Underscore([new ObjectLiteral({ f: id, args: [] })]);
+Underscore.prototype[Symbol.iterator] = function* () {
+  for (let transform of this.transforms) {
+    yield transform;
+  }
+};
+Underscore.prototype[Keyword.for("insert")] = function (f, ...args) {
+  return new Underscore([...this.transforms, new ObjectLiteral({ f, args })]);
+};
 _[HashCode] = function () {
   return 2n;
 };
-Underscore.prototype[Call] = function (value) {
-  return call.bind(compose(...this.transforms))(value);
+Object.prototype[UnderscoreInterpreter] = function (underscore) {
+  let result = this;
+  for (let { f, args } of underscore) {
+    result = call.bind(f.bind(result))(...args);
+  }
+  return result;
+};
+Underscore.prototype[Call] = function (data, ...args) {
+  return data[UnderscoreInterpreter](this, ...args);
 };
 Underscore.prototype[Comparable] = new ObjectLiteral({
   less_than(val) {
-    return new Underscore([
-      ...this.transforms,
-      function (my_value) {
-        return less_than.call(my_value, val);
-      },
-    ]);
+    return this.insert(less_than, val);
   },
   greater_than(val) {
-    return new Underscore([
-      ...this.transforms,
-      function (my_value) {
-        return greater_than.call(my_value, val);
-      },
-    ]);
+    return this.insert(greater_than, val);
   },
   less_than_eq(val) {
-    return new Underscore([
-      ...this.transforms,
-      function (my_value) {
-        return less_than_eq.call(my_value, val);
-      },
-    ]);
+    return this.insert(less_than_eq, val);
   },
   greater_than_eq(val) {
-    return new Underscore([
-      ...this.transforms,
-      function (my_value) {
-        return greater_than_eq.call(my_value, val);
-      },
-    ]);
+    return this.insert(greater_than_eq, val);
   },
 });
 Underscore.prototype[Negate] = function () {
@@ -1660,153 +1613,63 @@ Underscore.prototype[Negate] = function () {
   }.bind(this);
 };
 Underscore.prototype[Equal] = function (other) {
-  return new Underscore([
-    ...this.transforms,
-    function (my_value) {
-      return eq__q.call(my_value, other);
-    },
-  ]);
+  return this.insert(eq__q, other);
 };
 Underscore.prototype[Collection] = new ObjectLiteral({
   at(idx) {
-    return new Underscore([
-      ...this.transforms,
-      function (self) {
-        return at.bind(self)(idx);
-      },
-    ]);
+    return this.insert(at, idx);
   },
   sample() {
-    return new Underscore([
-      ...this.transforms,
-      function (self) {
-        return sample.bind(self)();
-      },
-    ]);
+    return this.insert(sample);
   },
   each(f) {
-    return new Underscore([
-      ...this.transforms,
-      function (self) {
-        return each.bind(self)(f);
-      },
-    ]);
+    return this.insert(each, f);
   },
   find(f) {
-    return new Underscore([
-      ...this.transforms,
-      function (self) {
-        return find.bind(self)(f);
-      },
-    ]);
+    return this.insert(find, f);
   },
   map(f) {
-    return new Underscore([
-      ...this.transforms,
-      function (self) {
-        return map.bind(self)(f);
-      },
-    ]);
+    return this.insert(map, f);
   },
   flat_map(f) {
-    return new Underscore([
-      ...this.transforms,
-      function (self) {
-        return flat_map.bind(self)(f);
-      },
-    ]);
+    return this.insert(flat_map, f);
   },
   filter(f) {
-    return new Underscore([
-      ...this.transforms,
-      function (self) {
-        return filter.bind(self)(f);
-      },
-    ]);
+    return this.insert(filter, f);
   },
   some__q(f) {
-    return new Underscore([
-      ...this.transforms,
-      function (self) {
-        return some__q.bind(self)(f);
-      },
-    ]);
+    return this.insert(some__q, f);
   },
   every__q(f) {
-    return new Underscore([
-      ...this.transforms,
-      function (self) {
-        return every__q.bind(self)(f);
-      },
-    ]);
+    return this.insert(every__q, f);
   },
   reduce(f, start) {
-    return new Underscore([
-      ...this.transforms,
-      function (self) {
-        return reduce.bind(self)(f, start);
-      },
-    ]);
+    return this.insert(reduce, f, start);
   },
   insert(...args) {
-    return new Underscore([
-      ...this.transforms,
-      function (self) {
-        return insert.bind(self)(...args);
-      },
-    ]);
+    return this.insert(insert, ...args);
   },
   concat(other) {
-    return new Underscore([
-      ...this.transforms,
-      function (self) {
-        return concat.bind(self)(other);
-      },
-    ]);
+    return this.insert(concat, other);
   },
   update(key, update_fn) {
-    return new Underscore([
-      ...this.transforms,
-      function (self) {
-        return update.bind(self)(key, update_fn);
-      },
-    ]);
+    return this.insert(update, key, update_fn);
   },
   empty__q() {
-    return new Underscore([
-      ...this.transforms,
-      function (self) {
-        return empty__q.bind(self)();
-      },
-    ]);
+    return this.insert(empty__q);
   },
   has__q(k) {
-    return new Underscore([
-      ...this.transforms,
-      function (self) {
-        return has__q.bind(self)(k);
-      },
-    ]);
+    return this.insert(has__q, k);
   },
   len() {
-    return new Underscore([
-      ...this.transforms,
-      function (self) {
-        return len.bind(self)();
-      },
-    ]);
+    return this.insert(len);
   },
   remove(key_or_val) {
-    return new Underscore([
-      ...this.transforms,
-      function (self) {
-        return remove.bind(self)(key_or_val);
-      },
-    ]);
+    return this.insert(remove, key_or_val);
   },
 });
 Underscore.prototype[Pipe] = function (f) {
-  return new Underscore([...this.transforms, f]);
+  return this.insert(pipe, f);
 };
 Underscore.prototype[And] = function (other) {
   return function (value) {
@@ -1819,53 +1682,129 @@ Underscore.prototype[Or] = function (other) {
   }.bind(this);
 };
 Underscore.prototype[Plus] = function (other) {
-  return new Underscore([
-    ...this.transforms,
-    function (my_value) {
-      return plus.call(my_value, other);
-    },
-  ]);
+  return this.insert(plus, other);
 };
 Underscore.prototype[Minus] = function (other) {
-  return new Underscore([
-    ...this.transforms,
-    function (my_value) {
-      return minus.call(my_value, other);
-    },
-  ]);
+  return this.insert(minus, other);
 };
 Underscore.prototype[Times] = function (other) {
-  return new Underscore([
-    ...this.transforms,
-    function (my_value) {
-      return times.call(my_value, other);
-    },
-  ]);
+  return this.insert(times, other);
 };
 Underscore.prototype[Divide] = function (other) {
-  return new Underscore([
-    ...this.transforms,
-    function (my_value) {
-      return divide_by.call(my_value, other);
-    },
-  ]);
+  return this.insert(divide, other);
 };
 Underscore.prototype[Exponent] = function (other) {
-  return new Underscore([
-    ...this.transforms,
-    function (my_value) {
-      return exponent.call(my_value, other);
-    },
-  ]);
+  return this.insert(exponent, other);
 };
 Underscore.prototype[Mod] = function (other) {
-  return new Underscore([
-    ...this.transforms,
-    function (my_value) {
-      return mod.call(my_value, other);
-    },
-  ]);
+  return this.insert(mod, other);
 };
+function Range(start, end, exclusive__q, transform) {
+  assert__b(Number.isInteger(start), 1127, 11, `Number.isInteger(start)`);
+  assert__b(Number.isInteger(end), 1128, 11, `Number.isInteger(end)`);
+  this.start = start;
+  this.end = end;
+  this.exclusive__q = truthy(exclusive__q);
+  this.transform = js_or(transform, function () {
+    return _;
+  });
+}
+Range.prototype[UnderscoreInterpreter] = function (underscore, val) {
+  let result = val;
+  for (let { f, args } of underscore) {
+    result = otherwise.bind(
+      call.bind(
+        at.bind(
+          construct_record.call(Map, [
+            [
+              map,
+              function (map_fn) {
+                return map_fn(result);
+              },
+            ],
+            [
+              filter,
+              function (filter_fn) {
+                if (truthy(filter_fn(result))) {
+                  return result;
+                } else {
+                  return Keyword.for("filtered");
+                }
+              },
+            ],
+          ])
+        )(f)
+      )(...args)
+    )(result);
+  }
+  return result;
+};
+Range.prototype[Symbol.iterator] = function* () {
+  let i = this.start;
+  let end = this.end;
+  if (truthy(this.exclusive__q)) {
+    end = dec.bind(end)();
+  } else {
+  }
+  while (less_than_eq.call(i, end)) {
+    let result = call.bind(this.transform)(this, i);
+    if (truthy(negate.call(eq__q.call(result, Keyword.for("filtered"))))) {
+      yield result;
+    } else {
+    }
+    i = inc.bind(i)();
+  }
+};
+Range.prototype[Keyword.for("update")] = function (new_transform) {
+  return new Range(this.start, this.end, this.exclusive__q, new_transform);
+};
+Range.prototype[Collection] = new ObjectLiteral({
+  sample() {
+    return this.start;
+  },
+  each(f) {
+    for (let elem of this) {
+      f(elem);
+    }
+  },
+  reduce(f, start) {
+    let result = start;
+    for (let elem of this) {
+      result = f(result, elem);
+    }
+    return result;
+  },
+  map(f) {
+    return this.update(map.bind(this.transform)(f));
+  },
+  filter(f) {
+    return this.update(filter.bind(this.transform)(f));
+  },
+});
+Range.prototype[Call] = function (value) {
+  if (truthy(this.exclusive__q)) {
+    return and.call(greater_than_eq.call(value, this.start), () =>
+      less_than.call(value, this.end)
+    );
+  } else {
+    return and.call(greater_than_eq.call(value, this.start), () =>
+      less_than_eq.call(value, this.end)
+    );
+  }
+};
+Range.prototype[Clone] = new ObjectLiteral({
+  clone() {
+    return new Range(this.start, this.end, this.exclusive__q, this.transform);
+  },
+  deep_clone() {
+    return new Range(
+      deep_clone.bind(this.start)(),
+      deep_clone.bind(this.end)(),
+      this.exclusive__q,
+      deep_clone.bind(this.transform)()
+    );
+  },
+});
 function All(conds) {
   this.conds = conds;
 }
@@ -1935,7 +1874,7 @@ CallEffectWith.prototype[Effect] = function () {
 };
 function intern_vec(klass) {
   if (truthy(negate.call(klass.cache))) {
-    klass.cache = construct_record.bind(Map)([]);
+    klass.cache = construct_record.call(Map, []);
     klass[Vector] = function (args) {
       let hash_value = hash.bind(args)();
       let __coil_if_let_temp = klass.cache.get(hash_value);
@@ -1990,14 +1929,14 @@ let http = new ObjectLiteral({
     if (
       truthy(
         Effect in
-          construct_vector.bind(Fetch)([
+          construct_vector.call(Fetch, [
             Keyword.for("get"),
             url,
             Keyword.for("init"),
           ])
       )
     ) {
-      yield construct_vector.bind(Fetch)([
+      yield construct_vector.call(Fetch, [
         Keyword.for("get"),
         url,
         Keyword.for("init"),
@@ -2007,14 +1946,14 @@ let http = new ObjectLiteral({
     if (
       truthy(
         Effect in
-          construct_vector.bind(Fetch)([
+          construct_vector.call(Fetch, [
             Keyword.for("get"),
             url,
             Keyword.for("loading"),
           ])
       )
     ) {
-      yield construct_vector.bind(Fetch)([
+      yield construct_vector.call(Fetch, [
         Keyword.for("get"),
         url,
         Keyword.for("loading"),
@@ -2027,15 +1966,15 @@ let http = new ObjectLiteral({
       if (
         truthy(
           Effect in
-            construct_vector.bind(Fetch)([Keyword.for("get"), url, error.code])
+            construct_vector.call(Fetch, [Keyword.for("get"), url, error.code])
         )
       ) {
         yield __coil_with.bind(
-          construct_vector.bind(Fetch)([Keyword.for("get"), url, error.code])
+          construct_vector.call(Fetch, [Keyword.for("get"), url, error.code])
         )(error);
       } else {
         yield __coil_with.bind(
-          construct_vector.bind(Fetch)([
+          construct_vector.call(Fetch, [
             Keyword.for("get"),
             url,
             Keyword.for("error"),
@@ -2050,16 +1989,16 @@ function Exec() {}
 Exec[Vector] = function ([map_fn, _for, collection, ...rest]) {
   assert__b(
     eq__q.call(_for, Keyword.for("for")),
-    1325,
+    1372,
     11,
     `eq__q.call(_for, Keyword.for("for"))`
   );
-  assert__b(Call in map_fn, 1326, 11, `Call in map_fn`);
+  assert__b(Call in map_fn, 1373, 11, `Call in map_fn`);
   let result = collection;
   if (truthy(eq__q.call(first.bind(rest)(), Keyword.for("if")))) {
     let [_if, filter_fn, ..._rest] = rest;
     rest = _rest;
-    assert__b(Call in filter_fn, 1332, 13, `Call in filter_fn`);
+    assert__b(Call in filter_fn, 1379, 13, `Call in filter_fn`);
     result = filter.bind(result)(filter_fn);
   } else {
   }
@@ -2068,7 +2007,7 @@ Exec[Vector] = function ([map_fn, _for, collection, ...rest]) {
     let [_verify, verify_fn, ..._rest] = rest;
     assert__b(
       every__q.bind(result)(verify_fn),
-      1340,
+      1387,
       13,
       `(every__q.bind(result))(verify_fn)`
     );
@@ -2135,7 +2074,24 @@ DefRecord[Vector] = function (property_name) {
   };
   return Constructor;
 };
-let Lexer = construct_vector.bind(DefRecord)([Keyword.for("entries")]);
+function Struct(kind, ...properties) {
+  function Constructor(...args) {
+    for (let [key, arg] of zip.bind(properties)(args)) {
+      console.log(key, arg);
+      this[key] = arg;
+    }
+  }
+  Object.defineProperty(
+    Constructor,
+    "name",
+    new ObjectLiteral({ value: kind })
+  );
+  return Constructor;
+}
+Struct[Vector] = function (args) {
+  return Struct(...args);
+};
+let Lexer = construct_vector.call(DefRecord, [Keyword.for("entries")]);
 function pass() {}
 function newline() {}
 Lexer.prototype[Call] = function (str) {
@@ -2187,11 +2143,11 @@ Lexer.prototype[Call] = function (str) {
       } else {
       }
     }
-    assert__b(found, 43, 13, `found`);
+    assert__b(found, 40, 13, `found`);
   }
   return tokens;
 };
-let lexer = construct_record.bind(Lexer)([
+let lexer = construct_record.call(Lexer, [
   [/^\n/, newline],
   [/^\s+/, pass],
   [/^\/\/.*/, pass],
@@ -2301,14 +2257,14 @@ function verify_exists__b(parser) {
   }
 }
 const ParseInstruction = Symbol("ParseInstruction");
-let Init = construct_vector.bind(DefVector)([Keyword.for("expr")]);
+let Init = construct_vector.call(DefVector, [Keyword.for("expr")]);
 Init.prototype[ParseInstruction] = function ([_expr, tokens]) {
   return [this.expr, tokens];
 };
 Init.prototype[Printable] = function () {
   return str("Init(", printable.bind(this.expr)(), ")");
 };
-let One = construct_vector.bind(DefVector)([
+let One = construct_vector.call(DefVector, [
   Keyword.for("kw"),
   Keyword.for("as"),
 ]);
@@ -2328,7 +2284,7 @@ One.prototype[Printable] = function () {
     )
   );
 };
-let Optional = construct_vector.bind(DefVector)([
+let Optional = construct_vector.call(DefVector, [
   Keyword.for("kw"),
   Keyword.for("parse_fn"),
   Keyword.for("as"),
@@ -2342,7 +2298,7 @@ Optional.prototype[ParseInstruction] = function ([expr, tokens]) {
     )
   ) {
     return parse_step.bind(
-      construct_vector.bind(Then)([this.parse_fn, this.as])
+      construct_vector.call(Then, [this.parse_fn, this.as])
     )([expr, tokens]);
   } else {
     return [expr, tokens];
@@ -2360,7 +2316,7 @@ Optional.prototype[Printable] = function () {
 Function.prototype[ParseInstruction] = function ([_expr, tokens]) {
   return this(tokens);
 };
-let Chomp = construct_vector.bind(DefVector)([_, Keyword.for("kws")]);
+let Chomp = construct_vector.call(DefVector, [_, Keyword.for("kws")]);
 Chomp.prototype[ParseInstruction] = function ([expr, tokens]) {
   let i = 0;
   for (let kw of this.kws) {
@@ -2375,7 +2331,7 @@ Chomp.prototype[Printable] = function () {
     plus.call(printable.bind(this.kws)().join(", "), ")")
   );
 };
-let Then = construct_vector.bind(DefVector)([
+let Then = construct_vector.call(DefVector, [
   Keyword.for("parser"),
   Keyword.for("kw"),
 ]);
@@ -2391,14 +2347,14 @@ Then.prototype[ParseInstruction] = function ([expr, tokens]) {
 Then.prototype[Printable] = function () {
   return str("Then(", this.parser.name, ", ", printable.bind(this.kw)(), ")");
 };
-let FMap = construct_vector.bind(DefVector)([Keyword.for("f")]);
+let FMap = construct_vector.call(DefVector, [Keyword.for("f")]);
 FMap.prototype[ParseInstruction] = function ([expr, tokens]) {
   return [call.bind(this.f)(expr), tokens];
 };
 FMap.prototype[Printable] = function () {
   return plus.call("Fmap(", plus.call(this.f.name, ")"));
 };
-let Until = construct_vector.bind(DefVector)([
+let Until = construct_vector.call(DefVector, [
   Keyword.for("end_kw"),
   Keyword.for("parser"),
   Keyword.for("kw"),
@@ -2436,7 +2392,7 @@ Until.prototype[Printable] = function () {
     ")"
   );
 };
-let Case = construct_vector.bind(DefVector)([
+let Case = construct_vector.call(DefVector, [
   Keyword.for("parse_map"),
   Keyword.for("kw"),
 ]);
@@ -2462,7 +2418,7 @@ Case.prototype[Printable] = function () {
     )
   );
 };
-let Either = construct_vector.bind(DefVector)([
+let Either = construct_vector.call(DefVector, [
   Keyword.for("set"),
   Keyword.for("kw"),
 ]);
@@ -2494,7 +2450,7 @@ function parse_step(result) {
   }
   return this[ParseInstruction](result);
 }
-let Parser = construct_vector.bind(DefVector)([_, Keyword.for("instructions")]);
+let Parser = construct_vector.call(DefVector, [_, Keyword.for("instructions")]);
 Parser.prototype[Printable] = function () {
   return plus.call(
     "~Parser[",
@@ -2504,7 +2460,7 @@ Parser.prototype[Printable] = function () {
 Parser.prototype[Call] = function (tokens) {
   return parse_step.bind(this)([null, tokens]);
 };
-let AbortIf = construct_vector.bind(DefVector)([Keyword.for("cond_fn")]);
+let AbortIf = construct_vector.call(DefVector, [Keyword.for("cond_fn")]);
 AbortIf.prototype[Printable] = function () {
   return plus.call(
     "~AbortIf[",
@@ -2525,7 +2481,7 @@ Parser.prototype[ParseInstruction] = function (result) {
   }
   return result;
 };
-let ParseMap = construct_vector.bind(DefRecord)([Keyword.for("entries")]);
+let ParseMap = construct_vector.call(DefRecord, [Keyword.for("entries")]);
 ParseMap.prototype[Call] = function (tokens, ...args) {
   if (truthy(empty__q.bind(tokens)())) {
     return null;
@@ -2593,95 +2549,95 @@ let comparison_ops = new Set([
 let all_math_ops = merge.bind(math_ops)(comparison_ops);
 function parse_double_eq(tokens, lhs) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("double_equals"), lhs }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("double_eq")]),
-      construct_vector.bind(Then)([parse_1_2_expr, Keyword.for("rhs")]),
+      construct_vector.call(Chomp, [Keyword.for("double_eq")]),
+      construct_vector.call(Then, [parse_1_2_expr, Keyword.for("rhs")]),
     ])
   )(tokens);
 }
 function parse_not_eq(tokens, lhs) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("not_equals"), lhs }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("not_eq")]),
-      construct_vector.bind(Then)([parse_1_2_expr, Keyword.for("rhs")]),
+      construct_vector.call(Chomp, [Keyword.for("not_eq")]),
+      construct_vector.call(Then, [parse_1_2_expr, Keyword.for("rhs")]),
     ])
   )(tokens);
 }
 function parse_triple_eq(tokens, lhs) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("triple_equals"), lhs }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("triple_eq")]),
-      construct_vector.bind(Then)([parse_1_2_expr, Keyword.for("rhs")]),
+      construct_vector.call(Chomp, [Keyword.for("triple_eq")]),
+      construct_vector.call(Then, [parse_1_2_expr, Keyword.for("rhs")]),
     ])
   )(tokens);
 }
 function parse_triple_not_eq(tokens, lhs) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("triple_not_equals"), lhs }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("triple_not_eq")]),
-      construct_vector.bind(Then)([parse_1_2_expr, Keyword.for("rhs")]),
+      construct_vector.call(Chomp, [Keyword.for("triple_not_eq")]),
+      construct_vector.call(Then, [parse_1_2_expr, Keyword.for("rhs")]),
     ])
   )(tokens);
 }
 function parse_and_and(tokens, lhs) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("and_and"), lhs }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("and_and")]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("rhs")]),
+      construct_vector.call(Chomp, [Keyword.for("and_and")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("rhs")]),
     ])
   )(tokens);
 }
 function parse_or_or(tokens, lhs) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("or_or"), lhs }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("or_or")]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("rhs")]),
+      construct_vector.call(Chomp, [Keyword.for("or_or")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("rhs")]),
     ])
   )(tokens);
 }
 function parse_keyof(tokens, lhs) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("keyof"), lhs }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("keyof")]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("rhs")]),
+      construct_vector.call(Chomp, [Keyword.for("keyof")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("rhs")]),
     ])
   )(tokens);
 }
 function parse_comparison_op(tokens, lhs) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("math_op"), lhs }),
       ]),
-      construct_vector.bind(Either)([comparison_ops, Keyword.for("op")]),
-      construct_vector.bind(Then)([parse_1_2_expr, Keyword.for("rhs")]),
+      construct_vector.call(Either, [comparison_ops, Keyword.for("op")]),
+      construct_vector.call(Then, [parse_1_2_expr, Keyword.for("rhs")]),
     ])
   )(tokens);
 }
 function parse_third_expr_step(tokens, lhs) {
   return call.bind(
-    construct_record.bind(ParseMap)([
+    construct_record.call(ParseMap, [
       [Keyword.for("double_eq"), parse_double_eq],
       [Keyword.for("triple_eq"), parse_triple_eq],
       [Keyword.for("triple_not_eq"), parse_triple_not_eq],
@@ -2705,44 +2661,44 @@ function parse_third_expr([lhs, tokens]) {
 }
 function parse_partial_obj_dyn_access(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("partial_obj_dyn_access") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("open_sq")]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("expr")]),
-      construct_vector.bind(Chomp)([Keyword.for("close_sq")]),
+      construct_vector.call(Chomp, [Keyword.for("open_sq")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("expr")]),
+      construct_vector.call(Chomp, [Keyword.for("close_sq")]),
     ])
   )(tokens);
 }
 function parse_partial_fn_call(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("partial_fn_call") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("open_p")]),
-      construct_vector.bind(Until)([
+      construct_vector.call(Chomp, [Keyword.for("open_p")]),
+      construct_vector.call(Until, [
         Keyword.for("close_p"),
         parse_expr,
         Keyword.for("args"),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("close_p")]),
+      construct_vector.call(Chomp, [Keyword.for("close_p")]),
     ])
   )(tokens);
 }
 function parse_and_dot(tokens, lhs) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("and_dot"), lhs }),
       ]),
-      construct_vector.bind(Chomp)([
+      construct_vector.call(Chomp, [
         Keyword.for("single_and"),
         Keyword.for("dot"),
       ]),
-      construct_vector.bind(Case)([
-        construct_record.bind(ParseMap)([
+      construct_vector.call(Case, [
+        construct_record.call(ParseMap, [
           [Keyword.for("id"), parse_id],
           [Keyword.for("open_sq"), parse_partial_obj_dyn_access],
           [Keyword.for("open_p"), parse_partial_fn_call],
@@ -2754,24 +2710,24 @@ function parse_and_dot(tokens, lhs) {
 }
 function parse_dot(tokens, lhs) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("property_lookup"), lhs }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("dot")]),
-      construct_vector.bind(One)([Keyword.for("id"), Keyword.for("property")]),
+      construct_vector.call(Chomp, [Keyword.for("dot")]),
+      construct_vector.call(One, [Keyword.for("id"), Keyword.for("property")]),
     ])
   )(tokens);
 }
 function parse_infix_bind(tokens, lhs) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("bind"), lhs }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("double_colon")]),
-      construct_vector.bind(Case)([
-        construct_record.bind(ParseMap)([
+      construct_vector.call(Chomp, [Keyword.for("double_colon")]),
+      construct_vector.call(Case, [
+        construct_record.call(ParseMap, [
           [Keyword.for("id"), parse_id],
           [Keyword.for("fn"), parse_fn],
           [
@@ -2788,34 +2744,34 @@ function parse_infix_bind(tokens, lhs) {
 }
 function parse_is(tokens, lhs) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("is"), lhs }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("is")]),
-      construct_vector.bind(Then)([parse_1_2_expr, Keyword.for("rhs")]),
+      construct_vector.call(Chomp, [Keyword.for("is")]),
+      construct_vector.call(Then, [parse_1_2_expr, Keyword.for("rhs")]),
     ])
   )(tokens);
 }
 function parse_snd_assign(tokens, lhs) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("snd_assign"), lhs }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("eq")]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("rhs")]),
+      construct_vector.call(Chomp, [Keyword.for("eq")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("rhs")]),
     ])
   )(tokens);
 }
 function parse_math_op(tokens, lhs) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("math_op"), lhs }),
       ]),
-      construct_vector.bind(Either)([math_ops, Keyword.for("op")]),
-      construct_vector.bind(Then)([parse_1_2_expr, Keyword.for("rhs")]),
+      construct_vector.call(Either, [math_ops, Keyword.for("op")]),
+      construct_vector.call(Then, [parse_1_2_expr, Keyword.for("rhs")]),
     ])
   )(tokens);
 }
@@ -2831,61 +2787,61 @@ function not_adjacent__q([_expr, tokens]) {
 }
 function parse_inclusive_range(tokens, lhs) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(AbortIf)([not_adjacent__q]),
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(AbortIf, [not_adjacent__q]),
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("inclusive_range"), lhs }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("dot_dot")]),
-      construct_vector.bind(Then)([parse_1_2_expr, Keyword.for("rhs")]),
+      construct_vector.call(Chomp, [Keyword.for("dot_dot")]),
+      construct_vector.call(Then, [parse_1_2_expr, Keyword.for("rhs")]),
     ])
   )(tokens);
 }
 function parse_exclusive_range(tokens, lhs) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(AbortIf)([not_adjacent__q]),
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(AbortIf, [not_adjacent__q]),
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("exclusive_range"), lhs }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("dot_dot_dot")]),
-      construct_vector.bind(Then)([parse_1_2_expr, Keyword.for("rhs")]),
+      construct_vector.call(Chomp, [Keyword.for("dot_dot_dot")]),
+      construct_vector.call(Then, [parse_1_2_expr, Keyword.for("rhs")]),
     ])
   )(tokens);
 }
 function parse_fn_call(tokens, lhs) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(AbortIf)([not_adjacent__q]),
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(AbortIf, [not_adjacent__q]),
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("fn_call"), lhs }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("open_p")]),
-      construct_vector.bind(Until)([
+      construct_vector.call(Chomp, [Keyword.for("open_p")]),
+      construct_vector.call(Until, [
         Keyword.for("close_p"),
         parse_expr,
         Keyword.for("args"),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("close_p")]),
+      construct_vector.call(Chomp, [Keyword.for("close_p")]),
     ])
   )(tokens);
 }
 function parse_object_dynamic_access(tokens, lhs) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(AbortIf)([not_adjacent__q]),
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(AbortIf, [not_adjacent__q]),
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("dynamic_access"), lhs }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("open_sq")]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("expr")]),
-      construct_vector.bind(Chomp)([Keyword.for("close_sq")]),
+      construct_vector.call(Chomp, [Keyword.for("open_sq")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("expr")]),
+      construct_vector.call(Chomp, [Keyword.for("close_sq")]),
     ])
   )(tokens);
 }
 function parse_snd_expr_step(tokens, lhs) {
   return call.bind(
-    construct_record.bind(ParseMap)([
+    construct_record.call(ParseMap, [
       [Keyword.for("single_and"), parse_and_dot],
       [Keyword.for("dot"), parse_dot],
       [Keyword.for("dot_dot"), parse_inclusive_range],
@@ -2911,99 +2867,99 @@ function parse_snd_expr([lhs, tokens]) {
 }
 function parse_call_expr(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Chomp)([Keyword.for("open_p")]),
-      construct_vector.bind(Until)([Keyword.for("close_p"), parse_expr]),
-      construct_vector.bind(Chomp)([Keyword.for("close_p")]),
+    construct_vector.call(Parser, [
+      construct_vector.call(Chomp, [Keyword.for("open_p")]),
+      construct_vector.call(Until, [Keyword.for("close_p"), parse_expr]),
+      construct_vector.call(Chomp, [Keyword.for("close_p")]),
     ])
   )(tokens);
 }
 function parse_decorator(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("decorator") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("at")]),
-      construct_vector.bind(One)([Keyword.for("id"), Keyword.for("name")]),
-      construct_vector.bind(Optional)([
+      construct_vector.call(Chomp, [Keyword.for("at")]),
+      construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")]),
+      construct_vector.call(Optional, [
         Keyword.for("open_p"),
         parse_call_expr,
         Keyword.for("args"),
       ]),
-      construct_vector.bind(Then)([parse_fn, Keyword.for("fn_def")]),
+      construct_vector.call(Then, [parse_fn, Keyword.for("fn_def")]),
     ])
   )(tokens);
 }
-let parse_regex = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_regex = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("regex_lit") }),
   ]),
-  construct_vector.bind(One)([Keyword.for("regex_lit"), Keyword.for("value")]),
+  construct_vector.call(One, [Keyword.for("regex_lit"), Keyword.for("value")]),
 ]);
-let parse_str = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_str = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("str") }),
   ]),
-  construct_vector.bind(One)([Keyword.for("string_lit"), Keyword.for("value")]),
+  construct_vector.call(One, [Keyword.for("string_lit"), Keyword.for("value")]),
 ]);
-let parse_id = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_id = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("id_lookup") }),
   ]),
-  construct_vector.bind(One)([Keyword.for("id"), Keyword.for("name")]),
+  construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")]),
 ]);
 function parse_reg_obj_entry(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("reg_obj_entry") }),
       ]),
-      construct_vector.bind(Either)([
+      construct_vector.call(Either, [
         new Set([Keyword.for("id"), Keyword.for("num")]),
         Keyword.for("key"),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("colon")]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("value")]),
+      construct_vector.call(Chomp, [Keyword.for("colon")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("value")]),
     ])
   )(tokens);
 }
-let parse_obj_shorthand_entry = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_obj_shorthand_entry = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("obj_shorthand_entry") }),
   ]),
-  construct_vector.bind(One)([Keyword.for("id"), Keyword.for("id")]),
+  construct_vector.call(One, [Keyword.for("id"), Keyword.for("id")]),
 ]);
 function parse_dynamic_obj_entry(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("dynamic_obj_entry") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("open_sq")]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("key_expr")]),
-      construct_vector.bind(Chomp)([
+      construct_vector.call(Chomp, [Keyword.for("open_sq")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("key_expr")]),
+      construct_vector.call(Chomp, [
         Keyword.for("close_sq"),
         Keyword.for("colon"),
       ]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("value")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("value")]),
     ])
   )(tokens);
 }
 function parse_spread_obj_entry(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("spread_obj_entry") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("dot_dot_dot")]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("expr")]),
+      construct_vector.call(Chomp, [Keyword.for("dot_dot_dot")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("expr")]),
     ])
   )(tokens);
 }
 function parse_obj_entry(tokens) {
   return call.bind(
-    construct_record.bind(ParseMap)([
+    construct_record.call(ParseMap, [
       [Keyword.for("open_sq"), parse_dynamic_obj_entry],
       [Keyword.for("dot_dot_dot"), parse_spread_obj_entry],
       [Keyword.for("fn"), parse_fn],
@@ -3016,185 +2972,185 @@ function parse_obj_entry(tokens) {
 }
 function parse_obj(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("obj_lit") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("open_b")]),
-      construct_vector.bind(Until)([
+      construct_vector.call(Chomp, [Keyword.for("open_b")]),
+      construct_vector.call(Until, [
         Keyword.for("close_b"),
         parse_obj_entry,
         Keyword.for("entries"),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("close_b")]),
+      construct_vector.call(Chomp, [Keyword.for("close_b")]),
     ])
   )(tokens);
 }
-let parse_spread_assign = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_spread_assign = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("spread_assign") }),
   ]),
-  construct_vector.bind(Chomp)([Keyword.for("dot_dot_dot")]),
-  construct_vector.bind(One)([Keyword.for("id"), Keyword.for("name")]),
+  construct_vector.call(Chomp, [Keyword.for("dot_dot_dot")]),
+  construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")]),
 ]);
-let parse_assign_id = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_assign_id = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("id_assign") }),
   ]),
-  construct_vector.bind(One)([Keyword.for("id"), Keyword.for("name")]),
+  construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")]),
 ]);
-let parse_assign_array_entry = construct_record.bind(ParseMap)([
+let parse_assign_array_entry = construct_record.call(ParseMap, [
   [Keyword.for("id"), parse_assign_id],
   [Keyword.for("dot_dot_dot"), parse_spread_assign],
 ]);
-let parse_assign_array = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_assign_array = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("array_deconstruction") }),
   ]),
-  construct_vector.bind(Chomp)([Keyword.for("open_sq")]),
-  construct_vector.bind(Until)([
+  construct_vector.call(Chomp, [Keyword.for("open_sq")]),
+  construct_vector.call(Until, [
     Keyword.for("close_sq"),
     parse_assign_array_entry,
     Keyword.for("entries"),
   ]),
-  construct_vector.bind(Chomp)([Keyword.for("close_sq")]),
+  construct_vector.call(Chomp, [Keyword.for("close_sq")]),
 ]);
-let parse_obj_entry_rename = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_obj_entry_rename = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("obj_entry_rename") }),
   ]),
-  construct_vector.bind(One)([Keyword.for("id"), Keyword.for("old_name")]),
-  construct_vector.bind(Chomp)([Keyword.for("colon")]),
-  construct_vector.bind(One)([Keyword.for("id"), Keyword.for("new_name")]),
+  construct_vector.call(One, [Keyword.for("id"), Keyword.for("old_name")]),
+  construct_vector.call(Chomp, [Keyword.for("colon")]),
+  construct_vector.call(One, [Keyword.for("id"), Keyword.for("new_name")]),
 ]);
-let parse_regular_obj_assign_entry = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_regular_obj_assign_entry = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("obj_reg_entry") }),
   ]),
-  construct_vector.bind(One)([Keyword.for("id"), Keyword.for("name")]),
+  construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")]),
 ]);
-let parse_obj_assign_entry = construct_record.bind(ParseMap)([
+let parse_obj_assign_entry = construct_record.call(ParseMap, [
   [[Keyword.for("id"), Keyword.for("colon")], parse_obj_entry_rename],
   [Keyword.for("id"), parse_regular_obj_assign_entry],
   [Keyword.for("dot_dot_dot"), parse_spread_assign],
 ]);
-let parse_assign_obj = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_assign_obj = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("object_deconstruction") }),
   ]),
-  construct_vector.bind(Chomp)([Keyword.for("open_b")]),
-  construct_vector.bind(Until)([
+  construct_vector.call(Chomp, [Keyword.for("open_b")]),
+  construct_vector.call(Until, [
     Keyword.for("close_b"),
     parse_obj_assign_entry,
     Keyword.for("entries"),
   ]),
-  construct_vector.bind(Chomp)([Keyword.for("close_b")]),
+  construct_vector.call(Chomp, [Keyword.for("close_b")]),
 ]);
-let parse_assign_expr = construct_record.bind(ParseMap)([
+let parse_assign_expr = construct_record.call(ParseMap, [
   [Keyword.for("id"), parse_assign_id],
   [Keyword.for("open_sq"), parse_assign_array],
   [Keyword.for("open_b"), parse_assign_obj],
   [Keyword.for("dot_dot_dot"), parse_spread_assign],
 ]);
-let parse_keyword = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_keyword = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("keyword") }),
   ]),
-  construct_vector.bind(One)([Keyword.for("keyword"), Keyword.for("value")]),
+  construct_vector.call(One, [Keyword.for("keyword"), Keyword.for("value")]),
 ]);
 function parse_paren_expr(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("paren_expr") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("open_p")]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("expr")]),
-      construct_vector.bind(Chomp)([Keyword.for("close_p")]),
+      construct_vector.call(Chomp, [Keyword.for("open_p")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("expr")]),
+      construct_vector.call(Chomp, [Keyword.for("close_p")]),
     ])
   )(tokens);
 }
 function parse_yield(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("yield") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("yield")]),
-      construct_vector.bind(Optional)([
+      construct_vector.call(Chomp, [Keyword.for("yield")]),
+      construct_vector.call(Optional, [
         Keyword.for("times"),
         parse_gen_modifier,
         Keyword.for("star__q"),
       ]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("expr")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("expr")]),
     ])
   )(tokens);
 }
 function parse_await(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("await") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("await")]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("expr")]),
+      construct_vector.call(Chomp, [Keyword.for("await")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("expr")]),
     ])
   )(tokens);
 }
-let parse_num = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_num = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("num") }),
   ]),
-  construct_vector.bind(One)([Keyword.for("num"), Keyword.for("value")]),
+  construct_vector.call(One, [Keyword.for("num"), Keyword.for("value")]),
 ]);
-let parse_big_int = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_big_int = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("big_int") }),
   ]),
-  construct_vector.bind(One)([Keyword.for("big_int"), Keyword.for("value")]),
+  construct_vector.call(One, [Keyword.for("big_int"), Keyword.for("value")]),
 ]);
 function parse_array(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("array") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("open_sq")]),
-      construct_vector.bind(Until)([
+      construct_vector.call(Chomp, [Keyword.for("open_sq")]),
+      construct_vector.call(Until, [
         Keyword.for("close_sq"),
         parse_expr,
         Keyword.for("elements"),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("close_sq")]),
+      construct_vector.call(Chomp, [Keyword.for("close_sq")]),
     ])
   )(tokens);
 }
 function parse_spread(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("spread") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("dot_dot_dot")]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("expr")]),
+      construct_vector.call(Chomp, [Keyword.for("dot_dot_dot")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("expr")]),
     ])
   )(tokens);
 }
-let parse_unapplied_math_op = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_unapplied_math_op = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("unapplied_math_op") }),
   ]),
-  construct_vector.bind(Either)([all_math_ops, Keyword.for("op")]),
+  construct_vector.call(Either, [all_math_ops, Keyword.for("op")]),
 ]);
 function parse_bind_this(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("bind_this") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("double_colon")]),
-      construct_vector.bind(Case)([
-        construct_record.bind(ParseMap)([
+      construct_vector.call(Chomp, [Keyword.for("double_colon")]),
+      construct_vector.call(Case, [
+        construct_record.call(ParseMap, [
           [Keyword.for("id"), parse_id],
           [Keyword.for("fn"), parse_fn],
           [all_math_ops, parse_unapplied_math_op],
@@ -3207,23 +3163,33 @@ function parse_bind_this(tokens) {
 }
 function parse_not(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("not") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("bang")]),
-      construct_vector.bind(Then)([parse_1_2_expr, Keyword.for("expr")]),
+      construct_vector.call(Chomp, [Keyword.for("bang")]),
+      construct_vector.call(Then, [parse_1_2_expr, Keyword.for("expr")]),
     ])
   )(tokens);
 }
 function parse_new(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("new") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("new")]),
-      construct_vector.bind(Then)([parse_1_2_expr, Keyword.for("expr")]),
+      construct_vector.call(Chomp, [Keyword.for("new")]),
+      construct_vector.call(One, [
+        Keyword.for("id"),
+        Keyword.for("constructor_name"),
+      ]),
+      construct_vector.call(Chomp, [Keyword.for("open_p")]),
+      construct_vector.call(Until, [
+        Keyword.for("close_p"),
+        parse_expr,
+        Keyword.for("args"),
+      ]),
+      construct_vector.call(Chomp, [Keyword.for("close_p")]),
     ])
   )(tokens);
 }
@@ -3232,61 +3198,61 @@ function parse_num_raw(tokens) {
     return [to_i.bind(at.bind(expr)(Keyword.for("value")))(), tokens];
   });
 }
-let parse_anon_arg_id = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_anon_arg_id = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("anon_arg_id") }),
   ]),
-  construct_vector.bind(Chomp)([Keyword.for("single_and")]),
-  construct_vector.bind(Optional)([
+  construct_vector.call(Chomp, [Keyword.for("single_and")]),
+  construct_vector.call(Optional, [
     Keyword.for("num"),
     parse_num_raw,
     Keyword.for("arg_num"),
   ]),
 ]);
-let parse_unapplied_and_and = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_unapplied_and_and = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("unapplied_and_and") }),
   ]),
-  construct_vector.bind(Chomp)([Keyword.for("and_and")]),
+  construct_vector.call(Chomp, [Keyword.for("and_and")]),
 ]);
-let parse_unapplied_or_or = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_unapplied_or_or = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("unapplied_or_or") }),
   ]),
-  construct_vector.bind(Chomp)([Keyword.for("or_or")]),
+  construct_vector.call(Chomp, [Keyword.for("or_or")]),
 ]);
 function parse_shorthand_anon_fn(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("shorthand_anon_fn") }),
       ]),
-      construct_vector.bind(Chomp)([
+      construct_vector.call(Chomp, [
         Keyword.for("hash"),
         Keyword.for("open_p"),
       ]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("expr")]),
-      construct_vector.bind(Chomp)([Keyword.for("close_p")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("expr")]),
+      construct_vector.call(Chomp, [Keyword.for("close_p")]),
     ])
   )(tokens);
 }
-let parse_async_modifier = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([true]),
-  construct_vector.bind(Chomp)([Keyword.for("async")]),
+let parse_async_modifier = construct_vector.call(Parser, [
+  construct_vector.call(Init, [true]),
+  construct_vector.call(Chomp, [Keyword.for("async")]),
 ]);
-let parse_gen_modifier = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([true]),
-  construct_vector.bind(Chomp)([Keyword.for("times")]),
+let parse_gen_modifier = construct_vector.call(Parser, [
+  construct_vector.call(Init, [true]),
+  construct_vector.call(Chomp, [Keyword.for("times")]),
 ]);
 function parse_fn_expr_body(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("return") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("eq")]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("expr")]),
-      construct_vector.bind(FMap)([
+      construct_vector.call(Chomp, [Keyword.for("eq")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("expr")]),
+      construct_vector.call(FMap, [
         function (node) {
           return [node];
         },
@@ -3296,10 +3262,10 @@ function parse_fn_expr_body(tokens) {
 }
 function parse_args_def(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Chomp)([Keyword.for("open_p")]),
-      construct_vector.bind(Until)([Keyword.for("close_p"), parse_assign_expr]),
-      construct_vector.bind(Chomp)([Keyword.for("close_p")]),
+    construct_vector.call(Parser, [
+      construct_vector.call(Chomp, [Keyword.for("open_p")]),
+      construct_vector.call(Until, [Keyword.for("close_p"), parse_assign_expr]),
+      construct_vector.call(Chomp, [Keyword.for("close_p")]),
     ])
   )(tokens);
 }
@@ -3310,33 +3276,33 @@ function parse_fn_name(tokens) {
 }
 function parse_fn(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("fn") }),
       ]),
-      construct_vector.bind(Optional)([
+      construct_vector.call(Optional, [
         Keyword.for("async"),
         parse_async_modifier,
         Keyword.for("is_async__q"),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("fn")]),
-      construct_vector.bind(Optional)([
+      construct_vector.call(Chomp, [Keyword.for("fn")]),
+      construct_vector.call(Optional, [
         Keyword.for("times"),
         parse_gen_modifier,
         Keyword.for("generator__q"),
       ]),
-      construct_vector.bind(Optional)([
+      construct_vector.call(Optional, [
         Keyword.for("id"),
         parse_fn_name,
         Keyword.for("name"),
       ]),
-      construct_vector.bind(Optional)([
+      construct_vector.call(Optional, [
         Keyword.for("open_p"),
         parse_args_def,
         Keyword.for("args"),
       ]),
-      construct_vector.bind(Case)([
-        construct_record.bind(ParseMap)([
+      construct_vector.call(Case, [
+        construct_record.call(ParseMap, [
           [Keyword.for("eq"), parse_fn_expr_body],
           [Keyword.for("open_b"), block()],
         ]),
@@ -3347,31 +3313,31 @@ function parse_fn(tokens) {
 }
 function parse_keyword_record_entry(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("keyword_record_entry") }),
       ]),
-      construct_vector.bind(One)([Keyword.for("id"), Keyword.for("name")]),
-      construct_vector.bind(Chomp)([Keyword.for("colon")]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("expr")]),
+      construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")]),
+      construct_vector.call(Chomp, [Keyword.for("colon")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("expr")]),
     ])
   )(tokens);
 }
 function parse_regular_record_entry(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("regular_record_entry") }),
       ]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("key_expr")]),
-      construct_vector.bind(Chomp)([Keyword.for("arrow")]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("value_expr")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("key_expr")]),
+      construct_vector.call(Chomp, [Keyword.for("arrow")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("value_expr")]),
     ])
   )(tokens);
 }
 function parse_record_entry(tokens) {
   return call.bind(
-    construct_record.bind(ParseMap)([
+    construct_record.call(ParseMap, [
       [[Keyword.for("id"), Keyword.for("colon")], parse_keyword_record_entry],
       [_, parse_regular_record_entry],
     ])
@@ -3379,68 +3345,68 @@ function parse_record_entry(tokens) {
 }
 function parse_record_syntax(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("record_syntax") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("tilde")]),
-      construct_vector.bind(One)([
+      construct_vector.call(Chomp, [Keyword.for("tilde")]),
+      construct_vector.call(One, [
         Keyword.for("id"),
         Keyword.for("constructor_name"),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("open_b")]),
-      construct_vector.bind(Until)([
+      construct_vector.call(Chomp, [Keyword.for("open_b")]),
+      construct_vector.call(Until, [
         Keyword.for("close_b"),
         parse_record_entry,
         Keyword.for("entries"),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("close_b")]),
+      construct_vector.call(Chomp, [Keyword.for("close_b")]),
     ])
   )(tokens);
 }
 function parse_vector_syntax(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("vector_syntax") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("tilde")]),
-      construct_vector.bind(One)([
+      construct_vector.call(Chomp, [Keyword.for("tilde")]),
+      construct_vector.call(One, [
         Keyword.for("id"),
         Keyword.for("constructor_name"),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("open_sq")]),
-      construct_vector.bind(Until)([
+      construct_vector.call(Chomp, [Keyword.for("open_sq")]),
+      construct_vector.call(Until, [
         Keyword.for("close_sq"),
         parse_expr,
         Keyword.for("entries"),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("close_sq")]),
+      construct_vector.call(Chomp, [Keyword.for("close_sq")]),
     ])
   )(tokens);
 }
 function parse_set(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("set") }),
       ]),
-      construct_vector.bind(Chomp)([
+      construct_vector.call(Chomp, [
         Keyword.for("hash"),
         Keyword.for("open_b"),
       ]),
-      construct_vector.bind(Until)([
+      construct_vector.call(Until, [
         Keyword.for("close_b"),
         parse_expr,
         Keyword.for("elements"),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("close_b")]),
+      construct_vector.call(Chomp, [Keyword.for("close_b")]),
     ])
   )(tokens);
 }
 function parse_single_expr(tokens) {
   return call.bind(
-    construct_record.bind(ParseMap)([
+    construct_record.call(ParseMap, [
       [Keyword.for("string_lit"), parse_str],
       [Keyword.for("regex_lit"), parse_regex],
       [Keyword.for("keyword"), parse_keyword],
@@ -3486,22 +3452,22 @@ function parse_expr(tokens) {
 }
 function parse_else_branch(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Chomp)([Keyword.for("else")]),
+    construct_vector.call(Parser, [
+      construct_vector.call(Chomp, [Keyword.for("else")]),
       block(),
     ])
   )(tokens);
 }
 function parse_if(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("if") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("if")]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("expr")]),
+      construct_vector.call(Chomp, [Keyword.for("if")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("expr")]),
       block(Keyword.for("pass")),
-      construct_vector.bind(Optional)([
+      construct_vector.call(Optional, [
         Keyword.for("else"),
         parse_else_branch,
         Keyword.for("fail"),
@@ -3511,46 +3477,46 @@ function parse_if(tokens) {
 }
 function parse_unless(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("unless") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("unless")]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("expr")]),
+      construct_vector.call(Chomp, [Keyword.for("unless")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("expr")]),
       block(Keyword.for("body")),
     ])
   )(tokens);
 }
-let parse_let = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_let = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("let") }),
   ]),
-  construct_vector.bind(Chomp)([Keyword.for("let")]),
-  construct_vector.bind(Then)([parse_assign_expr, Keyword.for("assign_expr")]),
-  construct_vector.bind(Chomp)([Keyword.for("eq")]),
-  construct_vector.bind(Then)([parse_expr, Keyword.for("rhs")]),
+  construct_vector.call(Chomp, [Keyword.for("let")]),
+  construct_vector.call(Then, [parse_assign_expr, Keyword.for("assign_expr")]),
+  construct_vector.call(Chomp, [Keyword.for("eq")]),
+  construct_vector.call(Then, [parse_expr, Keyword.for("rhs")]),
 ]);
 function parse_if_let(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("if_let") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("if"), Keyword.for("let")]),
-      construct_vector.bind(Then)([
+      construct_vector.call(Chomp, [Keyword.for("if"), Keyword.for("let")]),
+      construct_vector.call(Then, [
         parse_assign_expr,
         Keyword.for("assign_expr"),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("eq")]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("expr")]),
-      construct_vector.bind(Chomp)([Keyword.for("open_b")]),
-      construct_vector.bind(Until)([
+      construct_vector.call(Chomp, [Keyword.for("eq")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("expr")]),
+      construct_vector.call(Chomp, [Keyword.for("open_b")]),
+      construct_vector.call(Until, [
         Keyword.for("close_b"),
         parse_statement,
         Keyword.for("pass"),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("close_b")]),
-      construct_vector.bind(Optional)([
+      construct_vector.call(Chomp, [Keyword.for("close_b")]),
+      construct_vector.call(Optional, [
         Keyword.for("else"),
         parse_else_branch,
         Keyword.for("fail"),
@@ -3558,83 +3524,83 @@ function parse_if_let(tokens) {
     ])
   )(tokens);
 }
-let parse_impl = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_impl = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("impl_for") }),
   ]),
-  construct_vector.bind(Chomp)([Keyword.for("impl")]),
-  construct_vector.bind(Then)([parse_expr, Keyword.for("proto_expr")]),
-  construct_vector.bind(Chomp)([Keyword.for("for")]),
-  construct_vector.bind(One)([Keyword.for("id"), Keyword.for("constructor")]),
-  construct_vector.bind(Chomp)([Keyword.for("eq")]),
-  construct_vector.bind(Then)([parse_expr, Keyword.for("expr")]),
+  construct_vector.call(Chomp, [Keyword.for("impl")]),
+  construct_vector.call(Then, [parse_expr, Keyword.for("proto_expr")]),
+  construct_vector.call(Chomp, [Keyword.for("for")]),
+  construct_vector.call(One, [Keyword.for("id"), Keyword.for("constructor")]),
+  construct_vector.call(Chomp, [Keyword.for("eq")]),
+  construct_vector.call(Then, [parse_expr, Keyword.for("expr")]),
 ]);
-let parse_define = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_define = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("define_for") }),
   ]),
-  construct_vector.bind(Chomp)([Keyword.for("define")]),
-  construct_vector.bind(Then)([parse_expr, Keyword.for("proto_expr")]),
-  construct_vector.bind(Chomp)([Keyword.for("for")]),
-  construct_vector.bind(Then)([parse_single_expr, Keyword.for("src_expr")]),
-  construct_vector.bind(Chomp)([Keyword.for("eq")]),
-  construct_vector.bind(Then)([parse_expr, Keyword.for("expr")]),
+  construct_vector.call(Chomp, [Keyword.for("define")]),
+  construct_vector.call(Then, [parse_expr, Keyword.for("proto_expr")]),
+  construct_vector.call(Chomp, [Keyword.for("for")]),
+  construct_vector.call(Then, [parse_single_expr, Keyword.for("src_expr")]),
+  construct_vector.call(Chomp, [Keyword.for("eq")]),
+  construct_vector.call(Then, [parse_expr, Keyword.for("expr")]),
 ]);
-let parse_protocol = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_protocol = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("protocol_def") }),
   ]),
-  construct_vector.bind(Chomp)([Keyword.for("protocol")]),
-  construct_vector.bind(One)([Keyword.for("id"), Keyword.for("name")]),
+  construct_vector.call(Chomp, [Keyword.for("protocol")]),
+  construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")]),
 ]);
-let parse_return = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([
+let parse_return = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("return") }),
   ]),
-  construct_vector.bind(Chomp)([Keyword.for("return")]),
-  construct_vector.bind(Then)([parse_expr, Keyword.for("expr")]),
+  construct_vector.call(Chomp, [Keyword.for("return")]),
+  construct_vector.call(Then, [parse_expr, Keyword.for("expr")]),
 ]);
-let parse_await_modifier = construct_vector.bind(Parser)([
-  construct_vector.bind(Init)([true]),
-  construct_vector.bind(Chomp)([Keyword.for("await")]),
+let parse_await_modifier = construct_vector.call(Parser, [
+  construct_vector.call(Init, [true]),
+  construct_vector.call(Chomp, [Keyword.for("await")]),
 ]);
 function parse_for_loop(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("for_loop") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("for")]),
-      construct_vector.bind(Optional)([
+      construct_vector.call(Chomp, [Keyword.for("for")]),
+      construct_vector.call(Optional, [
         Keyword.for("await"),
         parse_await_modifier,
         Keyword.for("is_await__q"),
       ]),
-      construct_vector.bind(Then)([
+      construct_vector.call(Then, [
         parse_assign_expr,
         Keyword.for("assign_expr"),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("of")]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("iterable_expr")]),
+      construct_vector.call(Chomp, [Keyword.for("of")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("iterable_expr")]),
       block(Keyword.for("body")),
     ])
   )(tokens);
 }
 function parse_assert(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("assert") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("assert__b")]),
-      construct_vector.bind(Then)([
+      construct_vector.call(Chomp, [Keyword.for("assert__b")]),
+      construct_vector.call(Then, [
         function (tokens) {
           return [first.bind(tokens)(), tokens];
         },
         Keyword.for("token"),
       ]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("expr")]),
-      construct_vector.bind(Optional)([
+      construct_vector.call(Then, [parse_expr, Keyword.for("expr")]),
+      construct_vector.call(Optional, [
         Keyword.for("string_lit"),
         parse_str,
         Keyword.for("msg"),
@@ -3644,90 +3610,90 @@ function parse_assert(tokens) {
 }
 function parse_while_loop(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("while_loop") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("while")]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("test_expr")]),
+      construct_vector.call(Chomp, [Keyword.for("while")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("test_expr")]),
       block(Keyword.for("body")),
     ])
   )(tokens);
 }
 function parse_while_let_loop(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("while_let_loop") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("while"), Keyword.for("let")]),
-      construct_vector.bind(Then)([
+      construct_vector.call(Chomp, [Keyword.for("while"), Keyword.for("let")]),
+      construct_vector.call(Then, [
         parse_assign_expr,
         Keyword.for("assign_expr"),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("eq")]),
-      construct_vector.bind(Then)([parse_expr, Keyword.for("test_expr")]),
+      construct_vector.call(Chomp, [Keyword.for("eq")]),
+      construct_vector.call(Then, [parse_expr, Keyword.for("test_expr")]),
       block(Keyword.for("body")),
     ])
   )(tokens);
 }
 function parse_continue(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("continue") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("continue")]),
+      construct_vector.call(Chomp, [Keyword.for("continue")]),
     ])
   )(tokens);
 }
 function parse_break(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("break") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("break")]),
+      construct_vector.call(Chomp, [Keyword.for("break")]),
     ])
   )(tokens);
 }
 function parse_catch(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("catch") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("catch")]),
-      construct_vector.bind(One)([Keyword.for("id"), Keyword.for("name")]),
+      construct_vector.call(Chomp, [Keyword.for("catch")]),
+      construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")]),
       block(Keyword.for("body")),
     ])
   )(tokens);
 }
 function parse_finally(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("finally") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("finally")]),
+      construct_vector.call(Chomp, [Keyword.for("finally")]),
       block(Keyword.for("body")),
     ])
   )(tokens);
 }
 function parse_try(tokens) {
   return call.bind(
-    construct_vector.bind(Parser)([
-      construct_vector.bind(Init)([
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("try") }),
       ]),
-      construct_vector.bind(Chomp)([Keyword.for("try")]),
+      construct_vector.call(Chomp, [Keyword.for("try")]),
       block(Keyword.for("body")),
-      construct_vector.bind(Optional)([
+      construct_vector.call(Optional, [
         Keyword.for("catch"),
         parse_catch,
         Keyword.for("catch"),
       ]),
-      construct_vector.bind(Optional)([
+      construct_vector.call(Optional, [
         Keyword.for("finally"),
         parse_finally,
         Keyword.for("finally"),
@@ -3737,7 +3703,7 @@ function parse_try(tokens) {
 }
 function parse_statement(tokens) {
   return call.bind(
-    construct_record.bind(ParseMap)([
+    construct_record.call(ParseMap, [
       [Keyword.for("unless"), parse_unless],
       [Keyword.for("assert__b"), parse_assert],
       [Keyword.for("impl"), parse_impl],
@@ -3758,14 +3724,14 @@ function parse_statement(tokens) {
   )(tokens);
 }
 function block(name) {
-  return construct_vector.bind(Parser)([
-    construct_vector.bind(Chomp)([Keyword.for("open_b")]),
-    construct_vector.bind(Until)([
+  return construct_vector.call(Parser, [
+    construct_vector.call(Chomp, [Keyword.for("open_b")]),
+    construct_vector.call(Until, [
       Keyword.for("close_b"),
       parse_statement,
       name,
     ]),
-    construct_vector.bind(Chomp)([Keyword.for("close_b")]),
+    construct_vector.call(Chomp, [Keyword.for("close_b")]),
   ]);
 }
 function parse(tokens) {
@@ -3840,7 +3806,7 @@ function eval_spread_assign({ name }) {
 function eval_array_deconstruction_entry(node) {
   return call.bind(
     pipe.bind(at.bind(node)(Keyword.for("type")))(
-      construct_record.bind(Map)([
+      construct_record.call(Map, [
         [Keyword.for("id_assign"), eval_id_assign_name],
         [Keyword.for("spread_assign"), eval_spread_assign],
       ])
@@ -3857,7 +3823,7 @@ function eval_array_deconstruction_names({ entries }) {
 function eval_obj_deconstruction_entry(node) {
   return call.bind(
     pipe.bind(at.bind(node)(Keyword.for("type")))(
-      construct_record.bind(Map)([
+      construct_record.call(Map, [
         [
           Keyword.for("obj_reg_entry"),
           (...__args) => resolve_name(at.bind(__args[0])(Keyword.for("name"))),
@@ -3886,7 +3852,7 @@ function eval_object_deconstruction_names({ entries }) {
 function eval_assign_expr(node) {
   return call.bind(
     pipe.bind(at.bind(node)(Keyword.for("type")))(
-      construct_record.bind(Map)([
+      construct_record.call(Map, [
         [Keyword.for("id_assign"), eval_id_assign_name],
         [Keyword.for("spread_assign"), eval_spread_assign],
         [Keyword.for("array_deconstruction"), eval_array_deconstruction_names],
@@ -3941,7 +3907,7 @@ function eval_let({ assign_expr, rhs }) {
 function eval_array({ elements }) {
   return str("[", map.bind(elements)(eval_expr).join(", "), "]");
 }
-let math_op_to_method = construct_record.bind(Map)([
+let math_op_to_method = construct_record.call(Map, [
   [">", "greater_than"],
   ["<", "less_than"],
   [">=", "greater_than_eq"],
@@ -4013,7 +3979,7 @@ function eval_obj_fn({ name, generator__q, is_async__q, args, body }) {
 function eval_obj_entry(node) {
   return call.bind(
     pipe.bind(at.bind(node)(Keyword.for("type")))(
-      construct_record.bind(Map)([
+      construct_record.call(Map, [
         [Keyword.for("reg_obj_entry"), eval_reg_obj_entry],
         [Keyword.for("obj_shorthand_entry"), eval_obj_shorthand_entry],
         [Keyword.for("dynamic_obj_entry"), eval_dynamic_obj_entry],
@@ -4061,8 +4027,14 @@ function eval_not({ expr }) {
 function eval_dynamic_access({ lhs, expr }) {
   return str(eval_expr(lhs), "[", eval_expr(expr), "]");
 }
-function eval_new({ expr }) {
-  return str("new ", eval_expr(expr));
+function eval_new({ constructor_name, args }) {
+  return str(
+    "new ",
+    constructor_name,
+    "(",
+    map.bind(args)(eval_expr).join(", "),
+    ")"
+  );
 }
 function eval_triple_equals({ lhs, rhs }) {
   return str(eval_expr(lhs), " === ", eval_expr(rhs));
@@ -4123,7 +4095,7 @@ function eval_keyword_record_entry({ name, expr }) {
 function eval_record_entry(node) {
   return call.bind(
     pipe.bind(at.bind(node)(Keyword.for("type")))(
-      construct_record.bind(Map)([
+      construct_record.call(Map, [
         [Keyword.for("regular_record_entry"), eval_regular_record_entry],
         [Keyword.for("keyword_record_entry"), eval_keyword_record_entry],
       ])
@@ -4198,7 +4170,7 @@ function eval_regex_lit({ value }) {
 function eval_expr(node) {
   return call.bind(
     pipe.bind(at.bind(node)(Keyword.for("type")))(
-      construct_record.bind(Map)([
+      construct_record.call(Map, [
         [Keyword.for("str"), eval_str],
         [Keyword.for("regex_lit"), eval_regex_lit],
         [Keyword.for("decorator"), eval_decorator],
@@ -4364,7 +4336,7 @@ function eval_statement(node) {
     otherwise.bind(
       if_truthy__q.bind(
         pipe.bind(at.bind(node)(Keyword.for("type")))(
-          construct_record.bind(Map)([
+          construct_record.call(Map, [
             [Keyword.for("if"), eval_if],
             [Keyword.for("unless"), eval_unless],
             [Keyword.for("let"), eval_let],
@@ -4399,24 +4371,12 @@ function compile(string) {
     )(parse)
   )(eval_ast);
 }
-
-if (globalThis.Deno) {
-  let src_file_name = Deno.args[0];
-  let out_name = Deno.args[1];
-
-  // async function compile_prelude() {
-  //   try {
-  //     await Deno.lstat(".deno_cache/prelude.js");
-  //     return Deno.readTextFileSync(".deno_cache/prelude.js");
-  //   } catch {
-  let prelude = Deno.readTextFileSync("./src/std/js_prelude.js");
-  prelude = plus.call(
-    prelude,
-    compile(Deno.readTextFileSync("./src/std/prelude.coil"))
-  );
-  //   }
-  // }
-
-  let src = Deno.readTextFileSync(src_file_name);
-  Deno.writeTextFile(out_name, plus.call(prelude, compile(src)));
-}
+let src_file_name = Deno.args[0];
+let out_name = Deno.args[1];
+let prelude = Deno.readTextFileSync("./src/std/js_prelude.js");
+prelude = plus.call(
+  prelude,
+  compile(Deno.readTextFileSync("./src/std/prelude.coil"))
+);
+let src = Deno.readTextFileSync(src_file_name);
+Deno.writeTextFile(out_name, plus.call(prelude, compile(src)));

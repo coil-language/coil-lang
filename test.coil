@@ -1,4 +1,5 @@
-(0..5)
-  ::map(_ + 10)
-  ::filter(_ > 10)
-  ::reduce(+)::log()
+let User = ~Struct["User" :first_name :last_name]
+
+impl :name for User = fn() = str(this.first_name " " this.last_name)
+
+new User("marcelle" "rusu")::log()
