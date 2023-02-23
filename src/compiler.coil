@@ -270,7 +270,12 @@ impl Call for ParseMap = fn(tokens, ...args) {
     if pattern is Set && pattern::call(tokens::first()::at(:type)) {
       return parser::call(tokens, ...args)
     }
-    if pattern is Array && pattern::every?(fn(p, i) = p == tokens::at(i)::at(:type)) {
+    if pattern is Array && pattern::every?(fn(p, i) {
+      let type = tokens::at(i)::at(:type)
+      if p is Keyword { return p == type }
+      if p is Set { return p::has?(type) }
+      return false
+    }) {
       return parser::call(tokens, ...args)
     }
     if pattern is Keyword && pattern == tokens::first()::at(:type) {
@@ -450,6 +455,15 @@ fn parse_object_dynamic_access(tokens lhs) = ~Parser[
   ~Chomp[:close_sq]
 ]::call(tokens)
 
+let assignable_ops = math_ops::concat([:or_or, :and_and])
+
+fn parse_op_eq(tokens lhs) = ~Parser[
+  ~Init[{type: :op_eq, lhs}]  
+  ~Either[assignable_ops :op]
+  ~Chomp[:eq]
+  ~Then[parse_expr :rhs]
+]::call(tokens)
+
 fn parse_snd_expr_step(tokens, lhs) = ~ParseMap{
   :single_and => parse_and_dot
   :dot => parse_dot
@@ -460,6 +474,7 @@ fn parse_snd_expr_step(tokens, lhs) = ~ParseMap{
   :open_sq => parse_object_dynamic_access
   :is => parse_is
   :eq => parse_snd_assign
+  [assignable_ops :eq] => parse_op_eq
   math_ops => parse_math_op
 }::call(tokens, lhs)
 
@@ -1256,6 +1271,27 @@ fn eval_partial_fn_call({expr}) = str("(" eval_expr(expr) ")")
 fn eval_partial_obj_dyn_access({expr}) = str("[" eval_expr(expr) "]")
 fn eval_regex_lit({value}) = value
 
+let logic_ops = ~Map{
+  "||" => "or",
+  "&&" => "and"
+}
+
+let all_ops_to_method = math_op_to_method::concat(logic_ops)
+
+fn eval_rhs_based_on_op(op, rhs) {
+  if logic_ops::has?(op) {
+    return str("() => " eval_expr(rhs))
+  } else {
+    return eval_expr(rhs)
+  }
+}
+
+fn eval_op_eq({ lhs, op, rhs }) = 
+  str(eval_expr(lhs) " = "
+    all_ops_to_method::call(op) ".call("
+      eval_expr(lhs) ", "
+      eval_rhs_based_on_op(op rhs) ")")
+
 fn eval_expr(node) = node::at(:type)::pipe(~Map{
   :str => eval_str
   :regex_lit => eval_regex_lit
@@ -1301,6 +1337,7 @@ fn eval_expr(node) = node::at(:type)::pipe(~Map{
   :inclusive_range => eval_inclusive_range
   :exclusive_range => eval_exclusive_range
   :keyof => eval_keyof
+  :op_eq => eval_op_eq
 })::call(node)
 
 fn eval_return({expr}) = str("return " eval_expr(expr))

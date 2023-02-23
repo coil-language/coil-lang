@@ -1,3 +1,4 @@
-let positive_evens = ~Comp[_ :for 0..Infinity :where _ % 2 == 0 && _ >= 0]
+let value = null
+value ||= 10
 
-positive_evens::has?(30000000000000)::log()
+console.log(value)
