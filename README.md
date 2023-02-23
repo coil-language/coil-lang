@@ -1,6 +1,6 @@
 # Coil-Lang
 
-[try it out](https://protej-lang.netlify.app/)
+[try it out](https://coil-lang.netlify.app/)
 
 Coil is functional language with OO super powers
 
