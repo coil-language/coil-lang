@@ -1170,8 +1170,8 @@ impl Printable for Underscore = fn() {
 // Range
 
 fn Range(start, end, exclusive?, transform) {
-  assert! Number.isInteger(start)
-  assert! Number.isInteger(end)
+  // assert! Number.isInteger(start)
+  // assert! Number.isInteger(end)
   this.start = start
   this.end = end
   this.exclusive? = truthy(exclusive?)
@@ -1239,9 +1239,12 @@ impl Collection for Range = {
   }
   fn map(f) = this.update(this.transform::map(f))
   fn filter(f) = this.update(this.transform::filter(f))
+  fn has?(value) = this::call(value)
 }
 
 impl Call for Range = fn(value) {
+  value = this.transform::call(this, value)
+  if value == :filtered { return false }
   if this.exclusive? {  
     return value >= this.start && value < this.end
   } else {
@@ -1423,14 +1426,14 @@ let http = {
   }
 }
 
-fn Exec() {}
+fn Comp() {}
 
-define Vector for Exec = fn([map_fn, _for, collection, ...rest]) {
+define Vector for Comp = fn([map_fn, _for, collection, ...rest]) {
   assert! _for == :for
   assert! Call keyof map_fn
   let result = collection
 
-  if rest::first() == :if {
+  if rest::first() == :where {
     let [_if filter_fn, ..._rest] = rest
     rest = _rest
     assert! Call keyof filter_fn

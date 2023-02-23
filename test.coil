@@ -1,11 +1,3 @@
-let User = ~Struct["User" :first_name :last_name :age]
+let positive_evens = ~Comp[_ :for 0..Infinity :where _ % 2 == 0 && _ >= 0]
 
-impl User = {
-  fn name() = str(this.first_name " : " this.last_name)
-}
-
-impl Validation for User = {
-  age: _ > 0 && _ < 13
-}
-
-new User("marcelle" "rusu", 14).name()::log()
+positive_evens::has?(30000000000000)::log()
