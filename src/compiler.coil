@@ -1384,12 +1384,14 @@ fn compile(string) = lexer::call(string)
   ::pipe(parse)
   ::pipe(eval_ast)
 
-let src_file_name = Deno.args[0]
-let out_name = Deno.args[1]
+if globalThis.Deno {
+  let src_file_name = Deno.args[0]
+  let out_name = Deno.args[1]
 
-let prelude = Deno.readTextFileSync("./src/std/js_prelude.js")
-prelude = prelude + compile(Deno.readTextFileSync("./src/std/prelude.coil"))
+  let prelude = Deno.readTextFileSync("./src/std/js_prelude.js")
+  prelude = prelude + compile(Deno.readTextFileSync("./src/std/prelude.coil"))
 
-let src = Deno.readTextFileSync(src_file_name)
+  let src = Deno.readTextFileSync(src_file_name)
 
-Deno.writeTextFile(out_name, prelude + compile(src))
+  Deno.writeTextFile(out_name, prelude + compile(src))
+}
