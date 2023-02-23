@@ -1,5 +1,11 @@
-let User = ~Struct["User" :first_name :last_name]
+let User = ~Struct["User" :first_name :last_name :age]
 
-impl :name for User = fn() = str(this.first_name " " this.last_name)
+impl User = {
+  fn name() = str(this.first_name " : " this.last_name)
+}
 
-new User("marcelle" "rusu")::log()
+impl Validation for User = {
+  age: _::len()::pipe(0..10)
+}
+
+new User("marcelle" "rusu", "_" * 10).name()::log()

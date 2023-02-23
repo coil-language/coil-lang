@@ -863,7 +863,7 @@ fn parse_if_let(tokens) = ~Parser[
   ~Optional[:else parse_else_branch :fail]
 ]::call(tokens)
 
-let parse_impl = ~Parser[
+let parse_impl_for = ~Parser[
   ~Init[{type: :impl_for}]
   ~Chomp[:impl]
   ~Then[parse_expr :proto_expr]
@@ -965,10 +965,17 @@ fn parse_try(tokens) = ~Parser[
   ~Optional[:finally parse_finally :finally]
 ]::call(tokens)
 
+let parse_impl_object = ~Parser[
+  ~Init[{type: :impl_object}]
+  ~Chomp[:impl]
+  ~One[:id :constructor]
+  ~Chomp[:eq]
+  ~Then[parse_expr :expr]
+]
+
 fn parse_statement(tokens) = ~ParseMap{
   :unless => parse_unless,
   :assert! => parse_assert,
-  :impl => parse_impl
   :define => parse_define
   :try => parse_try
   :protocol => parse_protocol
@@ -977,6 +984,8 @@ fn parse_statement(tokens) = ~ParseMap{
   :for => parse_for_loop
   :continue => parse_continue
   :break => parse_break
+  [:impl :id :eq] => parse_impl_object
+  :impl => parse_impl_for
   [:while :let] => parse_while_let_loop
   :while => parse_while_loop
   [:if :let] => parse_if_let
@@ -1298,6 +1307,7 @@ fn eval_return({expr}) = str("return " eval_expr(expr))
 fn eval_protocol({name}) = str("const " resolve_name(name) " = Symbol(\"" name "\")")
 fn eval_impl_for({proto_expr constructor expr}) =
   str(constructor ".prototype[" eval_expr(proto_expr) "] = " eval_expr(expr))
+fn eval_impl_object({constructor expr}) = str(constructor ".prototype = " eval_expr(expr))
 fn eval_define_for({proto_expr src_expr expr}) =
   str(eval_expr(src_expr) "[" eval_expr(proto_expr) "] = " eval_expr(expr))
 
@@ -1353,6 +1363,7 @@ fn eval_statement(node) = node::at(:type)::pipe(~Map{
   :return => eval_return
   :protocol_def => eval_protocol
   :impl_for => eval_impl_for
+  :impl_object => eval_impl_object
   :define_for => eval_define_for
   :for_loop => eval_for_loop
   :id_assign => eval_id_assign

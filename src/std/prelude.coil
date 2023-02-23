@@ -124,7 +124,7 @@ fn freeze() = Object.freeze(this)
 
 let nil? = #{undefined null}::freeze()
 
-fn pipe(callable) = this&.[Pipe](callable::call)
+fn pipe(callable) = this&.[Pipe](callable)
 
 fn compose(first_fn, ...fns) = fn(...args) =
   fns::reduce(fn (result, f) = f::call(result), first_fn::call(...args))
@@ -915,6 +915,8 @@ impl Printable for Boolean = fn() = this
 
 impl Printable for String = fn() = this
 
+impl Printable for Function = fn() = this.name
+
 fn when(cond, f) {
   if cond(this) {
     return f(this)
@@ -1126,6 +1128,32 @@ impl Divide for Underscore = fn(other) = this.insert(divide, other)
 impl Exponent for Underscore = fn(other) = this.insert(exponent, other)
 impl Mod for Underscore = fn(other) = this.insert(mod, other)
 
+// this is kind of shakey but its good enough
+impl Printable for Underscore = fn() {
+  let fn_to_op = ~Map{
+    "greater_than" => ">"
+    "greater_than_eq" => ">="
+    "less_than" => "<"
+    "less_than_eq" => "<="
+    "times" => "*"
+    "exponent" => "**"
+    "divide_by" => "/"
+    "plus" => "+"
+    "minus" => "-"
+    "mod" => "%"
+    "eq__q" => "=="
+  }  
+  return str("_" this.transforms::skip(1)::map(fn({f, args}) {
+    let s = f::printable()
+    if let op = fn_to_op::call(s) {
+      let [rhs] = args
+      return str(" " op " " rhs::printable())
+    } else {
+      return str("::" s "(" args::map(printable).join(", ") ")")
+    }
+  }).join(""))
+}
+
 // Range
 
 fn Range(start, end, exclusive?, transform) {
@@ -1135,6 +1163,14 @@ fn Range(start, end, exclusive?, transform) {
   this.end = end
   this.exclusive? = truthy(exclusive?)
   this.transform = js_or(transform, fn() = _)
+}
+
+impl Printable for Range = fn() {
+  if this.exclusive? {
+    return str(this.start::printable() "..." this.end::printable())
+  } else {
+    return str(this.start::printable() ".." this.end::printable())
+  }
 }
 
 impl UnderscoreInterpreter for Range = fn(underscore, val) {
@@ -1450,11 +1486,43 @@ define Vector for DefRecord = fn(property_name) {
   return Constructor
 }
 
+protocol Validation
+
+fn StructValidationError(message) {
+  this.name = "StructValidationError"
+  this.message = message
+  this.stack = (new Error()).stack
+}
+
+StructValidationError.prototype = new Error()
+
+fn validate(kind) {
+  if !(Validation keyof this) { return true }
+
+  for [key, validator] of this[Validation]::entries() {
+    if validator::call(this[key]) {
+      continue
+    } else {
+      raise(
+        new StructValidationError(
+          str(
+            kind " validation failed.\n"
+            "Failed at " key::printable() ".\n"
+            "Expected " validator::printable()
+            ", got value " this[key]::printable() "."
+          )
+        )
+      )
+    }
+  }
+}
+
 fn Struct(kind, ...properties) {
   fn Constructor(...args) {
     for [key, arg] of properties::zip(args) {
       this[key] = arg
     }
+    this::validate(kind)
   }
   Object.defineProperty(Constructor, "name", { value: kind })
   return Constructor
