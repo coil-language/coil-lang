@@ -1348,10 +1348,9 @@ fn Fetch(method, url, status) {
 @intern_vec
 fn Eff(...descriptors) {
   this.descriptors = descriptors
-  for i of 0..descriptors.length {
-
-  }
 }
+
+impl Equal for Eff = fn({descriptors}) = this.descriptors == descriptors
 
 // Idea to allow you do write the following
 // define Effect for ~Eff[:save _] = ...

@@ -8,9 +8,33 @@ define Effect for ~Eff[:mask :get] = fn() = new Atom(#(mask))
 fn* main() {
   yield ~Eff[:mask :push]::with({x: 0, y: 0})
   let mask = yield ~Eff[:mask :get]
-  yield ~Eff[:mask :push]::with({x: 0, y: 0})
-  mask::$.polygon
+  yield ~Eff[:mask :push]::with({x: 1, y: 0})
+  // console.log(mask::$)
 }
 
-(await spawn(main))
-  // ::log()
+fn filter_eff(eff, ...args) =
+  ::filter(fn(effect) {
+    if effect is CallEffectWith {
+      if args::empty?() {
+        return effect.effect == eff
+      } else {
+        return effect.effect == eff && args == effect.args
+      }
+    } else {
+      return effect == eff && args::empty?()
+    }
+  })
+
+fn expect(callable) {
+  console.log(callable::call(this))
+}
+
+async fn verify_origin_point_pushed() {
+  let { effects } = await spawn(main)
+
+  effects
+    ::filter_eff(~Eff[:mask :push], {x: 0, y: 0})
+    ::expect(_::not_empty?())
+}
+
+verify_origin_point_pushed()
