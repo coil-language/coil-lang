@@ -17,7 +17,7 @@ Coil is a deeply polymorphic language which decouples data from its many impleme
 
 Coil lets you separate the concerns of data modeling from the concerns of business logic.
 
-Coil lets you do all this without breaking existing implementations because its polymorphism is based on [protocols](./docs/protocols.md), not basic object properties and methods.
+Coil lets you do all this without breaking existing implementations because its polymorphism is based on [protocols](./docs/protocols.md), instead of normal methods & properties.
 
 ## Data Literals
 
