@@ -6,7 +6,7 @@ Coil is functional language with OO super powers.
 
 ```
 fn tie?() =
-  ::map({won: 10, lost: -10})
+  ::map(:status {won: 10, lost: -10})
   ::reduce(+) == 0
 
 [{status: "won"}, {status: "lost"}]
