@@ -115,22 +115,6 @@ fn id() = this
 console.log(111::id()) // 111
 ```
 
-### Prefix Bind
-
-Sometimes its useful to use bind an expression to the current context.
-
-```
-fn get_id() = ::id()
-// the same as
-fn id_wrapper() = this::id()
-
-// more useful - bound fn
-fn make_adder() = ::fn(x) = this + x
-
-let add3 = 3::make_adder()
-add3(3) // 6
-```
-
 ## Protocols
 
 A protocol is kind of like a dynamic interface that is not tied to the defintion of the data. Kind of like a dynamic version of traits in rust, or a safe version of monkey-patching.
