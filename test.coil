@@ -1,4 +1,16 @@
-let value = null
-value ||= 10
+let mask = { polygon: [], id: 10 }
 
-console.log(value)
+define Effect for ~Eff[:mask :push] = fn(point) =
+  mask = mask::update(:polygon, _::insert(point))
+
+define Effect for ~Eff[:mask :get] = fn() = new Atom(#(mask))
+
+fn* main() {
+  yield ~Eff[:mask :push]::with({x: 0, y: 0})
+  let mask = yield ~Eff[:mask :get]
+  yield ~Eff[:mask :push]::with({x: 0, y: 0})
+  mask::$.polygon
+}
+
+(await spawn(main))
+  // ::log()
