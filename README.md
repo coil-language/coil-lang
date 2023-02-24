@@ -50,8 +50,6 @@ false
 :this_is_a_keyword
 ```
 
-Note: Keywords are like strings without methods for manipulation, they are an important part of the language.
-
 ### Arrays
 
 ```
