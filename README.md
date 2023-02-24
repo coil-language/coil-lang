@@ -2,7 +2,22 @@
 
 [try it out](https://coil-lang.netlify.app/)
 
-Coil is functional language with OO super powers
+Coil is functional language with OO super powers.
+
+```
+fn tie?() =
+  ::map({won: 10, lost: -10})
+  ::reduce(+) == 0
+
+[{status: "won"}, {status: "lost"}]
+  ::tie?() // true
+```
+
+Coil is a deeply polymorphic language which decouples data from its many implementations.
+
+Coil lets you separate the concerns of data modeling from the concerns of business logic.
+
+Coil lets you do all this without breaking existing implementations because its polymorphism is based on [protocols](./docs/protocols.md), not object properties and methods.
 
 ## Data Literals
 
@@ -289,7 +304,5 @@ There are tradeoffs to this approach, but the result is we can impl protocols sp
 ## Inspiration
 
 - Clojure
-- lodash
-- Ruby
 - JavaScript
-- [Bind Operator](https://github.com/tc39/proposal-bind-operator)
+- Ruby
