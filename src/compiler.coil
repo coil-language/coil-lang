@@ -1421,14 +1421,27 @@ fn compile(string) = lexer::call(string)
   ::pipe(parse)
   ::pipe(eval_ast)
 
+
+fn compile_file(src_file_name, out_name, prelude_src) {
+  let prelude = Deno.readTextFileSync("./src/std/js_prelude.js")
+  prelude = prelude + compile(Deno.readTextFileSync(prelude_src))
+  let src = Deno.readTextFileSync(src_file_name)
+  Deno.writeTextFile(out_name, prelude + compile(src))
+}
+
 if globalThis.Deno {
   let src_file_name = Deno.args[0]
   let out_name = Deno.args[1]
+  let prelude_src = "./src/std/prelude.coil"
 
-  let prelude = Deno.readTextFileSync("./src/std/js_prelude.js")
-  prelude = prelude + compile(Deno.readTextFileSync("./src/std/prelude.coil"))
-
-  let src = Deno.readTextFileSync(src_file_name)
-
-  Deno.writeTextFile(out_name, prelude + compile(src))
+  if Deno.args[2] == "-w" {
+    let watcher = Deno.watchFs([src_file_name, prelude_src])
+    for await event of watcher {
+      if event.kind != "modify" { continue }
+      console.log("Rebuilding...")
+      compile_file(src_file_name, out_name, prelude_src)
+    }
+  } else {
+    compile_file(src_file_name, out_name, prelude_src)
+  }
 }

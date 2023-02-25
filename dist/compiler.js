@@ -1093,6 +1093,8 @@ let as_keyword = impl_callable(function as_keyword() {
 return Keyword["for"](this.toString());})
 let error__q = impl_callable(function error__q() {
 return this instanceof Error;})
+let is_a__q = impl_callable(function is_a__q(klass) {
+return this instanceof Klass;})
 Set.prototype[Negate] = function () {
 return (...__args) => negate.call(this.has(__args[0]));};
 function pre(...args) {
@@ -1100,7 +1102,7 @@ let cond_fns = args.slice((0), (-1));
 let f = args.at((-1));
 return function (...args) {
 assert__b((every__q.bind(cond_fns))(function (f) {
-return (call.bind(f))(...args);}), 1012, 13, `(every__q.bind(cond_fns))(function (f) {
+return (call.bind(f))(...args);}), 1014, 13, `(every__q.bind(cond_fns))(function (f) {
 return (call.bind(f))(...args);})`,);
 return f(...args);};}
 function Args(schemas) {
@@ -1401,11 +1403,10 @@ let Fetch = intern_vec(function Fetch(method, url, status) {
 this.method = method
 this.url = url
 this.status = status})
-let Eff = intern_vec(function Eff(...descriptors) {
-this.descriptors = descriptors
-for  (let i of new Range((0), descriptors.length)) {
-
-};})
+let Msg = intern_vec(function Msg(...descriptors) {
+this.descriptors = descriptors})
+Msg.prototype[Equal] = function ({descriptors}) {
+return eq__q.call(this.descriptors, descriptors);};
 function HttpError(code, message) {
 this.name = "HttpError"
 this.message = message
@@ -1449,13 +1450,13 @@ return error;};
 function Comp() {
 }
 Comp[Vector] = function ([map_fn, _for, collection, ...rest]) {
-assert__b(eq__q.call(_for, Keyword.for("for")), 1422, 11, `eq__q.call(_for, Keyword.for("for"))`,);
-assert__b(Call in map_fn, 1423, 11, `Call in map_fn`,);
+assert__b(eq__q.call(_for, Keyword.for("for")), 1423, 11, `eq__q.call(_for, Keyword.for("for"))`,);
+assert__b(Call in map_fn, 1424, 11, `Call in map_fn`,);
 let result = collection;
 if (truthy(eq__q.call((first.bind(rest))(), Keyword.for("where")))) {
 let [_if, filter_fn, ..._rest] = rest;
 rest = _rest
-assert__b(Call in filter_fn, 1429, 13, `Call in filter_fn`,);
+assert__b(Call in filter_fn, 1430, 13, `Call in filter_fn`,);
 result = (filter.bind(result))(filter_fn)
 } else {
 
@@ -1463,7 +1464,7 @@ result = (filter.bind(result))(filter_fn)
 result = (map.bind(result))(map_fn)
 if (truthy(eq__q.call((first.bind(rest))(), Keyword.for("verify")))) {
 let [_verify, verify_fn, ..._rest] = rest;
-assert__b((every__q.bind(result))(verify_fn), 1437, 13, `(every__q.bind(result))(verify_fn)`,);
+assert__b((every__q.bind(result))(verify_fn), 1438, 13, `(every__q.bind(result))(verify_fn)`,);
 } else {
 
 };
@@ -1540,7 +1541,19 @@ this[key] = arg
 Object.defineProperty(Constructor, "name", new ObjectLiteral({value: name}))
 return Constructor;}
 Struct[Vector] = function (args) {
-return Struct(...args);};let Lexer = construct_vector.call(DefRecord, [Keyword.for("entries")]);
+return Struct(...args);};
+let Atom = construct_vector.call(Struct, ["Atom", Keyword.for("value")]);
+Atom.prototype = new ObjectLiteral({set(new_value) {
+this.value = new_value
+}});
+const Dereference = Symbol("Dereference");
+Atom.prototype[Dereference] = function () {
+return this.value;};
+function Deref() {
+}
+let $ = new Deref();
+$[Keyword.for("bind")] = function (other) {
+return other[Dereference]();};let Lexer = construct_vector.call(DefRecord, [Keyword.for("entries")]);
 function pass() {
 }
 function newline() {
@@ -2168,13 +2181,29 @@ return (map.bind(ast))(eval_statement).join("\n");}
 function compile(string) {
 return (pipe.bind((pipe.bind((pipe.bind((call.bind(lexer))(string)))(function (tokens) {
 return new CollectionView(tokens, (0));})))(parse)))(eval_ast);}
+function compile_file(src_file_name, out_name, prelude_src) {
+let prelude = Deno.readTextFileSync("./src/std/js_prelude.js");
+prelude = plus.call(prelude,compile(Deno.readTextFileSync(prelude_src)))
+let src = Deno.readTextFileSync(src_file_name);
+Deno.writeTextFile(out_name, plus.call(prelude,compile(src)))}
 if (truthy(globalThis.Deno)) {
 let src_file_name = Deno.args[(0)];
 let out_name = Deno.args[(1)];
-let prelude = Deno.readTextFileSync("./src/std/js_prelude.js");
-prelude = plus.call(prelude,compile(Deno.readTextFileSync("./src/std/prelude.coil")))
-let src = Deno.readTextFileSync(src_file_name);
-Deno.writeTextFile(out_name, plus.call(prelude,compile(src)))
+let prelude_src = "./src/std/prelude.coil";
+if (truthy(eq__q.call(Deno.args[(2)], "-w"))) {
+let watcher = Deno.watchFs([src_file_name, prelude_src]);
+for await  (let event of watcher) {
+if (truthy(negate.call(eq__q.call(event.kind, "modify")))) {
+continue;
+} else {
+
+};
+console.log("Rebuilding...")
+compile_file(src_file_name, out_name, prelude_src)
+};
+} else {
+compile_file(src_file_name, out_name, prelude_src)
+};
 } else {
 
 };

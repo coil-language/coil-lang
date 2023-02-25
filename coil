@@ -1,2 +1,2 @@
 #!sh
-deno run --allow-read --allow-write ./dist/compiler.js $1 $2
+deno run --allow-read --allow-write ./dist/compiler.js $1 $2 $3
