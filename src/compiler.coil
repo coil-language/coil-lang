@@ -1439,7 +1439,11 @@ if globalThis.Deno {
     for await event of watcher {
       if event.kind != "modify" { continue }
       console.log("Rebuilding...")
-      compile_file(src_file_name, out_name, prelude_src)
+      try {
+        compile_file(src_file_name, out_name, prelude_src)
+      } catch e {
+        console.error("Compile Failed", e)
+      }
     }
   } else {
     compile_file(src_file_name, out_name, prelude_src)
