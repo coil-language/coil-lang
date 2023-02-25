@@ -1,40 +1,69 @@
-let mask = { polygon: [], id: 10 }
+let EventStream = ~Struct["EventStream" :event_type :filter]
 
-define Effect for ~Eff[:mask :push] = fn(point) =
-  mask = mask::update(:polygon, _::insert(point))
-
-define Effect for ~Eff[:mask :get] = fn() = new Atom(#(mask))
-
-fn* main() {
-  yield ~Eff[:mask :push]::with({x: 0, y: 0})
-  let mask = yield ~Eff[:mask :get]
-  yield ~Eff[:mask :push]::with({x: 1, y: 0})
-  // console.log(mask::$)
-}
-
-fn filter_eff(eff, ...args) =
-  ::filter(fn(effect) {
-    if effect is CallEffectWith {
-      if args::empty?() {
-        return effect.effect == eff
-      } else {
-        return effect.effect == eff && args == effect.args
-      }
-    } else {
-      return effect == eff && args::empty?()
+impl :start for EventStream = fn() {
+  this.watch = ::fn(e) {
+    if this.filter::call(e) {
+      this.resolve::call(e)
     }
-  })
-
-fn expect(callable) {
-  console.log(callable::call(this))
+  }
+  window.addEventListener(this.event_type, this.watch)
 }
 
-async fn verify_origin_point_pushed() {
-  let { effects } = await spawn(main)
+impl :end for EventStream = fn() =
+  window.removeEventListener(this.event_type, this.watch)
 
-  effects
-    ::filter_eff(~Eff[:mask :push], {x: 0, y: 0})
-    ::expect(_::not_empty?())
+impl :subscribe for EventStream = fn(f) {
+  if !this.watch { this.start() }
+  this.resolve = f
 }
 
-verify_origin_point_pushed()
+impl Symbol.asyncIterator for EventStream = async fn*() {
+  while true {
+    yield await new Promise(::fn(resolve) = this.subscribe(resolve))
+  }
+}
+
+define Effect for ~Msg[:keydown] = fn(filter) =
+  new EventStream("keydown", #(&.key::pipe(filter)))
+
+let canvas = document.querySelector("canvas")
+
+let ctx = canvas.getContext("2d")
+
+let Point = ~Struct["Point" :x :y]
+
+impl Plus for Point = fn({x, y}) =
+  new Point(this.x + x, this.y + y)
+
+let data = new Point(0, 0)
+
+define Effect for ~Msg[:draw] = fn() {
+  ctx.rect(data.x, data.y, 50, 50)
+  ctx.stroke()
+}
+
+define Effect for ~Msg[:move] = fn(dir) {
+  data = data + dir
+}
+
+define Effect for ~Msg[:clear] = fn() {
+  ctx.clearRect(0, 0, 500, 500)
+  ctx.beginPath()
+}
+
+@spawn
+async fn* main() {
+  yield ~Msg[:draw]
+  let stream = yield ~Msg[:keydown]::with(#{"w" "a" "s" "d"})
+  for await {key} of stream {
+    let dir = ~Map{
+      "w" => {x: 0, y: -10}
+      "a" => {x: -10, y: 0},
+      "s" => {x: 0, y: 10}
+      "d" => {x: 10, y: 0}
+    }::call(key)
+    yield ~Msg[:move]::with(dir)
+    yield ~Msg[:clear]
+    yield ~Msg[:draw]
+  }
+}

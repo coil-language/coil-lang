@@ -1005,6 +1005,8 @@ fn as_keyword() = Keyword["for"](this.toString())
 @impl_callable
 fn error?() = this is Error
 
+@impl_callable
+fn is_a?(klass) = this is Klass
 
 // Schema / Schema related stuff
 impl Negate for Set = fn() = #(!this.has(&))
@@ -1346,20 +1348,20 @@ fn Fetch(method, url, status) {
 }
 
 @intern_vec
-fn Eff(...descriptors) {
+fn Msg(...descriptors) {
   this.descriptors = descriptors
 }
 
-impl Equal for Eff = fn({descriptors}) = this.descriptors == descriptors
+impl Equal for Msg = fn({descriptors}) = this.descriptors == descriptors
 
 // Idea to allow you do write the following
-// define Effect for ~Eff[:save _] = ...
-// and it would get called even if ~Eff[:save 12] was triggered.
+// define Effect for ~Msg[:save _] = ...
+// and it would get called even if ~Msg[:save 12] was triggered.
 // In other words, allowing _ to be used as a placeholder.
 // This is a step towards getting to closer to feel like 
 // pattern matching.
 
-// Implementing this as the root handler for Eff is pretty safe
+// Implementing this as the root handler for Msg is pretty safe
 // performance-wise I imagine since, I won't be reached 
 // in the prototype chain unless an effect hasn't been implemented
 // for the effect that was triggered.
@@ -1368,11 +1370,11 @@ impl Equal for Eff = fn({descriptors}) = this.descriptors == descriptors
 // and the placeholders will have O(n) where n is
 // the amount of descriptors which again should be very few.
 
-// impl Effect for Eff = fn(...with_args) {
+// impl Effect for Msg = fn(...with_args) {
 //   for i of 0..this.descriptors.length {
 //     let before = this.descriptors.slice(0, i)
 //     let after = this.descriptors.slice(i + 1)
-//     let eff_vec = Eff::construct_vector([...before, _, ...after])
+//     let eff_vec = Msg::construct_vector([...before, _, ...after])
 //     if Effect keyof eff_vec {
 //       return eff_vec[Effect](...with_args)
 //     }
@@ -1547,11 +1549,17 @@ define Vector for Struct = fn(args) = Struct(...args)
 
 // Reactive primitives
 
-let Atom = ~Struct["Atom" :getter]
+let Atom = ~Struct["Atom" :value]
+
+impl Atom = {
+  fn set(new_value) {
+    this.value = new_value
+  }
+}
 
 protocol Dereference
 
-impl Dereference for Atom = fn() = this.getter()
+impl Dereference for Atom = fn() = this.value
 
 fn Deref() {}
 
