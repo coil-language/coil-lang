@@ -113,8 +113,9 @@ impl Call for Keyword = fn(collection) {
 
 fn call(...args) = this&.[Call](...args)
 
-// make sets callable using bind syntax
+// make sets and map callable using bind syntax
 impl :bind for Set = fn(val) = ::fn() = this::call(val)
+impl :bind for Map = fn(val) = ::fn() = this::call(val)
 
 protocol Pipe
 
@@ -140,12 +141,7 @@ protocol Equal
 
 fn strict_eq?(other) = this === other
 
-impl Equal for Number = strict_eq?
-impl Equal for String = strict_eq?
-impl Equal for BigInt = strict_eq?
-impl Equal for Boolean = strict_eq?
-impl Equal for Keyword = strict_eq?
-impl Equal for Function = strict_eq?
+impl Equal for Object = strict_eq?
 
 fn vector_eq?(other) {
   if this::len() != other::len() { return false }
@@ -1286,8 +1282,8 @@ fn run_effect() {
   }
 }
 
-async fn spawn(generator_fn) {
-  let generator = generator_fn()
+async fn spawn(generator_fn, ...gen_args) {
+  let generator = generator_fn(...gen_args)
   let state = {done: false}
   let yield_result = null
   let effects = []
