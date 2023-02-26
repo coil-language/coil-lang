@@ -1,23 +1,23 @@
-protocol HashCode
+protocol Hash
 
-impl HashCode for String = fn() = js_str_hash(this)
-impl HashCode for Number = fn() = this
-impl HashCode for Keyword = fn() = ("____coil_keyword:" + this.value)::hash()
-impl HashCode for Array = fn() =
+impl Hash for String = fn() = js_str_hash(this)
+impl Hash for Number = fn() = this
+impl Hash for Keyword = fn() = ("____coil_keyword:" + this.value)::hash()
+impl Hash for Array = fn() =
   ::reduce(fn(value, elem, idx) = (value * 31n) + elem::hash(), 7n)
-impl HashCode for ObjectLiteral = fn() =
+impl Hash for ObjectLiteral = fn() =
   ::reduce(fn(value, entry) = (value * 31n) + entry::hash(), 7n)
-impl HashCode for Map = fn() =
+impl Hash for Map = fn() =
   ::reduce(fn(hash_value, key, value) = (hash_value * 31n) + [key value]::hash(), 7n)
 
-fn hash() = this[HashCode]()
+fn hash() = this[Hash]()
 
-fn Hash(entries) {
+fn HashMap(entries) {
   this.raw_entries = entries  
   this.map = new Map(entries.map(fn([key, value]) = [key::hash(), value]))
 }
 
-impl HashCode for Hash = fn() = this.map::hash()
+impl Hash for HashMap = fn() = this.map::hash()
 
 // Stepable protocol
 
@@ -42,7 +42,7 @@ protocol Record
 
 define Record for Map = fn(entries) = new Map(entries)
 define Record for ObjectLiteral = fn(entries) = entries::from_entries()
-define Record for Hash = fn(entries) = new Hash(entries)
+define Record for HashMap = fn(entries) = new HashMap(entries)
 
 fn truthy?() = truthy(this)
 
@@ -59,7 +59,7 @@ protocol Deconstruct
 
 impl Deconstruct for Map = fn() = this.entries()::from_entries()
 impl Deconstruct for ObjectLiteral = fn() = this
-impl Deconstruct for Hash = fn() = this.raw_entries::from_entries()
+impl Deconstruct for HashMap = fn() = this.raw_entries::from_entries()
 impl Deconstruct for Array = fn() = this
 
 fn deconstruct() = this[Deconstruct]()
@@ -82,7 +82,7 @@ impl Call for ObjectLiteral = fn(key) = this[key]
 
 impl Call for Array = fn(index) = this.at(index)
 
-impl Call for Hash = fn(key) = this::at(key)
+impl Call for HashMap = fn(key) = this::at(key)
 
 impl Call for String = fn(collection) {
   if typeof(collection) === "string" || collection is Keyword {
@@ -158,7 +158,7 @@ impl Equal for Set = vector_eq?
 impl Equal for Array = vector_eq?
 impl Equal for Map = record_eq?
 impl Equal for ObjectLiteral = record_eq?
-impl Equal for Hash = record_eq?
+impl Equal for HashMap = record_eq?
 
 @impl_callable
 fn eq?(other) {
@@ -177,8 +177,8 @@ impl Clone for ObjectLiteral = {
   fn deep_clone() = this::map(fn(k, v) = [k, v::deep_clone()])
 }
 
-impl Clone for Hash = {
-  fn clone() = new Hash(this.raw_entries.slice())
+impl Clone for HashMap = {
+  fn clone() = new HashMap(this.raw_entries.slice())
   fn deep_clone() = this::map(fn(k, v) = [k, v::deep_clone()])
 }
 
@@ -213,7 +213,7 @@ impl Identity for String = ""
 impl Identity for Array = []
 impl Identity for ObjectLiteral = {}
 impl Identity for Map = ~Map{}
-impl Identity for Hash = ~Hash{}
+impl Identity for HashMap = ~HashMap{}
 impl Identity for Set = #{}
 
 fn identity() {
@@ -288,7 +288,7 @@ impl Collection for Array = {
   fn remove(val) = this::filter(fn(v) = v != val)
 }
 
-impl Collection for Hash = {
+impl Collection for HashMap = {
   fn at(key) = this.map.get(key::hash())
   fn sample() = this.raw_entries[0]
   fn each(f) {
@@ -297,7 +297,7 @@ impl Collection for Hash = {
     }
   }
   fn map(f) {
-    let new_hash = new Hash([])
+    let new_hash = new HashMap([])
     for [k, v] of this.raw_entries {
       new_hash = new_hash::insert(...f(k, v))
     }
@@ -311,7 +311,7 @@ impl Collection for Hash = {
     }
   }
   fn flat_map(f) {
-    let new_hash = new Hash([])
+    let new_hash = new HashMap([])
     for [k, v] of this {
       for [_k, _v] of f(k, v) {
         new_hash = new_hash::insert(k, f(v))
@@ -320,7 +320,7 @@ impl Collection for Hash = {
     return new_hash
   }
   fn filter(f) {
-    let new_hash = new Hash([])
+    let new_hash = new HashMap([])
     for [k, v] of this.raw_entries {
       if f(k, v) {
         new_hash = new_hash::insert(k, f(v))
@@ -351,7 +351,7 @@ impl Collection for Hash = {
     }
     return acc
   }
-  fn insert(k, v) = new Hash([...this.raw_entries, [k, v]])
+  fn insert(k, v) = new HashMap([...this.raw_entries, [k, v]])
   fn concat(other) {
     let new_hash = this::clone()
     for [k, v] of other {
@@ -890,7 +890,7 @@ fn _resolve_keyword_str(kw) = kw.replaceAll("__q", "?").replaceAll("__b", "!")
 impl Printable for ObjectLiteral = fn() =
   this::map(fn (k, v) = [_resolve_keyword_str(k), v::printable()])
 
-impl Printable for Hash = fn() =
+impl Printable for HashMap = fn() =
   this::map(fn (k, v) = [k::printable(), v::printable()])
     .raw_entries::pipe(#(new Map(&)))
 
@@ -1074,7 +1074,7 @@ impl Symbol.iterator for Underscore = fn*() {
 impl :insert for Underscore = fn(f, ...args) =
   new Underscore([...this.transforms, {f, args}])
 
-define HashCode for _ = fn() = 2n
+define Hash for _ = fn() = 2n
 
 impl UnderscoreInterpreter for Object = fn(underscore) {
   let initial_value = this  
@@ -1618,7 +1618,7 @@ impl Matches for Underscore = fn(value) {
 }
 
 impl Matches for ObjectLiteral = fn(record) =
-  ::every?(fn(key, value) = value::matches?(record::at(key)))
+  ::every?(fn(key, pattern) = pattern::matches?(record::at(key::as_keyword())))
 
 // for listening to window events
 

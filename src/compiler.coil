@@ -1464,7 +1464,7 @@ fn eval_match_entry({pattern, body}, expr) {
   } }
 
   if assignments_js::not_empty?() {
-    assignments_js = str("let " assignments_js " = " eval_expr(expr) ";\n")
+    assignments_js = str("let " assignments_js " = deconstruct.call(" eval_expr(expr) ");\n")
   }
 
   let body_js = null
