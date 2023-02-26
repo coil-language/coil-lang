@@ -628,6 +628,8 @@ fn find(f) = this[Collection].find.call(this, f::call)
 fn filter(f) = this[Collection].filter.call(this, f::call)
 fn some?(...fns) = this[Collection].some?.call(this, compose(...fns))
 fn every?(...fns) = this[Collection].every?.call(this, compose(...fns))
+// TODO: implement this
+fn every_with_index?(...fns) = this::every?(...fns)
 fn reduce(f, start) {
   if start::nil?() {
     start = this::sample()::identity()
@@ -1562,3 +1564,24 @@ fn Deref() {}
 let $ = new Deref()
 
 define :bind for $ = fn(other) = other[Dereference]()
+
+protocol Matches
+
+fn matches?(value) = this[Matches](value)
+
+impl Matches for Object = fn(value) = this == value
+
+impl Matches for Array = fn(value) =
+  value::len() == this::len() &&
+  ::every_with_index?(fn(pattern, i) = pattern::matches?(value::at(i)))
+
+impl Matches for Underscore = fn(value) {
+  if value::nil?() {
+    return false
+  } else {
+    return this::call(value)
+  }
+}
+
+impl Matches for ObjectLiteral = fn(record) =
+  ::every?(fn(key, value) = value::matches?(record::at(key)))

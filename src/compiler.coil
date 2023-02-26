@@ -9,7 +9,7 @@ impl Call for Lexer = fn(str) {
   fn rest_of_string() = str.slice(index)
 
   fn scan() {
-    let result = rest_of_string().match(this)
+    let result = rest_of_string()["match"](this)
     if !result || result.index != 0 { return false }
     index = index + result[0].length
     return result[0]
@@ -54,6 +54,7 @@ let lexer = ~Lexer{
   /^#/ => :hash
   /^\~/ => :tilde
   /^if\b/ => :if
+  /^match\b/ => :match
   /^is\b/ => :is
   /^unless\b/ => :unless
   /^else\b/ => :else
@@ -215,7 +216,7 @@ impl ParseInstruction for Case = fn([expr tokens]) {
   if let [new_expr, new_tokens] = this.parse_map::call(tokens) {
     return [expr::merge({[this.kw]: new_expr}), new_tokens]
   } else {
-    console.log(this.parse_map)
+    console.log(this.tokens::first(), this.parse_map)
     raise(new Error("Case Parse Failed"))
   }
 }
@@ -988,6 +989,29 @@ let parse_impl_object = ~Parser[
   ~Then[parse_expr :expr]
 ]
 
+fn parse_match_entry(tokens) = ~Parser[
+  ~Init[{type: :match_entry}]
+  ~Case[~ParseMap{
+    :open_b => parse_assign_obj
+    :open_sq => parse_assign_array
+    _ => parse_expr
+  } :pattern]
+  ~Chomp[:arrow]
+  ~Case[~ParseMap{
+    :open_b => block()
+    _ => parse_statement
+  } :body]
+]::call(tokens)
+
+fn parse_match(tokens) = ~Parser[
+  ~Init[{type: :match}]
+  ~Chomp[:match]
+  ~Then[parse_expr :expr]
+  ~Chomp[:open_b]
+  ~Until[:close_b parse_match_entry :entries]
+  ~Chomp[:close_b]
+]::call(tokens)
+
 fn parse_statement(tokens) = ~ParseMap{
   :unless => parse_unless,
   :assert! => parse_assert,
@@ -999,6 +1023,7 @@ fn parse_statement(tokens) = ~ParseMap{
   :for => parse_for_loop
   :continue => parse_continue
   :break => parse_break
+  :match => parse_match
   [:impl :id :eq] => parse_impl_object
   :impl => parse_impl_for
   [:while :let] => parse_while_let_loop
@@ -1392,6 +1417,75 @@ fn eval_try(node) =
         ::otherwise("")
       "}")
 
+fn get_deconstructed_obj_entry_name(node) =
+  ~Map{:obj_reg_entry => :name
+       :obj_entry_rename => :old_name}
+    ::at(node::at(:type))
+    ::pipe(node)
+
+fn eval_match_obj_pattern({entries}) =
+  str(
+    "new ObjectLiteral({"
+      entries
+        ::map(get_deconstructed_obj_entry_name)
+        ::filter(_)
+        ::map(fn(name) = str(name ": _"))
+        .join(",")
+    "})"
+  )
+
+fn get_deconstructed_array_entry_name(node) =
+  ~Map{:id_assign => :name}
+    ::at(node::at(:type))
+    ::pipe(node)
+
+fn eval_match_array_pattern({entries}) =
+  str(
+    "["
+      entries
+        ::map(get_deconstructed_array_entry_name)
+        ::filter(_)
+        ::map(#("_")).join(", ")
+    "]"
+  )
+
+
+fn eval_match_entry({pattern, body}, expr) {
+  let pattern_js = null
+  let assignments_js = ""
+  if pattern::at(:type) == :object_deconstruction {
+    pattern_js = eval_match_obj_pattern(pattern)
+    assignments_js = eval_object_deconstruction_names(pattern)
+  } else { if pattern::at(:type) == :array_deconstruction {
+    pattern_js = eval_match_array_pattern(pattern)
+    assignments_js = eval_array_deconstruction_names(pattern)
+  } else {
+    pattern_js = eval_expr(pattern)
+  } }
+
+  if assignments_js {
+    assignments_js = str("let " assignments_js " = " eval_expr(expr) ";\n")
+  }
+
+  let body_js = null
+  if body is Array {
+    body_js = eval_ast(body)
+  } else {
+    body_js = eval_statement(body)
+  }
+
+  return str(
+    "if (truthy(matches__q.call(" pattern_js ", " eval_expr(expr) "))) {\n"
+      assignments_js
+      body_js
+    "}"
+  )
+}
+
+fn eval_match({expr, entries}) =
+  entries::map(fn(entry) = eval_match_entry(entry, expr))
+    .join("else ")
+
 fn eval_statement(node) = node::at(:type)::pipe(~Map{  
   :if => eval_if
   :unless => eval_unless
@@ -1410,6 +1504,7 @@ fn eval_statement(node) = node::at(:type)::pipe(~Map{
   :continue => eval_continue
   :break => eval_break
   :try => eval_try
+  :match => eval_match
 })
   ::if_truthy?(#(compose(&, _ + ";")))
   ::otherwise(eval_expr)::call(node)

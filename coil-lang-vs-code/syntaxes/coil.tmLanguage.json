@@ -47,7 +47,7 @@
       "patterns": [
         {
           "name": "keyword.control.coil",
-          "match": "\\b(if|while|try|catch|finally|else|yield|return|assert|continue|break|export|default|import|from)\\b"
+          "match": "\\b(if|while|match|try|catch|finally|else|yield|return|assert|continue|break|export|default|import|from)\\b"
         },
         {
           "match": "(impl)\\b(.*)\\b(for)\\b",
