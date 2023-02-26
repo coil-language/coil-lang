@@ -888,7 +888,10 @@ protocol Printable
 fn _resolve_keyword_str(kw) = kw.replaceAll("__q", "?").replaceAll("__b", "!")
 
 impl Printable for ObjectLiteral = fn() =
-  this::map(fn (k, v) = [_resolve_keyword_str(k), v::printable()])
+  Object.assign(
+    new Object(),
+    this::map(fn (k, v) = [_resolve_keyword_str(k), v::printable()])
+  )
 
 impl Printable for HashMap = fn() =
   this::map(fn (k, v) = [k::printable(), v::printable()])
