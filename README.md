@@ -2,7 +2,7 @@
 
 [try it out](https://coil-lang.netlify.app/)
 
-Coil is functional language with OO super powers.
+Coil is an expressive dynamic language which emphasizes polymorphism, programming with immutable data and managed effects.
 
 ```
 fn tie?() =
@@ -12,12 +12,6 @@ fn tie?() =
 [{status: "won"}, {status: "lost"}]
   ::tie?() // true
 ```
-
-Coil is a deeply polymorphic language which decouples data from its many implementations.
-
-Coil lets you separate the concerns of data modeling from the concerns of business logic.
-
-Coil lets you do all this without breaking existing implementations because its polymorphism is based on [protocols](./docs/protocols.md), instead of normal methods & properties.
 
 ## Data Literals
 
