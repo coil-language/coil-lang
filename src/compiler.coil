@@ -66,6 +66,7 @@ let lexer = ~Lexer{
   /^catch\b/ => :catch
   /^finally\b/ => :finally
   /^while\b/ => :while
+  /^loop\b/ => :loop
   /^continue\b/ => :continue
   /^break\b/ => :break
   /^of\b/ => :of
@@ -934,6 +935,12 @@ fn parse_assert(tokens) = ~Parser[
   ~Optional[:string_lit parse_str :msg]
 ]::call(tokens)
 
+fn parse_loop(tokens) = ~Parser[
+  ~Init[{type: :loop}]
+  ~Chomp[:loop]
+  block(:body)
+]::call(tokens)
+
 fn parse_while_loop(tokens) = ~Parser[
   ~Init[{type: :while_loop}]
   ~Chomp[:while]
@@ -1024,6 +1031,7 @@ fn parse_statement(tokens) = ~ParseMap{
   :continue => parse_continue
   :break => parse_break
   :match => parse_match
+  :loop => parse_loop
   [:impl :id :eq] => parse_impl_object
   :impl => parse_impl_for
   [:while :let] => parse_while_let_loop
@@ -1398,6 +1406,11 @@ fn eval_while_loop({test_expr body}) =
       eval_ast(body) "\n"
       "}")
 
+fn eval_loop({body}) =
+  str("while (true) {\n"
+      eval_ast(body) "\n"
+      "}")
+
 fn eval_continue() = "continue"
 fn eval_break() = "break"
 
@@ -1500,6 +1513,7 @@ fn eval_statement(node) = node::at(:type)::pipe(~Map{
   :id_assign => eval_id_assign
   :assert => eval_assert
   :while_loop => eval_while_loop
+  :loop => eval_loop
   :while_let_loop => eval_while_let_loop
   :continue => eval_continue
   :break => eval_break
