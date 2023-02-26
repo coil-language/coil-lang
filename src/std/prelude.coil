@@ -1619,3 +1619,55 @@ impl Matches for Underscore = fn(value) {
 
 impl Matches for ObjectLiteral = fn(record) =
   ::every?(fn(key, value) = value::matches?(record::at(key)))
+
+// for listening to window events
+
+let EventStream = ~Struct["EventStream" :event_type :filter]
+
+impl EventStream = {
+  fn start() {
+    this.watch = ::fn(e) {
+      if this.filter::call(e) {
+        this.resolve::call(e)
+      }
+    }
+    window.addEventListener(this.event_type, this.watch)
+  }
+  fn end() = window.removeEventListener(this.event_type, this.watch)
+  fn subscribe(f) {
+    if !this.watch { this.start() }
+    this.resolve = f
+  }
+}
+
+impl Symbol.asyncIterator for EventStream = async fn*() {
+  while true {
+    yield await new Promise(::fn(resolve) = this.subscribe(resolve))
+  }
+}
+
+// so you can iterate over animation frames
+let AnimationFrames = {}
+
+define Symbol.asyncIterator for AnimationFrames = async fn*() {
+  while true {
+    yield await new Promise(fn (resolve) = requestAnimationFrame(resolve))
+  }
+}
+
+// so you can listen to multiple event sources at once
+fn Race() {}
+
+define Vector for Race = async fn*(items) {
+  while true {
+    let promises = items::map(fn(stream) = new Promise(fn (resolve) = stream.subscribe(resolve)))
+    yield await Promise.race(promises)
+  }
+}
+
+// sane defaults
+define Effect for ~Msg[:keydown] = fn(filter) =
+  new EventStream("keydown", #(&.key::pipe(filter)))
+
+define Effect for ~Msg[:mousedown] = fn() = new EventStream("mousedown", _)
+define Effect for ~Msg[:mousemove] = fn() = new EventStream("mousemove", _)

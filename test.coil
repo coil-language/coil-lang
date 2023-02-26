@@ -1,86 +1,30 @@
-let EventStream = ~Struct["EventStream" :event_type :filter]
-
-impl :start for EventStream = fn() {
-  this.watch = ::fn(e) {
-    if this.filter::call(e) {
-      this.resolve::call(e)
-    }
-  }
-  window.addEventListener(this.event_type, this.watch)
-}
-
-impl :end for EventStream = fn() =
-  window.removeEventListener(this.event_type, this.watch)
-
-impl :subscribe for EventStream = fn(f) {
-  if !this.watch { this.start() }
-  this.resolve = f
-}
-
-impl Symbol.asyncIterator for EventStream = async fn*() {
-  while true {
-    yield await new Promise(::fn(resolve) = this.subscribe(resolve))
-  }
-}
-
-define Effect for ~Msg[:keydown] = fn(filter) =
-  new EventStream("keydown", #(&.key::pipe(filter)))
-
-let AnimationFrames = {}
-
-define Symbol.asyncIterator for AnimationFrames = async fn*() {
-  while true {
-    yield await new Promise(fn (resolve) = requestAnimationFrame(resolve))
-  }
-}
-
 let canvas = document.querySelector("canvas")
 
 let ctx = canvas.getContext("2d")
-
-let Point = ~Struct["Point" :x :y]
-impl Plus for Point = fn({x, y}) = new Point(this.x + x, this.y + y)
-let data = new Point(0, 0)
-
-define Effect for ~Msg[:draw] = fn() {
-  ctx.rect(data.x, data.y, 50, 50)
-  ctx.stroke()
-}
-
-define Effect for ~Msg[:move] = fn(dir) { data += dir }
-
-define Effect for ~Msg[:reset] = fn({x, y}) {
-  data = new Point(x - 28, y - 28)
-}
 
 define Effect for ~Msg[:clear] = fn() {
   ctx.clearRect(0, 0, 500, 500)
   ctx.beginPath()
 }
 
-@spawn
-async fn* watch_movements() {
-  for await {key} of yield ~Msg[:keydown]::with(#{"w" "a" "s" "d"}) {
-    yield ~Msg[:move]::with(~Map{
-      "w" => {x: 0, y: -10}
-      "a" => {x: -10, y: 0}
-      "s" => {x: 0, y: 10}
-      "d" => {x: 10, y: 0}
-    }::at(key))
+let Point = ~Struct["Point" :x :y]
+
+let mask = []
+
+define Effect for ~Msg[:draw] = fn() {
+  if mask::empty?() {return null}
+  let [first, ...rest] = mask
+  ctx.beginPath()
+  ctx.moveTo(first.x, first.y)
+  for {x, y} of rest {
+    ctx.lineTo(x, y)
   }
+  ctx.closePath()
+  ctx.stroke()
 }
 
-define Effect for ~Msg[:mousedown] = fn() = new EventStream("mousedown", _)
-define Effect for ~Msg[:mousemove] = fn() = new EventStream("mousemove", _)
-
-fn Race() {}
-
-define Vector for Race = async fn*(items) {
-  while true {
-    let promises = items::map(fn(stream) = new Promise(fn (resolve) = stream.subscribe(resolve)))
-    yield await Promise.race(promises)
-  }
-}
+define Effect for ~Msg[:place_point] = fn(x, y) =
+  mask.push(new Point(x, y))
 
 async fn* hover_mouse(channel) {
   for await msg of ~Race[channel, yield ~Msg[:mousemove]] {
@@ -93,20 +37,20 @@ async fn* hover_mouse(channel) {
 
 @spawn
 async fn* watch_mouse() {
-  let pid = null
+  // let pid = null
   for await {clientX, clientY} of yield ~Msg[:mousedown] {
-    if pid::nil?() {
-      yield ~Msg[:reset]::with({x: clientX, y: clientY})
-      pid = fork(hover_mouse)
-    } else {
-      pid = pid.send(~Msg[:stop])
-    }
+    yield ~Msg[:place_point]::with(clientX, clientY)
+    // if pid::nil?() {
+    //   // pid = fork(hover_mouse)
+    // } else {
+    //   pid = pid.send(~Msg[:stop])
+    // }
   }
 }
 
 @spawn
 async fn* main() {
-  for await __ of AnimationFrames {
+  for await _ of AnimationFrames {
     yield ~Msg[:clear]
     yield ~Msg[:draw]
   }  
