@@ -1463,7 +1463,7 @@ fn eval_match_entry({pattern, body}, expr) {
     pattern_js = eval_expr(pattern)
   } }
 
-  if assignments_js {
+  if assignments_js::not_empty?() {
     assignments_js = str("let " assignments_js " = " eval_expr(expr) ";\n")
   }
 

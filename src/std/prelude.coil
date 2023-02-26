@@ -233,6 +233,11 @@ fn from_entries() = new ObjectLiteral(Object.fromEntries(this))
 
 fn values() = Object.values(this)
 
+// Basics every object should impl this
+impl Collection for Object = {
+  fn at(key) = this[key]
+}
+
 impl Collection for ObjectLiteral = {
   fn at(key) = this[key]
   fn sample() = this::values()[0]
@@ -1307,6 +1312,28 @@ async fn spawn(generator_fn, ...gen_args) {
 
 async fn run(generator_fn) = (await spawn(generator_fn))::at(:value)
 
+fn Channel() {}
+
+impl :send for Channel = fn (msg) {
+  this.resolve(msg)
+}
+
+impl :subscribe for Channel = fn(f) {
+  this.resolve = f
+}
+
+impl Symbol.asyncIterator for Channel = async fn*() {
+  while true {
+    yield new Promise(::fn (resolve) = this.resolve = resolve)
+  }
+}
+
+fn fork(generator_fn) {
+  let pid = new Channel()
+  spawn(generator_fn, pid)
+  return pid
+}
+
 // builtin effects
 
 fn CallEffectWith(effect, ...args) {
@@ -1350,7 +1377,8 @@ fn Msg(...descriptors) {
   this.descriptors = descriptors
 }
 
-impl Equal for Msg = fn({descriptors}) = this.descriptors == descriptors
+impl Equal for Msg = fn(obj) =
+  obj is Msg && this.descriptors == obj.descriptors
 
 // Idea to allow you do write the following
 // define Effect for ~Msg[:save _] = ...
@@ -1569,7 +1597,13 @@ protocol Matches
 
 fn matches?(value) = this[Matches](value)
 
-impl Matches for Object = fn(value) = this == value
+impl Matches for Object = fn(value) {
+  if Call keyof this {
+    return this::call(value)
+  } else {
+    return this == value
+  }
+}
 
 impl Matches for Array = fn(value) =
   value::len() == this::len() &&

@@ -1563,7 +1563,11 @@ Array.prototype[Matches] = function (value) {
 return and.call(eq__q.call((len.bind(value))(), (len.bind(this))()), () => every_with_index__q.bind(this)(function (pattern, i) {
 return (matches__q.bind(pattern))((at.bind(value))(i));}));};
 Underscore.prototype[Matches] = function (value) {
-return (call.bind(this))(value) !== undefined;};
+if (truthy((nil__q.bind(value))())) {
+return false;
+} else {
+return (call.bind(this))(value);
+};};
 ObjectLiteral.prototype[Matches] = function (record) {
 return every__q.bind(this)(function (key, value) {
 return (matches__q.bind(value))((at.bind(record))(key));});};let Lexer = construct_vector.call(DefRecord, [Keyword.for("entries")]);
@@ -2214,7 +2218,7 @@ assignments_js = eval_array_deconstruction_names(pattern)
 pattern_js = eval_expr(pattern)
 };
 };
-if (truthy(assignments_js)) {
+if (truthy((not_empty__q.bind(assignments_js))())) {
 assignments_js = str("let ", assignments_js, " = ", eval_expr(expr), ";\n")
 } else {
 
