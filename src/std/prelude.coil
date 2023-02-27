@@ -668,6 +668,21 @@ fn discard(callable) = this::filter(compose(callable, !_))
 
 protocol OrderedCollection
 
+impl OrderedCollection for Range = {
+  fn first() = this.transform::call(this.start)
+  fn last() = this.transform::call(this.end)
+  fn take(n) {
+    let i = 0
+    let output = []
+    for item of this {
+      if i == n { break }
+      output.push(item)
+      i += 1
+    }
+    return output
+  }
+}
+
 impl OrderedCollection for Array = {
   fn first() = this[0]
   fn last() = this.at(-1)
