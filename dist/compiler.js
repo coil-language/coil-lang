@@ -1768,8 +1768,18 @@ Chomp.prototype[Printable] = function () {
 return plus.call("Chomp(",plus.call((printable.bind(this.kws))().join(", "),")"));};
 let Then = construct_vector.call(DefVector, [Keyword.for("parser"), Keyword.for("kw")]);
 Then.prototype[ParseInstruction] = function ([expr, tokens]) {
-let [new_expr, new_tokens] = (verify_exists__b.bind((call.bind(this.parser))(tokens)))(this);
-return [(merge.bind(expr))(new ObjectLiteral({[this.kw]: new_expr})), new_tokens];};
+let result = (call.bind(this.parser))(tokens);
+if (truthy((nil__q.bind(result))())) {
+return [expr, tokens];
+} else {
+
+};
+let [new_expr, new_tokens] = result;
+if (truthy(this.kw)) {
+return [(merge.bind(expr))(new ObjectLiteral({[this.kw]: new_expr})), new_tokens];
+} else {
+return [new_expr, new_tokens];
+};};
 Then.prototype[Printable] = function () {
 return str("Then(", this.parser.name, ", ", (printable.bind(this.kw))(), ")");};
 let FMap = construct_vector.call(DefVector, [Keyword.for("f")]);
@@ -1940,10 +1950,12 @@ return true;
 };
 let end_of_prev_token = plus.call(previous.col,previous.value.length);
 return greater_than_eq.call((minus.call(current.col,end_of_prev_token)),(1));}
+function parse_adjacent_1_2_expr(tokens) {
+return (call.bind(construct_vector.call(Parser, [construct_vector.call(AbortIf, [not_adjacent__q]), construct_vector.call(Then, [parse_1_2_expr])])))(tokens);}
 function parse_inclusive_range(tokens, lhs) {
-return (call.bind(construct_vector.call(Parser, [construct_vector.call(AbortIf, [not_adjacent__q]), construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("inclusive_range"), lhs})]), construct_vector.call(Chomp, [Keyword.for("dot_dot")]), construct_vector.call(Optional, [(keys.bind(SINGLE_EXPR_PARSE_MAP))(), parse_1_2_expr, Keyword.for("rhs")])])))(tokens);}
+return (call.bind(construct_vector.call(Parser, [construct_vector.call(AbortIf, [not_adjacent__q]), construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("inclusive_range"), lhs})]), construct_vector.call(Chomp, [Keyword.for("dot_dot")]), construct_vector.call(Optional, [(keys.bind(SINGLE_EXPR_PARSE_MAP))(), parse_adjacent_1_2_expr, Keyword.for("rhs")])])))(tokens);}
 function parse_exclusive_range(tokens, lhs) {
-return (call.bind(construct_vector.call(Parser, [construct_vector.call(AbortIf, [not_adjacent__q]), construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("exclusive_range"), lhs})]), construct_vector.call(Chomp, [Keyword.for("dot_dot_dot")]), construct_vector.call(Optional, [(keys.bind(SINGLE_EXPR_PARSE_MAP))(), parse_1_2_expr, Keyword.for("rhs")])])))(tokens);}
+return (call.bind(construct_vector.call(Parser, [construct_vector.call(AbortIf, [not_adjacent__q]), construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("exclusive_range"), lhs})]), construct_vector.call(Chomp, [Keyword.for("dot_dot_dot")]), construct_vector.call(Optional, [(keys.bind(SINGLE_EXPR_PARSE_MAP))(), parse_adjacent_1_2_expr, Keyword.for("rhs")])])))(tokens);}
 function parse_fn_call(tokens, lhs) {
 return (call.bind(construct_vector.call(Parser, [construct_vector.call(AbortIf, [not_adjacent__q]), construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("fn_call"), lhs})]), construct_vector.call(Chomp, [Keyword.for("open_p")]), construct_vector.call(Until, [Keyword.for("close_p"), parse_expr, Keyword.for("args")]), construct_vector.call(Chomp, [Keyword.for("close_p")])])))(tokens);}
 function parse_object_dynamic_access(tokens, lhs) {

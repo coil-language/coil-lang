@@ -1,1 +1,3 @@
-(..3)::log()
+let positive_evens = ~Comp[_ :for 0.. :where _ % 2 == 0 && _ >= 0]
+
+positive_evens::has?(30000000000001)::log()

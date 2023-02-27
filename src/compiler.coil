@@ -196,9 +196,15 @@ impl ParseInstruction for Chomp = fn([expr tokens]) {
 impl Printable for Chomp = fn() = "Chomp(" + this.kws::printable().join(", ") + ")"
 
 let Then = ~DefVector[:parser :kw]
-impl ParseInstruction for Then = fn([expr tokens]) {  
-  let [new_expr new_tokens] = this.parser::call(tokens)::verify_exists!(this)
-  return [expr::merge({[this.kw]: new_expr}) new_tokens]
+impl ParseInstruction for Then = fn([expr tokens]) {
+  let result = this.parser::call(tokens)
+  if result::nil?() { return [expr tokens] }
+  let [new_expr new_tokens] = result
+  if this.kw {
+    return [expr::merge({[this.kw]: new_expr}) new_tokens]
+  } else {
+    return [new_expr new_tokens]
+  }
 }
 impl Printable for Then = fn() = str("Then(" this.parser.name ", " this.kw::printable() ")")
 
@@ -442,18 +448,23 @@ fn not_adjacent?([_expr tokens]) {
   return (current.col - end_of_prev_token) >= 1
 }
 
+fn parse_adjacent_1_2_expr(tokens) = ~Parser[
+  ~AbortIf[not_adjacent?]
+  ~Then[parse_1_2_expr]
+]::call(tokens)
+
 fn parse_inclusive_range(tokens lhs) = ~Parser[
   ~AbortIf[not_adjacent?]
   ~Init[{type: :inclusive_range, lhs}]
   ~Chomp[:dot_dot]
-  ~Optional[SINGLE_EXPR_PARSE_MAP::keys() parse_1_2_expr :rhs]
+  ~Optional[SINGLE_EXPR_PARSE_MAP::keys() parse_adjacent_1_2_expr :rhs]
 ]::call(tokens)
 
 fn parse_exclusive_range(tokens lhs) = ~Parser[
   ~AbortIf[not_adjacent?]
   ~Init[{type: :exclusive_range, lhs}]
   ~Chomp[:dot_dot_dot]
-  ~Optional[SINGLE_EXPR_PARSE_MAP::keys() parse_1_2_expr :rhs]
+  ~Optional[SINGLE_EXPR_PARSE_MAP::keys() parse_adjacent_1_2_expr :rhs]
 ]::call(tokens)
 
 fn parse_fn_call(tokens lhs) = ~Parser[
