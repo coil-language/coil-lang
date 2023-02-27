@@ -700,18 +700,18 @@ impl OrderedCollection for String = {
   fn take_last(n) = this.slice(-1 - n, -1)
   fn take(n) = this.slice(0, n)
   // TODO: don't rely on Array for these
-  fn sort(f) = Array.from(this).sort(f).join("")
-  fn reverse() = Array.from(this).reverse().join("")
+  fn sort(f) = Array["from"](this).sort(f).join("")
+  fn reverse() = Array["from"](this).reverse().join("")
 }
 
 impl OrderedCollection for Map = {
   fn first() = this.entries().next().value
-  fn last() = Array.from(this).at(-1)
-  fn skip(n) = new Map(Array.from(this).slice(n))
-  fn take_last() = new Map(Array.from(this).slice(-1 - n, -1))
-  fn take() = new Map(Array.from(this).slice(0, n))
-  fn sort() = new Map(Array.from(this).sort(fn ([_k1, v1], [_k2, v2]) = v2 - v1))
-  fn reverse() = new Map(Array.from(this).reverse())
+  fn last() = Array["from"](this).at(-1)
+  fn skip(n) = new Map(Array["from"](this).slice(n))
+  fn take_last() = new Map(Array["from"](this).slice(-1 - n, -1))
+  fn take() = new Map(Array["from"](this).slice(0, n))
+  fn sort() = new Map(Array["from"](this).sort(fn ([_k1, v1], [_k2, v2]) = v2 - v1))
+  fn reverse() = new Map(Array["from"](this).reverse())
 }
 
 @impl_callable
@@ -930,7 +930,7 @@ impl Printable for HashMap = fn() =
 impl Printable for Array = fn() =
   this::map(printable)
 
-impl Printable for Set = fn() = "#{" + Array.from(this::map(printable)).join(", ") + "}"
+impl Printable for Set = fn() = "#{" + Array["from"](this::map(printable)).join(", ") + "}"
 
 fn print_for_generic_clone_object() {
   let out = this::clone()

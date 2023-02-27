@@ -59,6 +59,10 @@ let lexer = ~Lexer{
   /^unless\b/ => :unless
   /^else\b/ => :else
   /^return\b/ => :return
+  /^import\b/ => :import
+  /^export\b/ => :export
+  /^default\b/ => :default
+  /^from\b/ => :from
   /^let\b/ => :let
   /^protocol\b/ => :protocol
   /^for\b/ => :for
@@ -1054,19 +1058,42 @@ fn parse_match(tokens) = ~Parser[
   ~Chomp[:close_b]
 ]::call(tokens)
 
+fn parse_import(tokens) = ~Parser[
+  ~Init[{type: :import}]
+  ~Chomp[:import]
+  ~Then[parse_assign_expr :assign_expr]
+  ~Chomp[:from]
+  ~Then[parse_str :path]
+]::call(tokens)
+
+fn parse_export(tokens) = ~Parser[
+  ~Init[{type: :export}]
+  ~Chomp[:export]
+  ~Then[parse_statement :statement]
+]::call(tokens)
+
+fn parse_export_default(tokens) = ~Parser[
+  ~Init[{type: :export_default}]
+  ~Chomp[:export :default]
+  ~Then[parse_expr :expr]
+]::call(tokens)
+
 fn parse_statement(tokens) = ~ParseMap{
-  :unless => parse_unless,
-  :assert! => parse_assert,
+  :let => parse_let
+  :for => parse_for_loop
+  :unless => parse_unless
+  :assert! => parse_assert
   :define => parse_define
   :try => parse_try
   :protocol => parse_protocol
-  :let => parse_let
   :return => parse_return
-  :for => parse_for_loop
   :continue => parse_continue
   :break => parse_break
   :match => parse_match
   :loop => parse_loop
+  :import => parse_import
+  [:export :default] => parse_export_default
+  :export => parse_export
   [:impl :id :eq] => parse_impl_object
   :impl => parse_impl_for
   [:while :let] => parse_while_let_loop
@@ -1550,9 +1577,21 @@ fn eval_match({expr, entries}) =
   entries::map(fn(entry) = eval_match_entry(entry, expr))
     .join("else ")
 
+fn eval_import({assign_expr, path}) =
+  str("import " eval_assign_expr(assign_expr) " from \"" path.value.slice(1, -1) ".js\"")
+
+fn eval_export({statement}) =
+  str("export " eval_statement(statement))
+
+fn eval_export_default({expr}) =
+  str("export default " eval_expr(expr))
+
 fn eval_statement(node) = node::at(:type)::pipe(~Map{  
   :if => eval_if
   :unless => eval_unless
+  :import => eval_import
+  :export => eval_export
+  :export_default => eval_export_default
   :let => eval_let
   :if_let => eval_if_let
   :return => eval_return

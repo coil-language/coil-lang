@@ -1,3 +1,3 @@
-~Comp[_ :for 0.. :where _ % 2 == 0 && _ >= 0]
-  ::take(10)
-  ::log()
+import a from "./b"
+
+console.log(a)
