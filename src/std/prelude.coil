@@ -236,11 +236,13 @@ fn values() = Object.values(this)
 // Basics every object should impl this
 impl Collection for Object = {
   fn at(key) = this[key]
+  fn keys() = Object.keys(this)::as_set()
 }
 
 impl Collection for ObjectLiteral = {
   fn at(key) = this[key]
   fn sample() = this::values()[0]
+  fn keys() = Object.keys(this)::as_set()
   fn each(f) = this::entries().forEach(fn ([k, v]) = f(k, v))
   fn find(f) = this::entries().find(fn ([k, v]) = f(k, v)::pipe(truthy))
   fn map(f) = this::entries().map(fn ([k, v]) = f(k, v))::from_entries()
@@ -264,6 +266,7 @@ impl Collection for ObjectLiteral = {
 
 impl Collection for Array = {
   fn at(idx) = this.at(idx)
+  fn keys() = Object.keys(this)::as_set()
   fn sample() = this[0]
   fn each(f) = this.forEach(f)
   fn find(f) = this.find(compose(f, truthy))
@@ -290,6 +293,7 @@ impl Collection for Array = {
 
 impl Collection for HashMap = {
   fn at(key) = this.map.get(key::hash())
+  fn keys() = this.raw_entries::map(first)::as_set()
   fn sample() = this.raw_entries[0]
   fn each(f) {
     for [k, v] of this.raw_entries {
@@ -368,6 +372,7 @@ impl Collection for HashMap = {
 
 impl Collection for Map = {
   fn at(key) = this.get(key)
+  fn keys() = this.keys()::as_set()
   fn sample() = this.values().next().value
   fn each(f) {
     for [k, v] of this {
@@ -454,6 +459,7 @@ impl Collection for Set = {
       return val
     }
   }
+  fn keys() = this
   fn sample() = this.values().next().value
   fn each(f) {
     for elem of this {
@@ -542,6 +548,7 @@ impl Collection for Set = {
 
 impl Collection for String = {
   fn at(idx) = this.at(idx)
+  fn keys() = Object.keys(this)::as_set()
   fn sample() = this[0]
   fn each(f) {
     for char of this {
@@ -623,6 +630,7 @@ impl Collection for String = {
 fn zip(other) = this::map_with_index(fn(val, i) = [val, other::at(i)])
 
 fn at(key_or_idx) = this[Collection].at.call(this, key_or_idx)
+fn keys() = this[Collection].keys.call(this)
 fn sample() = this[Collection].sample.call(this)
 fn each(f) = this[Collection].each.call(this, f::call)
 fn map(...fns) = this[Collection].map.call(this, compose(...fns))
@@ -691,12 +699,19 @@ impl OrderedCollection for Map = {
   fn reverse() = new Map(Array.from(this).reverse())
 }
 
+@impl_callable
 fn first() = this[OrderedCollection].first.call(this)
+@impl_callable
 fn last() = this[OrderedCollection].last.call(this)
+@impl_callable
 fn skip(n) = this[OrderedCollection].skip.call(this, n)
+@impl_callable
 fn take_last(n) = this[OrderedCollection].take_last.call(this, n)
+@impl_callable
 fn take(n) = this[OrderedCollection].take.call(this, n)
+@impl_callable
 fn sort() = this[OrderedCollection].sort.call(this)
+@impl_callable
 fn reverse() = this[OrderedCollection].reverse.call(this)
 
 // OPERATORS

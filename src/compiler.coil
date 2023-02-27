@@ -161,9 +161,20 @@ impl ParseInstruction for One = fn([expr tokens]) {
 }
 impl Printable for One = fn() = "One(kw: " + this.kw::printable() + ", as: " + this.as::printable() +  ")"
 
-let Optional = ~DefVector[:kw :parse_fn :as]
+// this is starting to get complex
+// maybe we want OptionalOneOf? or something similar.
+// OR could take a note from the pattern matching algorithm
+// and use ~DefVector[:pattern :parse_fn :as] 
+// then for checking this.pattern::matches?(tokens::first()::at(:type))
+// not sure at this moment.
+let Optional = ~DefVector[:set_or_kw :parse_fn :as]
 impl ParseInstruction for Optional = fn([expr tokens]) {  
-  if tokens::first() && tokens::first()::at(:type) == this.kw {  
+  if tokens::empty?() { return [expr tokens] }
+  let {type} = tokens::first()
+  if this.set_or_kw is Keyword && type == this.set_or_kw {
+    return ~Then[this.parse_fn, this.as]::parse_step([expr tokens])
+  }
+  if this.set_or_kw is Set && this.set_or_kw::call(type) {
     return ~Then[this.parse_fn, this.as]::parse_step([expr tokens])
   } else {
     return [expr tokens]
@@ -261,6 +272,10 @@ impl ParseInstruction for Parser = fn(result) {
 }
 
 let ParseMap = ~DefRecord[:entries]
+
+impl Collection for ParseMap = {
+  fn keys() = this.entries::map(first)::as_set()
+}
 
 impl Call for ParseMap = fn(tokens, ...args) {
   if tokens::empty?() { return null }
@@ -431,14 +446,14 @@ fn parse_inclusive_range(tokens lhs) = ~Parser[
   ~AbortIf[not_adjacent?]
   ~Init[{type: :inclusive_range, lhs}]
   ~Chomp[:dot_dot]
-  ~Then[parse_1_2_expr :rhs]
+  ~Optional[SINGLE_EXPR_PARSE_MAP::keys() parse_1_2_expr :rhs]
 ]::call(tokens)
 
 fn parse_exclusive_range(tokens lhs) = ~Parser[
   ~AbortIf[not_adjacent?]
   ~Init[{type: :exclusive_range, lhs}]
   ~Chomp[:dot_dot_dot]
-  ~Then[parse_1_2_expr :rhs]
+  ~Optional[SINGLE_EXPR_PARSE_MAP::keys() parse_1_2_expr :rhs]
 ]::call(tokens)
 
 fn parse_fn_call(tokens lhs) = ~Parser[
@@ -802,7 +817,13 @@ fn parse_set(tokens) = ~Parser[
   ~Chomp[:close_b]
 ]::call(tokens)
 
-fn parse_single_expr(tokens) = ~ParseMap{
+fn parse_prefix_inclusive_range(tokens) = ~Parser[
+  ~Init[{type: :prefix_inclusive_range}]
+  ~Chomp[:dot_dot]
+  ~Then[parse_expr :expr]
+]::call(tokens)
+
+let SINGLE_EXPR_PARSE_MAP = ~ParseMap{
   :string_lit => parse_str
   :regex_lit => parse_regex
   :keyword => parse_keyword
@@ -814,6 +835,7 @@ fn parse_single_expr(tokens) = ~ParseMap{
   :num => parse_num
   :big_int => parse_big_int
   :open_sq => parse_array
+  :dot_dot => parse_prefix_inclusive_range
   :dot_dot_dot => parse_spread
   :double_colon => parse_bind_this
   :bang => parse_not
@@ -829,7 +851,9 @@ fn parse_single_expr(tokens) = ~ParseMap{
   :fn => parse_fn
   [:tilde :id :open_b] => parse_record_syntax
   [:tilde :id :open_sq] => parse_vector_syntax
-}::call(tokens)
+}
+
+fn parse_single_expr(tokens) = SINGLE_EXPR_PARSE_MAP::call(tokens)
 
 fn parse_1_2_expr(tokens) =
   parse_single_expr(tokens)
@@ -1276,11 +1300,21 @@ fn eval_vector_syntax({constructor_name entries}) =
         "[" entries::map(eval_expr).join(", ") "]"
       ")")
 
-fn eval_inclusive_range({lhs, rhs}) =
-  str("new Range(" eval_expr(lhs) ", " eval_expr(rhs) ")")
+fn eval_inclusive_range({lhs, rhs}) {
+  if rhs {
+    return str("new Range(" eval_expr(lhs) ", " eval_expr(rhs) ")")
+  } else {
+    return str("new Range(" eval_expr(lhs) ", Infinity)")
+  }
+}
 
-fn eval_exclusive_range({lhs, rhs}) =
-  str("new Range(" eval_expr(lhs) ", " eval_expr(rhs) ", true)")
+fn eval_exclusive_range({lhs, rhs}) {
+  if rhs {
+    return str("new Range(" eval_expr(lhs) ", " eval_expr(rhs) ", true)")
+  } else {
+    return str("new Range(" eval_expr(lhs) ", Infinity, true)")
+  }
+}
 
 fn eval_shorthand_anon_fn({expr}) =
   str("(...__args) => " eval_expr(expr))
@@ -1325,12 +1359,18 @@ fn eval_op_eq({ lhs, op, rhs }) =
       eval_expr(lhs) ", "
       eval_rhs_based_on_op(op rhs) ")")
 
+fn eval_prefix_inclusive_range({ expr }) =
+  // todo: do we want this to be polymoprhic based off
+  // the type of `expr`? For now its going to expect numbers
+  str("new Range(-Infinity, " eval_expr(expr) ")") 
+
 fn eval_expr(node) = node::at(:type)::pipe(~Map{
   :str => eval_str
   :regex_lit => eval_regex_lit
   :decorator => eval_decorator
   :keyword => eval_keyword
   :and_dot => eval_and_dot
+  :prefix_inclusive_range => eval_prefix_inclusive_range
   :partial_fn_call => eval_partial_fn_call
   :partial_obj_dyn_access => eval_partial_obj_dyn_access
   :property_lookup => eval_property_lookup

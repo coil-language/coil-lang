@@ -1,3 +1,1 @@
-match ~Map{a: 10} {
-  {a} => console.log("here", a)
-}
+(..3)::log()
