@@ -1,0 +1,49 @@
+// feb-26-2023
+
+import a from "./b"
+
+console.log(a)
+
+// compiler rules.
+// do not analyse import statements.
+// rather just recompile all files in a directory preserving
+// their paths.
+
+// this makes the compiler considerably simpler
+// and with the use of sha-ing files as a caching mechinism 
+// the compiler should be sufficently performant for incremental builds.
+// along with parral processing, this should be quiet fast.
+
+// for this reason, as-well as compiler simplicity
+// static analysis _should not_ be done in the compiler.
+
+// static analysis should be done, and with a coil-based compiler and
+// open parser, it will be easy to write linters, type checkers etc.
+
+// But it should not be implemented in the compiler, and should not require additional syntax.
+
+// Things I would like to see for linters:
+// - warn on multiple impl's of the same protocol on the same constructor
+// - warn on multiple define's of the same protocol on the same data
+// All of these warnings should be easy to opt-out!
+
+// the difference between linters & type checkers is that linters
+// don't force you to program a certain way, but they inform you
+// of footguns.
+
+// They don't tell you, your code is wrong. They let you know
+// "this code has the following known tradeoffs, please consent."
+
+// There's a few things that intimidate me, error messages & static analysis.
+// But I've written a simple but quite functional type checker. It was quite straight forward
+// even the basic idea of type inference is really basic when you think about it.
+
+// Type Checking coil would be quite hard, but doable.
+
+// I'm not against type checking, I'm against:
+// - giving it power to determine what is & is not valid
+// - needing to write boilerplate to assist type checking
+// - complicating & slowing down the compiler
+
+// Having it a separate build step would allow all builds to be very 
+// fast, while still providing useful warnings.
