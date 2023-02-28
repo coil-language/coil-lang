@@ -176,9 +176,11 @@ impl Call for Number = fn(collection) {
 impl Call for Keyword = fn(collection) {
   if collection is Keyword || typeof(collection) === "string" {
     raise(new TypeError("Can't 'call' a keyword with" + collection::to_s()))
-  } else {
+  } else { if Call keyof collection{
     return collection::call(this)
-  }
+  } else {
+    return collection[this]
+  } }
 }
 
 fn call(...args) = this&.[Call](...args)
@@ -727,6 +729,12 @@ fn find(f) = this[Collection].find.call(this, f::call)
 fn filter(f) = this[Collection].filter.call(this, f::call)
 fn some?(...fns) = this[Collection].some?.call(this, compose(...fns))
 fn every?(...fns) = this[Collection].every?.call(this, compose(...fns))
+fn every!(...fns) {
+  assert! this::every?(...fns)
+  return true
+}
+fn all!(...fns) = this::every!(...fns)
+
 // TODO: implement this. ^ see my above note
 fn every_with_index?(...fns) = this::every?(...fns)
 fn reduce(f, start) {
@@ -1113,6 +1121,9 @@ fn to_lowercase() = this.toLowerCase()
 fn as_set() = new Set(this)
 
 @impl_callable
+fn as_obj() = new ObjectLiteral(this)
+
+@impl_callable
 fn as_map() = new Map(this)
 
 @impl_callable
@@ -1443,9 +1454,9 @@ impl Symbol.asyncIterator for Channel = async fn*() {
 }
 
 fn fork(generator_fn) {
-  let pid = new Channel()
-  spawn(generator_fn, pid)
-  return pid
+  let chan = new Channel()
+  spawn(generator_fn, chan)
+  return chan
 }
 
 // builtin effects
@@ -1591,14 +1602,18 @@ define Vector for Comp = fn([map_fn, _for, collection, ...rest]) {
 
 let ZipView = ~Struct["ZipView" :collections]
 
+@impl_callable
 fn zip(...collections) = new ZipView([this, ...collections])
 
+@impl_callable
+fn iterator() = this[Symbol.iterator]()
+
 impl Symbol.iterator for ZipView = fn*() {
-  let generators = this.collections::map(#(&[Symbol.iterator]()))
+  let generators = this.collections::map(iterator)
   loop {
-    let vals = generators::map(fn(gen) = gen.next().value)
-    if vals::every?(nil?) { break }
-    yield vals
+    let gen_states = generators::map(#(&.next()))
+    if gen_states::every?(:done) { break }
+    yield gen_states::map(:value)
   }
 }
 
@@ -1761,6 +1776,7 @@ define Symbol.asyncIterator for AnimationFrames = async fn*() {
 fn Race() {}
 
 define Vector for Race = async fn*(items) {
+  items::all!(:subscribe)
   loop {
     let promises = items::map(fn(stream) = new Promise(fn (resolve) = stream.subscribe(resolve)))
     yield await Promise.race(promises)
