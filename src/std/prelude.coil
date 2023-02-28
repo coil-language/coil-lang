@@ -1245,11 +1245,8 @@ impl Collection for Underscore = {
 }
 
 impl Pipe for Underscore = fn(f) = this.insert(pipe, f)
-
 impl And for Underscore = fn(thunk) = this.insert(and, thunk)
-
 impl Or for Underscore = fn(other) = this.insert(or, other)
-
 impl Plus for Underscore = fn(other) = this.insert(plus, other)
 impl Minus for Underscore = fn(other) = this.insert(minus, other)
 impl Times for Underscore = fn(other) = this.insert(times, other)
@@ -1380,12 +1377,10 @@ impl OrderedCollection for Range = {
   fn first() = this.transform::call(this.start)
   fn last() = this.transform::call(this.end)
   fn take(n) {
-    let i = 0
     let output = []
-    for item of this {
+    for [item, i] of this::zip(0..) {
       if i == n { break }
       output.push(item)
-      i += 1
     }
     return output
   }
