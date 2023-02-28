@@ -1,3 +1,7 @@
-import a from "./b"
+let a = [1 2 3]
+let b = [:one :two :three]
+let c = ["blah" "ah"]
 
-console.log(a)
+for [num kw s] of a::zip(b, c) {
+  [num kw s]::log()
+}

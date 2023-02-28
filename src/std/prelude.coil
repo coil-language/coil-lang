@@ -85,20 +85,17 @@ StructValidationError.prototype = new Error()
 fn validate_struct(struct_name) {
   if !(Validation keyof this) { return true }
 
+  fn error_msg(key, validator) =
+    str(struct_name " validation failed.\n"
+        "Failed at " key::printable() ".\n"
+        "Expected [" validator::printable() "]"
+        ", got value " this[key]::printable() ".")
+
   for [key, validator] of this[Validation]::entries() {
     if validator::call(this[key]) {
       continue
     } else {
-      raise(
-        new StructValidationError(
-          str(
-            struct_name " validation failed.\n"
-            "Failed at " key::printable() ".\n"
-            "Expected " validator::printable()
-            ", got value " this[key]::printable() "."
-          )
-        )
-      )
+      raise(new StructValidationError(error_msg(key, validator)))
     }
   }
 }
@@ -123,9 +120,9 @@ fn set_struct_defaults() {
 
 fn Struct(name, ...properties) {
   fn Constructor(...args) {
-    for [key, arg] of properties::zip(args) {
-      this[key] = arg
-    }
+    properties::each(::fn(key, i) {
+      this[key] = args[i]
+    })
     // FIXME: I can't call these by doing
     // this::validate_struct(name), ...
     // it tries to chain the calls for some reason
@@ -162,8 +159,7 @@ impl Call for HashMap = fn(key) = this::at(key)
 
 impl Call for String = fn(collection) {
   if typeof(collection) === "string" || collection is Keyword {
-    // make sure we don't end up in infinite loop  
-    return collection[this]
+    raise(new TypeError("Can't 'call' a string with" + collection::to_s()))
   } else {
     return collection::call(this)
   }
@@ -178,10 +174,8 @@ impl Call for Number = fn(collection) {
 }
 
 impl Call for Keyword = fn(collection) {
-  if (collection is Keyword)
-  || typeof(collection) === "string" {
-    // again prevent infinite loop
-    return collection[this]
+  if collection is Keyword || typeof(collection) === "string" {
+    raise(new TypeError("Can't 'call' a keyword with" + collection::to_s()))
   } else {
     return collection::call(this)
   }
@@ -312,7 +306,14 @@ fn values() = Object.values(this)
 // Basics every object should impl this
 impl Collection for Object = {
   fn at(key) = this[key]
+  fn has?(property) = property keyof this
   fn keys() = Object.keys(this)::as_set()
+}
+
+impl Symbol.iterator for ObjectLiteral = fn*() {
+  for [key value] of this::entries() {
+    yield [key value]
+  }
 }
 
 impl Collection for ObjectLiteral = {
@@ -365,6 +366,12 @@ impl Collection for Array = {
   fn has?(val) = this.includes(val) || this::some?(fn(v) = v == val)
   fn len() = this.length
   fn remove(val) = this::filter(fn(v) = v != val)
+}
+
+impl Symbol.iterator for HashMap = fn*() {
+  for [key value] of this::raw_entries {
+    yield [key value]
+  }
 }
 
 impl Collection for HashMap = {
@@ -702,22 +709,25 @@ impl Collection for String = {
   }
 }
 
-// TODO: make this more general
-fn zip(other) = this::map_with_index(fn(val, i) = [val, other::at(i)])
-
 fn at(key_or_idx) = this[Collection].at.call(this, key_or_idx)
 fn keys() = this[Collection].keys.call(this)
 fn sample() = this[Collection].sample.call(this)
 fn each(f) = this[Collection].each.call(this, f::call)
 fn map(...fns) = this[Collection].map.call(this, compose(...fns))
-// TODO: implement this
+// TODO: implement this, or remove it if its not needed.
+// Honestly the only reason to rethink this is the following.
+// ["1" "1" "1"]::map(parseInt) -> [ 1, NaN, 1 ]
+// this is because index gets passed to parseInt.
+// I've never run into this, but it does seem kind of silly.
+// On the other hand, being able to easily pull out an index
+// for a regular map is very convenient, so I'm torn.
 fn map_with_index(...fns) = this::map(...fns)
 fn flat_map(...fns) = this[Collection].flat_map.call(this, compose(...fns))
 fn find(f) = this[Collection].find.call(this, f::call)
 fn filter(f) = this[Collection].filter.call(this, f::call)
 fn some?(...fns) = this[Collection].some?.call(this, compose(...fns))
 fn every?(...fns) = this[Collection].every?.call(this, compose(...fns))
-// TODO: implement this
+// TODO: implement this. ^ see my above note
 fn every_with_index?(...fns) = this::every?(...fns)
 fn reduce(f, start) {
   if start::nil?() {
@@ -1189,7 +1199,7 @@ impl UnderscoreInterpreter for Object = fn(underscore) {
   return result
 }
 
-impl Call for Underscore = fn(data, ...args) = data[UnderscoreInterpreter](this, ...args)
+impl Call for Underscore = fn(data, ...args) = data&.[UnderscoreInterpreter](this, ...args)
 
 impl Comparable for Underscore = {
   fn less_than(val) = this.insert(less_than, val)
@@ -1579,6 +1589,30 @@ define Vector for Comp = fn([map_fn, _for, collection, ...rest]) {
   return result
 }
 
+let ZipView = ~Struct["ZipView" :collections]
+
+fn zip(...collections) = new ZipView([this, ...collections])
+
+impl Symbol.iterator for ZipView = fn*() {
+  let generators = this.collections::map(#(&[Symbol.iterator]()))
+  loop {
+    let vals = generators::map(fn(gen) = gen.next().value)
+    if vals::every?(nil?) { break }
+    yield vals
+  }
+}
+
+impl :collect for ZipView = fn() {
+  let output = []  
+  for idx of 0...this.collections::first()::len() {
+    output.push([])
+    for col of this.collections {
+      output.at(-1).push(col[idx])
+    }
+  }
+  return output
+}
+
 // CollectionView is an efficent data structure to use
 // the same old Collection protocol methods, without
 // copying the entire array each time you ::skip(1)
@@ -1591,6 +1625,12 @@ impl OrderedCollection for CollectionView = {
   fn first() = this.collection::at(this.idx)
   fn last() = this.collection::last()
   fn skip(n) = new CollectionView(this.collection, this.idx + n)
+}
+
+impl Symbol.iterator for CollectionView = fn*() {
+  for elem of this.collection {
+    yield elem
+  }
 }
 
 impl Collection for CollectionView = {
@@ -1614,9 +1654,9 @@ define Vector for DefVector = fn(properties) {
     }
   } else {
     Constructor = fn(...args) {
-      for [key, arg] of properties::zip(args) {
-        this[key] = arg
-      }
+      properties::each(::fn(key, i) {
+        this[key] = args[i]
+      })
     }
   }
   define Vector for Constructor = fn(args) = new Constructor(...args)
@@ -1681,6 +1721,10 @@ impl Matches for ObjectLiteral = fn(record) =
 // for listening to window events
 
 let EventStream = ~Struct["EventStream" :event_type :filter]
+
+impl Validation for EventStream = {
+  event_type: #(window::has?("on" + &::to_s()))
+}
 
 impl EventStream = {
   fn start() {
