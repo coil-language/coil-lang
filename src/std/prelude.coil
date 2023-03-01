@@ -13,7 +13,8 @@ impl Hash for Map = fn() =
 fn hash() = this[Hash]()
 
 fn HashMap(entries) {
-  this.raw_entries = entries  
+  // I worry about the performance of keeping the raw entries around.
+  this.raw_entries = entries
   this.map = new Map(entries.map(fn([key, value]) = [key::hash(), value]))
 }
 
@@ -44,12 +45,12 @@ define Record for Map = fn(entries) = new Map(entries)
 define Record for ObjectLiteral = fn(entries) = entries::from_entries()
 define Record for HashMap = fn(entries) = new HashMap(entries)
 
-fn truthy?() = truthy(this)
-
-fn record?() = this.constructor[Record]::truthy?()
+fn record?() = this.constructor[Record]::as_bool()
 fn construct_record(entries) = this[Record](entries)
 
 protocol Vector
+
+fn vector?() = this.constructor[Vector]::as_bool()
 
 define Vector for Array = fn(entries) = entries
 
@@ -120,9 +121,11 @@ fn set_struct_defaults() {
 
 fn Struct(name, ...properties) {
   fn Constructor(...args) {
-    properties::each(::fn(key, i) {
+    let i = 0  
+    for key of properties {
       this[key] = args[i]
-    })
+      i += 1
+    }
     // FIXME: I can't call these by doing
     // this::validate_struct(name), ...
     // it tries to chain the calls for some reason
@@ -159,7 +162,7 @@ impl Call for HashMap = fn(key) = this::at(key)
 
 impl Call for String = fn(collection) {
   if typeof(collection) === "string" || collection is Keyword {
-    raise(new TypeError("Can't 'call' a string with" + collection::to_s()))
+    raise(new TypeError("Can't 'call' a string with" + collection::as_str()))
   } else {
     return collection::call(this)
   }
@@ -175,7 +178,7 @@ impl Call for Number = fn(collection) {
 
 impl Call for Keyword = fn(collection) {
   if collection is Keyword || typeof(collection) === "string" {
-    raise(new TypeError("Can't 'call' a keyword with" + collection::to_s()))
+    raise(new TypeError("Can't 'call' a keyword with" + collection::as_str()))
   } else { if Call keyof collection{
     return collection::call(this)
   } else {
@@ -329,7 +332,13 @@ impl Collection for ObjectLiteral = {
   fn filter(f) = this::entries().filter(fn ([k, v]) = f(k, v)::pipe(truthy))::from_entries()
   fn some?(f) = this::entries().some(fn ([k, v]) = f(k, v)::pipe(truthy))
   fn every?(f) = this::entries().every(fn ([k, v]) = f(k, v)::pipe(truthy))
-  fn reduce(f, start) = this::entries().reduce(f, start)
+  fn reduce(f, start) {
+    let result = start
+    for [k v] of this {
+      reuslt = f(result, k, v)
+    }
+    return result
+  }
   fn insert(key, value) = {...this, [key]: value}
   fn concat(other) = {...this, ...other}
   fn update(key, update_fn) = this::insert(key, update_fn::call(this::at(key)))
@@ -347,14 +356,14 @@ impl Collection for Array = {
   fn at(idx) = this.at(idx)
   fn keys() = Object.keys(this)::as_set()
   fn sample() = this[0]
-  fn each(f) = this.forEach(f)
-  fn find(f) = this.find(compose(f, truthy))
-  fn map(f) = this.map(f)
-  fn flat_map(f) = this::map(f).flat()
-  fn filter(f) = this.filter(compose(f, truthy))
-  fn some?(f) = this.some(compose(f, truthy))
-  fn every?(f) = this.every(compose(f, truthy))
-  fn reduce(f, start) = this.reduce(f, start)
+  fn each(f) = this.forEach(#(f(&)))
+  fn find(f) = this.find(compose(#(f(&)), truthy))
+  fn map(f) = this.map(#(f(&)))
+  fn flat_map(f) = this.flatMap(#(f(&)))
+  fn filter(f) = this.filter(compose(#(f(&)), truthy))
+  fn some?(f) = this.some(compose(#(f(&)), truthy))
+  fn every?(f) = this.every(compose(#(f(&)), truthy))
+  fn reduce(f, start) = this.reduce(fn(acc, val) = f(acc, val), start)
   fn insert(value) = [...this, value]
   fn concat(other) = [...this, ...other]
   fn update(val, update_fn) = this::map(fn(v) {
@@ -467,7 +476,7 @@ impl Collection for Map = {
   fn map(f) {
     let new_map = new Map([])
     for [k, v] of this {
-      new_map.set(k, f(v))
+      new_map.set(k, f(k, v))
     }
     return new_map
   }
@@ -710,20 +719,17 @@ impl Collection for String = {
     return this.slice(0, idx) + this.slice(idx + substr::len())
   }
 }
+// thoughts on naming
+// some? => any?
+// every? => all?
+// filter => keep
+// !filter => reject
 
 fn at(key_or_idx) = this[Collection].at.call(this, key_or_idx)
 fn keys() = this[Collection].keys.call(this)
 fn sample() = this[Collection].sample.call(this)
 fn each(f) = this[Collection].each.call(this, f::call)
 fn map(...fns) = this[Collection].map.call(this, compose(...fns))
-// TODO: implement this, or remove it if its not needed.
-// Honestly the only reason to rethink this is the following.
-// ["1" "1" "1"]::map(parseInt) -> [ 1, NaN, 1 ]
-// this is because index gets passed to parseInt.
-// I've never run into this, but it does seem kind of silly.
-// On the other hand, being able to easily pull out an index
-// for a regular map is very convenient, so I'm torn.
-fn map_with_index(...fns) = this::map(...fns)
 fn flat_map(...fns) = this[Collection].flat_map.call(this, compose(...fns))
 fn find(f) = this[Collection].find.call(this, f::call)
 fn filter(f) = this[Collection].filter.call(this, f::call)
@@ -734,9 +740,6 @@ fn every!(...fns) {
   return true
 }
 fn all!(...fns) = this::every!(...fns)
-
-// TODO: implement this. ^ see my above note
-fn every_with_index?(...fns) = this::every?(...fns)
 fn reduce(f, start) {
   if start::nil?() {
     start = this::sample()::identity()
@@ -753,6 +756,14 @@ fn not_empty?() = !this::empty?()
 fn has?(key_or_value) = this[Collection].has?.call(this, key_or_value)
 fn len() = this[Collection].len.call(this)
 fn remove(key_or_val) = this[Collection].remove.call(this, key_or_val)
+
+fn collection?() =
+  [Collection Identity]::every?(::fn(proto) = this[proto])
+    &&
+  (this::record?() || this::vector?())
+
+fn ordered_collection?() =
+  this::collection?() && this[OrderedCollection]::as_bool()
 
 // aliases for readability
 
@@ -790,6 +801,127 @@ impl OrderedCollection for Map = {
   fn take() = new Map(Array["from"](this).slice(0, n))
   fn sort() = new Map(Array["from"](this).sort(fn ([_k1, v1], [_k2, v2]) = v2 - v1))
   fn reverse() = new Map(Array["from"](this).reverse())
+}
+
+// let ProtoMap = ~
+
+fn each_with_index(f) {
+  if this::is_a?(Record) {
+    for [elem, i] of this::zip(0..) {
+      f::call(...elem, i)
+    }
+  } else { if this::is_a?(Vector) {
+    for [elem, i] of this::zip(0..) {
+      f::call(elem, i)
+    }
+  } else {
+    raise(new TypeError("Expected a Record or Vector"))
+  } }
+}
+fn map_with_index(f) {
+  let coll = this::identity()
+  if this::record?() {
+    for [elem, i] of this::zip(0..) {
+      coll = coll::insert(...f::call(...elem, i))
+    }
+  } else {
+    for [elem, i] of this::zip(0..) {
+      coll = coll::insert(f::call(elem, i))
+    }
+  }
+  return coll
+}
+fn flat_map_with_index(f) {
+  let coll = this::identity()
+  if this::record?() {
+    for [elem, i] of this::zip(0..) {
+      coll = coll::concat(...f::call(...elem, i))
+    }
+  } else {
+    for [elem, i] of this::zip(0..) {
+      coll = coll::concat(f::call(elem, i))
+    }
+  }
+  return coll
+}
+fn find_with_index(f) {
+  if this::record?() {
+    for [elem, i] of this::zip(0..) {
+      if f::call(...elem, i) {
+        return elem
+      }
+    }
+  } else {
+    for [elem, i] of this::zip(0..) {
+      if f::call(elem, i) {
+        return elem
+      }
+    }
+  }
+}
+fn filter_with_index(f) {
+  let coll = this::identity()
+  if this::record?() {
+    for [elem, i] of this::zip(0..) {
+      if f::call(...elem, i) {
+        coll = coll::insert(elem)
+      }
+    }
+  } else {
+    for [elem, i] of this::zip(0..) {
+      if f::call(elem, i) {
+        coll = coll::insert(elem)
+      }
+    }
+  }
+  return coll
+}
+fn some_with_index?(f) {
+  if this::record?() {
+    for [elem, i] of this::zip(0..) {
+      if f::call(...elem, i) {
+        return true
+      }
+    }
+  } else {
+    for [elem, i] of this::zip(0..) {
+      if f::call(elem, i) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+fn every_with_index?() = ~ProtoMap{
+  Record => ::fn(f) {
+    for [elem, i] of this::zip(0..) {
+      if !f::call(...elem, i) {
+        return false
+      }
+    }
+  },
+  Vector => ::fn(f) {
+    for [elem, i] of this::zip(0..) {
+      if f::call(elem, i) {
+        return false
+      }
+    }
+  }
+}::call(this)
+
+fn reduce_with_index(f, start) {
+  let result = start || this::first()::identity()
+  if this::record?() {
+    for [elem, i] of this::zip(0..) {
+      result = f::call(result, ...elem, i)
+    }
+  } else {
+    for [elem, i] of this::zip(0..) {
+      result = f::call(result, elem, i)
+    }
+  }
+  return result
 }
 
 @impl_callable
@@ -1091,22 +1223,10 @@ fn pos?() = this >= this::identity()
 fn nan?() = Number.isNaN(this)
 
 @impl_callable
-fn to_f() = Number(this)
-
-@impl_callable
-fn to_i() = this::to_f()::pipe(Math.floor)
-
-@impl_callable
-fn to_s() = this.toString()
-
-@impl_callable
 fn str?() = typeof(this) == "string"
 
 @impl_callable
-fn to_b() = truthy(this)
-
-@impl_callable
-fn exists?() = (this || (this == false))::to_b()
+fn exists?() = (this || (this == false))::as_bool()
 
 @impl_callable
 fn finite?() = this::bigint?() || Number.isFinite(this)
@@ -1130,10 +1250,30 @@ fn as_map() = new Map(this)
 fn as_keyword() = Keyword["for"](this.toString())
 
 @impl_callable
+fn as_float() = Number(this)
+
+@impl_callable
+fn as_int() = this::as_float()::pipe(Math.floor)
+
+@impl_callable
+fn as_str() = this.toString()
+
+@impl_callable
+fn as_bool() = truthy(this)
+
+@impl_callable
 fn error?() = this is Error
 
 @impl_callable
-fn is_a?(klass) = this is Klass
+fn is_a?(KlassOrProtocol) {
+  if typeof(KlassOrProtocol) == "symbol" {
+    return this.constructor[KlassOrProtocol]::as_bool()
+  } else { if typeof(KlassOrProtocol) == "function" {
+    return this is KlassOrProtocol
+  } else {
+    return false
+  } }
+}
 
 // Schema / Schema related stuff
 impl Negate for Set = fn() = #(!this.has(&))
@@ -1174,7 +1314,7 @@ impl And for Schema = fn(thunk) = new Schema([
 
 
 impl Or for Schema = fn(thunk) =
-  ::fn(record) = (this::call(record) || thunk()::call(record))::to_b()
+  ::fn(record) = (this::call(record) || thunk()::call(record))::as_bool()
 
 let Underscore = ~Struct["Underscore" :transforms]
 
@@ -1733,7 +1873,7 @@ impl Matches for ObjectLiteral = fn(record) =
 let EventStream = ~Struct["EventStream" :event_type :filter]
 
 impl Validation for EventStream = {
-  event_type: #(window::has?("on" + &::to_s()))
+  event_type: #(window::has?("on" + &::as_str()))
 }
 
 impl EventStream = {
