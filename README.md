@@ -2,7 +2,7 @@
 
 [try it out](https://coil-lang.netlify.app/)
 
-Coil is an expressive dynamic language which emphasizes polymorphism, programming with immutable data and managed effects.
+Coil is an expressive dynamic language which emphasizes polymorphism without inheritance, programming with immutable data and managed effects.
 
 ```
 fn tie?() =
