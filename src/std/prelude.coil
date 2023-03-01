@@ -1607,7 +1607,7 @@ impl Symbol.iterator for ZipView = fn*() {
   let generators = this.collections::map(iterator)
   loop {
     let gen_states = generators::map(#(&.next()))
-    if gen_states::every?(:done) { break }
+    if gen_states::first()::at(:done) { break }
     yield gen_states::map(:value)
   }
 }
