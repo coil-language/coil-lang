@@ -114,7 +114,7 @@ function js_str_hash(str) {
   return hash;
 }
 
-function raise(err) {
+function raise__b(err) {
   console.log(err);
   throw err;
 }
