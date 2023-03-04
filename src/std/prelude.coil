@@ -343,7 +343,7 @@ impl Collection for ObjectLiteral = {
   fn concat(other) = {...this, ...other}
   fn update(key, update_fn) = this::insert(key, update_fn::call(this::at(key)))
   fn empty?() = this::len() == 0
-  fn has?(key) = this[key]::truthy?()
+  fn has?(key) = this[key]::as_bool()
   fn len() = Object.keys(this).length
   fn remove(key) {
     let obj = this::clone()
@@ -459,7 +459,7 @@ impl Collection for HashMap = {
   }
   fn update(key, update_fn) = this::insert(key, update_fn::call(this::at(key)))
   fn empty?() = this.raw_entries.length == 0
-  fn has?(key) = this::at(key)::truthy?()
+  fn has?(key) = this::at(key)::as_bool()
   fn len() = this.raw_entries.length
   fn remove(key) = this::filter(fn (k, v) = k != key)
 }
@@ -538,7 +538,7 @@ impl Collection for Map = {
   }
   fn update(key, update_fn) = this::insert(key, update_fn::call(this::at(key)))
   fn empty?() = this.size == 0
-  fn has?(key) = this::at(key)::truthy?()
+  fn has?(key) = this::at(key)::as_bool()
   fn len() = this.size
   fn remove(key) {
     let map = this::clone()
@@ -888,7 +888,7 @@ fn filter_with_index(f) {
   }
   return coll
 }
-fn some_with_index?(f) {
+fn any_with_index?(f) {
   if this::record?() {
     for [elem, i] of this::zip(0..) {
       if f::call(...elem, i) {
@@ -905,22 +905,23 @@ fn some_with_index?(f) {
   return false
 }
 
-fn every_with_index?() = ~ProtoMap{
-  Record => ::fn(f) {
+fn all_with_index?(f) {
+  if this::record?() {
     for [elem, i] of this::zip(0..) {
       if !f::call(...elem, i) {
         return false
       }
     }
-  },
-  Vector => ::fn(f) {
+    return true
+  } else {
     for [elem, i] of this::zip(0..) {
-      if f::call(elem, i) {
+      if !f::call(elem, i) {
         return false
       }
     }
+    return true
   }
-}::call(this)
+}
 
 fn reduce_with_index(f, start) {
   let result = start || this::first()::identity()
@@ -1304,7 +1305,7 @@ let Args = ~Struct["Args" :schemas]
 define Vector for Args = fn(schemas) = new Args(schemas)
 
 impl Call for Args = fn(...args) =
-  this.schemas::all?(fn(schema, i) = schema::call(args[i]))
+  this.schemas::all_with_index?(fn(schema, i) = schema::call(args[i]))
 
 impl Negate for Args = fn() = ::fn(...args) = !this::call(...args)
 
@@ -1490,6 +1491,14 @@ impl :update for Range = fn(new_transform) = new Range(
   this.exclusive?,
   new_transform
 )
+
+impl :fill for Range = fn(val) {
+  let output = []  
+  for i of this {
+    output[i] = val
+  }
+  return output
+}
 
 impl Collection for Range = {
   fn sample() = this.start
@@ -1755,6 +1764,16 @@ fn zip(...collections) = new ZipView([this, ...collections])
 @impl_callable
 fn iterator() = this[Symbol.iterator]()
 
+impl Collection for ZipView = {
+  fn map(f) {
+    let output = []  
+    for [a, b] of this {
+      output.push(f(a, b))
+    }
+    return output
+  }
+}
+
 impl Symbol.iterator for ZipView = fn*() {
   let generators = this.collections::map(iterator)
   loop {
@@ -1816,9 +1835,9 @@ define Vector for DefVector = fn(properties) {
     }
   } else {
     Constructor = fn(...args) {
-      properties::each(::fn(key, i) {
+      for [key i] of properties::zip(0..) {
         this[key] = args[i]
-      })
+      }
     }
   }
   define Vector for Constructor = fn(args) = new Constructor(...args)
@@ -1857,7 +1876,21 @@ protocol Matches
 
 fn matches?(value) = this[Matches](value)
 
+fn guard(...args) {
+  let [patterns, f] = [args.slice(0, -1), args.at(-1)]
+  return fn(...args) {
+    if patterns::matches?(args) {
+      return f(...args)
+    }
+  }
+}
+
+fn primitive?() = typeof(this) != "object" && typeof(this) != "function"
+
 impl Matches for Object = fn(value) {
+  if this::primitive?() {
+    return this == value
+  }
   if Call keyof this {
     return this::call(value)
   } else {
@@ -1867,7 +1900,9 @@ impl Matches for Object = fn(value) {
 
 impl Matches for Array = fn(value) =
   value::len() == this::len() &&
-  ::every_with_index?(fn(pattern, i) = pattern::matches?(value::at(i)))
+  ::all_with_index?(fn(pattern, i) = pattern::matches?(value::at(i)))
+
+impl Matches for Set = fn(value) = this::has?(value)
 
 impl Matches for Underscore = fn(value) {
   if value::nil?() {
@@ -1879,6 +1914,24 @@ impl Matches for Underscore = fn(value) {
 
 impl Matches for ObjectLiteral = fn(record) =
   ::all?(fn(key, pattern) = pattern::matches?(record::at(key::as_keyword())))
+
+let Match = ~DefRecord[:entries]
+
+// probably we can get rid of the `match`
+// keyword for this. 
+// The primary benefit of `match` is that it allow
+// statements like yield.
+// It would be nice to find a way to unify these two ideas.
+// because right now the `match` keyword is clunky
+// & would require more work than I'd like
+// to make it nice to use.
+impl Call for Match = fn(val) {
+  for [pattern ret] of this.entries {
+    if pattern::matches?(val) {
+      return ret
+    }
+  }
+}
 
 // for listening to window events
 
