@@ -128,14 +128,14 @@ fn ParseError(expected_token_type, actual_token) {
   this.message = str(
     "Expected: " expected_token_type::printable()
     " got " actual_token::at(:type)::printable()
-    " @ " actual_token::at(:line)::to_s() ":" actual_token::at(:col)::to_s()
+    " @ " actual_token::at(:line)::as_str() ":" actual_token::at(:col)::as_str()
   )
 }
 ParseError.prototype = new Error()
 
 fn expect_token!(kw) {
   if this::first()::at(:type) != kw {
-    raise(new ParseError(kw, this::first()))
+    raise!(new ParseError(kw, this::first()))
   } else {
     return this
   }
@@ -143,7 +143,7 @@ fn expect_token!(kw) {
 
 fn verify_exists!(parser) {
   if this::nil?() {
-    raise(new Error("Parser Failed - Expected " + parser::printable()))
+    raise!(new Error("Parser Failed - Expected " + parser::printable()))
   } else {
     return this
   }
@@ -190,6 +190,8 @@ impl ParseInstruction for Function = fn([_expr tokens]) = this(tokens)
 
 let Chomp = ~DefVector[_ :kws]
 impl ParseInstruction for Chomp = fn([expr tokens]) {
+  // this.kws::zip(tokens)::all!(fn([a b]) = a == b)
+  // return [expr tokens::skip(this.kws::len())]
   let i = 0
   for kw of this.kws {
     tokens::skip(i)::expect_token!(kw)
@@ -239,7 +241,7 @@ impl ParseInstruction for Case = fn([expr tokens]) {
     return [expr::merge({[this.kw]: new_expr}), new_tokens]
   } else {
     console.log(this.tokens::first(), this.parse_map)
-    raise(new Error("Case Parse Failed"))
+    raise!(new Error("Case Parse Failed"))
   }
 }
 impl Printable for Case = fn() = "Case(" + this.parse_map::printable() + ", as: " + this.kw::printable() + ")"
@@ -297,7 +299,8 @@ impl Call for ParseMap = fn(tokens, ...args) {
     if pattern is Set && pattern::call(tokens::first()::at(:type)) {
       return parser::call(tokens, ...args)
     }
-    if pattern is Array && pattern::every?(fn(p, i) {
+    if pattern is Array && pattern::all_with_index?(fn(p, i) {
+      if i >= tokens::len() { return false }
       let type = tokens::at(i)::at(:type)
       if p is Keyword { return p == type }
       if p is Set { return p::has?(type) }
@@ -1078,6 +1081,13 @@ fn parse_export_default(tokens) = ~Parser[
   ~Then[parse_expr :expr]
 ]::call(tokens)
 
+fn parse_label(tokens) = ~Parser[
+  ~Init[{type: :label}]
+  ~One[:id :label_name]
+  ~Chomp[:colon]
+  ~Then[parse_statement :statement]
+]::call(tokens)
+
 fn parse_statement(tokens) = ~ParseMap{
   :let => parse_let
   :for => parse_for_loop
@@ -1100,6 +1110,7 @@ fn parse_statement(tokens) = ~ParseMap{
   :while => parse_while_loop
   [:if :let] => parse_if_let
   :if => parse_if
+  [:id :colon] => parse_label
   _ => parse_expr
 }::call(tokens)
 
@@ -1368,7 +1379,7 @@ fn eval_decorator({name, fn_def args}) =
           ::if_truthy?(#(str(args::map(eval_expr).join(", ") ", ")))
           ::otherwise("")
         eval_fn(fn_def)
-      ")")
+      ");")
 
 fn eval_keyof({lhs rhs}) = str(eval_expr(lhs) " in " eval_expr(rhs))
 fn eval_and_dot({lhs rhs}) = str(eval_expr(lhs) "?." eval_expr(rhs))
@@ -1577,8 +1588,16 @@ fn eval_match({expr, entries}) =
   entries::map(fn(entry) = eval_match_entry(entry, expr))
     .join("else ")
 
+fn eval_import_path(path) {
+  if path.split(".")::len() == 1 {
+    return str(path ".js")
+  } else {
+    return path
+  }
+}
+
 fn eval_import({assign_expr, path}) =
-  str("import " eval_assign_expr(assign_expr) " from \"" path.value.slice(1, -1) ".js\"")
+  str("import " eval_assign_expr(assign_expr) " from \"" eval_import_path(path.value.slice(1, -1)) "\"")
 
 fn eval_export({statement}) =
   str("export " eval_statement(statement))
@@ -1586,7 +1605,11 @@ fn eval_export({statement}) =
 fn eval_export_default({expr}) =
   str("export default " eval_expr(expr))
 
-fn eval_statement(node) = node::at(:type)::pipe(~Map{  
+fn eval_label({label_name, statement}) =
+  str(label_name ": " eval_statement(statement))
+
+fn eval_statement(node) = node::at(:type)::pipe(~Map{
+  :label => eval_label  
   :if => eval_if
   :unless => eval_unless
   :import => eval_import
