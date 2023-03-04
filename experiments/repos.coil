@@ -1,0 +1,40 @@
+fn Repo({url, mapping, deps}) {
+  this.url = url
+  this.mapping = mapping
+  this.deps = deps
+}
+
+define Vector for Repo = fn(entries) {
+  let [url_kw, url, ...rest] = entries
+  assert! url_kw == :url
+  let deps = []
+  if rest::first() == :deps {
+    [deps rest] = rest::until(_ == :mapping)
+  }
+  let [mapping_kw, mapping] = rest
+  assert! mapping_kw == :mapping
+  return new Repo({url, deps, mapping})
+}
+
+impl Dereference for Repo = fn() =
+  http.get(this.url, this.deps).then(this.mapping)
+
+let Batch = ~Repo[
+  :url API.Batches.current
+  :mapping _
+]
+
+// time to get a basic app up, crud style
+
+// reactive URLs ??
+let Mask = ~Repo[
+  :url API.Masks.me :deps batch
+  :mapping {
+    points: _::at(:points)::sort_by(:idx)::map_to_constructor([:x :y] Point)
+  }
+]
+
+@sub(Mask, Batch)
+async fn* view_mask(mask, batch) {
+
+}
