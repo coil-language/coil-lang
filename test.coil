@@ -102,6 +102,7 @@ impl Invertable for Lookup = fn(output, value) {
 
 let Point = ~Struct["Point" :x :y]
 
+// this should probably be a DefRecord
 let Construct = ~DefVector[:ctor _ :entries]
 
 impl Symbol.iterator for Construct = fn*() {
@@ -150,9 +151,5 @@ let Post = new Model("Post" {
 })
 
 let my_post = Post.load({point_x: 10, point_y: 20})::log()
-// the compiler is broken.. these lets are necessary for some reason
-let d = 3
 my_post.data.point.x += 20
-// the compiler is broken..
-let b = 10
 my_post.unload()::log()

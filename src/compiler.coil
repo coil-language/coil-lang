@@ -1264,7 +1264,7 @@ fn eval_set({elements}) =
   str("new Set([" elements::map(eval_expr).join(", ") "])")
 
 fn eval_bind({lhs expr}) =
-  str("(" eval_expr(expr) ".bind(" eval_expr(lhs) "))")
+  str(eval_expr(expr) ".bind(" eval_expr(lhs) ")")
 
 fn eval_reg_obj_entry({key, value}) =
   str(resolve_name(key) ": " eval_expr(value))
