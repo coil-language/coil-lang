@@ -40,7 +40,9 @@ impl Model = {
       // use something like StructValidationError here instead.
       // In general this assert! keyword is poorly thought out
       // maybe needs to be removed
-      assert! schema::at(key)::call(output.data[key])
+      if key keyof schema {
+        assert! schema::at(key)::call(output.data[key])
+      }
     }
     return output
   }
@@ -48,7 +50,9 @@ impl Model = {
     let {mapping, schema} = this.options
     let output = {}
     for [key mapper] of mapping {
-      assert! schema[key]::call(this.data[key])
+      if key keyof schema {  
+        assert! schema[key]::call(this.data[key])
+      }
       output = mapper::invert(output, this.data[key])
     }
     return output
@@ -60,10 +64,11 @@ let Lookup = ~DefVector[_ :keys]
 impl Call for Lookup = fn(obj) =
   this.keys::reduce(fn(result, kw) = result::at(kw), obj)
 
-
 // inverse of :age _::at(:person)::at(:my_age) is:
 //            {...output, person: {my_age: new_value}}
 // that is    output::insert(:person ::insert(:my_age new_value))
+// This breaks at ~Lookup[:age] - that is, it breaks when
+// there is only one key in this.keys
 impl Invertable for Lookup = fn(output, value) {
   // this is a mess, but it kind of works??
   let reversed_keys = this.keys::reverse()
@@ -85,16 +90,69 @@ impl Invertable for Lookup = fn(output, value) {
   return obj
 }
 
+// what if compose stored the functions instead of combining them right away
+// kind of like Underscore
+// it would mean we could use compose(:user :id) in
+// these mappings & as long as each step was reversable..
+// it should be possible?
+// idk
+// The other thing is reading compose(:user :id)
+// is pretty meaningless because that word has been
+// overloaded so many times
+
+let Point = ~Struct["Point" :x :y]
+
+let Construct = ~DefVector[:ctor _ :entries]
+
+impl Symbol.iterator for Construct = fn*() {
+  let i = 0
+  let prev = null
+  for elem of this.entries {
+    i += 1
+    if i::odd?() {
+      prev = elem  
+      continue
+    }
+    yield [prev elem]
+  }
+}
+
+impl Call for Construct = fn(data) {
+  let args = []
+  for [_arg_name, mapper] of this {
+    args.push(mapper::call(data))
+  }
+  let Ctor = this.ctor
+  return new Ctor(...args)
+}
+
+impl Invertable for Construct = fn(output, value) {
+  for [prop mapper] of this {
+    output = mapper::invert(output, value[prop])
+  }
+  return output
+}
+
 let Post = new Model("Post" {
   mapping: {
-    id: ~Lookup[:user :id]
-    title: ~Lookup[:user :title]
+    // id: ~Lookup[:user :id]
+    // title: ~Lookup[:user :title]
+    point: ~Construct[Point
+      :x :point_x
+      :y :point_y
+    ]
+    // age: :age
   }
   schema: {
-    id: _
-    title: _::len() < 100
+    // id: _
+    // title: _::len() < 100
   }
 })
 
-let my_post = Post.load({user: {id: 10, title: "oh yea"}})::log()
+let my_post = Post.load({point_x: 10, point_y: 20})::log()
+// the compiler is broken.. these lets are necessary for some reason
+let d = 3
+my_post.data.point.x += 20
+// the compiler is broken..
+let b = 10
 my_post.unload()::log()

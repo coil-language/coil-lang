@@ -771,6 +771,7 @@ impl OrderedCollection for Array = {
   fn first() = this[0]
   fn last() = this.at(-1)
   fn skip(n) = this.slice(n)
+  fn drop(n) = this.slice(0, -n)
   fn take_last(n) = this.slice(-1 - n, -1)
   fn take(n) = this.slice(0, n)
   fn sort(f) = this::clone().sort(f)
@@ -935,6 +936,8 @@ fn first() = this[OrderedCollection].first.call(this)
 fn last() = this[OrderedCollection].last.call(this)
 @impl_callable
 fn skip(n) = this[OrderedCollection].skip.call(this, n)
+@impl_callable
+fn drop(n) = this[OrderedCollection].drop.call(this, n)
 @impl_callable
 fn take_last(n) = this[OrderedCollection].take_last.call(this, n)
 @impl_callable
@@ -1222,6 +1225,9 @@ fn float?() = typeof(this) === "number" && !int?(this)
 
 @impl_callable
 fn even?() = (this % 2) === 0
+
+@impl_callable
+fn odd?() = !this::even?()
 
 @impl_callable
 fn pos?() = this >= this::identity()
@@ -1845,7 +1851,13 @@ define Vector for DefVector = fn(properties) {
   let Constructor = null
   // TODO: this returns _ itself when its true
   // that's weird, but it still works.
-  if properties::first() == _ {
+  if properties::at(1) == _ {
+    let kw = properties::at(2)
+    Constructor = fn(fst, ...args) {
+      this[properties::first()] = fst
+      this[kw] = args
+    }
+  } else { if properties::first() == _ {
     let kw = properties::at(1)
     Constructor = fn(...args) {
       this[kw] = args
@@ -1856,7 +1868,7 @@ define Vector for DefVector = fn(properties) {
         this[key] = args[i]
       }
     }
-  }
+  } }
   define Vector for Constructor = fn(args) = new Constructor(...args)
   return Constructor
 }
