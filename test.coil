@@ -1,18 +1,28 @@
 let Model = ~Struct["Model" :name :options]
 
-impl Validation for Model = {
-  // why doesn't this work??? >:(
-  options: _::at(:mapping)::all?(fn(_key value) = Invertable keyof value)
+impl Clone for Model = {
+  fn clone() = new Model(this.name, this.options)
 }
 
-protocol Invertable
+// Validation should probably
+// rely on the `Matches` api instead of its own thing
+// so we can write more declarative patterns here.
+// ok so I've switched to matches? & it still doesn't work >:(
+impl Validation for Model = {
+  // why doesn't this work??? >:(
+  options: {
+    mapping: _::all?(fn(_key value) = value::is_a?(Invertible))
+  }
+}
+
+protocol Invertible
 
 // opposite of looking up a keyword is inserting it into a record
-impl Invertable for Keyword = fn(output, new_value) = 
+impl Invertible for Keyword = fn(output, new_value) = 
   output::insert(this, new_value)
 
 // opposite of looking up a keyword is inserting it into a record
-impl Invertable for Number = fn(output, new_value) = 
+impl Invertible for Number = fn(output, new_value) = 
   output::insert(this, new_value)
 
 // inverse of :age _::at(:person)::at(:my_age) is:
@@ -20,19 +30,18 @@ impl Invertable for Number = fn(output, new_value) =
 // that is    output::insert(:person ::insert(:my_age new_value))
 // so we reverse the operations & replace at with update.
 // there's a lot to do here, but it should be possible
-// let InvertableCollectionApis = {
+// let InvertibleCollectionApis = {
 //   // output, update_fn, ...fn_args
 //   at(output, update_fn, key) = output::update(key, update_fn)
 // }
 
-fn invert(...args) = this[Invertable](...args)
+fn invert(...args) = this[Invertible](...args)
 
 impl Model = {
+  ...Model.prototype  
   data: null
   fn load(data) {
-    // TODO: something is wrong with ~Struct here I think.
-    // I can't seem to do this::clone() and retain being a `Model`
-    let output = new Model(this.name, this.options)
+    let output = this::clone()
     let {mapping, schema} = this.options
     output.data = {}
     for [key map_fn] of mapping {
@@ -59,6 +68,8 @@ impl Model = {
   }
 }
 
+impl Printable for Model = fn() = this.data::printable()
+
 let Lookup = ~DefVector[_ :keys]
 
 impl Call for Lookup = fn(obj) =
@@ -69,7 +80,7 @@ impl Call for Lookup = fn(obj) =
 // that is    output::insert(:person ::insert(:my_age new_value))
 // This breaks at ~Lookup[:age] - that is, it breaks when
 // there is only one key in this.keys
-impl Invertable for Lookup = fn(output, value) {
+impl Invertible for Lookup = fn(output, value) {
   // this is a mess, but it kind of works??
   let reversed_keys = this.keys::reverse()
   let [all_but_last last_kw] = [reversed_keys::skip(1) reversed_keys::first()]
@@ -93,7 +104,7 @@ impl Invertable for Lookup = fn(output, value) {
 // what if compose stored the functions instead of combining them right away
 // kind of like Underscore
 // it would mean we could use compose(:user :id) in
-// these mappings & as long as each step was reversable..
+// these mappings & as long as each step was reversible..
 // it should be possible?
 // idk
 // The other thing is reading compose(:user :id)
@@ -111,7 +122,7 @@ impl Symbol.iterator for Construct = fn*() {
   for elem of this.entries {
     i += 1
     if i::odd?() {
-      prev = elem  
+      prev = elem
       continue
     }
     yield [prev elem]
@@ -120,14 +131,14 @@ impl Symbol.iterator for Construct = fn*() {
 
 impl Call for Construct = fn(data) {
   let args = []
-  for [_arg_name, mapper] of this {
+  for [_prop, mapper] of this {
     args.push(mapper::call(data))
   }
   let Ctor = this.ctor
   return new Ctor(...args)
 }
 
-impl Invertable for Construct = fn(output, value) {
+impl Invertible for Construct = fn(output, value) {
   for [prop mapper] of this {
     output = mapper::invert(output, value[prop])
   }
@@ -136,18 +147,12 @@ impl Invertable for Construct = fn(output, value) {
 
 let Post = new Model("Post" {
   mapping: {
-    // id: ~Lookup[:user :id]
-    // title: ~Lookup[:user :title]
     point: ~Construct[Point
       :x :point_x
       :y :point_y
     ]
-    // age: :age
   }
-  schema: {
-    // id: _
-    // title: _::len() < 100
-  }
+  schema: {}
 })
 
 let my_post = Post.load({point_x: 10, point_y: 20})::log()

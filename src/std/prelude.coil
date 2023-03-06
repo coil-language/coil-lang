@@ -288,7 +288,7 @@ impl Collection for ObjectLiteral = {
   fn reduce(f, start) {
     let result = start
     for [k v] of this {
-      reuslt = f(result, k, v)
+      result = f(result, k, v)
     }
     return result
   }
@@ -580,11 +580,11 @@ impl Collection for String = {
     return before + update_fn::call(this::at(idx)) + after
   }
   fn empty?() = this.length == 0
-  fn has?(substr) = this.includes(substr)
+  fn has?(sub_str) = this.includes(sub_str)
   fn len() = this.length
-  fn remove(substr) {
-    let idx = this.indexOf(substr)
-    return this.slice(0, idx) + this.slice(idx + substr::len())
+  fn remove(sub_str) {
+    let idx = this.indexOf(sub_str)
+    return this.slice(0, idx) + this.slice(idx + sub_str::len())
   }
 }
 // thoughts on naming
@@ -679,7 +679,7 @@ impl OrderedCollection for Map = {
 // the performance hit of
 // - checking Record vs Vector
 // - spreading
-// - calling ::insert() each step intead of
+// - calling ::insert() each step instead of
 //   mutating a temporary variable
 // gotta kill it.
 // so much repeated code, but its worse to keep it out.
@@ -1214,7 +1214,7 @@ impl Comparable for Underscore = {
   fn greater_than_eq(val) = this.insert(greater_than_eq, val)
 }
 
-// TODO: this should append ! to the list inead of directly call it :/
+// TODO: this should append ! to the list instead of directly call it :/
 impl Negate for Underscore = fn() = ::fn(val) = !this::call(val)
 
 impl Equal for Underscore = fn(other) = this.insert(eq?, other)
@@ -1249,7 +1249,7 @@ impl Divide for Underscore = fn(other) = this.insert(divide, other)
 impl Exponent for Underscore = fn(other) = this.insert(exponent, other)
 impl Mod for Underscore = fn(other) = this.insert(mod, other)
 
-// this is kind of shakey but its good enough
+// this is kind of shaky but its good enough
 impl Printable for Underscore = fn() {
   let fn_to_op = ~Map{
     "greater_than" => ">"
