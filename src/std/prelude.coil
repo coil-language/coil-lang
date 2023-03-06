@@ -12,21 +12,12 @@ impl Hash for Map = fn() =
 
 fn hash() = this[Hash]()
 
-fn HashMap(entries) {
-  // I worry about the performance of keeping the raw entries around.
-  this.raw_entries = entries
-  this.map = new Map(entries.map(fn([key, value]) = [key::hash(), value]))
-}
-
-impl Hash for HashMap = fn() = this.map::hash()
-
 // CONSTRUCT RECORD PROTOCOL
 
 protocol Record
 
 define Record for Map = fn(entries) = new Map(entries)
 define Record for ObjectLiteral = fn(entries) = entries::from_entries()
-define Record for HashMap = fn(entries) = new HashMap(entries)
 
 fn record?() = this.constructor[Record]::as_bool()
 fn construct_record(entries) = this[Record](entries)
@@ -43,7 +34,6 @@ protocol Deconstruct
 
 impl Deconstruct for Map = fn() = this.entries()::from_entries()
 impl Deconstruct for ObjectLiteral = fn() = this
-impl Deconstruct for HashMap = fn() = this.raw_entries::from_entries()
 impl Deconstruct for Array = fn() = this
 
 fn deconstruct() = this[Deconstruct]()
@@ -71,15 +61,15 @@ fn validate_struct(struct_name) {
 
   fn error_msg(key, validator) =
     str(struct_name " validation failed.\n"
-        "Failed at " key::printable() ".\n"
-        "Expected [" validator::printable() "]"
-        ", got value " this[key]::printable() ".")
+        "Failed at " key ".\n"
+        "Expected [" validator "]"
+        ", got value " this[key] ".")
 
-  for [key, validator] of this[Validation]::entries() {
-    if validator::call(this[key]) {
+  for [key, validator] of this[Validation]::entries() {  
+    if validator::matches?(this[key]) {
       continue
     } else {
-      raise!(new StructValidationError(error_msg(key, validator)))
+      raise!(new StructValidationError(this::error_msg(key, validator)))
     }
   }
 }
@@ -143,8 +133,6 @@ impl Call for Map = fn(key) = this.get(key)
 impl Call for ObjectLiteral = fn(key) = this[key]
 
 impl Call for Array = fn(index) = this.at(index)
-
-impl Call for HashMap = fn(key) = this::at(key)
 
 impl Call for String = fn(collection) {
   if typeof(collection) === "string" || collection is Keyword {
@@ -219,7 +207,6 @@ impl Equal for Set = vector_eq?
 impl Equal for Array = vector_eq?
 impl Equal for Map = record_eq?
 impl Equal for ObjectLiteral = record_eq?
-impl Equal for HashMap = record_eq?
 
 @impl_callable
 fn eq?(other) {
@@ -235,11 +222,6 @@ protocol Clone
 
 impl Clone for ObjectLiteral = {
   fn clone() = {...this}
-  fn deep_clone() = this::map(fn(k, v) = [k, v::deep_clone()])
-}
-
-impl Clone for HashMap = {
-  fn clone() = new HashMap(this.raw_entries.slice())
   fn deep_clone() = this::map(fn(k, v) = [k, v::deep_clone()])
 }
 
@@ -274,7 +256,6 @@ impl Identity for String = ""
 impl Identity for Array = []
 impl Identity for ObjectLiteral = {}
 impl Identity for Map = ~Map{}
-impl Identity for HashMap = ~HashMap{}
 impl Identity for Set = #{}
 
 fn identity() {
@@ -369,91 +350,6 @@ impl Collection for Array = {
   fn has?(val) = this.includes(val) || this::any?(fn(v) = v == val)
   fn len() = this.length
   fn remove(val) = this::filter(fn(v) = v != val)
-}
-
-impl Symbol.iterator for HashMap = fn*() {
-  for [key value] of this::raw_entries {
-    yield [key value]
-  }
-}
-
-impl Collection for HashMap = {
-  fn at(key) = this.map.get(key::hash())
-  fn keys() = this.raw_entries::map(first)::as_set()
-  fn sample() = this.raw_entries[0]
-  fn each(f) {
-    for [k, v] of this.raw_entries {
-      f(k, v)
-    }
-  }
-  fn map(f) {
-    let new_hash = new HashMap([])
-    for [k, v] of this.raw_entries {
-      new_hash = new_hash::insert(...f(k, v))
-    }
-    return new_hash
-  }
-  fn find(f) {
-    for [k, v] of this.raw_entries {
-      if f(k, v) {
-        return v
-      }
-    }
-  }
-  fn flat_map(f) {
-    let new_hash = new HashMap([])
-    for [k, v] of this {
-      for [_k, _v] of f(k, v) {
-        new_hash = new_hash::insert(k, f(v))
-      }
-    }
-    return new_hash
-  }
-  fn filter(f) {
-    let new_hash = new HashMap([])
-    for [k, v] of this.raw_entries {
-      if f(k, v) {
-        new_hash = new_hash::insert(k, f(v))
-      }
-    }
-    return new_hash
-  }
-  fn any?(f) {
-    for [k, v] of this.raw_entries {
-      if f(k, v) {
-        return true
-      }
-    }
-    return false
-  }
-  fn all?(f) {
-    for [k, v] of this.raw_entries {
-      if !f(k, v) {
-        return false
-      }
-    }
-    return true
-  }
-  fn reduce(f, start) {
-    let acc = start
-    for [k, v] of this.raw_entries {
-      acc = f(acc, k, v)
-    }
-    return acc
-  }
-  fn insert(k, v) = new HashMap([...this.raw_entries, [k, v]])
-  fn concat(other) {
-    let new_hash = this::clone()
-    for [k, v] of other {
-      new_hash = new_hash::insert(k, v)
-    }
-    return new_hash
-  }
-  fn update(key, update_fn) = this::insert(key, update_fn::call(this::at(key)))
-  fn empty?() = this.raw_entries.length == 0
-  fn has?(key) = this::at(key)::as_bool()
-  fn len() = this.raw_entries.length
-  fn remove(key) = this::filter(fn (k, v) = k != key)
 }
 
 impl Collection for Map = {
@@ -1132,6 +1028,7 @@ fn or(thunk) {
 }
 
 // Printable
+// TODO: rename this to Inspectable, and replace all usages of this to generate pretty string with ::pretty_str
 
 protocol Printable
 
@@ -1142,10 +1039,6 @@ impl Printable for ObjectLiteral = fn() =
     new Object(),
     this::map(fn (k, v) = [_resolve_keyword_str(k), v::printable()])
   )
-
-impl Printable for HashMap = fn() =
-  this::map(fn (k, v) = [k::printable(), v::printable()])
-    .raw_entries::pipe(#(new Map(&)))
 
 impl Printable for Array = fn() =
   this::map(printable)
@@ -1212,7 +1105,28 @@ fn inspect(...args) {
 
 // Helpers
 
-fn str(...args) = args.join("")
+protocol PrettyStr
+
+impl PrettyStr for ObjectLiteral = fn() {
+  let s = "{ "
+  for [key, value] of this {
+    s += str(key ": " value ", ")
+  }
+  return s + " }"
+}
+impl PrettyStr for Keyword = fn() = str(":" this.value)
+impl PrettyStr for String = fn() = this
+impl PrettyStr for Number = fn() = this
+impl PrettyStr for BigInt = fn() = this
+impl PrettyStr for Function = fn() = this.name
+
+@impl_callable
+fn pretty_str() {
+  console.log(this.constructor.name)  
+  return this[PrettyStr]()
+}
+
+fn str(...args) = args::map(pretty_str).join("")
 
 @impl_callable
 fn int?() = Number.isInteger(this)
@@ -1283,7 +1197,7 @@ fn error?() = this is Error
 @impl_callable
 fn is_a?(KlassOrProtocol) {
   if typeof(KlassOrProtocol) == "symbol" {
-    return this.constructor[KlassOrProtocol]::as_bool()
+    return KlassOrProtocol keyof Object.getPrototypeOf(this)
   } else { if typeof(KlassOrProtocol) == "function" {
     return this is KlassOrProtocol
   } else {
@@ -1412,6 +1326,40 @@ impl Mod for Underscore = fn(other) = this.insert(mod, other)
 
 // this is kind of shakey but its good enough
 impl Printable for Underscore = fn() {
+  let fn_to_op = ~Map{
+    "greater_than" => ">"
+    "greater_than_eq" => ">="
+    "less_than" => "<"
+    "less_than_eq" => "<="
+    "times" => "*"
+    "exponent" => "**"
+    "divide_by" => "/"
+    "plus" => "+"
+    "minus" => "-"
+    "mod" => "%"
+    "eq__q" => "=="
+  }  
+  return str("_" this.transforms::skip(1)::map(fn({f, args}) {
+    if f == and {
+      let [thunk] = args
+      return str(" && " thunk()::printable())
+    }
+    if f == or {
+      let [thunk] = args
+      return str(" || " thunk()::printable())
+    }
+    let s = f::printable()
+    if let op = fn_to_op::call(s) {
+      let [rhs] = args
+      return str(" " op " " rhs::printable())
+    } else {
+      return str("::" s "(" args::map(printable).join(", ") ")")
+    }
+  }).join(""))
+}
+
+// this is kind of shakey but its good enough
+impl PrettyStr for Underscore = fn() {
   let fn_to_op = ~Map{
     "greater_than" => ">"
     "greater_than_eq" => ">="
