@@ -1,3 +1,65 @@
-[4, 5, 6]::each_with_index(fn(num, i) {
-  console.log(i, num)
+let Model = ~Struct["Model" :name :options]
+
+protocol Invert
+
+// opposite of looking up a keyword is inserting it into a record
+impl Invert for Keyword = fn(output, new_value) = 
+  output::insert(this, new_value)
+
+// inverse of :age _::at(:person)::at(:my_age) is:
+//            {...output, person: {my_age: new_value}}
+// that is    output::update(:person _::update(:my_age new_value))
+// so we reverse the operations & replace at with update.
+// there's a lot to do here, but it should be possible
+// impl Invert for Underscore
+
+fn invert(...args) = this[Invert](...args)
+
+fn invert_keys_with_values() {
+  let output = new Map()
+  for [key value] of this {
+    output.set(value, key)
+  }
+  return output
+}
+
+impl Model = {
+  data: null
+  fn load(data) {
+    let output = new Model(this.name, this.options)
+    let {mapping, schema} = this.options
+    output.data = {}
+    for [key map_fn] of mapping {
+      output.data[key] = map_fn::call(data)
+      // use something like StructValidationError here instead.
+      // In general this assert! keyword is poorly thought out
+      // maybe needs to be removed
+      assert! schema::at(key)::call(output.data[key])
+    }
+    return output
+  }
+  fn unload() {
+    let {mapping, schema} = this.options
+    let output = {}
+    for [key mapper] of mapping {
+      assert! schema[key]::call(this.data[key])
+      output = mapper::invert(output, this.data[key])
+    }
+    return output
+  }
+// TODO: don't wrap "impl"s in ObjectLiterals
+}
+
+let Post = new Model("Post" {
+  mapping: {
+    id: :id
+    title: :my_title
+  }
+  schema: {
+    id: _
+    title: _::len() < 100
+  }
 })
+
+let my_post = Post.load({id: 10, my_title: "oh yea"})::log()
+my_post.unload()::log()

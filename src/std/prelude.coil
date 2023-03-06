@@ -302,6 +302,12 @@ impl Collection for Object = {
 }
 
 impl Symbol.iterator for ObjectLiteral = fn*() {
+  // maybe find a way to do this without constructing
+  // an entire Array with ::entries >:(
+  // best would be `for key in this { yield [key, this[key]] }`
+  // but I don't support that syntax because I don't see any other
+  // benefit to it.
+  // We could always move this to js_prelude.js, but that's no fun.
   for [key value] of this::entries() {
     yield [key value]
   }
