@@ -1,31 +1,37 @@
 let Model = ~Struct["Model" :name :options]
 
-protocol Invert
+impl Validation for Model = {
+  // why doesn't this work??? >:(
+  options: _::at(:mapping)::all?(fn(_key value) = Invertable keyof value)
+}
+
+protocol Invertable
 
 // opposite of looking up a keyword is inserting it into a record
-impl Invert for Keyword = fn(output, new_value) = 
+impl Invertable for Keyword = fn(output, new_value) = 
+  output::insert(this, new_value)
+
+// opposite of looking up a keyword is inserting it into a record
+impl Invertable for Number = fn(output, new_value) = 
   output::insert(this, new_value)
 
 // inverse of :age _::at(:person)::at(:my_age) is:
 //            {...output, person: {my_age: new_value}}
-// that is    output::update(:person _::update(:my_age new_value))
+// that is    output::insert(:person ::insert(:my_age new_value))
 // so we reverse the operations & replace at with update.
 // there's a lot to do here, but it should be possible
-// impl Invert for Underscore
+// let InvertableCollectionApis = {
+//   // output, update_fn, ...fn_args
+//   at(output, update_fn, key) = output::update(key, update_fn)
+// }
 
-fn invert(...args) = this[Invert](...args)
-
-fn invert_keys_with_values() {
-  let output = new Map()
-  for [key value] of this {
-    output.set(value, key)
-  }
-  return output
-}
+fn invert(...args) = this[Invertable](...args)
 
 impl Model = {
   data: null
   fn load(data) {
+    // TODO: something is wrong with ~Struct here I think.
+    // I can't seem to do this::clone() and retain being a `Model`
     let output = new Model(this.name, this.options)
     let {mapping, schema} = this.options
     output.data = {}
@@ -47,13 +53,42 @@ impl Model = {
     }
     return output
   }
-// TODO: don't wrap "impl"s in ObjectLiterals
+}
+
+let Lookup = ~DefVector[_ :keys]
+
+impl Call for Lookup = fn(obj) =
+  this.keys::reduce(fn(result, kw) = result::at(kw), obj)
+
+
+// inverse of :age _::at(:person)::at(:my_age) is:
+//            {...output, person: {my_age: new_value}}
+// that is    output::insert(:person ::insert(:my_age new_value))
+impl Invertable for Lookup = fn(output, value) {
+  // this is a mess, but it kind of works??
+  let reversed_keys = this.keys::reverse()
+  let [all_but_last last_kw] = [reversed_keys::skip(1) reversed_keys::first()]
+  let obj = {[last_kw]: value}
+  let i = 1
+  fn get_obj_at(i) {
+    // I don't get how this works..
+    let result = output  
+    for [_ key] of (0...i)::zip(this.keys) {
+      result = result::at(key)
+    }
+    return result || {}
+  }
+  for key of all_but_last {
+    obj = {[key]: this::get_obj_at(i)::merge(obj)}
+    i += 1
+  }
+  return obj
 }
 
 let Post = new Model("Post" {
   mapping: {
-    id: :id
-    title: :my_title
+    id: ~Lookup[:user :id]
+    title: ~Lookup[:user :title]
   }
   schema: {
     id: _
@@ -61,5 +96,5 @@ let Post = new Model("Post" {
   }
 })
 
-let my_post = Post.load({id: 10, my_title: "oh yea"})::log()
+let my_post = Post.load({user: {id: 10, title: "oh yea"}})::log()
 my_post.unload()::log()
