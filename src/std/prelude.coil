@@ -34,6 +34,11 @@ impl Stepable for BigInt = {
   fn dec() = this - 1n
 }
 
+impl Stepable for String = {
+  fn inc() = String.fromCharCode(this.charCodeAt(0) + 1)
+  fn dec() = String.fromCharCode(this.charCodeAt(0) - 1)
+}
+
 fn inc() = this[Stepable].inc.call(this)
 fn dec() = this[Stepable].dec.call(this)
 
@@ -104,7 +109,10 @@ fn validate_struct(struct_name) {
 fn construct_struct_values() {
   if !(Constructors keyof this) { return null }
   for [key f] of this[Constructors]::entries() {
-    this[key] = f::call(this[key])
+    if typeof(f) == "function" { f = this::f }
+    if let prop_val = f::call(this[key]) {
+      this[key] = prop_val
+    }
   }
 }
 
@@ -971,6 +979,8 @@ impl Negate for Object = fn() = js_negate(this)
 impl And for Object = fn(thunk) = js_and(this, thunk)
 
 impl Or for Object = fn(thunk) = js_or(this, thunk)
+
+impl Or for Set = fn(thunk) = this::merge(thunk())
 
 impl Plus for Number = fn(other) {
   assert! typeof(other) === "number"
@@ -1993,3 +2003,17 @@ define Effect for ~Msg[:keydown] = fn(filter) =
 
 define Effect for ~Msg[:mousedown] = fn() = new EventStream("mousedown", _)
 define Effect for ~Msg[:mousemove] = fn() = new EventStream("mousemove", _)
+
+//  Async helpers
+
+fn sleep(ms) = new Promise(#(setTimeout(&, ms)))
+
+// generic helpers
+fn partial(...args) = ::fn(...rest) = this::call(...args, ...rest)
+
+// string helpers
+let char_alpha? = ("a".."z")::as_set()::merge("A".."Z")
+let numeric? = (0..9)::map(as_str)::as_set()
+
+fn alpha?() = this::all?(char_alpha?)
+fn alpha_numeric?() = this::all?(char_alpha? || numeric?)
