@@ -136,19 +136,11 @@ return reduce.bind(this)(function (hash_value, key, value) {
 return plus.call((times.call(hash_value,31n)),hash.bind([key, value])());}, 7n);};
 function hash() {
 return this[Hash]();}
-function HashMap(entries) {
-this.raw_entries = entries
-this.map = new Map(entries.map(function ([key, value]) {
-return [hash.bind(key)(), value];}))}
-HashMap.prototype[Hash] = function () {
-return hash.bind(this.map)();};
 const Record = Symbol("Record");
 Map[Record] = function (entries) {
 return new Map(entries);};
 ObjectLiteral[Record] = function (entries) {
 return from_entries.bind(entries)();};
-HashMap[Record] = function (entries) {
-return new HashMap(entries);};
 function record__q() {
 return as_bool.bind(this.constructor[Record])();}
 function construct_record(entries) {
@@ -160,23 +152,6 @@ Array[Vector] = function (entries) {
 return entries;};
 function construct_vector(entries) {
 return this[Vector](entries);}
-const Deconstruct = Symbol("Deconstruct");
-Map.prototype[Deconstruct] = function () {
-return from_entries.bind(this.entries())();};
-ObjectLiteral.prototype[Deconstruct] = function () {
-return this;};
-HashMap.prototype[Deconstruct] = function () {
-return from_entries.bind(this.raw_entries)();};
-Array.prototype[Deconstruct] = function () {
-return this;};
-function deconstruct() {
-return this[Deconstruct]();}
-function deconstruct_this(f) {
-return function () {
-return f.bind(this)(deconstruct.bind(this)());};}
-function deconstruct_args(f) {
-return function (...args) {
-return f.bind(this)(...map.bind(args)((...__args) => deconstruct.bind(__args[0])()));};}
 const Validation = Symbol("Validation");
 const Constructors = Symbol("Constructors");
 const Defaults = Symbol("Defaults");
@@ -192,12 +167,12 @@ return true;
 
 };
 function error_msg(key, validator) {
-return str(struct_name, " validation failed.\n", "Failed at ", printable.bind(key)(), ".\n", "Expected [", printable.bind(validator)(), "]", ", got value ", printable.bind(this[key])(), ".");}
+return str(struct_name, " validation failed.\n", "Failed at ", key, ".\n", "Expected [", validator, "]", ", got value ", this[key], ".");}
 for  (let [key, validator] of entries.bind(this[Validation])()) {
-if (truthy(call.bind(validator)(this[key]))) {
+if (truthy(matches__q.bind(validator)(this[key]))) {
 continue;
 } else {
-raise__b(new StructValidationError(error_msg(key, validator)))
+raise__b(new StructValidationError(error_msg.bind(this)(key, validator)))
 };
 };}
 function construct_struct_values() {
@@ -258,8 +233,6 @@ ObjectLiteral.prototype[Call] = function (key) {
 return this[key];};
 Array.prototype[Call] = function (index) {
 return this.at(index);};
-HashMap.prototype[Call] = function (key) {
-return at.bind(this)(key);};
 String.prototype[Call] = function (collection) {
 if (truthy(or.call(typeof(collection) === "string", () => collection instanceof Keyword))) {
 raise__b(new TypeError(plus.call("Can't 'call' a string with",as_str.bind(collection)())))
@@ -335,7 +308,6 @@ Set.prototype[Equal] = vector_eq__q;
 Array.prototype[Equal] = vector_eq__q;
 Map.prototype[Equal] = record_eq__q;
 ObjectLiteral.prototype[Equal] = record_eq__q;
-HashMap.prototype[Equal] = record_eq__q;
 let eq__q = impl_callable(function eq__q(other) {
 if (truthy(nil__q.bind(this)())) {
 return this === other;
@@ -345,12 +317,6 @@ return this[Equal](other);
 const Clone = Symbol("Clone");
 ObjectLiteral.prototype[Clone] = new ObjectLiteral({clone() {
 return new ObjectLiteral({...this});
-}, deep_clone() {
-return map.bind(this)(function (k, v) {
-return [k, deep_clone.bind(v)()];});
-}});
-HashMap.prototype[Clone] = new ObjectLiteral({clone() {
-return new HashMap(this.raw_entries.slice());
 }, deep_clone() {
 return map.bind(this)(function (k, v) {
 return [k, deep_clone.bind(v)()];});
@@ -378,11 +344,6 @@ const Identity = Symbol("Identity");
 Number.prototype[Identity] = (0);
 BigInt.prototype[Identity] = 0n;
 String.prototype[Identity] = "";
-Array.prototype[Identity] = [];
-ObjectLiteral.prototype[Identity] = new ObjectLiteral({});
-Map.prototype[Identity] = construct_record.call(Map, []);
-HashMap.prototype[Identity] = construct_record.call(HashMap, []);
-Set.prototype[Identity] = new Set([]);
 function identity() {
 if (truthy(nil__q.bind(this)())) {
 return this;
@@ -501,96 +462,6 @@ return this.length;
 }, remove(val) {
 return filter.bind(this)(function (v) {
 return negate.call(eq__q.call(v, val));});
-}});
-HashMap.prototype[Symbol.iterator] = function *() {
-for  (let [key, value] of raw_entries.bind(this)) {
-yield [key, value]
-};};
-HashMap.prototype[Collection] = new ObjectLiteral({at(key) {
-return this.map.get(hash.bind(key)());
-}, keys() {
-return as_set.bind(map.bind(this.raw_entries)(first))();
-}, sample() {
-return this.raw_entries[(0)];
-}, each(f) {
-for  (let [k, v] of this.raw_entries) {
-f(k, v)
-};
-}, map(f) {
-let new_hash = new HashMap([]);
-for  (let [k, v] of this.raw_entries) {
-new_hash = insert.bind(new_hash)(...f(k, v))
-};
-return new_hash;
-}, find(f) {
-for  (let [k, v] of this.raw_entries) {
-if (truthy(f(k, v))) {
-return v;
-} else {
-
-};
-};
-}, flat_map(f) {
-let new_hash = new HashMap([]);
-for  (let [k, v] of this) {
-for  (let [_k, _v] of f(k, v)) {
-new_hash = insert.bind(new_hash)(k, f(v))
-};
-};
-return new_hash;
-}, filter(f) {
-let new_hash = new HashMap([]);
-for  (let [k, v] of this.raw_entries) {
-if (truthy(f(k, v))) {
-new_hash = insert.bind(new_hash)(k, f(v))
-} else {
-
-};
-};
-return new_hash;
-}, any__q(f) {
-for  (let [k, v] of this.raw_entries) {
-if (truthy(f(k, v))) {
-return true;
-} else {
-
-};
-};
-return false;
-}, all__q(f) {
-for  (let [k, v] of this.raw_entries) {
-if (truthy(negate.call(f(k, v)))) {
-return false;
-} else {
-
-};
-};
-return true;
-}, reduce(f, start) {
-let acc = start;
-for  (let [k, v] of this.raw_entries) {
-acc = f(acc, k, v)
-};
-return acc;
-}, insert(k, v) {
-return new HashMap([...this.raw_entries, [k, v]]);
-}, concat(other) {
-let new_hash = clone.bind(this)();
-for  (let [k, v] of other) {
-new_hash = insert.bind(new_hash)(k, v)
-};
-return new_hash;
-}, update(key, update_fn) {
-return insert.bind(this)(key, call.bind(update_fn)(at.bind(this)(key)));
-}, empty__q() {
-return eq__q.call(this.raw_entries.length, (0));
-}, has__q(key) {
-return as_bool.bind(at.bind(this)(key))();
-}, len() {
-return this.raw_entries.length;
-}, remove(key) {
-return filter.bind(this)(function (k, v) {
-return negate.call(eq__q.call(k, key));});
 }});
 Map.prototype[Collection] = new ObjectLiteral({at(key) {
 return this.get(key);
@@ -872,12 +743,12 @@ return this[Collection].filter.call(this, call.bind(f));}
 function any__q(...fns) {
 return this[Collection].any__q.call(this, compose(...fns));}
 function any__b(...fns) {
-assert__b(any__q.bind(this)(...fns), 726, 11, `any__q.bind(this)(...fns)`,);
+assert__b(any__q.bind(this)(...fns), 613, 11, `any__q.bind(this)(...fns)`,);
 return true;}
 function all__q(...fns) {
 return this[Collection].all__q.call(this, compose(...fns));}
 function all__b(...fns) {
-assert__b(all__q.bind(this)(...fns), 731, 11, `all__q.bind(this)(...fns)`,);
+assert__b(all__q.bind(this)(...fns), 618, 11, `all__q.bind(this)(...fns)`,);
 return true;}
 function reduce(f, start) {
 if (truthy(nil__q.bind(start)())) {
@@ -1125,40 +996,40 @@ return js_or(this, thunk);};
 Set.prototype[Or] = function (thunk) {
 return merge.bind(this)(thunk());};
 Number.prototype[Plus] = function (other) {
-assert__b(typeof(other) === "number", 970, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 858, 11, `typeof(other) === "number"`,);
 return js_plus(this, other);};
 Number.prototype[Minus] = function (other) {
-assert__b(typeof(other) === "number", 975, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 863, 11, `typeof(other) === "number"`,);
 return js_minus(this, other);};
 Number.prototype[Times] = function (other) {
-assert__b(typeof(other) === "number", 980, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 868, 11, `typeof(other) === "number"`,);
 return js_times(this, other);};
 Number.prototype[Divide] = function (other) {
-assert__b(typeof(other) === "number", 985, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 873, 11, `typeof(other) === "number"`,);
 return js_divide(this, other);};
 Number.prototype[Exponent] = function (other) {
-assert__b(typeof(other) === "number", 990, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 878, 11, `typeof(other) === "number"`,);
 return js_exponent(this, other);};
 Number.prototype[Mod] = function (other) {
-assert__b(typeof(other) === "number", 995, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 883, 11, `typeof(other) === "number"`,);
 return js_mod(this, other);};
 BigInt.prototype[Plus] = function (other) {
-assert__b(typeof(other) === "bigint", 1000, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 888, 11, `typeof(other) === "bigint"`,);
 return js_plus(this, other);};
 BigInt.prototype[Minus] = function (other) {
-assert__b(typeof(other) === "bigint", 1005, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 893, 11, `typeof(other) === "bigint"`,);
 return js_minus(this, other);};
 BigInt.prototype[Times] = function (other) {
-assert__b(typeof(other) === "bigint", 1010, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 898, 11, `typeof(other) === "bigint"`,);
 return js_times(this, other);};
 BigInt.prototype[Divide] = function (other) {
-assert__b(typeof(other) === "bigint", 1015, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 903, 11, `typeof(other) === "bigint"`,);
 return js_divide(this, other);};
 BigInt.prototype[Exponent] = function (other) {
-assert__b(typeof(other) === "bigint", 1020, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 908, 11, `typeof(other) === "bigint"`,);
 return js_exponent(this, other);};
 BigInt.prototype[Mod] = function (other) {
-assert__b(typeof(other) === "bigint", 1025, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 913, 11, `typeof(other) === "bigint"`,);
 return js_mod(this, other);};
 let ComparableMixin = new ObjectLiteral({greater_than_eq(other) {
 return or.call(greater_than.bind(this)(other), () => (eq__q.call(this, other)));
@@ -1166,30 +1037,30 @@ return or.call(greater_than.bind(this)(other), () => (eq__q.call(this, other)));
 return or.call(less_than.bind(this)(other), () => (eq__q.call(this, other)));
 }});
 Number.prototype[Comparable] = new ObjectLiteral({...ComparableMixin, greater_than(other) {
-assert__b(typeof(other) === "number", 1037, 13, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 925, 13, `typeof(other) === "number"`,);
 return js_greater_than(this, other);
 }, less_than(other) {
-assert__b(typeof(other) === "number", 1041, 13, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 929, 13, `typeof(other) === "number"`,);
 return js_less_than(this, other);
 }});
 BigInt.prototype[Comparable] = new ObjectLiteral({...ComparableMixin, greater_than(other) {
-assert__b(typeof(other) === "bigint", 1049, 13, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 937, 13, `typeof(other) === "bigint"`,);
 return js_greater_than(this, other);
 }, less_than(other) {
-assert__b(typeof(other) === "bigint", 1053, 13, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 941, 13, `typeof(other) === "bigint"`,);
 return js_less_than(this, other);
 }});
 String.prototype[Plus] = function (other) {
-assert__b(typeof(other) === "string", 1059, 11, `typeof(other) === "string"`,);
+assert__b(typeof(other) === "string", 947, 11, `typeof(other) === "string"`,);
 return js_plus(this, other);};
 String.prototype[Times] = function (amount) {
-assert__b(typeof(amount) === "number", 1064, 11, `typeof(amount) === "number"`,);
+assert__b(typeof(amount) === "number", 952, 11, `typeof(amount) === "number"`,);
 return this.repeat(amount);};
 String.prototype[Comparable] = new ObjectLiteral({...ComparableMixin, greater_than(other) {
-assert__b(typeof(other) === "string", 1071, 13, `typeof(other) === "string"`,);
+assert__b(typeof(other) === "string", 959, 13, `typeof(other) === "string"`,);
 return js_greater_than(this, other);
 }, less_than(other) {
-assert__b(typeof(other) === "string", 1075, 13, `typeof(other) === "string"`,);
+assert__b(typeof(other) === "string", 963, 13, `typeof(other) === "string"`,);
 return js_less_than(this, other);
 }});
 let plus = impl_callable(function plus(other) {
@@ -1239,9 +1110,6 @@ return kw.replaceAll("__q", "?").replaceAll("__b", "!");}
 ObjectLiteral.prototype[Printable] = function () {
 return Object.assign(new Object(), map.bind(this)(function (k, v) {
 return [_resolve_keyword_str(k), printable.bind(v)()];}));};
-HashMap.prototype[Printable] = function () {
-return pipe.bind(map.bind(this)(function (k, v) {
-return [printable.bind(k)(), printable.bind(v)()];}).raw_entries)((...__args) => new Map(__args[0]));};
 Array.prototype[Printable] = function () {
 return map.bind(this)(printable);};
 Set.prototype[Printable] = function () {
@@ -1288,8 +1156,31 @@ return this;});
 let inspect = impl_callable(function inspect(...args) {
 console.log(...args, this)
 return this;});
+const PrettyStr = Symbol("PrettyStr");
+ObjectLiteral.prototype[PrettyStr] = function () {
+let s = "{ ";
+for  (let [key, value] of this) {
+s = plus.call(s, str(key, ": ", value, ", "))
+};
+return plus.call(s," }");};
+Keyword.prototype[PrettyStr] = function () {
+return str(":", this.value);};
+String.prototype[PrettyStr] = function () {
+return this;};
+Number.prototype[PrettyStr] = function () {
+return this;};
+BigInt.prototype[PrettyStr] = function () {
+return this;};
+Function.prototype[PrettyStr] = function () {
+return this.name;};
+let pretty_str = impl_callable(function pretty_str() {
+if (truthy(nil__q.bind(this)())) {
+return this;
+} else {
+return this[PrettyStr]();
+};});
 function str(...args) {
-return args.join("");}
+return map.bind(args)(pretty_str).join("");}
 let int__q = impl_callable(function int__q() {
 return Number.isInteger(this);});
 let bigint__q = impl_callable(function bigint__q() {
@@ -1306,8 +1197,6 @@ let nan__q = impl_callable(function nan__q() {
 return Number.isNaN(this);});
 let str__q = impl_callable(function str__q() {
 return eq__q.call(typeof(this), "string");});
-let exists__q = impl_callable(function exists__q() {
-return as_bool.bind((or.call(this, () => (eq__q.call(this, false)))))();});
 let finite__q = impl_callable(function finite__q() {
 return or.call(bigint__q.bind(this)(), () => Number.isFinite(this));});
 let inf__q = impl_callable(function inf__q() {
@@ -1324,19 +1213,15 @@ let as_map = impl_callable(function as_map() {
 return new Map(this);});
 let as_keyword = impl_callable(function as_keyword() {
 return Keyword["for"](this.toString());});
-let as_float = impl_callable(function as_float() {
+let as_num = impl_callable(function as_num() {
 return Number(this);});
-let as_int = impl_callable(function as_int() {
-return pipe.bind(as_float.bind(this)())(Math.floor);});
 let as_str = impl_callable(function as_str() {
 return this.toString();});
 let as_bool = impl_callable(function as_bool() {
 return truthy(this);});
-let error__q = impl_callable(function error__q() {
-return this instanceof Error;});
 let is_a__q = impl_callable(function is_a__q(KlassOrProtocol) {
 if (truthy(eq__q.call(typeof(KlassOrProtocol), "symbol"))) {
-return as_bool.bind(this.constructor[KlassOrProtocol])();
+return KlassOrProtocol in or.call(Object.getPrototypeOf(this), () => KlassOrProtocol in this.constructor);
 } else {
 if (truthy(eq__q.call(typeof(KlassOrProtocol), "function"))) {
 return this instanceof KlassOrProtocol;
@@ -1346,38 +1231,6 @@ return false;
 };});
 Set.prototype[Negate] = function () {
 return (...__args) => negate.call(this.has(__args[0]));};
-function pre(...args) {
-let cond_fns = args.slice((0), (-1));
-let f = args.at((-1));
-return function (...args) {
-assert__b(all__q.bind(cond_fns)(function (f) {
-return call.bind(f)(...args);}), 1296, 13, `all__q.bind(cond_fns)(function (f) {
-return call.bind(f)(...args);})`,);
-return f(...args);};}
-let Args = construct_vector.call(Struct, ["Args", Keyword.for("schemas")]);
-Args[Vector] = function (schemas) {
-return new Args(schemas);};
-Args.prototype[Call] = function (...args) {
-return all_with_index__q.bind(this.schemas)(function (schema, i) {
-return call.bind(schema)(args[i]);});};
-Args.prototype[Negate] = function () {
-return function (...args) {
-return negate.call(call.bind(this)(...args));}.bind(this);};
-let Schema = construct_vector.call(Struct, ["Schema", Keyword.for("entries")]);
-Schema.prototype[Constructors] = new ObjectLiteral({entries: as_map});
-Schema[Record] = function (entries) {
-return new Schema(entries);};
-Schema.prototype[Call] = function (record) {
-return and.call(record__q.bind(record)(), () => all__q.bind(this.entries)(function (k, schema) {
-return call.bind(schema)(at.bind(record)(k));}));};
-Schema.prototype[Negate] = function () {
-return function (record) {
-return negate.call(call.bind(this)(record));}.bind(this);};
-Schema.prototype[And] = function (thunk) {
-return new Schema([...this.entries.entries(), ...thunk().entries.entries()]);};
-Schema.prototype[Or] = function (thunk) {
-return function (record) {
-return as_bool.bind((or.call(call.bind(this)(record), () => call.bind(thunk())(record))))();}.bind(this);};
 let Underscore = construct_vector.call(Struct, ["Underscore", Keyword.for("transforms")]);
 function id() {
 return this;}
@@ -1614,145 +1467,15 @@ output.push(item)
 };
 return output;
 }});
-let All = construct_vector.call(Struct, ["All", Keyword.for("conds")]);
-All[Vector] = function (conds) {
-return new All(conds);};
-All.prototype[Call] = function (val) {
-return all__q.bind(this.conds)(function (f) {
-return call.bind(f)(val);});};
-let Any = construct_vector.call(Struct, ["Any", Keyword.for("conds")]);
-Any[Vector] = function (conds) {
-return new Any(conds);};
-Any.prototype[Call] = function (val) {
-return any__q.bind(this.conds)(function (f) {
-return call.bind(f)(val);});};
-const Effect = Symbol("Effect");
-function run_effect() {
-if (truthy(this[Effect])) {
-return this[Effect]();
-} else {
-console.log("No effect found for", this)
-raise__b(this)
-};}
-async function spawn(generator_fn, ...gen_args) {
-let generator = generator_fn(...gen_args);
-let state = new ObjectLiteral({done: false});
-let yield_result = null;
-let effects = [];
-while (negate.call(state.done)) {
-state = await generator.next(yield_result)
-if (truthy(state.done)) {
-break;
-} else {
-
-};
-let effect = state.value;
-try {
-yield_result = await run_effect.bind(effect)()
-} catch (error) {
-state = await generator.throw(error)
-yield_result = await run_effect.bind(state.value)()
-effects.push(state.value)};
-effects.push(effect)
-};
-return new ObjectLiteral({effects, value: state.value});}
-async function run(generator_fn) {
-return at.bind((await spawn(generator_fn)))(Keyword.for("value"));}
-let Channel = construct_vector.call(Struct, ["Channel"]);
-Channel.prototype[Keyword.for("send")] = function (msg) {
-this.resolve(msg)};
-Channel.prototype[Keyword.for("subscribe")] = function (f) {
-this.resolve = f};
-Channel.prototype[Symbol.asyncIterator] = async function *() {
-while (true) {
-yield new Promise(function (resolve) {
-return this.resolve = resolve;}.bind(this))
-};};
-function fork(generator_fn) {
-let chan = new Channel();
-spawn(generator_fn, chan)
-return chan;}
-function CallEffectWith(effect, ...args) {
-this.effect = effect
-this.args = args}
-function __coil_with(...args) {
-return new CallEffectWith(this, ...args);}
-CallEffectWith.prototype[Effect] = function () {
-return this.effect[Effect](...this.args);};
-function intern_vec(klass) {
-if (truthy(negate.call(klass.cache))) {
-klass.cache = construct_record.call(Map, [])
-klass[Vector] = function (args) {
-let hash_value = hash.bind(args)();
-let __coil_if_let_temp = klass.cache.get(hash_value);
-if (truthy(__coil_if_let_temp)) {
-let obj = __coil_if_let_temp;
-return obj;
-} else {
-let obj = new klass(...args);
-klass.cache.set(hash_value, obj)
-return obj;
-};};
-} else {
-
-};
-return klass;}
-let Fetch = intern_vec(function Fetch(method, url, status) {
-this.method = method
-this.url = url
-this.status = status});
-let Msg = intern_vec(function Msg(...descriptors) {
-this.descriptors = descriptors});
-Msg.prototype[Equal] = function (obj) {
-return and.call(obj instanceof Msg, () => eq__q.call(this.descriptors, obj.descriptors));};
-function HttpError(code, message) {
-this.name = "HttpError"
-this.message = message
-this.stack = (new Error()).stack
-this.code = as_keyword.bind(code)()}
-HttpError.prototype = new Error()
-let JSONRequest = construct_vector.call(Struct, ["JSONRequest", Keyword.for("url")]);
-JSONRequest.prototype[Effect] = function () {
-return fetch(this.url).then(async function (res) {
-if (truthy(negate.call(res.ok))) {
-let text = await res.text();
-return Promise.reject(new HttpError(res.status, text));
-} else {
-
-};
-return res.json();});};
-function json_req(url) {
-return new JSONRequest(url);}
-let http = new ObjectLiteral({async*get(url) {
-if (truthy(Effect in construct_vector.call(Fetch, [Keyword.for("get"), url, Keyword.for("init")]))) {
-yield construct_vector.call(Fetch, [Keyword.for("get"), url, Keyword.for("init")])
-} else {
-
-};
-if (truthy(Effect in construct_vector.call(Fetch, [Keyword.for("get"), url, Keyword.for("loading")]))) {
-yield construct_vector.call(Fetch, [Keyword.for("get"), url, Keyword.for("loading")])
-} else {
-
-};
-try {
-return yield json_req(url);
-} catch (error) {
-if (truthy(Effect in construct_vector.call(Fetch, [Keyword.for("get"), url, error.code]))) {
-yield __coil_with.bind(construct_vector.call(Fetch, [Keyword.for("get"), url, error.code]))(error)
-} else {
-yield __coil_with.bind(construct_vector.call(Fetch, [Keyword.for("get"), url, Keyword.for("error")]))(error)
-};
-return error;};
-}});
 let Comp = construct_vector.call(Struct, ["Comp"]);
 Comp[Vector] = function ([map_fn, _for, collection, ...rest]) {
-assert__b(eq__q.call(_for, Keyword.for("for")), 1749, 11, `eq__q.call(_for, Keyword.for("for"))`,);
-assert__b(Call in map_fn, 1750, 11, `Call in map_fn`,);
+assert__b(eq__q.call(_for, Keyword.for("for")), 1429, 11, `eq__q.call(_for, Keyword.for("for"))`,);
+assert__b(Call in map_fn, 1430, 11, `Call in map_fn`,);
 let result = collection;
 if (truthy(eq__q.call(first.bind(rest)(), Keyword.for("where")))) {
 let [_if, filter_fn, ..._rest] = rest;
 rest = _rest
-assert__b(Call in filter_fn, 1756, 13, `Call in filter_fn`,);
+assert__b(Call in filter_fn, 1436, 13, `Call in filter_fn`,);
 result = filter.bind(result)(filter_fn)
 } else {
 
@@ -1760,7 +1483,7 @@ result = filter.bind(result)(filter_fn)
 result = map.bind(result)(map_fn)
 if (truthy(eq__q.call(first.bind(rest)(), Keyword.for("verify")))) {
 let [_verify, verify_fn, ..._rest] = rest;
-assert__b(all__q.bind(result)(verify_fn), 1764, 13, `all__q.bind(result)(verify_fn)`,);
+assert__b(all__q.bind(result)(verify_fn), 1444, 13, `all__q.bind(result)(verify_fn)`,);
 } else {
 
 };
@@ -1797,27 +1520,6 @@ output.at((-1)).push(col[idx])
 };
 };
 return output;};
-let CollectionView = construct_vector.call(Struct, ["CollectionView", Keyword.for("collection"), Keyword.for("idx")]);
-CollectionView.prototype[OrderedCollection] = new ObjectLiteral({first() {
-return at.bind(this.collection)(this.idx);
-}, last() {
-return last.bind(this.collection)();
-}, skip(n) {
-return new CollectionView(this.collection, plus.call(this.idx,n));
-}});
-CollectionView.prototype[Symbol.iterator] = function *() {
-for  (let elem of this.collection) {
-yield elem
-};};
-CollectionView.prototype[Collection] = new ObjectLiteral({at(idx) {
-return at.bind(this.collection)(plus.call(this.idx,idx));
-}, len() {
-return minus.call(len.bind(this.collection)(),this.idx);
-}, empty__q() {
-return eq__q.call(len.bind(this)(), (0));
-}});
-CollectionView.prototype[Printable] = function () {
-return skip.bind(this.collection)(this.idx);};
 function DefVector() {
 }
 DefVector[Vector] = function (properties) {
@@ -1850,17 +1552,6 @@ this[property_name] = entries};
 Constructor[Record] = function (entries) {
 return new Constructor(entries);};
 return Constructor;};
-let Atom = construct_vector.call(Struct, ["Atom", Keyword.for("value")]);
-Atom.prototype = new ObjectLiteral({set(new_value) {
-this.value = new_value
-}});
-const Dereference = Symbol("Dereference");
-Atom.prototype[Dereference] = function () {
-return this.value;};
-let Deref = construct_vector.call(Struct, ["Deref"]);
-let $ = new Deref();
-$[Keyword.for("bind")] = function (other) {
-return other[Dereference]();};
 const Matches = Symbol("Matches");
 function matches__q(value) {
 return this[Matches](value);}
@@ -1908,53 +1599,6 @@ return ret;
 
 };
 };};
-let EventStream = construct_vector.call(Struct, ["EventStream", Keyword.for("event_type"), Keyword.for("filter")]);
-EventStream.prototype[Validation] = new ObjectLiteral({event_type: (...__args) => has__q.bind(window)(plus.call("on",as_str.bind(__args[0])()))});
-EventStream.prototype = new ObjectLiteral({start() {
-this.watch = function (e) {
-if (truthy(call.bind(this.filter)(e))) {
-call.bind(this.resolve)(e)
-} else {
-
-};}.bind(this)
-window.addEventListener(this.event_type, this.watch)
-}, end() {
-return window.removeEventListener(this.event_type, this.watch);
-}, subscribe(f) {
-if (truthy(negate.call(this.watch))) {
-this.start()
-} else {
-
-};
-this.resolve = f
-}});
-EventStream.prototype[Symbol.asyncIterator] = async function *() {
-while (true) {
-yield await new Promise(function (resolve) {
-return this.subscribe(resolve);}.bind(this))
-};};
-let AnimationFrames = new ObjectLiteral({});
-AnimationFrames[Symbol.asyncIterator] = async function *() {
-while (true) {
-yield await new Promise(function (resolve) {
-return requestAnimationFrame(resolve);})
-};};
-function Race() {
-}
-Race[Vector] = async function *(items) {
-all__b.bind(items)(Keyword.for("subscribe"))
-while (true) {
-let promises = map.bind(items)(function (stream) {
-return new Promise(function (resolve) {
-return stream.subscribe(resolve);});});
-yield await Promise.race(promises)
-};};
-construct_vector.call(Msg, [Keyword.for("keydown")])[Effect] = function (filter) {
-return new EventStream("keydown", pipe.bind(at.bind(_)(Keyword.for("key")))(filter));};
-construct_vector.call(Msg, [Keyword.for("mousedown")])[Effect] = function () {
-return new EventStream("mousedown", _);};
-construct_vector.call(Msg, [Keyword.for("mousemove")])[Effect] = function () {
-return new EventStream("mousemove", _);};
 function sleep(ms) {
 return new Promise((...__args) => setTimeout(__args[0], ms));}
 function partial(...args) {
@@ -1965,7 +1609,28 @@ let numeric__q = as_set.bind(map.bind((new Range((0), (9))))(as_str))();
 function alpha__q() {
 return all__q.bind(this)(char_alpha__q);}
 function alpha_numeric__q() {
-return all__q.bind(this)(or.call(char_alpha__q, () => numeric__q));}let Lexer = construct_vector.call(DefRecord, [Keyword.for("entries")]);
+return all__q.bind(this)(or.call(char_alpha__q, () => numeric__q));}let CollectionView = construct_vector.call(Struct, ["CollectionView", Keyword.for("collection"), Keyword.for("idx")]);
+CollectionView.prototype[OrderedCollection] = new ObjectLiteral({first() {
+return at.bind(this.collection)(this.idx);
+}, last() {
+return last.bind(this.collection)();
+}, skip(n) {
+return new CollectionView(this.collection, plus.call(this.idx,n));
+}});
+CollectionView.prototype[Symbol.iterator] = function *() {
+for  (let elem of this.collection) {
+yield elem
+};};
+CollectionView.prototype[Collection] = new ObjectLiteral({at(idx) {
+return at.bind(this.collection)(plus.call(this.idx,idx));
+}, len() {
+return minus.call(len.bind(this.collection)(),this.idx);
+}, empty__q() {
+return eq__q.call(len.bind(this)(), (0));
+}});
+CollectionView.prototype[Printable] = function () {
+return skip.bind(this.collection)(this.idx);};
+let Lexer = construct_vector.call(DefRecord, [Keyword.for("entries")]);
 function pass() {
 }
 function newline() {
@@ -2014,7 +1679,7 @@ break;
 
 };
 };
-assert__b(found, 40, 13, `found`,);
+assert__b(found, 68, 13, `found`,);
 };
 return tokens;};
 let lexer = construct_record.call(Lexer, [[/^\n/, newline], [/^\s+/, pass], [/^\/\/.*/, pass], [/^\,/, pass], [/^\;/, pass], [/^#/, Keyword.for("hash")], [/^\~/, Keyword.for("tilde")], [/^if\b/, Keyword.for("if")], [/^match\b/, Keyword.for("match")], [/^is\b/, Keyword.for("is")], [/^unless\b/, Keyword.for("unless")], [/^else\b/, Keyword.for("else")], [/^return\b/, Keyword.for("return")], [/^import\b/, Keyword.for("import")], [/^export\b/, Keyword.for("export")], [/^default\b/, Keyword.for("default")], [/^from\b/, Keyword.for("from")], [/^let\b/, Keyword.for("let")], [/^protocol\b/, Keyword.for("protocol")], [/^for\b/, Keyword.for("for")], [/^try\b/, Keyword.for("try")], [/^catch\b/, Keyword.for("catch")], [/^finally\b/, Keyword.for("finally")], [/^while\b/, Keyword.for("while")], [/^loop\b/, Keyword.for("loop")], [/^continue\b/, Keyword.for("continue")], [/^break\b/, Keyword.for("break")], [/^of\b/, Keyword.for("of")], [/^impl\b/, Keyword.for("impl")], [/^define\b/, Keyword.for("define")], [/^yield\b/, Keyword.for("yield")], [/^async\b/, Keyword.for("async")], [/^await\b/, Keyword.for("await")], [/^assert\!/, Keyword.for("assert__b")], [/^new\b/, Keyword.for("new")], [/^keyof\b/, Keyword.for("keyof")], [/^\=\>/, Keyword.for("arrow")], [/^\@/, Keyword.for("at")], [/^\&\&/, Keyword.for("and_and")], [/^\|\|/, Keyword.for("or_or")], [/^\=\=\=/, Keyword.for("triple_eq")], [/^\!\=\=/, Keyword.for("triple_not_eq")], [/^\=\=/, Keyword.for("double_eq")], [/^\!\=/, Keyword.for("not_eq")], [/^\!/, Keyword.for("bang")], [/^\=/, Keyword.for("eq")], [/^fn\b/, Keyword.for("fn")], [/^\{/, Keyword.for("open_b")], [/^\}/, Keyword.for("close_b")], [/^\(/, Keyword.for("open_p")], [/^\)/, Keyword.for("close_p")], [/^[\-\+]?\d+n/, Keyword.for("big_int")], [/^[\-\+]?(\d*\.)?\d+/, Keyword.for("num")], [/^\.\.\./, Keyword.for("dot_dot_dot")], [/^\.\./, Keyword.for("dot_dot")], [/^\./, Keyword.for("dot")], [/^\/.*\/[a-z]?/, Keyword.for("regex_lit")], [/^\>\=/, Keyword.for("gt_eq")], [/^\<\=/, Keyword.for("lt_eq")], [/^\>/, Keyword.for("gt")], [/^\</, Keyword.for("lt")], [/^\+/, Keyword.for("plus")], [/^\%/, Keyword.for("mod")], [/^\-/, Keyword.for("minus")], [/^\*\*/, Keyword.for("pow")], [/^\*/, Keyword.for("times")], [/^\&/, Keyword.for("single_and")], [/^\:\:/, Keyword.for("double_colon")], [/^\:[a-zA-Z_\?\!\$0-9]+/, Keyword.for("keyword")], [/^\:/, Keyword.for("colon")], [/^\//, Keyword.for("div")], [/^\[/, Keyword.for("open_sq")], [/^\]/, Keyword.for("close_sq")], [/^\"([^\\\"]|\\.)*\"/s, Keyword.for("string_lit")], [/^[a-zA-Z_\?\!\$0-9]+/, Keyword.for("id")]]);

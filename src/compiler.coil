@@ -1,3 +1,31 @@
+// CollectionView is an efficent data structure to use
+// the same old Collection protocol methods, without
+// copying the entire array each time you ::skip(1)
+// which happens a lot during parsing.
+let CollectionView = ~Struct["CollectionView" :collection :idx]
+
+// Its only partially implemented right now because most use-cases
+// don't require the complete collections api.
+impl OrderedCollection for CollectionView = {
+  fn first() = this.collection::at(this.idx)
+  fn last() = this.collection::last()
+  fn skip(n) = new CollectionView(this.collection, this.idx + n)
+}
+
+impl Symbol.iterator for CollectionView = fn*() {
+  for elem of this.collection {
+    yield elem
+  }
+}
+
+impl Collection for CollectionView = {
+  fn at(idx) = this.collection::at(this.idx + idx)
+  fn len() = this.collection::len() - this.idx
+  fn empty?() = this::len() == 0
+}
+
+impl Printable for CollectionView = fn() = this.collection::skip(this.idx)
+
 let Lexer = ~DefRecord[:entries]
 
 fn pass() {}
