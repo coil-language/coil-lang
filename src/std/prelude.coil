@@ -30,18 +30,6 @@ define Vector for Array = fn(entries) = entries
 
 fn construct_vector(entries) = this[Vector](entries)
 
-protocol Deconstruct
-
-impl Deconstruct for Map = fn() = this.entries()::from_entries()
-impl Deconstruct for ObjectLiteral = fn() = this
-impl Deconstruct for Array = fn() = this
-
-fn deconstruct() = this[Deconstruct]()
-
-// decorators
-fn deconstruct_this(f) = fn() = ::f(this::deconstruct())
-fn deconstruct_args(f) = fn(...args) = ::f(...args::map(#(&::deconstruct())))
-
 // STRUCT
 
 protocol Validation
@@ -1197,7 +1185,8 @@ fn error?() = this is Error
 @impl_callable
 fn is_a?(KlassOrProtocol) {
   if typeof(KlassOrProtocol) == "symbol" {
-    return KlassOrProtocol keyof Object.getPrototypeOf(this)
+    return KlassOrProtocol keyof Object.getPrototypeOf(this) ||
+           KlassOrProtocol keyof this.constructor
   } else { if typeof(KlassOrProtocol) == "function" {
     return this is KlassOrProtocol
   } else {
