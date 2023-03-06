@@ -20,28 +20,6 @@ fn HashMap(entries) {
 
 impl Hash for HashMap = fn() = this.map::hash()
 
-// Stepable protocol
-
-protocol Stepable
-
-impl Stepable for Number = {
-  fn inc() = this + 1
-  fn dec() = this - 1
-}
-
-impl Stepable for BigInt = {
-  fn inc() = this + 1n
-  fn dec() = this - 1n
-}
-
-impl Stepable for String = {
-  fn inc() = String.fromCharCode(this.charCodeAt(0) + 1)
-  fn dec() = String.fromCharCode(this.charCodeAt(0) - 1)
-}
-
-fn inc() = this[Stepable].inc.call(this)
-fn dec() = this[Stepable].dec.call(this)
-
 // CONSTRUCT RECORD PROTOCOL
 
 protocol Record
@@ -1455,6 +1433,26 @@ impl Printable for Underscore = fn() {
 }
 
 // Range
+
+protocol Stepable
+
+impl Stepable for Number = {
+  fn inc() = this + 1
+  fn dec() = this - 1
+}
+
+impl Stepable for BigInt = {
+  fn inc() = this + 1n
+  fn dec() = this - 1n
+}
+
+impl Stepable for String = {
+  fn inc() = String.fromCharCode(this.charCodeAt(0) + 1)
+  fn dec() = String.fromCharCode(this.charCodeAt(0) - 1)
+}
+
+fn inc() = this[Stepable].inc.call(this)
+fn dec() = this[Stepable].dec.call(this)
 
 let Range = ~Struct["Range" :start :end :exclusive? :transform]
 impl Constructors for Range = {exclusive?: truthy}
