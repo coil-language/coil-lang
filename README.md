@@ -9,7 +9,7 @@ Featuring:
 - Protocol-based Polymorphism
 - Rich immutable `Collection` api to provide a clear, concise & consistent API for dealing with virtually all collections
 - Bind operator to enable clear function chaining
-- Strong data literal syntax for sets, custom vector & record types
+- Strong data literal syntax beyond just Arrays and Object Literals - Sets, custom Vectors & custom Records.
 - No macros
 
 ```
