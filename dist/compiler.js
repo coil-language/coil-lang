@@ -215,9 +215,9 @@ for  (let key of properties) {
 this[key] = args[i]
 i = plus.call(i, (1))
 };
-validate_struct.call(this, name)
-construct_struct_values.call(this)
-set_struct_defaults.call(this)}
+validate_struct.bind(this)(name)
+construct_struct_values.bind(this)(this)
+set_struct_defaults.bind(this)(this)}
 Object.defineProperty(Constructor, "name", new ObjectLiteral({value: name}))
 return Constructor;}
 Struct[Vector] = function (args) {
@@ -743,12 +743,12 @@ return this[Collection].filter.call(this, call.bind(f));}
 function any__q(...fns) {
 return this[Collection].any__q.call(this, compose(...fns));}
 function any__b(...fns) {
-assert__b(any__q.bind(this)(...fns), 613, 11, `any__q.bind(this)(...fns)`,);
+assert__b(any__q.bind(this)(...fns), 602, 11, `any__q.bind(this)(...fns)`,);
 return true;}
 function all__q(...fns) {
 return this[Collection].all__q.call(this, compose(...fns));}
 function all__b(...fns) {
-assert__b(all__q.bind(this)(...fns), 618, 11, `all__q.bind(this)(...fns)`,);
+assert__b(all__q.bind(this)(...fns), 607, 11, `all__q.bind(this)(...fns)`,);
 return true;}
 function reduce(f, start) {
 if (truthy(nil__q.bind(start)())) {
@@ -996,40 +996,40 @@ return js_or(this, thunk);};
 Set.prototype[Or] = function (thunk) {
 return merge.bind(this)(thunk());};
 Number.prototype[Plus] = function (other) {
-assert__b(typeof(other) === "number", 858, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 847, 11, `typeof(other) === "number"`,);
 return js_plus(this, other);};
 Number.prototype[Minus] = function (other) {
-assert__b(typeof(other) === "number", 863, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 852, 11, `typeof(other) === "number"`,);
 return js_minus(this, other);};
 Number.prototype[Times] = function (other) {
-assert__b(typeof(other) === "number", 868, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 857, 11, `typeof(other) === "number"`,);
 return js_times(this, other);};
 Number.prototype[Divide] = function (other) {
-assert__b(typeof(other) === "number", 873, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 862, 11, `typeof(other) === "number"`,);
 return js_divide(this, other);};
 Number.prototype[Exponent] = function (other) {
-assert__b(typeof(other) === "number", 878, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 867, 11, `typeof(other) === "number"`,);
 return js_exponent(this, other);};
 Number.prototype[Mod] = function (other) {
-assert__b(typeof(other) === "number", 883, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 872, 11, `typeof(other) === "number"`,);
 return js_mod(this, other);};
 BigInt.prototype[Plus] = function (other) {
-assert__b(typeof(other) === "bigint", 888, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 877, 11, `typeof(other) === "bigint"`,);
 return js_plus(this, other);};
 BigInt.prototype[Minus] = function (other) {
-assert__b(typeof(other) === "bigint", 893, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 882, 11, `typeof(other) === "bigint"`,);
 return js_minus(this, other);};
 BigInt.prototype[Times] = function (other) {
-assert__b(typeof(other) === "bigint", 898, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 887, 11, `typeof(other) === "bigint"`,);
 return js_times(this, other);};
 BigInt.prototype[Divide] = function (other) {
-assert__b(typeof(other) === "bigint", 903, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 892, 11, `typeof(other) === "bigint"`,);
 return js_divide(this, other);};
 BigInt.prototype[Exponent] = function (other) {
-assert__b(typeof(other) === "bigint", 908, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 897, 11, `typeof(other) === "bigint"`,);
 return js_exponent(this, other);};
 BigInt.prototype[Mod] = function (other) {
-assert__b(typeof(other) === "bigint", 913, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 902, 11, `typeof(other) === "bigint"`,);
 return js_mod(this, other);};
 let ComparableMixin = new ObjectLiteral({greater_than_eq(other) {
 return or.call(greater_than.bind(this)(other), () => (eq__q.call(this, other)));
@@ -1037,30 +1037,30 @@ return or.call(greater_than.bind(this)(other), () => (eq__q.call(this, other)));
 return or.call(less_than.bind(this)(other), () => (eq__q.call(this, other)));
 }});
 Number.prototype[Comparable] = new ObjectLiteral({...ComparableMixin, greater_than(other) {
-assert__b(typeof(other) === "number", 925, 13, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 914, 13, `typeof(other) === "number"`,);
 return js_greater_than(this, other);
 }, less_than(other) {
-assert__b(typeof(other) === "number", 929, 13, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 918, 13, `typeof(other) === "number"`,);
 return js_less_than(this, other);
 }});
 BigInt.prototype[Comparable] = new ObjectLiteral({...ComparableMixin, greater_than(other) {
-assert__b(typeof(other) === "bigint", 937, 13, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 926, 13, `typeof(other) === "bigint"`,);
 return js_greater_than(this, other);
 }, less_than(other) {
-assert__b(typeof(other) === "bigint", 941, 13, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 930, 13, `typeof(other) === "bigint"`,);
 return js_less_than(this, other);
 }});
 String.prototype[Plus] = function (other) {
-assert__b(typeof(other) === "string", 947, 11, `typeof(other) === "string"`,);
+assert__b(typeof(other) === "string", 936, 11, `typeof(other) === "string"`,);
 return js_plus(this, other);};
 String.prototype[Times] = function (amount) {
-assert__b(typeof(amount) === "number", 952, 11, `typeof(amount) === "number"`,);
+assert__b(typeof(amount) === "number", 941, 11, `typeof(amount) === "number"`,);
 return this.repeat(amount);};
 String.prototype[Comparable] = new ObjectLiteral({...ComparableMixin, greater_than(other) {
-assert__b(typeof(other) === "string", 959, 13, `typeof(other) === "string"`,);
+assert__b(typeof(other) === "string", 948, 13, `typeof(other) === "string"`,);
 return js_greater_than(this, other);
 }, less_than(other) {
-assert__b(typeof(other) === "string", 963, 13, `typeof(other) === "string"`,);
+assert__b(typeof(other) === "string", 952, 13, `typeof(other) === "string"`,);
 return js_less_than(this, other);
 }});
 let plus = impl_callable(function plus(other) {
@@ -1174,11 +1174,7 @@ return this;};
 Function.prototype[PrettyStr] = function () {
 return this.name;};
 let pretty_str = impl_callable(function pretty_str() {
-if (truthy(nil__q.bind(this)())) {
-return this;
-} else {
-return this[PrettyStr]();
-};});
+return this?.[PrettyStr]();});
 function str(...args) {
 return map.bind(args)(pretty_str).join("");}
 let int__q = impl_callable(function int__q() {
@@ -1469,13 +1465,13 @@ return output;
 }});
 let Comp = construct_vector.call(Struct, ["Comp"]);
 Comp[Vector] = function ([map_fn, _for, collection, ...rest]) {
-assert__b(eq__q.call(_for, Keyword.for("for")), 1429, 11, `eq__q.call(_for, Keyword.for("for"))`,);
-assert__b(Call in map_fn, 1430, 11, `Call in map_fn`,);
+assert__b(eq__q.call(_for, Keyword.for("for")), 1412, 11, `eq__q.call(_for, Keyword.for("for"))`,);
+assert__b(Call in map_fn, 1413, 11, `Call in map_fn`,);
 let result = collection;
 if (truthy(eq__q.call(first.bind(rest)(), Keyword.for("where")))) {
 let [_if, filter_fn, ..._rest] = rest;
 rest = _rest
-assert__b(Call in filter_fn, 1436, 13, `Call in filter_fn`,);
+assert__b(Call in filter_fn, 1419, 13, `Call in filter_fn`,);
 result = filter.bind(result)(filter_fn)
 } else {
 
@@ -1483,7 +1479,7 @@ result = filter.bind(result)(filter_fn)
 result = map.bind(result)(map_fn)
 if (truthy(eq__q.call(first.bind(rest)(), Keyword.for("verify")))) {
 let [_verify, verify_fn, ..._rest] = rest;
-assert__b(all__q.bind(result)(verify_fn), 1444, 13, `all__q.bind(result)(verify_fn)`,);
+assert__b(all__q.bind(result)(verify_fn), 1427, 13, `all__q.bind(result)(verify_fn)`,);
 } else {
 
 };

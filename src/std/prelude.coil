@@ -34,6 +34,9 @@ fn construct_vector(entries) = this[Vector](entries)
 
 protocol Validation
 protocol Constructors
+// This needs to be more thought out
+// what if I want to default options.schema to {}, without
+// overriding the rest of options
 protocol Defaults
 
 fn StructValidationError(message) {
@@ -85,24 +88,16 @@ fn set_struct_defaults() {
 
 fn Struct(name, ...properties) {
   fn Constructor(...args) {
-    let i = 0  
+    let i = 0
     for key of properties {
       this[key] = args[i]
       i += 1
     }
-    // FIXME: I can't call these by doing
-    // this::validate_struct(name), ...
-    // it tries to chain the calls for some reason
-    // even though they were all using this:: syntax.
-    // I would expect it to be broken if I was using prefix bind
-    // but I'm not.
-    // On that topic, it might be time to remove prefix bind
-    // from the language, because its too confusing when & when not 
-    // to use it.
-    validate_struct.call(this, name)
-    construct_struct_values.call(this)
-    set_struct_defaults.call(this)
+    this::validate_struct(name)
+    this::construct_struct_values(this)
+    this::set_struct_defaults(this)
   }
+  // This doesn't work >:(
   Object.defineProperty(Constructor, "name", { value: name })
   return Constructor
 }
@@ -113,15 +108,10 @@ define Vector for Struct = fn(args) = Struct(...args)
 protocol Call
 
 impl Call for Function = fn(...args) = this(...args)
-
 impl Call for Set = fn(key) = this.has(key)
-
 impl Call for Map = fn(key) = this.get(key)
-
 impl Call for ObjectLiteral = fn(key) = this[key]
-
 impl Call for Array = fn(index) = this.at(index)
-
 impl Call for String = fn(collection) {
   if typeof(collection) === "string" || collection is Keyword {
     raise!(new TypeError("Can't 'call' a string with" + collection::as_str()))
@@ -129,7 +119,6 @@ impl Call for String = fn(collection) {
     return collection::call(this)
   }
 }
-
 impl Call for Number = fn(collection) {
   if collection is Keyword {
     return this[collection]
@@ -137,7 +126,6 @@ impl Call for Number = fn(collection) {
     return collection::call(this)
   }
 }
-
 impl Call for Keyword = fn(collection) {
   if collection is Keyword || typeof(collection) === "string" {
     raise!(new TypeError("Can't 'call' a keyword with" + collection::as_str()))
@@ -1114,13 +1102,7 @@ impl PrettyStr for BigInt = fn() = this
 impl PrettyStr for Function = fn() = this.name
 
 @impl_callable
-fn pretty_str() {
-  if this::nil?() {
-    return this
-  } else {
-    return this[PrettyStr]()
-  }
-}
+fn pretty_str() = this&.[PrettyStr]()
 
 fn str(...args) = args::map(pretty_str).join("")
 
