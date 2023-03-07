@@ -163,48 +163,38 @@ StructValidationError.prototype = new Error()
 function validate_struct(struct_name) {
 if (truthy(negate.call((Validation in this)))) {
 return true;
-} else {
-
-};
+} ;
 function error_msg(key, validator) {
 return str(struct_name, " validation failed.\n", "Failed at ", key, ".\n", "Expected [", validator, "]", ", got value ", this[key], ".");}
 for  (let [key, validator] of entries.bind(this[Validation])()) {
 if (truthy(matches__q.bind(validator)(this[key]))) {
 continue;
-} else {
+}  else {
 raise__b(new StructValidationError(error_msg.bind(this)(key, validator)))
 };
 };}
 function construct_struct_values() {
 if (truthy(negate.call((Constructors in this)))) {
 return null;
-} else {
-
-};
+} ;
 for  (let [key, f] of entries.bind(this[Constructors])()) {
 if (truthy(eq__q.call(typeof(f), "function"))) {
 f = f.bind(this)
-} else {
-
-};
+} ;
 let __coil_if_let_temp = call.bind(f)(this[key]);
 if (truthy(__coil_if_let_temp)) {
 let prop_val = __coil_if_let_temp;
 this[key] = prop_val
-} else {
-
 };
 };}
 function set_struct_defaults() {
 if (truthy(negate.call((Defaults in this)))) {
 return null;
-} else {
-
-};
+} ;
 for  (let [key, fallback] of entries.bind(this[Defaults])()) {
 if (truthy(this[key])) {
 continue;
-} else {
+}  else {
 this[key] = fallback
 };
 };}
@@ -236,24 +226,22 @@ return this.at(index);};
 String.prototype[Call] = function (collection) {
 if (truthy(or.call(typeof(collection) === "string", () => collection instanceof Keyword))) {
 raise__b(new TypeError(plus.call("Can't 'call' a string with",as_str.bind(collection)())))
-} else {
+}  else {
 return call.bind(collection)(this);
 };};
 Number.prototype[Call] = function (collection) {
 if (truthy(collection instanceof Keyword)) {
 return this[collection];
-} else {
+}  else {
 return call.bind(collection)(this);
 };};
 Keyword.prototype[Call] = function (collection) {
 if (truthy(or.call(collection instanceof Keyword, () => typeof(collection) === "string"))) {
 raise__b(new TypeError(plus.call("Can't 'call' a keyword with",as_str.bind(collection)())))
-} else {
-if (truthy(Call in collection)) {
+}  else if (Call in collection) {
 return call.bind(collection)(this);
 } else {
 return collection[this];
-};
 };};
 function call(...args) {
 return this?.[Call](...args);}
@@ -286,22 +274,16 @@ Object.prototype[Equal] = strict_eq__q;
 function vector_eq__q(other) {
 if (truthy(negate.call(eq__q.call(len.bind(this)(), len.bind(other)())))) {
 return false;
-} else {
-
-};
+} ;
 return all__q.bind(zip.bind(this)(other))(function ([a, b]) {
 return eq__q.call(a, b);});}
 function record_eq__q(other) {
 if (truthy(negate.call(record__q.bind(other)()))) {
 return false;
-} else {
-
-};
+} ;
 if (truthy(negate.call(eq__q.call(len.bind(this)(), len.bind(other)())))) {
 return false;
-} else {
-
-};
+} ;
 return all__q.bind(this)(function (key, value) {
 return eq__q.call(at.bind(other)(key), value);});}
 Set.prototype[Equal] = vector_eq__q;
@@ -311,7 +293,7 @@ ObjectLiteral.prototype[Equal] = record_eq__q;
 let eq__q = impl_callable(function eq__q(other) {
 if (truthy(nil__q.bind(this)())) {
 return this === other;
-} else {
+}  else {
 return this[Equal](other);
 };});
 const Clone = Symbol("Clone");
@@ -347,7 +329,7 @@ String.prototype[Identity] = "";
 function identity() {
 if (truthy(nil__q.bind(this)())) {
 return this;
-} else {
+}  else {
 return this[Identity];
 };}
 const Collection = Symbol("Collection");
@@ -398,7 +380,7 @@ return pipe.bind(f(k, v))(truthy);});
 }, reduce(f, start) {
 let result = start;
 for  (let [k, v] of this) {
-reuslt = f(result, k, v)
+result = f(result, k, v)
 };
 return result;
 }, insert(key, value) {
@@ -449,7 +431,7 @@ return [...this, ...other];
 return map.bind(this)(function (v) {
 if (truthy(eq__q.call(val, v))) {
 return call.bind(update_fn)(val);
-} else {
+}  else {
 return v;
 };});
 }, empty__q() {
@@ -483,9 +465,7 @@ return new_map;
 for  (let [k, v] of this) {
 if (truthy(f(k, v))) {
 return v;
-} else {
-
-};
+} ;
 };
 }, flat_map(f) {
 let new_map = new Map([]);
@@ -500,27 +480,21 @@ let new_map = new Map([]);
 for  (let [k, v] of this) {
 if (truthy(f(k, v))) {
 new_map.set(k, f(v))
-} else {
-
-};
+} ;
 };
 return new_map;
 }, any__q(f) {
 for  (let [k, v] of this) {
 if (truthy(f(k, v))) {
 return true;
-} else {
-
-};
+} ;
 };
 return false;
 }, all__q(f) {
 for  (let [k, v] of this) {
 if (truthy(negate.call(f(k, v)))) {
 return false;
-} else {
-
-};
+} ;
 };
 return true;
 }, reduce(f, start) {
@@ -553,9 +527,7 @@ return map;
 Set.prototype[Collection] = new ObjectLiteral({at(val) {
 if (truthy(this.has(val))) {
 return val;
-} else {
-
-};
+} ;
 }, keys() {
 return this;
 }, sample() {
@@ -574,9 +546,7 @@ return out;
 for  (let elem of this) {
 if (truthy(f(elem))) {
 return elem;
-} else {
-
-};
+} ;
 };
 }, flat_map(f) {
 let out = new Set([]);
@@ -597,27 +567,21 @@ let out = new Set([]);
 for  (let elem of this) {
 if (truthy(f(elem))) {
 out.add(elem)
-} else {
-
-};
+} ;
 };
 return out;
 }, any__q(f) {
 for  (let elem of this) {
 if (truthy(f(elem))) {
 return true;
-} else {
-
-};
+} ;
 };
 return false;
 }, all__q(f) {
 for  (let elem of this) {
 if (truthy(negate.call(f(elem)))) {
 return false;
-} else {
-
-};
+} ;
 };
 return true;
 }, insert(elem) {
@@ -670,35 +634,27 @@ return out;
 for  (let char of this) {
 if (truthy(f(char))) {
 return char;
-} else {
-
-};
+} ;
 };
 }, filter(f) {
 let out = "";
 for  (let char of this) {
 if (truthy(f(char))) {
 out = plus.call(out,char)
-} else {
-
-};
+} ;
 };
 }, any__q(f) {
 for  (let char of this) {
 if (truthy(f(char))) {
 return true;
-} else {
-
-};
+} ;
 };
 return false;
 }, all__q(f) {
 for  (let char of this) {
 if (truthy(negate.call(f(char)))) {
 return false;
-} else {
-
-};
+} ;
 };
 return true;
 }, reduce(f, start) {
@@ -716,13 +672,13 @@ let [before, after] = [this.slice((0), idx), this.slice(idx, (-1))];
 return plus.call(before,plus.call(call.bind(update_fn)(at.bind(this)(idx)),after));
 }, empty__q() {
 return eq__q.call(this.length, (0));
-}, has__q(substr) {
-return this.includes(substr);
+}, has__q(sub_str) {
+return this.includes(sub_str);
 }, len() {
 return this.length;
-}, remove(substr) {
-let idx = this.indexOf(substr);
-return plus.call(this.slice((0), idx),this.slice(plus.call(idx,len.bind(substr)())));
+}, remove(sub_str) {
+let idx = this.indexOf(sub_str);
+return plus.call(this.slice((0), idx),this.slice(plus.call(idx,len.bind(sub_str)())));
 }});
 function at(key_or_idx) {
 return this[Collection].at.call(this, key_or_idx);}
@@ -753,9 +709,7 @@ return true;}
 function reduce(f, start) {
 if (truthy(nil__q.bind(start)())) {
 start = identity.bind(sample.bind(this)())()
-} else {
-
-};
+} ;
 return this[Collection].reduce.call(this, call.bind(f), start);}
 function insert(...args) {
 return this[Collection].insert.call(this, ...args);}
@@ -838,14 +792,12 @@ if (truthy(is_a__q.bind(this)(Record))) {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 call.bind(f)(...elem, i)
 };
-} else {
-if (truthy(is_a__q.bind(this)(Vector))) {
+}  else if (is_a__q.bind(this)(Vector)) {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 call.bind(f)(elem, i)
 };
 } else {
 raise__b(new TypeError("Expected a Record or Vector"))
-};
 };}
 function map_with_index(f) {
 let coll = identity.bind(this)();
@@ -853,7 +805,7 @@ if (truthy(record__q.bind(this)())) {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 coll = insert.bind(coll)(...call.bind(f)(...elem, i))
 };
-} else {
+}  else {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 coll = insert.bind(coll)(call.bind(f)(elem, i))
 };
@@ -865,7 +817,7 @@ if (truthy(record__q.bind(this)())) {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 coll = concat.bind(coll)(...call.bind(f)(...elem, i))
 };
-} else {
+}  else {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 coll = concat.bind(coll)(call.bind(f)(elem, i))
 };
@@ -876,17 +828,13 @@ if (truthy(record__q.bind(this)())) {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 if (truthy(call.bind(f)(...elem, i))) {
 return elem;
-} else {
-
+} ;
 };
-};
-} else {
+}  else {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 if (truthy(call.bind(f)(elem, i))) {
 return elem;
-} else {
-
-};
+} ;
 };
 };}
 function filter_with_index(f) {
@@ -895,17 +843,13 @@ if (truthy(record__q.bind(this)())) {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 if (truthy(call.bind(f)(...elem, i))) {
 coll = insert.bind(coll)(elem)
-} else {
-
+} ;
 };
-};
-} else {
+}  else {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 if (truthy(call.bind(f)(elem, i))) {
 coll = insert.bind(coll)(elem)
-} else {
-
-};
+} ;
 };
 };
 return coll;}
@@ -914,17 +858,13 @@ if (truthy(record__q.bind(this)())) {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 if (truthy(call.bind(f)(...elem, i))) {
 return true;
-} else {
-
+} ;
 };
-};
-} else {
+}  else {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 if (truthy(call.bind(f)(elem, i))) {
 return true;
-} else {
-
-};
+} ;
 };
 };
 return false;}
@@ -933,18 +873,14 @@ if (truthy(record__q.bind(this)())) {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 if (truthy(negate.call(call.bind(f)(...elem, i)))) {
 return false;
-} else {
-
-};
+} ;
 };
 return true;
-} else {
+}  else {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 if (truthy(negate.call(call.bind(f)(elem, i)))) {
 return false;
-} else {
-
-};
+} ;
 };
 return true;
 };}
@@ -954,7 +890,7 @@ if (truthy(record__q.bind(this)())) {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 result = call.bind(f)(result, ...elem, i)
 };
-} else {
+}  else {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 result = call.bind(f)(result, elem, i)
 };
@@ -1071,7 +1007,7 @@ return this[proto];}.bind(this)))();});
 let negate = impl_callable(function negate() {
 if (truthy(nil__q.bind(this)())) {
 return true;
-} else {
+}  else {
 return this[Negate]();
 };});
 let minus = impl_callable(function minus(other) {
@@ -1095,13 +1031,13 @@ return this[Comparable].less_than_eq.call(this, other);});
 let and = impl_callable(function and(thunk) {
 if (truthy(nil__q.bind(this)())) {
 return this;
-} else {
+}  else {
 return this[And](thunk);
 };});
 let or = impl_callable(function or(thunk) {
 if (truthy(nil__q.bind(this)())) {
 return thunk();
-} else {
+}  else {
 return this[Or](thunk);
 };});
 const Printable = Symbol("Printable");
@@ -1121,9 +1057,7 @@ let new_key = _resolve_keyword_str(key);
 out[new_key] = value
 if (truthy(negate.call(eq__q.call(new_key, key)))) {
 js_object_delete(out, key)
-} else {
-
-};
+} ;
 };
 return out;}
 Keyword.prototype[Printable] = function () {
@@ -1137,7 +1071,7 @@ return this.name;};
 function when(cond, f) {
 if (truthy(cond(this))) {
 return f(this);
-} else {
+}  else {
 return this;
 };}
 function otherwise(val) {
@@ -1145,16 +1079,13 @@ return or.call(this, () => val);}
 let printable = impl_callable(function printable() {
 if (truthy(nil__q.bind(this)())) {
 return this;
-} else {
+}  else {
 return otherwise.bind(call.bind(find.bind(construct_record.call(Map, [[Printable, function () {
 return this[Printable]();}.bind(this)], [Clone, print_for_generic_clone_object.bind(this)]]))(function (proto) {
 return this[proto];}.bind(this)))())(this);
 };});
 let log = impl_callable(function log(...args) {
 console.log(...args, printable.bind(this)())
-return this;});
-let inspect = impl_callable(function inspect(...args) {
-console.log(...args, this)
 return this;});
 const PrettyStr = Symbol("PrettyStr");
 ObjectLiteral.prototype[PrettyStr] = function () {
@@ -1218,20 +1149,17 @@ return truthy(this);});
 let is_a__q = impl_callable(function is_a__q(KlassOrProtocol) {
 if (truthy(eq__q.call(typeof(KlassOrProtocol), "symbol"))) {
 return KlassOrProtocol in or.call(Object.getPrototypeOf(this), () => KlassOrProtocol in this.constructor);
-} else {
-if (truthy(eq__q.call(typeof(KlassOrProtocol), "function"))) {
+}  else if (eq__q.call(typeof(KlassOrProtocol), "function")) {
 return this instanceof KlassOrProtocol;
 } else {
 return false;
-};
 };});
 Set.prototype[Negate] = function () {
 return (...__args) => negate.call(this.has(__args[0]));};
 let Underscore = construct_vector.call(Struct, ["Underscore", Keyword.for("transforms")]);
-function id() {
-return this;}
 const UnderscoreInterpreter = Symbol("UnderscoreInterpreter");
-let _ = new Underscore([new ObjectLiteral({f: id, args: []})]);
+let _ = new Underscore([new ObjectLiteral({f: function id() {
+return this;}, args: []})]);
 Underscore.prototype[Symbol.iterator] = function *() {
 for  (let transform of this.transforms) {
 yield transform
@@ -1247,9 +1175,7 @@ for  (let {f, args} of underscore) {
 result = call.bind(f.bind(result))(...args)
 if (truthy(result instanceof Underscore)) {
 result = call.bind(result)(initial_value)
-} else {
-
-};
+} ;
 };
 return result;};
 Underscore.prototype[Call] = function (data, ...args) {
@@ -1327,15 +1253,11 @@ return str("_", map.bind(skip.bind(this.transforms)((1)))(function ({f, args}) {
 if (truthy(eq__q.call(f, and))) {
 let [thunk] = args;
 return str(" && ", printable.bind(thunk())());
-} else {
-
-};
+} ;
 if (truthy(eq__q.call(f, or))) {
 let [thunk] = args;
 return str(" || ", printable.bind(thunk())());
-} else {
-
-};
+} ;
 let s = printable.bind(f)();
 let __coil_if_let_temp = call.bind(fn_to_op)(s);
 if (truthy(__coil_if_let_temp)) {
@@ -1371,7 +1293,7 @@ Range.prototype[Defaults] = new ObjectLiteral({transform: _});
 Range.prototype[Printable] = function () {
 if (truthy(this.exclusive__q)) {
 return str(printable.bind(this.start)(), "...", printable.bind(this.end)());
-} else {
+}  else {
 return str(printable.bind(this.start)(), "..", printable.bind(this.end)());
 };};
 Range.prototype[UnderscoreInterpreter] = function (underscore, val) {
@@ -1381,7 +1303,7 @@ result = otherwise.bind(call.bind(at.bind(construct_record.call(Map, [[map, func
 return map_fn(result);}], [filter, function (filter_fn) {
 if (truthy(filter_fn(result))) {
 return result;
-} else {
+}  else {
 return Keyword.for("filtered");
 };}]]))(f))(...args))(result)
 };
@@ -1391,16 +1313,12 @@ let i = this.start;
 let end = this.end;
 if (truthy(this.exclusive__q)) {
 end = dec.bind(end)()
-} else {
-
-};
+} ;
 while (less_than_eq.call(i,end)) {
 let result = call.bind(this.transform)(this, i);
 if (truthy(negate.call(eq__q.call(result, Keyword.for("filtered"))))) {
 yield result
-} else {
-
-};
+} ;
 i = inc.bind(i)()
 };};
 Range.prototype[Keyword.for("update")] = function (new_transform) {
@@ -1434,12 +1352,10 @@ Range.prototype[Call] = function (value) {
 value = call.bind(this.transform)(this, value)
 if (truthy(eq__q.call(value, Keyword.for("filtered")))) {
 return false;
-} else {
-
-};
+} ;
 if (truthy(this.exclusive__q)) {
 return and.call(greater_than_eq.call(value,this.start), () => less_than.call(value,this.end));
-} else {
+}  else {
 return and.call(greater_than_eq.call(value,this.start), () => less_than_eq.call(value,this.end));
 };};
 Range.prototype[Clone] = new ObjectLiteral({clone() {
@@ -1456,33 +1372,27 @@ let output = [];
 for  (let [item, i] of zip.bind(this)(new Range((0), Infinity))) {
 if (truthy(eq__q.call(i, n))) {
 break;
-} else {
-
-};
+} ;
 output.push(item)
 };
 return output;
 }});
 let Comp = construct_vector.call(Struct, ["Comp"]);
 Comp[Vector] = function ([map_fn, _for, collection, ...rest]) {
-assert__b(eq__q.call(_for, Keyword.for("for")), 1412, 11, `eq__q.call(_for, Keyword.for("for"))`,);
-assert__b(Call in map_fn, 1413, 11, `Call in map_fn`,);
+assert__b(eq__q.call(_for, Keyword.for("for")), 1407, 11, `eq__q.call(_for, Keyword.for("for"))`,);
+assert__b(Call in map_fn, 1408, 11, `Call in map_fn`,);
 let result = collection;
 if (truthy(eq__q.call(first.bind(rest)(), Keyword.for("where")))) {
 let [_if, filter_fn, ..._rest] = rest;
 rest = _rest
-assert__b(Call in filter_fn, 1419, 13, `Call in filter_fn`,);
+assert__b(Call in filter_fn, 1414, 13, `Call in filter_fn`,);
 result = filter.bind(result)(filter_fn)
-} else {
-
-};
+} ;
 result = map.bind(result)(map_fn)
 if (truthy(eq__q.call(first.bind(rest)(), Keyword.for("verify")))) {
 let [_verify, verify_fn, ..._rest] = rest;
-assert__b(all__q.bind(result)(verify_fn), 1427, 13, `all__q.bind(result)(verify_fn)`,);
-} else {
-
-};
+assert__b(all__q.bind(result)(verify_fn), 1422, 13, `all__q.bind(result)(verify_fn)`,);
+} ;
 return result;};
 let ZipView = construct_vector.call(Struct, ["ZipView", Keyword.for("collections")]);
 let zip = impl_callable(function zip(...collections) {
@@ -1502,9 +1412,7 @@ while (true) {
 let gen_states = map.bind(generators)((...__args) => __args[0].next());
 if (truthy(at.bind(first.bind(gen_states)())(Keyword.for("done")))) {
 break;
-} else {
-
-};
+} ;
 yield map.bind(gen_states)(Keyword.for("value"))
 };};
 ZipView.prototype[Keyword.for("collect")] = function () {
@@ -1525,8 +1433,7 @@ let kw = at.bind(properties)((2));
 Constructor = function (fst, ...args) {
 this[first.bind(properties)()] = fst
 this[kw] = args}
-} else {
-if (truthy(eq__q.call(first.bind(properties)(), _))) {
+}  else if (eq__q.call(first.bind(properties)(), _)) {
 let kw = at.bind(properties)((1));
 Constructor = function (...args) {
 this[kw] = args}
@@ -1535,7 +1442,6 @@ Constructor = function (...args) {
 for  (let [key, i] of zip.bind(properties)(new Range((0), Infinity))) {
 this[key] = args[i]
 };}
-};
 };
 Constructor[Vector] = function (args) {
 return new Constructor(...args);};
@@ -1556,20 +1462,16 @@ let [patterns, f] = [args.slice((0), (-1)), args.at((-1))];
 return function (...args) {
 if (truthy(matches__q.bind(patterns)(args))) {
 return f(...args);
-} else {
-
-};};}
+} ;};}
 function primitive__q() {
 return and.call(negate.call(eq__q.call(typeof(this), "object")), () => negate.call(eq__q.call(typeof(this), "function")));}
 Object.prototype[Matches] = function (value) {
 if (truthy(primitive__q.bind(this)())) {
 return eq__q.call(this, value);
-} else {
-
-};
+} ;
 if (truthy(Call in this)) {
 return call.bind(this)(value);
-} else {
+}  else {
 return eq__q.call(this, value);
 };};
 Array.prototype[Matches] = function (value) {
@@ -1580,7 +1482,7 @@ return has__q.bind(this)(value);};
 Underscore.prototype[Matches] = function (value) {
 if (truthy(nil__q.bind(value)())) {
 return false;
-} else {
+}  else {
 return call.bind(this)(value);
 };};
 ObjectLiteral.prototype[Matches] = function (record) {
@@ -1591,9 +1493,7 @@ Match.prototype[Call] = function (val) {
 for  (let [pattern, ret] of this.entries) {
 if (truthy(matches__q.bind(pattern)(val))) {
 return ret;
-} else {
-
-};
+} ;
 };};
 function sleep(ms) {
 return new Promise((...__args) => setTimeout(__args[0], ms));}
@@ -1640,9 +1540,7 @@ function scan() {
 let result = rest_of_string()["match"](this);
 if (truthy(or.call(negate.call(result), () => negate.call(eq__q.call(result.index, (0)))))) {
 return false;
-} else {
-
-};
+} ;
 index = plus.call(index,result[(0)].length)
 return result[(0)];}
 let line = (1);
@@ -1658,21 +1556,17 @@ line = plus.call(line,(1))
 col = (1)
 found = true
 break;
-} else {
-
-};
+} ;
 if (truthy(negate.call(eq__q.call(type, pass)))) {
 tokens.push(new ObjectLiteral({type, value, line, col}))
 col = plus.call(col,len.bind(value)())
 found = true
 break;
-} else {
+}  else {
 col = plus.call(col,len.bind(value)())
 found = true
 break;
 };
-} else {
-
 };
 };
 assert__b(found, 68, 13, `found`,);
@@ -1686,13 +1580,13 @@ ParseError.prototype = new Error()
 function expect_token__b(kw) {
 if (truthy(negate.call(eq__q.call(at.bind(first.bind(this)())(Keyword.for("type")), kw)))) {
 raise__b(new ParseError(kw, first.bind(this)()))
-} else {
+}  else {
 return this;
 };}
 function verify_exists__b(parser) {
 if (truthy(nil__q.bind(this)())) {
 raise__b(new Error(plus.call("Parser Failed - Expected ",printable.bind(parser)())))
-} else {
+}  else {
 return this;
 };}
 const ParseInstruction = Symbol("ParseInstruction");
@@ -1711,18 +1605,14 @@ let Optional = construct_vector.call(DefVector, [Keyword.for("set_or_kw"), Keywo
 Optional.prototype[ParseInstruction] = function ([expr, tokens]) {
 if (truthy(empty__q.bind(tokens)())) {
 return [expr, tokens];
-} else {
-
-};
+} ;
 let {type} = first.bind(tokens)();
 if (truthy(and.call(this.set_or_kw instanceof Keyword, () => eq__q.call(type, this.set_or_kw)))) {
 return parse_step.bind(construct_vector.call(Then, [this.parse_fn, this.as]))([expr, tokens]);
-} else {
-
-};
+} ;
 if (truthy(and.call(this.set_or_kw instanceof Set, () => call.bind(this.set_or_kw)(type)))) {
 return parse_step.bind(construct_vector.call(Then, [this.parse_fn, this.as]))([expr, tokens]);
-} else {
+}  else {
 return [expr, tokens];
 };};
 Optional.prototype[Printable] = function () {
@@ -1744,13 +1634,11 @@ Then.prototype[ParseInstruction] = function ([expr, tokens]) {
 let result = call.bind(this.parser)(tokens);
 if (truthy(nil__q.bind(result)())) {
 return [expr, tokens];
-} else {
-
-};
+} ;
 let [new_expr, new_tokens] = result;
 if (truthy(this.kw)) {
 return [merge.bind(expr)(new ObjectLiteral({[this.kw]: new_expr})), new_tokens];
-} else {
+}  else {
 return [new_expr, new_tokens];
 };};
 Then.prototype[Printable] = function () {
@@ -1770,7 +1658,7 @@ tokens = new_tokens
 };
 if (truthy(this.kw)) {
 return [merge.bind(expr)(new ObjectLiteral({[this.kw]: exprs})), tokens];
-} else {
+}  else {
 return [exprs, tokens];
 };};
 Until.prototype[Printable] = function () {
@@ -1780,7 +1668,11 @@ Case.prototype[ParseInstruction] = function ([expr, tokens]) {
 let __coil_if_let_temp = call.bind(this.parse_map)(tokens);
 if (truthy(__coil_if_let_temp)) {
 let [new_expr, new_tokens] = __coil_if_let_temp;
+if (truthy(this.kw)) {
 return [merge.bind(expr)(new ObjectLiteral({[this.kw]: new_expr})), new_tokens];
+}  else {
+return [new_expr, new_tokens];
+};
 } else {
 console.log(first.bind(this.tokens)(), this.parse_map)
 raise__b(new Error("Case Parse Failed"))
@@ -1797,9 +1689,7 @@ return plus.call("Either(",plus.call(printable.bind(this.set)(),plus.call(", as:
 function parse_step(result) {
 if (truthy(negate.call((ParseInstruction in this)))) {
 console.log("This is not parsable:", printable.bind(this)())
-} else {
-
-};
+} ;
 return this[ParseInstruction](result);}
 let Parser = construct_vector.call(DefVector, [_, Keyword.for("instructions")]);
 Parser.prototype[Printable] = function () {
@@ -1814,12 +1704,10 @@ for  (let instruction of this.instructions) {
 if (truthy(instruction instanceof AbortIf)) {
 if (truthy(call.bind(instruction.cond_fn)(result))) {
 return null;
-} else {
+}  else {
 continue;
 };
-} else {
-
-};
+} ;
 result = parse_step.bind(instruction)(result)
 };
 return result;};
@@ -1830,47 +1718,31 @@ return as_set.bind(map.bind(this.entries)(first))();
 ParseMap.prototype[Call] = function (tokens, ...args) {
 if (truthy(empty__q.bind(tokens)())) {
 return null;
-} else {
-
-};
+} ;
 for  (let [pattern, parser] of this.entries) {
 if (truthy(eq__q.call(pattern, _))) {
 return call.bind(parser)(tokens, ...args);
-} else {
-
-};
+} ;
 if (truthy(and.call(pattern instanceof Set, () => call.bind(pattern)(at.bind(first.bind(tokens)())(Keyword.for("type")))))) {
 return call.bind(parser)(tokens, ...args);
-} else {
-
-};
+} ;
 if (truthy(and.call(pattern instanceof Array, () => all_with_index__q.bind(pattern)(function (p, i) {
 if (truthy(greater_than_eq.call(i,len.bind(tokens)()))) {
 return false;
-} else {
-
-};
+} ;
 let type = at.bind(at.bind(tokens)(i))(Keyword.for("type"));
 if (truthy(p instanceof Keyword)) {
 return eq__q.call(p, type);
-} else {
-
-};
+} ;
 if (truthy(p instanceof Set)) {
 return has__q.bind(p)(type);
-} else {
-
-};
+} ;
 return false;})))) {
 return call.bind(parser)(tokens, ...args);
-} else {
-
-};
+} ;
 if (truthy(and.call(pattern instanceof Keyword, () => eq__q.call(pattern, at.bind(first.bind(tokens)())(Keyword.for("type")))))) {
 return call.bind(parser)(tokens, ...args);
-} else {
-
-};
+} ;
 };};
 let math_ops = new Set([Keyword.for("mod"), Keyword.for("plus"), Keyword.for("minus"), Keyword.for("times"), Keyword.for("pow"), Keyword.for("div")]);
 let comparison_ops = new Set([Keyword.for("lt"), Keyword.for("gt"), Keyword.for("lt_eq"), Keyword.for("gt_eq")]);
@@ -1923,9 +1795,7 @@ let current = first.bind(tokens)();
 let previous = at.bind(tokens.collection)(minus.call(tokens.idx,(1)));
 if (truthy(negate.call(eq__q.call(current.line, previous.line)))) {
 return true;
-} else {
-
-};
+} ;
 let end_of_prev_token = plus.call(previous.col,previous.value.length);
 return greater_than_eq.call((minus.call(current.col,end_of_prev_token)),(1));}
 function parse_adjacent_1_2_expr(tokens) {
@@ -2041,9 +1911,13 @@ return pipe.bind(parse_single_expr(tokens))(parse_snd_expr);}
 function parse_expr(tokens) {
 return pipe.bind(pipe.bind(parse_single_expr(tokens))(parse_snd_expr))(parse_third_expr);}
 function parse_else_branch(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Chomp, [Keyword.for("else")]), block()]))(tokens);}
+return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("else")})]), construct_vector.call(Chomp, [Keyword.for("else")]), block(Keyword.for("body"))]))(tokens);}
+function parse_else_if_branch(tokens) {
+return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("else_if")})]), construct_vector.call(Chomp, [Keyword.for("else"), Keyword.for("if")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")]), block(Keyword.for("pass")), construct_vector.call(Optional, [Keyword.for("else"), parse_if_branch, Keyword.for("fail")])]))(tokens);}
+function parse_if_branch(tokens) {
+return call.bind(construct_vector.call(Parser, [construct_vector.call(Case, [construct_record.call(ParseMap, [[[Keyword.for("else"), Keyword.for("if")], parse_else_if_branch], [Keyword.for("else"), parse_else_branch]])])]))(tokens);}
 function parse_if(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("if")})]), construct_vector.call(Chomp, [Keyword.for("if")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")]), block(Keyword.for("pass")), construct_vector.call(Optional, [Keyword.for("else"), parse_else_branch, Keyword.for("fail")])]))(tokens);}
+return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("if")})]), construct_vector.call(Chomp, [Keyword.for("if")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")]), block(Keyword.for("pass")), construct_vector.call(Optional, [Keyword.for("else"), parse_if_branch, Keyword.for("fail")])]))(tokens);}
 function parse_unless(tokens) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("unless")})]), construct_vector.call(Chomp, [Keyword.for("unless")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")]), block(Keyword.for("body"))]))(tokens);}
 let parse_let = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("let")})]), construct_vector.call(Chomp, [Keyword.for("let")]), construct_vector.call(Then, [parse_assign_expr, Keyword.for("assign_expr")]), construct_vector.call(Chomp, [Keyword.for("eq")]), construct_vector.call(Then, [parse_expr, Keyword.for("rhs")])]);
@@ -2105,29 +1979,32 @@ return ast;}
 function resolve_name(name) {
 if (truthy(eq__q.call(name, "with"))) {
 return "__coil_with";
-} else {
-
-};
+} ;
 if (truthy(eq__q.call(name, "case"))) {
 return "__coil_case";
-} else {
-
-};
+} ;
 if (truthy(name)) {
 return name.replaceAll("?", "__q").replaceAll("!", "__b");
-} else {
-
-};
+} ;
 return name;}
+function eval_if_branch(branch) {
+if (truthy(nil__q.bind(branch)())) {
+return "";
+}  else if (eq__q.call(at.bind(branch)(Keyword.for("type")), Keyword.for("else"))) {
+return str(" else {\n", eval_ast(or.call(at.bind(branch)(Keyword.for("body")), () => [])), "\n}");
+} else {
+assert__b(eq__q.call(at.bind(branch)(Keyword.for("type")), Keyword.for("else_if")), 1191, 13, `eq__q.call(at.bind(branch)(Keyword.for("type")), Keyword.for("else_if"))`,);
+return str(" else if (", eval_expr(at.bind(branch)(Keyword.for("expr"))), ") {\n", eval_ast(or.call(at.bind(branch)(Keyword.for("pass")), () => [])), "\n}", eval_if_branch(at.bind(branch)(Keyword.for("fail"))));
+};}
 function eval_if({expr, pass, fail}) {
-return str("if (truthy(", eval_expr(expr), ")) {\n", eval_ast(pass), "\n", "} else {\n", eval_ast(or.call(fail, () => [])), "\n", "}");}
+return str("if (truthy(", eval_expr(expr), ")) {\n", eval_ast(pass), "\n", "}", eval_if_branch(fail));}
 function eval_unless({expr, body}) {
 return str("if (negate.call(", eval_expr(expr), ")) {\n", eval_ast(body), "\n", "}");}
 function eval_str({value}) {
 value = value.slice((1), (-1))
 if (truthy(value.includes("\n"))) {
 return str("`", value, "`");
-} else {
+}  else {
 return str("\"", value, "\"");
 };}
 function eval_property_lookup({lhs, property}) {
@@ -2151,7 +2028,7 @@ return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.
 function eval_while_let_loop({assign_expr, test_expr, body}) {
 return str("let __coil_while_let_temp = ", eval_expr(test_expr), ";\n", "while (__coil_while_let_temp) {\n", "let ", eval_assign_expr(assign_expr), " = __coil_while_let_temp;\n", eval_ast(body), "\n", "__coil_while_let_temp = ", eval_expr(test_expr), ";\n", "}");}
 function eval_if_let({assign_expr, expr, pass, fail}) {
-return str("let __coil_if_let_temp = ", eval_expr(expr), ";\n", "if (truthy(__coil_if_let_temp)) {\n", "let ", eval_assign_expr(assign_expr), " = __coil_if_let_temp;\n", eval_ast(pass), "\n", "} else {\n", eval_ast(or.call(fail, () => [])), "\n", "}");}
+return str("let __coil_if_let_temp = ", eval_expr(expr), ";\n", "if (truthy(__coil_if_let_temp)) {\n", "let ", eval_assign_expr(assign_expr), " = __coil_if_let_temp;\n", eval_ast(pass), "\n", "}", eval_if_branch(fail));}
 function eval_spread({expr}) {
 return str("...", eval_expr(expr));}
 function eval_let({assign_expr, rhs}) {
@@ -2162,7 +2039,7 @@ let math_op_to_method = construct_record.call(Map, [[">", "greater_than"], ["<",
 function if_truthy__q(f) {
 if (truthy(this)) {
 return f(this);
-} else {
+}  else {
 return this;
 };}
 function eval_math_op({lhs, op, rhs}) {
@@ -2242,13 +2119,13 @@ return str("construct_vector.call(", constructor_name, ", ", "[", map.bind(entri
 function eval_inclusive_range({lhs, rhs}) {
 if (truthy(rhs)) {
 return str("new Range(", eval_expr(lhs), ", ", eval_expr(rhs), ")");
-} else {
+}  else {
 return str("new Range(", eval_expr(lhs), ", Infinity)");
 };}
 function eval_exclusive_range({lhs, rhs}) {
 if (truthy(rhs)) {
 return str("new Range(", eval_expr(lhs), ", ", eval_expr(rhs), ", true)");
-} else {
+}  else {
 return str("new Range(", eval_expr(lhs), ", Infinity, true)");
 };}
 function eval_shorthand_anon_fn({expr}) {
@@ -2272,7 +2149,7 @@ let all_ops_to_method = concat.bind(math_op_to_method)(logic_ops);
 function eval_rhs_based_on_op(op, rhs) {
 if (truthy(has__q.bind(logic_ops)(op))) {
 return str("() => ", eval_expr(rhs));
-} else {
+}  else {
 return eval_expr(rhs);
 };}
 function eval_op_eq({lhs, op, rhs}) {
@@ -2322,23 +2199,19 @@ let assignments_js = "";
 if (truthy(eq__q.call(at.bind(pattern)(Keyword.for("type")), Keyword.for("object_deconstruction")))) {
 pattern_js = eval_match_obj_pattern(pattern)
 assignments_js = eval_object_deconstruction_names(pattern)
-} else {
-if (truthy(eq__q.call(at.bind(pattern)(Keyword.for("type")), Keyword.for("array_deconstruction")))) {
+}  else if (eq__q.call(at.bind(pattern)(Keyword.for("type")), Keyword.for("array_deconstruction"))) {
 pattern_js = eval_match_array_pattern(pattern)
 assignments_js = eval_array_deconstruction_names(pattern)
 } else {
 pattern_js = eval_expr(pattern)
 };
-};
 if (truthy(not_empty__q.bind(assignments_js)())) {
 assignments_js = str("let ", assignments_js, " = deconstruct.call(", eval_expr(expr), ");\n")
-} else {
-
-};
+} ;
 let body_js = null;
 if (truthy(body instanceof Array)) {
 body_js = eval_ast(body)
-} else {
+}  else {
 body_js = eval_statement(body)
 };
 return str("if (truthy(matches__q.call(", pattern_js, ", ", eval_expr(expr), "))) {\n", assignments_js, body_js, "}");}
@@ -2348,7 +2221,7 @@ return eval_match_entry(entry, expr);}).join("else ");}
 function eval_import_path(path) {
 if (truthy(eq__q.call(len.bind(path.split("."))(), (1)))) {
 return str(path, ".js");
-} else {
+}  else {
 return path;
 };}
 function eval_import({assign_expr, path}) {
@@ -2380,18 +2253,14 @@ let watcher = Deno.watchFs([src_file_name, prelude_src]);
 for await  (let event of watcher) {
 if (truthy(negate.call(eq__q.call(event.kind, "modify")))) {
 continue;
-} else {
-
-};
+} ;
 console.log("Rebuilding...")
 try {
 compile_file(src_file_name, out_name, prelude_src)
 } catch (e) {
 console.error("Compile Failed", e)};
 };
-} else {
+}  else {
 compile_file(src_file_name, out_name, prelude_src)
 };
-} else {
-
-};
+} ;

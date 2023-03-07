@@ -266,7 +266,11 @@ impl Printable for Until = fn() = str("Until(end: " this.end_kw::printable() ", 
 let Case = ~DefVector[:parse_map :kw]
 impl ParseInstruction for Case = fn([expr tokens]) {
   if let [new_expr, new_tokens] = this.parse_map::call(tokens) {
-    return [expr::merge({[this.kw]: new_expr}), new_tokens]
+    if this.kw {
+      return [expr::merge({[this.kw]: new_expr}), new_tokens]
+    } else {
+      return [new_expr new_tokens]
+    }
   } else {
     console.log(this.tokens::first(), this.parse_map)
     raise!(new Error("Case Parse Failed"))
@@ -911,8 +915,24 @@ fn parse_expr(tokens) =
     ::pipe(parse_third_expr)
 
 fn parse_else_branch(tokens) = ~Parser[
+  ~Init[{type: :else}]  
   ~Chomp[:else]
-  block()
+  block(:body)
+]::call(tokens)
+
+fn parse_else_if_branch(tokens) = ~Parser[
+  ~Init[{type: :else_if}]  
+  ~Chomp[:else :if]
+  ~Then[parse_expr :expr]
+  block(:pass)
+  ~Optional[:else parse_if_branch :fail]
+]::call(tokens)
+
+fn parse_if_branch(tokens) = ~Parser[
+  ~Case[~ParseMap{
+    [:else :if] => parse_else_if_branch
+    :else => parse_else_branch
+  }]
 ]::call(tokens)
 
 fn parse_if(tokens) = ~Parser[
@@ -920,7 +940,7 @@ fn parse_if(tokens) = ~Parser[
   ~Chomp[:if]
   ~Then[parse_expr :expr]
   block(:pass)
-  ~Optional[:else parse_else_branch :fail]
+  ~Optional[:else parse_if_branch :fail]
 ]::call(tokens)
 
 fn parse_unless(tokens) = ~Parser[
@@ -1170,12 +1190,27 @@ fn resolve_name(name) {
   return name
 }
 
+fn eval_if_branch(branch) {
+  if branch::nil?() {
+    return ""
+  } else if branch::at(:type) == :else {
+    return str(" else {\n"
+      eval_ast(branch::at(:body) || [])
+    "\n}")
+  } else {
+    assert! branch::at(:type) == :else_if
+    return str(
+      " else if (" eval_expr(branch::at(:expr)) ") {\n"
+        eval_ast(branch::at(:pass) || [])
+      "\n}" eval_if_branch(branch::at(:fail))
+    )
+  }
+}
+
 fn eval_if({expr pass fail}) = str(
   "if (truthy(" eval_expr(expr) ")) {\n"
     eval_ast(pass) "\n"
-  "} else {\n"
-    eval_ast(fail || []) "\n"
-  "}")
+  "}" eval_if_branch(fail))
 
 fn eval_unless({expr body}) = str(
   "if (negate.call(" eval_expr(expr) ")) {\n"
@@ -1241,9 +1276,7 @@ fn eval_if_let({assign_expr expr pass fail}) = str(
   "if (truthy(__coil_if_let_temp)) {\n"
   "let " eval_assign_expr(assign_expr) " = __coil_if_let_temp;\n"
     eval_ast(pass) "\n"
-  "} else {\n"
-    eval_ast(fail || []) "\n"
-  "}")
+  "}" eval_if_branch(fail))
 
 fn eval_spread({expr}) = str("..." eval_expr(expr))
 
@@ -1586,12 +1619,12 @@ fn eval_match_entry({pattern, body}, expr) {
   if pattern::at(:type) == :object_deconstruction {
     pattern_js = eval_match_obj_pattern(pattern)
     assignments_js = eval_object_deconstruction_names(pattern)
-  } else { if pattern::at(:type) == :array_deconstruction {
+  } else if pattern::at(:type) == :array_deconstruction {
     pattern_js = eval_match_array_pattern(pattern)
     assignments_js = eval_array_deconstruction_names(pattern)
   } else {
     pattern_js = eval_expr(pattern)
-  } }
+  }
 
   if assignments_js::not_empty?() {
     assignments_js = str("let " assignments_js " = deconstruct.call(" eval_expr(expr) ");\n")

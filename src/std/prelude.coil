@@ -129,11 +129,11 @@ impl Call for Number = fn(collection) {
 impl Call for Keyword = fn(collection) {
   if collection is Keyword || typeof(collection) === "string" {
     raise!(new TypeError("Can't 'call' a keyword with" + collection::as_str()))
-  } else { if Call keyof collection{
+  } else if Call keyof collection {
     return collection::call(this)
   } else {
     return collection[this]
-  } }
+  }
 }
 
 fn call(...args) = this&.[Call](...args)
@@ -691,13 +691,13 @@ fn each_with_index(f) {
     for [elem, i] of this::zip(0..) {
       f::call(...elem, i)
     }
-  } else { if this::is_a?(Vector) {
+  } else if this::is_a?(Vector) {
     for [elem, i] of this::zip(0..) {
       f::call(elem, i)
     }
   } else {
     raise!(new TypeError("Expected a Record or Vector"))
-  } }
+  }
 }
 fn map_with_index(f) {
   let coll = this::identity()
@@ -1164,11 +1164,11 @@ fn is_a?(KlassOrProtocol) {
   if typeof(KlassOrProtocol) == "symbol" {
     return KlassOrProtocol keyof Object.getPrototypeOf(this) ||
            KlassOrProtocol keyof this.constructor
-  } else { if typeof(KlassOrProtocol) == "function" {
+  } else if typeof(KlassOrProtocol) == "function" {
     return this is KlassOrProtocol
   } else {
     return false
-  } }
+  }
 }
 
 impl Negate for Set = fn() = #(!this.has(&))
@@ -1483,7 +1483,7 @@ define Vector for DefVector = fn(properties) {
       this[properties::first()] = fst
       this[kw] = args
     }
-  } else { if properties::first() == _ {
+  } else if properties::first() == _ {
     let kw = properties::at(1)
     Constructor = fn(...args) {
       this[kw] = args
@@ -1494,7 +1494,7 @@ define Vector for DefVector = fn(properties) {
         this[key] = args[i]
       }
     }
-  } }
+  }
   define Vector for Constructor = fn(args) = new Constructor(...args)
   return Constructor
 }
