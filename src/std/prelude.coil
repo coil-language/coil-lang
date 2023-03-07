@@ -844,7 +844,7 @@ impl And for Object = fn(thunk) = js_and(this, thunk)
 impl Or for Object = fn(thunk) = js_or(this, thunk)
 
 // this should probably be replace with Plus
-impl Or for Set = fn(thunk) = this::merge(thunk())
+impl Plus for Set = fn(other_set) = this::merge(other_set)
 
 impl Plus for Number = fn(other) {
   assert! typeof(other) === "number"
@@ -1268,8 +1268,7 @@ impl Printable for Underscore = fn() {
     if f == and {
       let [thunk] = args
       return str(" && " thunk()::printable())
-    }
-    if f == or {
+    } else if f == or {
       let [thunk] = args
       return str(" || " thunk()::printable())
     }
@@ -1525,8 +1524,7 @@ fn primitive?() = typeof(this) != "object" && typeof(this) != "function"
 impl Matches for Object = fn(value) {
   if this::primitive?() {
     return this == value
-  }
-  if Call keyof this {
+  } else if Call keyof this {
     return this::call(value)
   } else {
     return this == value
@@ -1576,8 +1574,9 @@ fn sleep(ms) = new Promise(#(setTimeout(&, ms)))
 fn partial(...args) = ::fn(...rest) = this::call(...args, ...rest)
 
 // string helpers
-let char_alpha? = ("a".."z")::as_set()::merge("A".."Z")
-let numeric? = (0..9)::map(as_str)::as_set()
+let char_alpha? = ("a".."z")::as_set() + "A".."Z"
+let char_numeric? = (0..9)::map(as_str)::as_set()
+let char_alpha_numeric? = char_alpha? + char_numeric?
 
 fn alpha?() = this::all?(char_alpha?)
-fn alpha_numeric?() = this::all?(char_alpha? || numeric?)
+fn alpha_numeric?() = this::all?(char_alpha_numeric?)

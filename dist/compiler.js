@@ -163,24 +163,24 @@ StructValidationError.prototype = new Error()
 function validate_struct(struct_name) {
 if (truthy(negate.call((Validation in this)))) {
 return true;
-} ;
+};
 function error_msg(key, validator) {
 return str(struct_name, " validation failed.\n", "Failed at ", key, ".\n", "Expected [", validator, "]", ", got value ", this[key], ".");}
 for  (let [key, validator] of entries.bind(this[Validation])()) {
 if (truthy(matches__q.bind(validator)(this[key]))) {
 continue;
-}  else {
+} else {
 raise__b(new StructValidationError(error_msg.bind(this)(key, validator)))
 };
 };}
 function construct_struct_values() {
 if (truthy(negate.call((Constructors in this)))) {
 return null;
-} ;
+};
 for  (let [key, f] of entries.bind(this[Constructors])()) {
 if (truthy(eq__q.call(typeof(f), "function"))) {
 f = f.bind(this)
-} ;
+};
 let __coil_if_let_temp = call.bind(f)(this[key]);
 if (truthy(__coil_if_let_temp)) {
 let prop_val = __coil_if_let_temp;
@@ -190,11 +190,11 @@ this[key] = prop_val
 function set_struct_defaults() {
 if (truthy(negate.call((Defaults in this)))) {
 return null;
-} ;
+};
 for  (let [key, fallback] of entries.bind(this[Defaults])()) {
 if (truthy(this[key])) {
 continue;
-}  else {
+} else {
 this[key] = fallback
 };
 };}
@@ -226,19 +226,19 @@ return this.at(index);};
 String.prototype[Call] = function (collection) {
 if (truthy(or.call(typeof(collection) === "string", () => collection instanceof Keyword))) {
 raise__b(new TypeError(plus.call("Can't 'call' a string with",as_str.bind(collection)())))
-}  else {
+} else {
 return call.bind(collection)(this);
 };};
 Number.prototype[Call] = function (collection) {
 if (truthy(collection instanceof Keyword)) {
 return this[collection];
-}  else {
+} else {
 return call.bind(collection)(this);
 };};
 Keyword.prototype[Call] = function (collection) {
 if (truthy(or.call(collection instanceof Keyword, () => typeof(collection) === "string"))) {
 raise__b(new TypeError(plus.call("Can't 'call' a keyword with",as_str.bind(collection)())))
-}  else if (Call in collection) {
+} else if (Call in collection) {
 return call.bind(collection)(this);
 } else {
 return collection[this];
@@ -274,16 +274,16 @@ Object.prototype[Equal] = strict_eq__q;
 function vector_eq__q(other) {
 if (truthy(negate.call(eq__q.call(len.bind(this)(), len.bind(other)())))) {
 return false;
-} ;
+};
 return all__q.bind(zip.bind(this)(other))(function ([a, b]) {
 return eq__q.call(a, b);});}
 function record_eq__q(other) {
 if (truthy(negate.call(record__q.bind(other)()))) {
 return false;
-} ;
+};
 if (truthy(negate.call(eq__q.call(len.bind(this)(), len.bind(other)())))) {
 return false;
-} ;
+};
 return all__q.bind(this)(function (key, value) {
 return eq__q.call(at.bind(other)(key), value);});}
 Set.prototype[Equal] = vector_eq__q;
@@ -293,7 +293,7 @@ ObjectLiteral.prototype[Equal] = record_eq__q;
 let eq__q = impl_callable(function eq__q(other) {
 if (truthy(nil__q.bind(this)())) {
 return this === other;
-}  else {
+} else {
 return this[Equal](other);
 };});
 const Clone = Symbol("Clone");
@@ -329,7 +329,7 @@ String.prototype[Identity] = "";
 function identity() {
 if (truthy(nil__q.bind(this)())) {
 return this;
-}  else {
+} else {
 return this[Identity];
 };}
 const Collection = Symbol("Collection");
@@ -431,7 +431,7 @@ return [...this, ...other];
 return map.bind(this)(function (v) {
 if (truthy(eq__q.call(val, v))) {
 return call.bind(update_fn)(val);
-}  else {
+} else {
 return v;
 };});
 }, empty__q() {
@@ -465,7 +465,7 @@ return new_map;
 for  (let [k, v] of this) {
 if (truthy(f(k, v))) {
 return v;
-} ;
+};
 };
 }, flat_map(f) {
 let new_map = new Map([]);
@@ -480,21 +480,21 @@ let new_map = new Map([]);
 for  (let [k, v] of this) {
 if (truthy(f(k, v))) {
 new_map.set(k, f(v))
-} ;
+};
 };
 return new_map;
 }, any__q(f) {
 for  (let [k, v] of this) {
 if (truthy(f(k, v))) {
 return true;
-} ;
+};
 };
 return false;
 }, all__q(f) {
 for  (let [k, v] of this) {
 if (truthy(negate.call(f(k, v)))) {
 return false;
-} ;
+};
 };
 return true;
 }, reduce(f, start) {
@@ -527,7 +527,7 @@ return map;
 Set.prototype[Collection] = new ObjectLiteral({at(val) {
 if (truthy(this.has(val))) {
 return val;
-} ;
+};
 }, keys() {
 return this;
 }, sample() {
@@ -546,7 +546,7 @@ return out;
 for  (let elem of this) {
 if (truthy(f(elem))) {
 return elem;
-} ;
+};
 };
 }, flat_map(f) {
 let out = new Set([]);
@@ -567,21 +567,21 @@ let out = new Set([]);
 for  (let elem of this) {
 if (truthy(f(elem))) {
 out.add(elem)
-} ;
+};
 };
 return out;
 }, any__q(f) {
 for  (let elem of this) {
 if (truthy(f(elem))) {
 return true;
-} ;
+};
 };
 return false;
 }, all__q(f) {
 for  (let elem of this) {
 if (truthy(negate.call(f(elem)))) {
 return false;
-} ;
+};
 };
 return true;
 }, insert(elem) {
@@ -634,27 +634,27 @@ return out;
 for  (let char of this) {
 if (truthy(f(char))) {
 return char;
-} ;
+};
 };
 }, filter(f) {
 let out = "";
 for  (let char of this) {
 if (truthy(f(char))) {
 out = plus.call(out,char)
-} ;
+};
 };
 }, any__q(f) {
 for  (let char of this) {
 if (truthy(f(char))) {
 return true;
-} ;
+};
 };
 return false;
 }, all__q(f) {
 for  (let char of this) {
 if (truthy(negate.call(f(char)))) {
 return false;
-} ;
+};
 };
 return true;
 }, reduce(f, start) {
@@ -709,7 +709,7 @@ return true;}
 function reduce(f, start) {
 if (truthy(nil__q.bind(start)())) {
 start = identity.bind(sample.bind(this)())()
-} ;
+};
 return this[Collection].reduce.call(this, call.bind(f), start);}
 function insert(...args) {
 return this[Collection].insert.call(this, ...args);}
@@ -792,7 +792,7 @@ if (truthy(is_a__q.bind(this)(Record))) {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 call.bind(f)(...elem, i)
 };
-}  else if (is_a__q.bind(this)(Vector)) {
+} else if (is_a__q.bind(this)(Vector)) {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 call.bind(f)(elem, i)
 };
@@ -805,7 +805,7 @@ if (truthy(record__q.bind(this)())) {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 coll = insert.bind(coll)(...call.bind(f)(...elem, i))
 };
-}  else {
+} else {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 coll = insert.bind(coll)(call.bind(f)(elem, i))
 };
@@ -817,7 +817,7 @@ if (truthy(record__q.bind(this)())) {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 coll = concat.bind(coll)(...call.bind(f)(...elem, i))
 };
-}  else {
+} else {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 coll = concat.bind(coll)(call.bind(f)(elem, i))
 };
@@ -828,13 +828,13 @@ if (truthy(record__q.bind(this)())) {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 if (truthy(call.bind(f)(...elem, i))) {
 return elem;
-} ;
 };
-}  else {
+};
+} else {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 if (truthy(call.bind(f)(elem, i))) {
 return elem;
-} ;
+};
 };
 };}
 function filter_with_index(f) {
@@ -843,13 +843,13 @@ if (truthy(record__q.bind(this)())) {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 if (truthy(call.bind(f)(...elem, i))) {
 coll = insert.bind(coll)(elem)
-} ;
 };
-}  else {
+};
+} else {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 if (truthy(call.bind(f)(elem, i))) {
 coll = insert.bind(coll)(elem)
-} ;
+};
 };
 };
 return coll;}
@@ -858,13 +858,13 @@ if (truthy(record__q.bind(this)())) {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 if (truthy(call.bind(f)(...elem, i))) {
 return true;
-} ;
 };
-}  else {
+};
+} else {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 if (truthy(call.bind(f)(elem, i))) {
 return true;
-} ;
+};
 };
 };
 return false;}
@@ -873,14 +873,14 @@ if (truthy(record__q.bind(this)())) {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 if (truthy(negate.call(call.bind(f)(...elem, i)))) {
 return false;
-} ;
+};
 };
 return true;
-}  else {
+} else {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 if (truthy(negate.call(call.bind(f)(elem, i)))) {
 return false;
-} ;
+};
 };
 return true;
 };}
@@ -890,7 +890,7 @@ if (truthy(record__q.bind(this)())) {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 result = call.bind(f)(result, ...elem, i)
 };
-}  else {
+} else {
 for  (let [elem, i] of zip.bind(this)(new Range((0), Infinity))) {
 result = call.bind(f)(result, elem, i)
 };
@@ -929,8 +929,8 @@ Object.prototype[And] = function (thunk) {
 return js_and(this, thunk);};
 Object.prototype[Or] = function (thunk) {
 return js_or(this, thunk);};
-Set.prototype[Or] = function (thunk) {
-return merge.bind(this)(thunk());};
+Set.prototype[Plus] = function (other_set) {
+return merge.bind(this)(other_set);};
 Number.prototype[Plus] = function (other) {
 assert__b(typeof(other) === "number", 847, 11, `typeof(other) === "number"`,);
 return js_plus(this, other);};
@@ -1007,7 +1007,7 @@ return this[proto];}.bind(this)))();});
 let negate = impl_callable(function negate() {
 if (truthy(nil__q.bind(this)())) {
 return true;
-}  else {
+} else {
 return this[Negate]();
 };});
 let minus = impl_callable(function minus(other) {
@@ -1031,13 +1031,13 @@ return this[Comparable].less_than_eq.call(this, other);});
 let and = impl_callable(function and(thunk) {
 if (truthy(nil__q.bind(this)())) {
 return this;
-}  else {
+} else {
 return this[And](thunk);
 };});
 let or = impl_callable(function or(thunk) {
 if (truthy(nil__q.bind(this)())) {
 return thunk();
-}  else {
+} else {
 return this[Or](thunk);
 };});
 const Printable = Symbol("Printable");
@@ -1057,7 +1057,7 @@ let new_key = _resolve_keyword_str(key);
 out[new_key] = value
 if (truthy(negate.call(eq__q.call(new_key, key)))) {
 js_object_delete(out, key)
-} ;
+};
 };
 return out;}
 Keyword.prototype[Printable] = function () {
@@ -1071,7 +1071,7 @@ return this.name;};
 function when(cond, f) {
 if (truthy(cond(this))) {
 return f(this);
-}  else {
+} else {
 return this;
 };}
 function otherwise(val) {
@@ -1079,7 +1079,7 @@ return or.call(this, () => val);}
 let printable = impl_callable(function printable() {
 if (truthy(nil__q.bind(this)())) {
 return this;
-}  else {
+} else {
 return otherwise.bind(call.bind(find.bind(construct_record.call(Map, [[Printable, function () {
 return this[Printable]();}.bind(this)], [Clone, print_for_generic_clone_object.bind(this)]]))(function (proto) {
 return this[proto];}.bind(this)))())(this);
@@ -1149,7 +1149,7 @@ return truthy(this);});
 let is_a__q = impl_callable(function is_a__q(KlassOrProtocol) {
 if (truthy(eq__q.call(typeof(KlassOrProtocol), "symbol"))) {
 return KlassOrProtocol in or.call(Object.getPrototypeOf(this), () => KlassOrProtocol in this.constructor);
-}  else if (eq__q.call(typeof(KlassOrProtocol), "function")) {
+} else if (eq__q.call(typeof(KlassOrProtocol), "function")) {
 return this instanceof KlassOrProtocol;
 } else {
 return false;
@@ -1175,7 +1175,7 @@ for  (let {f, args} of underscore) {
 result = call.bind(f.bind(result))(...args)
 if (truthy(result instanceof Underscore)) {
 result = call.bind(result)(initial_value)
-} ;
+};
 };
 return result;};
 Underscore.prototype[Call] = function (data, ...args) {
@@ -1253,11 +1253,11 @@ return str("_", map.bind(skip.bind(this.transforms)((1)))(function ({f, args}) {
 if (truthy(eq__q.call(f, and))) {
 let [thunk] = args;
 return str(" && ", printable.bind(thunk())());
-} ;
+};
 if (truthy(eq__q.call(f, or))) {
 let [thunk] = args;
 return str(" || ", printable.bind(thunk())());
-} ;
+};
 let s = printable.bind(f)();
 let __coil_if_let_temp = call.bind(fn_to_op)(s);
 if (truthy(__coil_if_let_temp)) {
@@ -1293,7 +1293,7 @@ Range.prototype[Defaults] = new ObjectLiteral({transform: _});
 Range.prototype[Printable] = function () {
 if (truthy(this.exclusive__q)) {
 return str(printable.bind(this.start)(), "...", printable.bind(this.end)());
-}  else {
+} else {
 return str(printable.bind(this.start)(), "..", printable.bind(this.end)());
 };};
 Range.prototype[UnderscoreInterpreter] = function (underscore, val) {
@@ -1303,7 +1303,7 @@ result = otherwise.bind(call.bind(at.bind(construct_record.call(Map, [[map, func
 return map_fn(result);}], [filter, function (filter_fn) {
 if (truthy(filter_fn(result))) {
 return result;
-}  else {
+} else {
 return Keyword.for("filtered");
 };}]]))(f))(...args))(result)
 };
@@ -1313,12 +1313,12 @@ let i = this.start;
 let end = this.end;
 if (truthy(this.exclusive__q)) {
 end = dec.bind(end)()
-} ;
+};
 while (less_than_eq.call(i,end)) {
 let result = call.bind(this.transform)(this, i);
 if (truthy(negate.call(eq__q.call(result, Keyword.for("filtered"))))) {
 yield result
-} ;
+};
 i = inc.bind(i)()
 };};
 Range.prototype[Keyword.for("update")] = function (new_transform) {
@@ -1352,10 +1352,10 @@ Range.prototype[Call] = function (value) {
 value = call.bind(this.transform)(this, value)
 if (truthy(eq__q.call(value, Keyword.for("filtered")))) {
 return false;
-} ;
+};
 if (truthy(this.exclusive__q)) {
 return and.call(greater_than_eq.call(value,this.start), () => less_than.call(value,this.end));
-}  else {
+} else {
 return and.call(greater_than_eq.call(value,this.start), () => less_than_eq.call(value,this.end));
 };};
 Range.prototype[Clone] = new ObjectLiteral({clone() {
@@ -1372,7 +1372,7 @@ let output = [];
 for  (let [item, i] of zip.bind(this)(new Range((0), Infinity))) {
 if (truthy(eq__q.call(i, n))) {
 break;
-} ;
+};
 output.push(item)
 };
 return output;
@@ -1387,12 +1387,12 @@ let [_if, filter_fn, ..._rest] = rest;
 rest = _rest
 assert__b(Call in filter_fn, 1414, 13, `Call in filter_fn`,);
 result = filter.bind(result)(filter_fn)
-} ;
+};
 result = map.bind(result)(map_fn)
 if (truthy(eq__q.call(first.bind(rest)(), Keyword.for("verify")))) {
 let [_verify, verify_fn, ..._rest] = rest;
 assert__b(all__q.bind(result)(verify_fn), 1422, 13, `all__q.bind(result)(verify_fn)`,);
-} ;
+};
 return result;};
 let ZipView = construct_vector.call(Struct, ["ZipView", Keyword.for("collections")]);
 let zip = impl_callable(function zip(...collections) {
@@ -1412,7 +1412,7 @@ while (true) {
 let gen_states = map.bind(generators)((...__args) => __args[0].next());
 if (truthy(at.bind(first.bind(gen_states)())(Keyword.for("done")))) {
 break;
-} ;
+};
 yield map.bind(gen_states)(Keyword.for("value"))
 };};
 ZipView.prototype[Keyword.for("collect")] = function () {
@@ -1433,7 +1433,7 @@ let kw = at.bind(properties)((2));
 Constructor = function (fst, ...args) {
 this[first.bind(properties)()] = fst
 this[kw] = args}
-}  else if (eq__q.call(first.bind(properties)(), _)) {
+} else if (eq__q.call(first.bind(properties)(), _)) {
 let kw = at.bind(properties)((1));
 Constructor = function (...args) {
 this[kw] = args}
@@ -1462,16 +1462,16 @@ let [patterns, f] = [args.slice((0), (-1)), args.at((-1))];
 return function (...args) {
 if (truthy(matches__q.bind(patterns)(args))) {
 return f(...args);
-} ;};}
+};};}
 function primitive__q() {
 return and.call(negate.call(eq__q.call(typeof(this), "object")), () => negate.call(eq__q.call(typeof(this), "function")));}
 Object.prototype[Matches] = function (value) {
 if (truthy(primitive__q.bind(this)())) {
 return eq__q.call(this, value);
-} ;
+};
 if (truthy(Call in this)) {
 return call.bind(this)(value);
-}  else {
+} else {
 return eq__q.call(this, value);
 };};
 Array.prototype[Matches] = function (value) {
@@ -1482,7 +1482,7 @@ return has__q.bind(this)(value);};
 Underscore.prototype[Matches] = function (value) {
 if (truthy(nil__q.bind(value)())) {
 return false;
-}  else {
+} else {
 return call.bind(this)(value);
 };};
 ObjectLiteral.prototype[Matches] = function (record) {
@@ -1493,19 +1493,20 @@ Match.prototype[Call] = function (val) {
 for  (let [pattern, ret] of this.entries) {
 if (truthy(matches__q.bind(pattern)(val))) {
 return ret;
-} ;
+};
 };};
 function sleep(ms) {
 return new Promise((...__args) => setTimeout(__args[0], ms));}
 function partial(...args) {
 return function (...rest) {
 return call.bind(this)(...args, ...rest);}.bind(this);}
-let char_alpha__q = merge.bind(as_set.bind((new Range("a", "z")))())(new Range("A", "Z"));
-let numeric__q = as_set.bind(map.bind((new Range((0), (9))))(as_str))();
+let char_alpha__q = plus.call(as_set.bind((new Range("a", "z")))(),new Range("A", "Z"));
+let char_numeric__q = as_set.bind(map.bind((new Range((0), (9))))(as_str))();
+let char_alpha_numeric__q = plus.call(char_alpha__q,char_numeric__q);
 function alpha__q() {
 return all__q.bind(this)(char_alpha__q);}
 function alpha_numeric__q() {
-return all__q.bind(this)(or.call(char_alpha__q, () => numeric__q));}let CollectionView = construct_vector.call(Struct, ["CollectionView", Keyword.for("collection"), Keyword.for("idx")]);
+return all__q.bind(this)(char_alpha_numeric__q);}let CollectionView = construct_vector.call(Struct, ["CollectionView", Keyword.for("collection"), Keyword.for("idx")]);
 CollectionView.prototype[OrderedCollection] = new ObjectLiteral({first() {
 return at.bind(this.collection)(this.idx);
 }, last() {
@@ -1540,7 +1541,7 @@ function scan() {
 let result = rest_of_string()["match"](this);
 if (truthy(or.call(negate.call(result), () => negate.call(eq__q.call(result.index, (0)))))) {
 return false;
-} ;
+};
 index = plus.call(index,result[(0)].length)
 return result[(0)];}
 let line = (1);
@@ -1554,22 +1555,17 @@ let value = __coil_if_let_temp;
 if (truthy(eq__q.call(type, newline))) {
 line = plus.call(line,(1))
 col = (1)
-found = true
-break;
-} ;
-if (truthy(negate.call(eq__q.call(type, pass)))) {
+} else if (negate.call(eq__q.call(type, pass))) {
 tokens.push(new ObjectLiteral({type, value, line, col}))
 col = plus.call(col,len.bind(value)())
-found = true
-break;
-}  else {
+} else {
 col = plus.call(col,len.bind(value)())
+};
 found = true
 break;
 };
 };
-};
-assert__b(found, 68, 13, `found`,);
+assert__b(found, 63, 13, `found`,);
 };
 return tokens;};
 let lexer = construct_record.call(Lexer, [[/^\n/, newline], [/^\s+/, pass], [/^\/\/.*/, pass], [/^\,/, pass], [/^\;/, pass], [/^#/, Keyword.for("hash")], [/^\~/, Keyword.for("tilde")], [/^if\b/, Keyword.for("if")], [/^match\b/, Keyword.for("match")], [/^is\b/, Keyword.for("is")], [/^unless\b/, Keyword.for("unless")], [/^else\b/, Keyword.for("else")], [/^return\b/, Keyword.for("return")], [/^import\b/, Keyword.for("import")], [/^export\b/, Keyword.for("export")], [/^default\b/, Keyword.for("default")], [/^from\b/, Keyword.for("from")], [/^let\b/, Keyword.for("let")], [/^protocol\b/, Keyword.for("protocol")], [/^for\b/, Keyword.for("for")], [/^try\b/, Keyword.for("try")], [/^catch\b/, Keyword.for("catch")], [/^finally\b/, Keyword.for("finally")], [/^while\b/, Keyword.for("while")], [/^loop\b/, Keyword.for("loop")], [/^continue\b/, Keyword.for("continue")], [/^break\b/, Keyword.for("break")], [/^of\b/, Keyword.for("of")], [/^impl\b/, Keyword.for("impl")], [/^define\b/, Keyword.for("define")], [/^yield\b/, Keyword.for("yield")], [/^async\b/, Keyword.for("async")], [/^await\b/, Keyword.for("await")], [/^assert\!/, Keyword.for("assert__b")], [/^new\b/, Keyword.for("new")], [/^keyof\b/, Keyword.for("keyof")], [/^\=\>/, Keyword.for("arrow")], [/^\@/, Keyword.for("at")], [/^\&\&/, Keyword.for("and_and")], [/^\|\|/, Keyword.for("or_or")], [/^\=\=\=/, Keyword.for("triple_eq")], [/^\!\=\=/, Keyword.for("triple_not_eq")], [/^\=\=/, Keyword.for("double_eq")], [/^\!\=/, Keyword.for("not_eq")], [/^\!/, Keyword.for("bang")], [/^\=/, Keyword.for("eq")], [/^fn\b/, Keyword.for("fn")], [/^\{/, Keyword.for("open_b")], [/^\}/, Keyword.for("close_b")], [/^\(/, Keyword.for("open_p")], [/^\)/, Keyword.for("close_p")], [/^[\-\+]?\d+n/, Keyword.for("big_int")], [/^[\-\+]?(\d*\.)?\d+/, Keyword.for("num")], [/^\.\.\./, Keyword.for("dot_dot_dot")], [/^\.\./, Keyword.for("dot_dot")], [/^\./, Keyword.for("dot")], [/^\/.*\/[a-z]?/, Keyword.for("regex_lit")], [/^\>\=/, Keyword.for("gt_eq")], [/^\<\=/, Keyword.for("lt_eq")], [/^\>/, Keyword.for("gt")], [/^\</, Keyword.for("lt")], [/^\+/, Keyword.for("plus")], [/^\%/, Keyword.for("mod")], [/^\-/, Keyword.for("minus")], [/^\*\*/, Keyword.for("pow")], [/^\*/, Keyword.for("times")], [/^\&/, Keyword.for("single_and")], [/^\:\:/, Keyword.for("double_colon")], [/^\:[a-zA-Z_\?\!\$0-9]+/, Keyword.for("keyword")], [/^\:/, Keyword.for("colon")], [/^\//, Keyword.for("div")], [/^\[/, Keyword.for("open_sq")], [/^\]/, Keyword.for("close_sq")], [/^\"([^\\\"]|\\.)*\"/s, Keyword.for("string_lit")], [/^[a-zA-Z_\?\!\$0-9]+/, Keyword.for("id")]]);
@@ -1580,13 +1576,13 @@ ParseError.prototype = new Error()
 function expect_token__b(kw) {
 if (truthy(negate.call(eq__q.call(at.bind(first.bind(this)())(Keyword.for("type")), kw)))) {
 raise__b(new ParseError(kw, first.bind(this)()))
-}  else {
+} else {
 return this;
 };}
 function verify_exists__b(parser) {
 if (truthy(nil__q.bind(this)())) {
 raise__b(new Error(plus.call("Parser Failed - Expected ",printable.bind(parser)())))
-}  else {
+} else {
 return this;
 };}
 const ParseInstruction = Symbol("ParseInstruction");
@@ -1605,14 +1601,13 @@ let Optional = construct_vector.call(DefVector, [Keyword.for("set_or_kw"), Keywo
 Optional.prototype[ParseInstruction] = function ([expr, tokens]) {
 if (truthy(empty__q.bind(tokens)())) {
 return [expr, tokens];
-} ;
+};
 let {type} = first.bind(tokens)();
 if (truthy(and.call(this.set_or_kw instanceof Keyword, () => eq__q.call(type, this.set_or_kw)))) {
 return parse_step.bind(construct_vector.call(Then, [this.parse_fn, this.as]))([expr, tokens]);
-} ;
-if (truthy(and.call(this.set_or_kw instanceof Set, () => call.bind(this.set_or_kw)(type)))) {
+} else if (and.call(this.set_or_kw instanceof Set, () => call.bind(this.set_or_kw)(type))) {
 return parse_step.bind(construct_vector.call(Then, [this.parse_fn, this.as]))([expr, tokens]);
-}  else {
+} else {
 return [expr, tokens];
 };};
 Optional.prototype[Printable] = function () {
@@ -1634,11 +1629,11 @@ Then.prototype[ParseInstruction] = function ([expr, tokens]) {
 let result = call.bind(this.parser)(tokens);
 if (truthy(nil__q.bind(result)())) {
 return [expr, tokens];
-} ;
+};
 let [new_expr, new_tokens] = result;
 if (truthy(this.kw)) {
 return [merge.bind(expr)(new ObjectLiteral({[this.kw]: new_expr})), new_tokens];
-}  else {
+} else {
 return [new_expr, new_tokens];
 };};
 Then.prototype[Printable] = function () {
@@ -1658,7 +1653,7 @@ tokens = new_tokens
 };
 if (truthy(this.kw)) {
 return [merge.bind(expr)(new ObjectLiteral({[this.kw]: exprs})), tokens];
-}  else {
+} else {
 return [exprs, tokens];
 };};
 Until.prototype[Printable] = function () {
@@ -1670,7 +1665,7 @@ if (truthy(__coil_if_let_temp)) {
 let [new_expr, new_tokens] = __coil_if_let_temp;
 if (truthy(this.kw)) {
 return [merge.bind(expr)(new ObjectLiteral({[this.kw]: new_expr})), new_tokens];
-}  else {
+} else {
 return [new_expr, new_tokens];
 };
 } else {
@@ -1689,7 +1684,7 @@ return plus.call("Either(",plus.call(printable.bind(this.set)(),plus.call(", as:
 function parse_step(result) {
 if (truthy(negate.call((ParseInstruction in this)))) {
 console.log("This is not parsable:", printable.bind(this)())
-} ;
+};
 return this[ParseInstruction](result);}
 let Parser = construct_vector.call(DefVector, [_, Keyword.for("instructions")]);
 Parser.prototype[Printable] = function () {
@@ -1704,10 +1699,10 @@ for  (let instruction of this.instructions) {
 if (truthy(instruction instanceof AbortIf)) {
 if (truthy(call.bind(instruction.cond_fn)(result))) {
 return null;
-}  else {
+} else {
 continue;
 };
-} ;
+};
 result = parse_step.bind(instruction)(result)
 };
 return result;};
@@ -1718,31 +1713,31 @@ return as_set.bind(map.bind(this.entries)(first))();
 ParseMap.prototype[Call] = function (tokens, ...args) {
 if (truthy(empty__q.bind(tokens)())) {
 return null;
-} ;
+};
 for  (let [pattern, parser] of this.entries) {
 if (truthy(eq__q.call(pattern, _))) {
 return call.bind(parser)(tokens, ...args);
-} ;
+};
 if (truthy(and.call(pattern instanceof Set, () => call.bind(pattern)(at.bind(first.bind(tokens)())(Keyword.for("type")))))) {
 return call.bind(parser)(tokens, ...args);
-} ;
+};
 if (truthy(and.call(pattern instanceof Array, () => all_with_index__q.bind(pattern)(function (p, i) {
 if (truthy(greater_than_eq.call(i,len.bind(tokens)()))) {
 return false;
-} ;
+};
 let type = at.bind(at.bind(tokens)(i))(Keyword.for("type"));
 if (truthy(p instanceof Keyword)) {
 return eq__q.call(p, type);
-} ;
+};
 if (truthy(p instanceof Set)) {
 return has__q.bind(p)(type);
-} ;
+};
 return false;})))) {
 return call.bind(parser)(tokens, ...args);
-} ;
+};
 if (truthy(and.call(pattern instanceof Keyword, () => eq__q.call(pattern, at.bind(first.bind(tokens)())(Keyword.for("type")))))) {
 return call.bind(parser)(tokens, ...args);
-} ;
+};
 };};
 let math_ops = new Set([Keyword.for("mod"), Keyword.for("plus"), Keyword.for("minus"), Keyword.for("times"), Keyword.for("pow"), Keyword.for("div")]);
 let comparison_ops = new Set([Keyword.for("lt"), Keyword.for("gt"), Keyword.for("lt_eq"), Keyword.for("gt_eq")]);
@@ -1795,7 +1790,7 @@ let current = first.bind(tokens)();
 let previous = at.bind(tokens.collection)(minus.call(tokens.idx,(1)));
 if (truthy(negate.call(eq__q.call(current.line, previous.line)))) {
 return true;
-} ;
+};
 let end_of_prev_token = plus.call(previous.col,previous.value.length);
 return greater_than_eq.call((minus.call(current.col,end_of_prev_token)),(1));}
 function parse_adjacent_1_2_expr(tokens) {
@@ -1979,21 +1974,21 @@ return ast;}
 function resolve_name(name) {
 if (truthy(eq__q.call(name, "with"))) {
 return "__coil_with";
-} ;
+};
 if (truthy(eq__q.call(name, "case"))) {
 return "__coil_case";
-} ;
+};
 if (truthy(name)) {
 return name.replaceAll("?", "__q").replaceAll("!", "__b");
-} ;
+};
 return name;}
 function eval_if_branch(branch) {
 if (truthy(nil__q.bind(branch)())) {
 return "";
-}  else if (eq__q.call(at.bind(branch)(Keyword.for("type")), Keyword.for("else"))) {
+} else if (eq__q.call(at.bind(branch)(Keyword.for("type")), Keyword.for("else"))) {
 return str(" else {\n", eval_ast(or.call(at.bind(branch)(Keyword.for("body")), () => [])), "\n}");
 } else {
-assert__b(eq__q.call(at.bind(branch)(Keyword.for("type")), Keyword.for("else_if")), 1191, 13, `eq__q.call(at.bind(branch)(Keyword.for("type")), Keyword.for("else_if"))`,);
+assert__b(eq__q.call(at.bind(branch)(Keyword.for("type")), Keyword.for("else_if")), 1185, 13, `eq__q.call(at.bind(branch)(Keyword.for("type")), Keyword.for("else_if"))`,);
 return str(" else if (", eval_expr(at.bind(branch)(Keyword.for("expr"))), ") {\n", eval_ast(or.call(at.bind(branch)(Keyword.for("pass")), () => [])), "\n}", eval_if_branch(at.bind(branch)(Keyword.for("fail"))));
 };}
 function eval_if({expr, pass, fail}) {
@@ -2004,7 +1999,7 @@ function eval_str({value}) {
 value = value.slice((1), (-1))
 if (truthy(value.includes("\n"))) {
 return str("`", value, "`");
-}  else {
+} else {
 return str("\"", value, "\"");
 };}
 function eval_property_lookup({lhs, property}) {
@@ -2039,7 +2034,7 @@ let math_op_to_method = construct_record.call(Map, [[">", "greater_than"], ["<",
 function if_truthy__q(f) {
 if (truthy(this)) {
 return f(this);
-}  else {
+} else {
 return this;
 };}
 function eval_math_op({lhs, op, rhs}) {
@@ -2119,13 +2114,13 @@ return str("construct_vector.call(", constructor_name, ", ", "[", map.bind(entri
 function eval_inclusive_range({lhs, rhs}) {
 if (truthy(rhs)) {
 return str("new Range(", eval_expr(lhs), ", ", eval_expr(rhs), ")");
-}  else {
+} else {
 return str("new Range(", eval_expr(lhs), ", Infinity)");
 };}
 function eval_exclusive_range({lhs, rhs}) {
 if (truthy(rhs)) {
 return str("new Range(", eval_expr(lhs), ", ", eval_expr(rhs), ", true)");
-}  else {
+} else {
 return str("new Range(", eval_expr(lhs), ", Infinity, true)");
 };}
 function eval_shorthand_anon_fn({expr}) {
@@ -2149,7 +2144,7 @@ let all_ops_to_method = concat.bind(math_op_to_method)(logic_ops);
 function eval_rhs_based_on_op(op, rhs) {
 if (truthy(has__q.bind(logic_ops)(op))) {
 return str("() => ", eval_expr(rhs));
-}  else {
+} else {
 return eval_expr(rhs);
 };}
 function eval_op_eq({lhs, op, rhs}) {
@@ -2199,7 +2194,7 @@ let assignments_js = "";
 if (truthy(eq__q.call(at.bind(pattern)(Keyword.for("type")), Keyword.for("object_deconstruction")))) {
 pattern_js = eval_match_obj_pattern(pattern)
 assignments_js = eval_object_deconstruction_names(pattern)
-}  else if (eq__q.call(at.bind(pattern)(Keyword.for("type")), Keyword.for("array_deconstruction"))) {
+} else if (eq__q.call(at.bind(pattern)(Keyword.for("type")), Keyword.for("array_deconstruction"))) {
 pattern_js = eval_match_array_pattern(pattern)
 assignments_js = eval_array_deconstruction_names(pattern)
 } else {
@@ -2207,11 +2202,11 @@ pattern_js = eval_expr(pattern)
 };
 if (truthy(not_empty__q.bind(assignments_js)())) {
 assignments_js = str("let ", assignments_js, " = deconstruct.call(", eval_expr(expr), ");\n")
-} ;
+};
 let body_js = null;
 if (truthy(body instanceof Array)) {
 body_js = eval_ast(body)
-}  else {
+} else {
 body_js = eval_statement(body)
 };
 return str("if (truthy(matches__q.call(", pattern_js, ", ", eval_expr(expr), "))) {\n", assignments_js, body_js, "}");}
@@ -2221,7 +2216,7 @@ return eval_match_entry(entry, expr);}).join("else ");}
 function eval_import_path(path) {
 if (truthy(eq__q.call(len.bind(path.split("."))(), (1)))) {
 return str(path, ".js");
-}  else {
+} else {
 return path;
 };}
 function eval_import({assign_expr, path}) {
@@ -2253,14 +2248,14 @@ let watcher = Deno.watchFs([src_file_name, prelude_src]);
 for await  (let event of watcher) {
 if (truthy(negate.call(eq__q.call(event.kind, "modify")))) {
 continue;
-} ;
+};
 console.log("Rebuilding...")
 try {
 compile_file(src_file_name, out_name, prelude_src)
 } catch (e) {
 console.error("Compile Failed", e)};
 };
-}  else {
+} else {
 compile_file(src_file_name, out_name, prelude_src)
 };
-} ;
+};

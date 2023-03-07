@@ -52,19 +52,14 @@ impl Call for Lexer = fn(str) {
         if type == newline {
           line = line + 1
           col = 1
-          found = true
-          break
-        }
-        if type != pass {
+        } else if type != pass {
           tokens.push({type, value, line, col})
           col = col + value::len()
-          found = true
-          break
         } else {
           col = col + value::len()
-          found = true
-          break
         }
+        found = true
+        break
       }
     }
     assert! found
@@ -205,8 +200,7 @@ impl ParseInstruction for Optional = fn([expr tokens]) {
   let {type} = tokens::first()
   if this.set_or_kw is Keyword && type == this.set_or_kw {
     return ~Then[this.parse_fn, this.as]::parse_step([expr tokens])
-  }
-  if this.set_or_kw is Set && this.set_or_kw::call(type) {
+  } else if this.set_or_kw is Set && this.set_or_kw::call(type) {
     return ~Then[this.parse_fn, this.as]::parse_step([expr tokens])
   } else {
     return [expr tokens]
