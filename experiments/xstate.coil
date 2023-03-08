@@ -1,0 +1,153 @@
+// import { assign } from "xstate"
+
+protocol PropChain
+protocol Accessed
+protocol Name
+protocol FakeObject
+protocol RootName
+
+protocol AssignInterpreter
+
+fn fake_object?() = this[FakeObject]
+
+fn root_node?(root) = this&.[RootName] == root
+
+fn interpret_prop_chain(obj) =
+  this[PropChain]::reduce(fn(o, k) = o[k], obj)
+
+fn fake_object(root_node, props, name) = new Proxy({props}, {
+  fn get(target, prop, receiver) {
+    this.accessed ||= []
+    this.accessed = [...this.accessed, prop]
+    if prop == RootName {
+      return root_node
+    } else if prop == FakeObject {
+      return true
+    } else if prop == Name {
+      return name
+    } else if prop == Accessed {
+      return this.accessed::filter(_ != Accessed)
+    } else if prop == PropChain {
+      return props
+    } else {
+      return fake_object(root_node, [...(props || []), prop], prop)
+    }
+  }
+})
+
+let Target = ~DefVector[:state]
+let Assign = ~DefRecord[:properties]
+
+fn self() = this
+
+
+let args = fake_object(:args)
+
+let { a, b, c } = args
+
+console.log(args[Accessed], a[Name])
+
+fn assign_interpreter() {
+  if this::nil?() {
+    return #(this)
+  } else {
+    return this[AssignInterpreter]
+  }
+}
+
+impl AssignInterpreter for Object = fn(ctx, args) {
+  if this::root_node?(:ctx) {
+    return this::interpret_prop_chain(ctx)
+  } else if this::root_node?(:args) {
+    return this::interpret_prop_chain(args)
+  } else {
+    return this
+  }
+}
+
+impl AssignInterpreter for Function = this
+
+impl AssignInterpreter for ObjectLiteral = fn(ctx, args) {
+  let output = {}  
+  for [key, value] of this {
+    output[key] = value[AssignInterpreter](ctx, args)
+  }
+  return output
+}
+
+impl AssignInterpreter for Underscore = fn(ctx, args) {
+  let transforms = []
+  for {f, args} of this {
+    // ok this is hard
+    // if 
+    [key] = value[AssignInterpreter](ctx, args)
+  }
+  return output
+}
+
+async fn as_xstate() {
+  let {initial, context, ...state_defs} = this
+  let states = {}
+  for [name, events] of state_defs {    
+    let state_events = {}
+    for [event_name, gen_fn] of events {
+      state_events[event_name] = {}
+      let [effects] = await spawn(gen_fn, fake_object(:ctx), fake_object(:args))
+      for effect of effects {
+        if effect::is_a?(Assign) {
+          let my_assign = {}  
+          for [key, value] of this {
+            my_assign[key] = value::assign_interpreter()
+          }
+          state_events[event_name].actions ||= []
+          state_events[event_name].actions += [assign(my_assign)]
+        } else if effect::is_a?(Target) {
+          state_events[event_name].target = effect.state
+        }
+      }
+    }
+  }
+  return {
+    initial,
+    context,
+    states,
+  }
+}
+
+let Mask = {
+  initial: :idle
+  context: {
+    masks: []
+    creating: null
+    editing: null
+  }
+  idle: {
+    fn* START_CREATE(_ctx, {point}) {
+      yield ~Assign{creating: {point}}
+      yield ~Target[:creating]
+    }
+    fn* START_EDIT(_ctx, {point, mask}) {
+      yield ~Assign{editing: {point, mask}}
+      yield ~Target[:editing]
+    }
+  }
+  creating: {
+    fn* END_CREATE(_ctx, {mask}) {
+      yield ~Assign{
+        masks: _::insert(mask)
+        creating: null
+      }
+      yield ~Target[:idle]
+    }
+    fn* CLEAR() {
+      yield ~Assign{creating: null}
+      yield ~Target[:idle]
+    }
+  }
+  editing: {
+    fn* END_EDIT({editing} {new_point}) {  
+      yield ~Assign{masks: _::replace(editing.point, new_point)}
+      yield ~Target[:idle]
+    }
+  }
+}
