@@ -107,6 +107,7 @@ define Vector for Struct = fn(args) = Struct(...args)
 
 protocol Call
 
+impl Call for Symbol = fn(obj, ...args) = obj[this](...args)
 impl Call for Function = fn(...args) = this(...args)
 impl Call for Set = fn(key) = this.has(key)
 impl Call for Map = fn(key) = this.get(key)
@@ -631,6 +632,13 @@ fn not_empty?() = !this::empty?()
 fn has?(key_or_value) = this[Collection].has?.call(this, key_or_value)
 fn len() = this[Collection].len.call(this)
 fn remove(key_or_val) = this[Collection].remove.call(this, key_or_val)
+fn def(key, value) {
+  if this::at(key) {
+    return this
+  } else {
+    return this::insert(key, value)
+  }
+}
 
 fn collection?() =
   [Collection Identity]::all?(::fn(proto) = this[proto])
@@ -1582,6 +1590,9 @@ impl Call for Match = fn(val) {
 fn sleep(ms) = new Promise(#(setTimeout(&, ms)))
 
 // generic helpers
+// FIXME: this seems to break with:
+// (_ + 1)[ResolveAssignExpr]::partial(:id)({id: 10} {})::log()
+// `this` seems to get lost.. investigate why.
 fn partial(...args) = ::fn(...rest) = this::call(...args, ...rest)
 
 // string helpers
