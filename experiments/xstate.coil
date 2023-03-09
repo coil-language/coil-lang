@@ -1,4 +1,6 @@
-// import { assign } from "xstate"
+// import {assign} from "xstate"
+
+// FAKE OBJECT API START
 
 protocol PropChain
 protocol Accessed
@@ -6,106 +8,118 @@ protocol Name
 protocol FakeObject
 protocol RootName
 
-protocol AssignInterpreter
-
 fn fake_object?() = this[FakeObject]
 
 fn root_node?(root) = this&.[RootName] == root
 
-fn interpret_prop_chain(obj) =
+fn eval_msg_chain(obj) =
   this[PropChain]::reduce(fn(o, k) = o[k], obj)
 
-fn fake_object(root_node, props, name) = new Proxy({props}, {
-  fn get(target, prop, receiver) {
+fn fake_object(root_node, msgs, name) = new Proxy({}, {
+  fn get(_target, msg, _receiver) {
     this.accessed ||= []
-    this.accessed = [...this.accessed, prop]
-    if prop == RootName {
-      return root_node
-    } else if prop == FakeObject {
-      return true
-    } else if prop == Name {
+    this.accessed = [...this.accessed, msg]
+    if msg == Printable {
       return name
-    } else if prop == Accessed {
+    } else if msg == RootName {
+      return root_node
+    } else if msg == FakeObject {
+      return true
+    } else if msg == Name {
+      return name
+    } else if msg == Accessed {
       return this.accessed::filter(_ != Accessed)
-    } else if prop == PropChain {
-      return props
+    } else if msg == PropChain {
+      return msgs
     } else {
-      return fake_object(root_node, [...(props || []), prop], prop)
+      return fake_object(root_node, [...(msgs || []), msg], msg)
     }
   }
 })
 
+// FAKE OBJECT API END
+
+protocol ResolveAssignExpr
+
 let Target = ~DefVector[:state]
 let Assign = ~DefRecord[:properties]
-
-fn self() = this
-
-
-let args = fake_object(:args)
-
-let { a, b, c } = args
-
-console.log(args[Accessed], a[Name])
-
-fn assign_interpreter() {
-  if this::nil?() {
-    return #(this)
-  } else {
-    return this[AssignInterpreter]
+impl Symbol.iterator for Assign = fn*() {
+  for entry of this.properties {
+    yield entry
   }
 }
 
-impl AssignInterpreter for Object = fn(ctx, args) {
-  if this::root_node?(:ctx) {
-    return this::interpret_prop_chain(ctx)
-  } else if this::root_node?(:args) {
-    return this::interpret_prop_chain(args)
-  } else {
-    return this
-  }
+// We can't take apart a function..
+impl ResolveAssignExpr for Function = fn(ctx_key, ctx, args) =
+  this(ctx, args)
+
+impl ResolveAssignExpr for ObjectLiteral = fn(ctx_key, ctx, args) {
+  let local_ctx = ctx::at(ctx_key)
+
+  let assign_ctx = this::map(fn(key, value) =
+    [key, value[ResolveAssignExpr](key, local_ctx, args)]
+  )
+
+  return ctx::insert(ctx_key, local_ctx::merge(assign_ctx))
 }
 
-impl AssignInterpreter for Function = this
-
-impl AssignInterpreter for ObjectLiteral = fn(ctx, args) {
-  let output = {}  
-  for [key, value] of this {
-    output[key] = value[AssignInterpreter](ctx, args)
-  }
-  return output
-}
-
-impl AssignInterpreter for Underscore = fn(ctx, args) {
-  let transforms = []
+impl ResolveAssignExpr for Underscore = fn(ctx_key, ctx, xstate_args) {
+  let output = ctx::at(ctx_key)
   for {f, args} of this {
-    // ok this is hard
-    // if 
-    [key] = value[AssignInterpreter](ctx, args)
+    let actual_args = args::map(fn(arg) {
+      if arg::root_node?(:ctx) {
+        return arg::eval_msg_chain(ctx::at(ctx_key))
+      } else if arg::root_node?(:args) {
+        return arg::eval_msg_chain(xstate_args)
+      } else {
+        return arg[ResolveAssignExpr](ctx_key, ctx, xstate_args)
+      }
+    })
+    output = output::f::call(...actual_args)
   }
   return output
 }
 
-async fn as_xstate() {
+protocol GenerateXState
+
+impl GenerateXState for Assign = fn(event_obj) {
+  let my_assign = {}
+  for [key, value] of this {
+    if value&.[ResolveAssignExpr] {
+      my_assign[key] = fn(ctx, args) = value[ResolveAssignExpr](key, ctx, args)
+    } else {
+      my_assign[key] = fn(ctx, args) = value
+    }
+  }
+
+  return {
+    ...event_obj,
+    actions: [
+      ...event_obj.actions,
+      assign(my_assign)
+    ]
+  }
+}
+
+impl GenerateXState for Target = fn(event_obj) {
+  return {
+    ...event_obj,
+    target: this.target
+  }
+}
+
+fn as_xstate() {
   let {initial, context, ...state_defs} = this
   let states = {}
   for [name, events] of state_defs {    
     let state_events = {}
     for [event_name, gen_fn] of events {
-      state_events[event_name] = {}
-      let [effects] = await spawn(gen_fn, fake_object(:ctx), fake_object(:args))
-      for effect of effects {
-        if effect::is_a?(Assign) {
-          let my_assign = {}  
-          for [key, value] of this {
-            my_assign[key] = value::assign_interpreter()
-          }
-          state_events[event_name].actions ||= []
-          state_events[event_name].actions += [assign(my_assign)]
-        } else if effect::is_a?(Target) {
-          state_events[event_name].target = effect.state
-        }
-      }
+      state_events[event_name] = 
+        gen_fn(fake_object(:ctx), fake_object(:args))
+          ::as_array()
+          ::map(GenerateXState)
     }
+    states[name] = {on: state_events}
   }
   return {
     initial,
