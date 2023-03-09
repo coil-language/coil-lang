@@ -1594,6 +1594,8 @@ fn sleep(ms) = new Promise(#(setTimeout(&, ms)))
 // (_ + 1)[ResolveAssignExpr]::partial(:id)({id: 10} {})::log()
 // `this` seems to get lost.. investigate why.
 fn partial(...args) = ::fn(...rest) = this::call(...args, ...rest)
+// hmmmmm
+// impl Call for partial = fn(f, ...args) = ::fn(self) = self::f::call(...args)
 
 // string helpers
 let char_alpha? = ("a".."z")::as_set() + "A".."Z"

@@ -2,6 +2,8 @@
 
 // FAKE OBJECT API START
 
+fn assign(obj) = obj
+
 protocol PropChain
 protocol Accessed
 protocol Name
@@ -94,30 +96,30 @@ impl GenerateXState for Assign = fn(event_obj) {
 
   return {
     ...event_obj,
-    actions: [
-      ...event_obj.actions,
-      assign(my_assign)
-    ]
+    actions: [...event_obj.actions, assign(my_assign)]
   }
 }
 
 impl GenerateXState for Target = fn(event_obj) {
   return {
     ...event_obj,
-    target: this.target
+    target: this.state.toString()
   }
 }
 
 fn as_xstate() {
   let {initial, context, ...state_defs} = this
   let states = {}
-  for [name, events] of state_defs {    
+  for [name, events] of state_defs::as_obj() {
     let state_events = {}
     for [event_name, gen_fn] of events {
       state_events[event_name] = 
         gen_fn(fake_object(:ctx), fake_object(:args))
           ::as_array()
-          ::map(GenerateXState)
+          ::reduce(
+            fn(event, effect) = effect[GenerateXState](event),
+            {actions: []}
+          )
     }
     states[name] = {on: state_events}
   }
@@ -160,8 +162,10 @@ let Mask = {
   }
   editing: {
     fn* END_EDIT({editing} {new_point}) {  
-      yield ~Assign{masks: _::replace(editing.point, new_point)}
+      yield ~Assign{masks: _::update(editing.point, new_point)}
       yield ~Target[:idle]
     }
   }
-}
+}::as_xstate()
+  ::pipe(compose(:states :idle :on :START_CREATE))
+  ::pipe(#(console.log(&)))
