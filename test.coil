@@ -1,5 +1,0 @@
-if false {
-  console.log(10)
-} else if true {
-  console.log("else if ")  
-}

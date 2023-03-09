@@ -1426,15 +1426,19 @@ fn eval_shorthand_anon_fn({expr}) =
 fn eval_anon_arg_id({arg_num}) =
   str("__args[" (arg_num || 1)::dec() "]")
 
-fn eval_decorator({name, fn_def args}) =
-  str("let " resolve_name(fn_def::at(:name)) " = "
-      name "("
-      // yup this is a mess
-        ((args || [])::len() != 0)
-          ::if_truthy?(#(str(args::map(eval_expr).join(", ") ", ")))
-          ::otherwise("")
-        eval_fn(fn_def)
-      ");")
+fn eval_decorator({name: decorator_name, fn_def args}) {
+  let fn_name = fn_def::at(:name)::pipe(resolve_name)
+  let fn_def_js = eval_fn(fn_def)
+  if args::empty?() {
+    return str("let " fn_name " = " decorator_name "(" fn_def_js ")")
+  } else {
+    return str("let " fn_name " = "
+      decorator_name "("
+        fn_def_js ", "
+        args::map(eval_expr).join(", ")
+      ")")
+  }
+}
 
 fn eval_keyof({lhs rhs}) = str(eval_expr(lhs) " in " eval_expr(rhs))
 fn eval_and_dot({lhs rhs}) = str(eval_expr(lhs) "?." eval_expr(rhs))
