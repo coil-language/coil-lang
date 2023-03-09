@@ -1430,13 +1430,13 @@ fn eval_decorator({name: decorator_name, fn_def args}) {
   let fn_name = fn_def::at(:name)::pipe(resolve_name)
   let fn_def_js = eval_fn(fn_def)
   if args::empty?() {
-    return str("let " fn_name " = " decorator_name "(" fn_def_js ")")
+    return str("let " fn_name " = " decorator_name "(" fn_def_js ");")
   } else {
     return str("let " fn_name " = "
       decorator_name "("
         fn_def_js ", "
         args::map(eval_expr).join(", ")
-      ")")
+      ");")
   }
 }
 
