@@ -620,7 +620,13 @@ fn concat(other) = this[Collection].concat.call(this, other)
 // alias
 fn merge(other) = this::concat(other)
 fn update(key, update_fn) = this[Collection].update.call(this, key, update_fn)
-fn empty?() = this[Collection].empty?.call(this)
+fn empty?() {
+  if this::nil?() {
+    return true
+  } else {
+    return this[Collection].empty?.call(this)
+  }
+}
 fn not_empty?() = !this::empty?()
 fn has?(key_or_value) = this[Collection].has?.call(this, key_or_value)
 fn len() = this[Collection].len.call(this)
@@ -1503,6 +1509,11 @@ fn DefRecord() {}
 define Vector for DefRecord = fn(property_name) {
   let Constructor = fn (entries) { this[property_name] = entries }
   define Record for Constructor = fn(entries) = new Constructor(entries)
+  impl Symbol.iterator for Constructor = fn*() {
+    for [key, value] of this.entries {
+      yield [key, value]
+    }
+  }
   return Constructor
 }
 
