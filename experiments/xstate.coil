@@ -69,20 +69,18 @@ impl ResolveAssignExpr for Underscore = fn(ctx_key, ctx, xstate_args) {
 protocol GenerateXState
 
 impl GenerateXState for Assign = fn(event) {
-  let my_assign = {}
-  for [key, value] of this.properties {
+  let assign_obj = this.properties::from_entries()::map(fn(key, value) {
     if value&.[ResolveAssignExpr] {
-      my_assign[key] = fn(ctx, args) = value::resolve_assign_expr(key, ctx, args)
+      return [key, fn(ctx, args) = value::resolve_assign_expr(key, ctx, args)]
     } else {
-      my_assign[key] = fn(ctx, args) = value
+      return [key, fn(_ctx, _args) = value]
     }
-  }
-
-  return event::update(:actions _::push(assign(my_assign)))
+  })
+  return event::update(:actions _::push(assign(assign_obj)))
 }
 
-impl GenerateXState for Target = fn(event_obj) =
-  event_obj::insert(:target this.state::as_str())
+impl GenerateXState for Target = fn(event) =
+  event::insert(:target this.state::as_str())
 
 fn as_xstate() = createMachine({
   initial: this.initial,
