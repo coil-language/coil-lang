@@ -1648,7 +1648,7 @@ fn eval_match({expr, entries}) =
     .join("else ")
 
 fn eval_import_path(path) {
-  if path.split(".")::len() == 1 {
+  if path.split(".")::len() == 1 && !path.includes(":") && !path.includes("@") {
     return str(path ".js")
   } else {
     return path

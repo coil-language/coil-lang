@@ -282,8 +282,8 @@ impl Collection for ObjectLiteral = {
   fn each(f) = this::entries().forEach(fn ([k, v]) = f(k, v))
   fn find(f) = this::entries().find(fn ([k, v]) = f(k, v)::pipe(truthy))
   fn map(f) = this::entries().map(fn ([k, v]) = f(k, v))::from_entries()
-  fn flat_map(f) = this::entries().map(fn ([k, v]) = f(k, v)::entries()).flat()::from_entries()
-  fn filter(f) = this::entries().filter(fn ([k, v]) = f(k, v)::pipe(truthy))::from_entries()
+  fn flat_map(f) = this::entries().map(fn ([k, v]) = f(k::as_keyword(), v)::entries()).flat()::from_entries()
+  fn filter(f) = this::entries().filter(fn ([k, v]) = f(k::as_keyword(), v)::pipe(truthy))::from_entries()
   fn any?(f) = this::entries().some(fn ([k, v]) = f(k, v)::pipe(truthy))
   fn all?(f) = this::entries().every(fn ([k, v]) = f(k, v)::pipe(truthy))
   fn reduce(f, start) {
@@ -319,6 +319,14 @@ impl Collection for Array = {
   fn all?(f) = this.every(compose(#(f(&)), truthy))
   fn reduce(f, start) = this.reduce(fn(acc, val) = f(acc, val), start)
   fn insert(value) = [...this, value]
+  fn replace(old_value, new_value) =
+    this::map(fn(val) {
+      if val == old_value {
+        return new_value
+      } else {
+        return val
+      }
+    })
   fn concat(other) = [...this, ...other]
   fn update(val, update_fn) = this::map(fn(v) {
     if val == v {
@@ -617,6 +625,9 @@ fn reduce(f, start) {
   return this[Collection].reduce.call(this, f::call, start)
 }
 fn insert(...args) = this[Collection].insert.call(this, ...args)
+fn push(val) = this::insert(val)
+fn replace(old_value, new_value) =
+  this[Collection].replace.call(this, old_value, new_value)
 fn concat(other) = this[Collection].concat.call(this, other)
 // alias
 fn merge(other) = this::concat(other)
@@ -639,6 +650,8 @@ fn def(key, value) {
     return this::insert(key, value)
   }
 }
+fn map_values(f) = this::map(fn(key, value) = [key, f(value)])
+fn omit(...keys) = this::filter(fn(k, v) = !keys::has?(k))
 
 fn collection?() =
   [Collection Identity]::all?(::fn(proto) = this[proto])
@@ -1245,6 +1258,7 @@ impl Collection for Underscore = {
   fn all?(f) = this.insert(all? f)
   fn reduce(f, start) = this.insert(reduce, f, start)
   fn insert(...args) = this.insert(insert, ...args)
+  fn replace(...args) = this.insert(replace, ...args)
   fn concat(other) = this.insert(concat, other)
   fn update(key, update_fn) = this.insert(update, key, update_fn)
   fn empty?() = this.insert(empty?)
