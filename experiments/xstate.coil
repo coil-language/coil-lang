@@ -1,10 +1,8 @@
 import { createMachine, assign } from "npm:@xstate/fsm";
 
-// FAKE OBJECT API START
+// FAKE OBJECT (foo) API START
 
 protocol PropChain
-protocol Accessed
-protocol Name
 protocol Foo
 protocol RootName
 
@@ -15,29 +13,22 @@ fn root_node?(root) = this&.[RootName] == root
 fn eval_msg_chain(obj) =
   this[PropChain]::reduce(fn(o, k) = o[k], obj)
 
-fn foo(root_node, msgs, name) = new Proxy({}, {
+fn foo(root_node, msgs) = new Proxy({}, {
   fn get(_target, msg, _receiver) {
-    this.accessed ||= []
-    this.accessed = [...this.accessed, msg]
-    if msg == Printable {
-      return name
-    } else if msg == RootName {
+    msgs ||= []
+    if msg == RootName {
       return root_node
     } else if msg == Foo {
       return true
-    } else if msg == Name {
-      return name
-    } else if msg == Accessed {
-      return this.accessed::filter(_ != Accessed)
     } else if msg == PropChain {
       return msgs
     } else {
-      return foo(root_node, [...(msgs || []), msg], msg)
+      return foo(root_node, [...msgs, msg])
     }
   }
 })
 
-// FAKE OBJECT API END
+// FAKE OBJECT (foo) API END
 
 protocol ResolveAssignExpr
 
