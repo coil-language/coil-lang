@@ -11,7 +11,7 @@ fn foo?() = this[Foo]
 fn root_node?(root) = this&.[RootName] == root
 
 fn eval_msg_chain(obj) =
-  this[PropChain]::reduce(fn(o, k) = o[k], obj)
+  this[PropChain]::reduce(fn(o, k) = o::at(k), obj)
 
 fn foo(root_node, msgs) = new Proxy({}, {
   fn get(_target, msg, _receiver) {
@@ -78,10 +78,7 @@ impl GenerateXState for Assign = fn(event) {
     }
   }
 
-  return {
-    ...event,
-    actions: event.actions::push(assign(my_assign))
-  }
+  return {...event, actions: event.actions::push(assign(my_assign))}
 }
 
 impl GenerateXState for Target = fn(event_obj) =
