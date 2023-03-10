@@ -78,7 +78,7 @@ impl GenerateXState for Assign = fn(event) {
     }
   }
 
-  return {...event, actions: event.actions::push(assign(my_assign))}
+  return event::update(:actions _::push(assign(my_assign)))
 }
 
 impl GenerateXState for Target = fn(event_obj) =
