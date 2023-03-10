@@ -34,9 +34,6 @@ protocol ResolveAssignExpr
 
 export let Target = ~DefVector[:state]
 export let Assign = ~DefRecord[:properties]
-impl Symbol.iterator for Assign = fn*() {
-  for entry of this.properties { yield entry }
-}
 
 impl ResolveAssignExpr for Function = fn(ctx_key, ctx, args) =
   this(ctx, args)
@@ -73,7 +70,7 @@ protocol GenerateXState
 
 impl GenerateXState for Assign = fn(event) {
   let my_assign = {}
-  for [key, value] of this {
+  for [key, value] of this.properties {
     if value&.[ResolveAssignExpr] {
       my_assign[key] = fn(ctx, args) = value::resolve_assign_expr(key, ctx, args)
     } else {
