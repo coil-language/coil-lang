@@ -1,0 +1,23 @@
+let Comp = ~Struct["Comp"]
+
+define Vector for Comp = fn([map_fn, _for, collection, ...rest]) {
+  assert! _for == :for
+  assert! Call keyof map_fn
+  let result = collection
+
+  if rest::first() == :where {
+    let [_if filter_fn, ..._rest] = rest
+    rest = _rest
+    assert! Call keyof filter_fn
+    result = result::filter(filter_fn)
+  }
+
+  result = result::map(map_fn)
+
+  if rest::first() == :verify {
+    let [_verify, verify_fn, ..._rest] = rest
+    assert! result::all?(verify_fn)
+  }
+
+  return result
+}
