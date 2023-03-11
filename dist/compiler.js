@@ -192,7 +192,7 @@ if (truthy(negate.call((Defaults in this)))) {
 return null;
 };
 for  (let [key, fallback] of entries.bind(this[Defaults])()) {
-if (truthy(this[key])) {
+if (truthy(exists__q.bind(this[key])())) {
 continue;
 } else {
 this[key] = fallback
@@ -267,7 +267,7 @@ return this[Pipe](callable);
 };}
 function pipe(...callables) {
 return reduce.bind(callables)(function (r, c) {
-return call.bind(c)(r);}, this);}
+return pipe_one.bind(r)(c);}, this);}
 function compose(first_fn, ...fns) {
 return function (...args) {
 return reduce.bind(fns)(function (result, f) {
@@ -1100,8 +1100,6 @@ String.prototype[Printable] = function () {
 return this;};
 Function.prototype[Printable] = function () {
 return this.name;};
-function otherwise(val) {
-return or.call(this, () => val);}
 let printable = impl_callable(function printable() {
 if (truthy(nil__q.bind(this)())) {
 return this;
@@ -1332,13 +1330,13 @@ return str(printable.bind(this.start)(), "..", printable.bind(this.end)());
 Range.prototype[UnderscoreInterpreter] = function (underscore, val) {
 let result = val;
 for  (let {f, args} of underscore) {
-result = otherwise.bind(call.bind(at.bind(construct_record.call(Map, [[map, function (map_fn) {
+result = or.call(call.bind(at.bind(construct_record.call(Map, [[map, function (map_fn) {
 return map_fn(result);}], [filter, function (filter_fn) {
 if (truthy(filter_fn(result))) {
 return result;
 } else {
 return Keyword.for("filtered");
-};}]]))(f))(...args))(result)
+};}]]))(f))(...args), () => result)
 };
 return result;};
 Range.prototype[Symbol.iterator] = function *() {
@@ -1412,19 +1410,19 @@ return output;
 }});
 let Comp = construct_vector.call(Struct, ["Comp"]);
 Comp[Vector] = function ([map_fn, _for, collection, ...rest]) {
-assert__b(eq__q.call(_for, Keyword.for("for")), 1442, 11, `eq__q.call(_for, Keyword.for("for"))`,);
-assert__b(Call in map_fn, 1443, 11, `Call in map_fn`,);
+assert__b(eq__q.call(_for, Keyword.for("for")), 1440, 11, `eq__q.call(_for, Keyword.for("for"))`,);
+assert__b(Call in map_fn, 1441, 11, `Call in map_fn`,);
 let result = collection;
 if (truthy(eq__q.call(first.bind(rest)(), Keyword.for("where")))) {
 let [_if, filter_fn, ..._rest] = rest;
 rest = _rest
-assert__b(Call in filter_fn, 1449, 13, `Call in filter_fn`,);
+assert__b(Call in filter_fn, 1447, 13, `Call in filter_fn`,);
 result = filter.bind(result)(filter_fn)
 };
 result = map.bind(result)(map_fn)
 if (truthy(eq__q.call(first.bind(rest)(), Keyword.for("verify")))) {
 let [_verify, verify_fn, ..._rest] = rest;
-assert__b(all__q.bind(result)(verify_fn), 1457, 13, `all__q.bind(result)(verify_fn)`,);
+assert__b(all__q.bind(result)(verify_fn), 1455, 13, `all__q.bind(result)(verify_fn)`,);
 };
 return result;};
 let ZipView = construct_vector.call(Struct, ["ZipView", Keyword.for("collections")]);
@@ -2067,7 +2065,7 @@ return this;
 function eval_math_op({lhs, op, rhs}) {
 return str(call.bind(math_op_to_method)(op), ".call(", eval_expr(lhs), ",", eval_expr(rhs), ")");}
 function eval_fn({is_async__q, generator__q, name, args, body}) {
-return str(if_truthy__q.bind(is_async__q)((...__args) => "async "), "function ", if_truthy__q.bind(generator__q)((...__args) => "*"), resolve_name(name), "(", map.bind(args)(eval_assign_expr).join(", "), ") {\n", eval_ast(body), "}");}
+return str((and.call(is_async__q, () => "async ")), "function ", (and.call(generator__q, () => "*")), resolve_name(name), "(", map.bind(args)(eval_assign_expr).join(", "), ") {\n", eval_ast(body), "}");}
 function eval_set({elements}) {
 return str("new Set([", map.bind(elements)(eval_expr).join(", "), "])");}
 function eval_bind({lhs, expr}) {
@@ -2079,7 +2077,7 @@ return resolve_name(id);}
 function eval_dynamic_obj_entry({key_expr, value}) {
 return str("[", eval_expr(key_expr), "]: ", eval_expr(value));}
 function eval_obj_fn({name, generator__q, is_async__q, args, body}) {
-return str(if_truthy__q.bind(is_async__q)((...__args) => "async"), if_truthy__q.bind(generator__q)((...__args) => "*"), resolve_name(name), "(", map.bind(args)(eval_assign_expr).join(", "), ") {\n", eval_ast(body), "\n}");}
+return str((and.call(is_async__q, () => "async")), (and.call(generator__q, () => "*")), resolve_name(name), "(", map.bind(args)(eval_assign_expr).join(", "), ") {\n", eval_ast(body), "\n}");}
 function eval_obj_entry(node) {
 return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("reg_obj_entry"), eval_reg_obj_entry], [Keyword.for("obj_shorthand_entry"), eval_obj_shorthand_entry], [Keyword.for("dynamic_obj_entry"), eval_dynamic_obj_entry], [Keyword.for("spread_obj_entry"), eval_spread], [Keyword.for("fn"), eval_obj_fn]])))(node);}
 function eval_obj_lit({entries}) {
@@ -2117,7 +2115,7 @@ return str(eval_expr(lhs), " = ", eval_expr(rhs));}
 function eval_await({expr}) {
 return str("await ", eval_expr(expr));}
 function eval_yield({star__q, expr}) {
-return str("yield", if_truthy__q.bind(star__q)((...__args) => "*"), " ", eval_expr(expr));}
+return str("yield", (and.call(star__q, () => "*")), " ", eval_expr(expr));}
 function eval_paren_expr({expr}) {
 return str("(", eval_expr(expr), ")");}
 function eval_unapplied_math_op({op}) {
@@ -2197,7 +2195,7 @@ return str(constructor, ".prototype = ", eval_expr(expr));}
 function eval_define_for({proto_expr, src_expr, expr}) {
 return str(eval_expr(src_expr), "[", eval_expr(proto_expr), "] = ", eval_expr(expr));}
 function eval_for_loop({is_await__q, assign_expr, iterable_expr, body}) {
-return str("for ", if_truthy__q.bind(is_await__q)((...__args) => "await "), " (let ", eval_assign_expr(assign_expr), " of ", eval_expr(iterable_expr), ") {\n", eval_ast(body), "\n", "}");}
+return str("for ", (and.call(is_await__q, () => "await ")), " (let ", eval_assign_expr(assign_expr), " of ", eval_expr(iterable_expr), ") {\n", eval_ast(body), "\n", "}");}
 function eval_id_assign({name, expr}) {
 return str(resolve_name(name), " = ", eval_expr(expr));}
 function eval_assert({expr, token, msg}) {
@@ -2242,7 +2240,12 @@ return str("export default ", eval_expr(expr));}
 function eval_label({label_name, statement}) {
 return str(label_name, ": ", eval_statement(statement));}
 function eval_statement(node) {
-return call.bind(pipe.bind(if_truthy__q.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("label"), eval_label], [Keyword.for("if"), eval_if], [Keyword.for("unless"), eval_unless], [Keyword.for("import"), eval_import], [Keyword.for("export"), eval_export], [Keyword.for("export_default"), eval_export_default], [Keyword.for("let"), eval_let], [Keyword.for("if_let"), eval_if_let], [Keyword.for("return"), eval_return], [Keyword.for("protocol_def"), eval_protocol], [Keyword.for("impl_for"), eval_impl_for], [Keyword.for("impl_object"), eval_impl_object], [Keyword.for("define_for"), eval_define_for], [Keyword.for("for_loop"), eval_for_loop], [Keyword.for("id_assign"), eval_id_assign], [Keyword.for("assert"), eval_assert], [Keyword.for("while_loop"), eval_while_loop], [Keyword.for("loop"), eval_loop], [Keyword.for("while_let_loop"), eval_while_let_loop], [Keyword.for("continue"), eval_continue], [Keyword.for("break"), eval_break], [Keyword.for("try"), eval_try]])))((...__args) => compose(__args[0], plus.call(_,";"))))(or.call(_, () => eval_expr)))(node);}
+return call.bind(pipe.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("label"), eval_label], [Keyword.for("if"), eval_if], [Keyword.for("unless"), eval_unless], [Keyword.for("import"), eval_import], [Keyword.for("export"), eval_export], [Keyword.for("export_default"), eval_export_default], [Keyword.for("let"), eval_let], [Keyword.for("if_let"), eval_if_let], [Keyword.for("return"), eval_return], [Keyword.for("protocol_def"), eval_protocol], [Keyword.for("impl_for"), eval_impl_for], [Keyword.for("impl_object"), eval_impl_object], [Keyword.for("define_for"), eval_define_for], [Keyword.for("for_loop"), eval_for_loop], [Keyword.for("id_assign"), eval_id_assign], [Keyword.for("assert"), eval_assert], [Keyword.for("while_loop"), eval_while_loop], [Keyword.for("loop"), eval_loop], [Keyword.for("while_let_loop"), eval_while_let_loop], [Keyword.for("continue"), eval_continue], [Keyword.for("break"), eval_break], [Keyword.for("try"), eval_try]])))(function (f) {
+if (truthy(f)) {
+return compose(f, plus.call(_,";"));
+} else {
+return eval_expr;
+};}))(node);}
 function eval_ast(ast) {
 return map.bind(ast)(eval_statement).join("\n");}
 function compile(string) {
@@ -2267,7 +2270,8 @@ console.log("Rebuilding...")
 try {
 compile_file(src_file_name, out_name, prelude_src)
 } catch (e) {
-console.error("Compile Failed", e)};
+console.error("Compile Failed", e)
+};
 };
 } else {
 compile_file(src_file_name, out_name, prelude_src)

@@ -1268,23 +1268,15 @@ let math_op_to_method = ~Map{
   "%" => "mod"
 }
 
-fn if_truthy?(f) {
-  if this {
-    return f(this)
-  } else {
-    return this
-  }
-}
-
 fn eval_math_op({lhs op rhs}) = str(
   math_op_to_method::call(op) ".call("
     eval_expr(lhs) "," eval_expr(rhs)
   ")")
 
 fn eval_fn({is_async? generator? name args body}) = str(
-  is_async?::if_truthy?(#("async "))
+  (is_async? && "async ")
   "function "
-    generator?::if_truthy?(#("*"))
+    (generator? && "*")
     resolve_name(name)
     "(" args::map(eval_assign_expr).join(", ") ") {\n"
     eval_ast(body)
@@ -1305,8 +1297,8 @@ fn eval_dynamic_obj_entry({key_expr value}) =
   str("[" eval_expr(key_expr)"]: " eval_expr(value))
 
 fn eval_obj_fn({name generator? is_async? args body}) =
-  str(is_async?::if_truthy?(#("async"))
-      generator?::if_truthy?(#("*"))
+  str((is_async? && "async")
+      (generator? && "*")
       resolve_name(name) "(" args::map(eval_assign_expr).join(", ") ") {\n"
       eval_ast(body) "\n}")
 
@@ -1348,7 +1340,7 @@ fn eval_snd_assign({lhs rhs}) =
   str(eval_expr(lhs) " = " eval_expr(rhs))
 fn eval_await({expr}) = str("await " eval_expr(expr))
 fn eval_yield({star? expr}) =
-  str("yield" star?::if_truthy?(#("*")) " " eval_expr(expr))
+  str("yield" (star? && "*") " " eval_expr(expr))
 fn eval_paren_expr({expr}) = str("(" eval_expr(expr) ")")
 fn eval_unapplied_math_op({op}) = math_op_to_method::call(op)
 fn eval_unapplied_and_and() = "and"
@@ -1506,7 +1498,7 @@ fn eval_define_for({proto_expr src_expr expr}) =
 
 fn eval_for_loop({is_await? assign_expr iterable_expr body}) = 
   str("for "
-      is_await?::if_truthy?(#("await "))
+      (is_await? && "await ")
       " (let " eval_assign_expr(assign_expr) " of "
       eval_expr(iterable_expr) ") {\n"
         eval_ast(body) "\n"
@@ -1607,10 +1599,10 @@ fn eval_statement(node) = node::at(:type)::pipe(~Map{
   :break => eval_break
   :try => eval_try
 })
-  // TODO: get rid of if_truthy?
-  // ::pipe(_ && #(compose(&, _ + ";")))
-  ::if_truthy?(#(compose(&, _ + ";")))
-  ::pipe(_ || eval_expr)::call(node)
+  ::pipe(fn(f) {
+    if f { return compose(f _ + ";") }
+    else { return eval_expr }
+  })::call(node)
 
 fn eval_ast(ast) = ast::map(eval_statement).join("\n")
 

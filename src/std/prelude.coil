@@ -78,7 +78,7 @@ fn construct_struct_values() {
 fn set_struct_defaults() {
   if !(Defaults keyof this) { return null }
   for [key fallback] of this[Defaults]::entries() {
-    if this[key] {
+    if this[key]::exists?() {
       continue
     } else {
       this[key] = fallback
@@ -160,7 +160,7 @@ fn pipe_one(callable) {
 }
 
 fn pipe(...callables) =
-  callables::reduce(fn(r, c) = c::call(r), this)
+  callables::reduce(fn(r, c) = r::pipe_one(c), this)
 
 fn compose(first_fn, ...fns) = fn(...args) =
   fns::reduce(fn (result, f) = f::call(result), first_fn::call(...args))
