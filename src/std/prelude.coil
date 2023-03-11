@@ -207,6 +207,7 @@ fn eq?(other) {
 // This is poorly thought out..
 // likely we want to get to the point where we don't need to clone anything
 // because we just have better built in immutable data structures
+// TODO: remove or limit the usage/need for this
 protocol Clone
 
 impl Clone for ObjectLiteral = {
@@ -1443,30 +1444,6 @@ impl OrderedCollection for Range = {
   }
 }
 
-let Comp = ~Struct["Comp"]
-
-define Vector for Comp = fn([map_fn, _for, collection, ...rest]) {
-  assert! _for == :for
-  assert! Call keyof map_fn
-  let result = collection
-
-  if rest::first() == :where {
-    let [_if filter_fn, ..._rest] = rest
-    rest = _rest
-    assert! Call keyof filter_fn
-    result = result::filter(filter_fn)
-  }
-
-  result = result::map(map_fn)
-
-  if rest::first() == :verify {
-    let [_verify, verify_fn, ..._rest] = rest
-    assert! result::all?(verify_fn)
-  }
-
-  return result
-}
-
 let ZipView = ~Struct["ZipView" :collections]
 
 @impl_callable
@@ -1507,6 +1484,9 @@ impl :collect for ZipView = fn() {
 
 fn DefVector() {}
 
+// This should be rethought.
+// if it wants to be `dsl` like, it should not be adhoc
+// like it is now..
 define Vector for DefVector = fn(properties) {  
   let Constructor = null
   // TODO: this returns _ itself when its true
@@ -1546,6 +1526,8 @@ define Vector for DefRecord = fn(property_name) {
   return Constructor
 }
 
+// Consider removing this
+// or rethinking it
 protocol Matches
 
 fn matches?(value) = this[Matches](value)
