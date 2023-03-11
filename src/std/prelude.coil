@@ -643,15 +643,14 @@ fn not_empty?() = !this::empty?()
 fn has?(key_or_value) = this[Collection].has?.call(this, key_or_value)
 fn len() = this[Collection].len.call(this)
 fn remove(key_or_val) = this[Collection].remove.call(this, key_or_val)
-fn def(key, value) {
-  if this::at(key) {
-    return this
-  } else {
-    return this::insert(key, value)
-  }
+fn map_values(f) {
+  assert! this::record?()
+  return this::map(fn(key, value) = [key, f(value)])
 }
-fn map_values(f) = this::map(fn(key, value) = [key, f(value)])
-fn omit(...keys) = this::filter(fn(k, v) = !keys::has?(k))
+fn omit(...keys) {
+  assert! this::record?()  
+  return this::filter(fn(k, v) = !keys::has?(k))
+}
 
 fn collection?() =
   [Collection Identity]::all?(::fn(proto) = this[proto])
@@ -1187,6 +1186,9 @@ fn as_str() = this.toString()
 fn as_bool() = truthy(this)
 
 @impl_callable
+fn exists?() = !this::nil?()
+
+@impl_callable
 fn is_a?(KlassOrProtocol) {
   if typeof(KlassOrProtocol) == "symbol" {
     return KlassOrProtocol keyof Object.getPrototypeOf(this) ||
@@ -1221,7 +1223,7 @@ impl UnderscoreInterpreter for Object = fn(underscore) {
   let initial_value = this  
   let result = initial_value
   for {f args} of underscore {
-    result = f.bind(result)::call(...args)
+    result = result::f::call(...args)
     // this may not always be true, but this handles And, and Or
     if result is Underscore {
       // we could do something like f[UnderscoreInterpreter]::call(result, initial_value)
@@ -1583,14 +1585,6 @@ impl Matches for ObjectLiteral = fn(record) =
 
 let Match = ~DefRecord[:entries]
 
-// probably we can get rid of the `match`
-// keyword for this. 
-// The primary benefit of `match` is that it allow
-// statements like yield.
-// It would be nice to find a way to unify these two ideas.
-// because right now the `match` keyword is clunky
-// & would require more work than I'd like
-// to make it nice to use.
 impl Call for Match = fn(val) {
   for [pattern ret] of this.entries {
     if pattern::matches?(val) {
@@ -1598,18 +1592,6 @@ impl Call for Match = fn(val) {
     }
   }
 }
-
-//  Async helpers
-
-fn sleep(ms) = new Promise(#(setTimeout(&, ms)))
-
-// generic helpers
-// FIXME: this seems to break with:
-// (_ + 1)[ResolveAssignExpr]::partial(:id)({id: 10} {})::log()
-// `this` seems to get lost.. investigate why.
-fn partial(...args) = ::fn(...rest) = this::call(...args, ...rest)
-// hmmmmm
-// impl Call for partial = fn(f, ...args) = ::fn(self) = self::f::call(...args)
 
 // string helpers
 let char_alpha? = ("a".."z")::as_set() + "A".."Z"
