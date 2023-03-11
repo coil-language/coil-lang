@@ -1537,21 +1537,20 @@ fn eval_loop({body}) =
 fn eval_continue() = "continue"
 fn eval_break() = "break"
 
-fn eval_try(node) =
-  str("try {\n"
-      eval_ast(node::at(:body)) "\n"
-      "}"
-      node::has?(:catch)::if_truthy?(
-        #(str(" catch (" node::at(:catch)::at(:name) ") {\n"
-              eval_ast(node::at(:catch)::at(:body) "\n"
-              "}"))))
-        ::otherwise("")
-      node::has?(:finally)::if_truthy?(
-        #(str(" finally {\n"
-              eval_ast(node::at(:finally)::at(:body) "\n"
-              "}"))))
-        ::otherwise("")
-      "}")
+fn eval_try(node) {
+  let body_js = node::at(:body)::pipe(eval_ast)
+  let catch_js = ""
+  let finally_js = ""
+  if node::has?(:catch) {
+    let {name, body} = node::at(:catch)
+    catch_js = str(" catch (" name ") {\n" eval_ast(body) "\n}")
+  }
+  if node::has?(:finally) {
+    let {body} = node::at(:finally)
+    finally_js = str(" finally {\n" eval_ast(body) "\n}")
+  }
+  return str("try {\n" body_js "\n" "}" catch_js finally_js)
+}
 
 fn get_deconstructed_obj_entry_name(node) =
   ~Map{:obj_reg_entry => :name
@@ -1608,8 +1607,10 @@ fn eval_statement(node) = node::at(:type)::pipe(~Map{
   :break => eval_break
   :try => eval_try
 })
+  // TODO: get rid of if_truthy?
+  // ::pipe(_ && #(compose(&, _ + ";")))
   ::if_truthy?(#(compose(&, _ + ";")))
-  ::otherwise(eval_expr)::call(node)
+  ::pipe(_ || eval_expr)::call(node)
 
 fn eval_ast(ast) = ast::map(eval_statement).join("\n")
 
@@ -1617,7 +1618,6 @@ fn compile(string) = lexer::call(string)
   ::pipe(fn(tokens) = new CollectionView(tokens, 0))
   ::pipe(parse)
   ::pipe(eval_ast)
-
 
 fn compile_file(src_file_name, out_name, prelude_src) {
   let prelude = Deno.readTextFileSync("./src/std/js_prelude.js")

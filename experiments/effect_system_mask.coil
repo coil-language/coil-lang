@@ -24,8 +24,7 @@ impl Render for Point = fn*() {
   let currently_hovering_point = yield ~Msg[:currently_hovering_point :get]
   for _ of currently_hovering_point {
     let color = ~Map{this => "yellow"}
-      ::at(currently_hovering_point::$)
-      ::otherwise("green")
+      ::at(currently_hovering_point::$) || "green"
     yield rect({
       x: this.x - 5
       y: this.y - 5

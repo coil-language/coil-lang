@@ -151,7 +151,16 @@ fn freeze() = Object.freeze(this)
 
 let nil? = #{undefined null}::freeze()
 
-fn pipe(callable) = this&.[Pipe](callable)
+fn pipe_one(callable) {
+  if this::nil?() {
+    return callable::call(this)
+  } else {
+    return this[Pipe](callable)
+  }
+}
+
+fn pipe(...callables) =
+  callables::reduce(fn(r, c) = c::call(r), this)
 
 fn compose(first_fn, ...fns) = fn(...args) =
   fns::reduce(fn (result, f) = f::call(result), first_fn::call(...args))
@@ -1073,16 +1082,6 @@ impl Printable for String = fn() = this
 
 impl Printable for Function = fn() = this.name
 
-fn when(cond, f) {
-  if cond(this) {
-    return f(this)
-  } else {
-    return this
-  }
-}
-
-fn otherwise(val) = this || val
-
 @impl_callable
 fn printable() {
   if this::nil?() {
@@ -1094,8 +1093,7 @@ fn printable() {
       Clone => ::print_for_generic_clone_object
     }
       ::find(::fn(proto) = this[proto])
-      ::call()
-      ::otherwise(this)
+      ::call() || this
   }
 }
 
@@ -1107,6 +1105,7 @@ fn log(...args) {
 
 // Helpers
 
+// THIS NEEDS TO BE RETHOUGHT
 protocol PrettyStr
 
 impl PrettyStr for ObjectLiteral = fn() {
@@ -1159,7 +1158,7 @@ fn finite?() = this::bigint?() || Number.isFinite(this)
 fn inf?() = !this::finite?()
 
 @impl_callable
-fn to_lowercase() = this.toLowerCase()
+fn as_lowercase() = this.toLowerCase()
 
 @impl_callable
 fn as_set() = new Set(this)
@@ -1234,7 +1233,13 @@ impl UnderscoreInterpreter for Object = fn(underscore) {
   return result
 }
 
-impl Call for Underscore = fn(data, ...args) = data&.[UnderscoreInterpreter](this, ...args)
+impl Call for Underscore = fn(data, ...args) {
+  if data::nil?() {
+    return Object.prototype[UnderscoreInterpreter].call(data, this, ...args)
+  } else {
+    return data[UnderscoreInterpreter](this, ...args)
+  }
+}
 
 impl Comparable for Underscore = {
   fn less_than(val) = this.insert(less_than, val)
@@ -1271,7 +1276,7 @@ impl Collection for Underscore = {
 
 impl Pipe for Underscore = fn(f) = this.insert(pipe, f)
 impl And for Underscore = fn(thunk) = this.insert(and, thunk)
-impl Or for Underscore = fn(other) = this.insert(or, other)
+impl Or for Underscore = fn(thunk) = this.insert(or, thunk)
 impl Plus for Underscore = fn(other) = this.insert(plus, other)
 impl Minus for Underscore = fn(other) = this.insert(minus, other)
 impl Times for Underscore = fn(other) = this.insert(times, other)
@@ -1358,7 +1363,7 @@ impl UnderscoreInterpreter for Range = fn(underscore, val) {
           return :filtered
         }
       }
-    }::at(f)::call(...args)::otherwise(result)
+    }::at(f)::call(...args) || result
   }
   return result
 }

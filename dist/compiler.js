@@ -259,8 +259,15 @@ return call.bind(callable)(this);};
 function freeze() {
 return Object.freeze(this);}
 let nil__q = freeze.bind(new Set([undefined, null]))();
-function pipe(callable) {
-return this?.[Pipe](callable);}
+function pipe_one(callable) {
+if (truthy(nil__q.bind(this)())) {
+return call.bind(callable)(this);
+} else {
+return this[Pipe](callable);
+};}
+function pipe(...callables) {
+return reduce.bind(callables)(function (r, c) {
+return call.bind(c)(r);}, this);}
 function compose(first_fn, ...fns) {
 return function (...args) {
 return reduce.bind(fns)(function (result, f) {
@@ -708,12 +715,12 @@ return this[Collection].filter.call(this, call.bind(f));}
 function any__q(...fns) {
 return this[Collection].any__q.call(this, compose(...fns));}
 function any__b(...fns) {
-assert__b(any__q.bind(this)(...fns), 611, 11, `any__q.bind(this)(...fns)`,);
+assert__b(any__q.bind(this)(...fns), 620, 11, `any__q.bind(this)(...fns)`,);
 return true;}
 function all__q(...fns) {
 return this[Collection].all__q.call(this, compose(...fns));}
 function all__b(...fns) {
-assert__b(all__q.bind(this)(...fns), 616, 11, `all__q.bind(this)(...fns)`,);
+assert__b(all__q.bind(this)(...fns), 625, 11, `all__q.bind(this)(...fns)`,);
 return true;}
 function reduce(f, start) {
 if (truthy(nil__q.bind(start)())) {
@@ -747,11 +754,11 @@ return this[Collection].len.call(this);}
 function remove(key_or_val) {
 return this[Collection].remove.call(this, key_or_val);}
 function map_values(f) {
-assert__b(record__q.bind(this)(), 645, 11, `record__q.bind(this)()`,);
+assert__b(record__q.bind(this)(), 654, 11, `record__q.bind(this)()`,);
 return map.bind(this)(function (key, value) {
 return [key, f(value)];});}
 function omit(...keys) {
-assert__b(record__q.bind(this)(), 649, 11, `record__q.bind(this)()`,);
+assert__b(record__q.bind(this)(), 658, 11, `record__q.bind(this)()`,);
 return filter.bind(this)(function (k, v) {
 return negate.call(has__q.bind(keys)(k));});}
 function collection__q() {
@@ -957,40 +964,40 @@ return js_or(this, thunk);};
 Set.prototype[Plus] = function (other_set) {
 return merge.bind(this)(other_set);};
 Number.prototype[Plus] = function (other) {
-assert__b(typeof(other) === "number", 872, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 881, 11, `typeof(other) === "number"`,);
 return js_plus(this, other);};
 Number.prototype[Minus] = function (other) {
-assert__b(typeof(other) === "number", 877, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 886, 11, `typeof(other) === "number"`,);
 return js_minus(this, other);};
 Number.prototype[Times] = function (other) {
-assert__b(typeof(other) === "number", 882, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 891, 11, `typeof(other) === "number"`,);
 return js_times(this, other);};
 Number.prototype[Divide] = function (other) {
-assert__b(typeof(other) === "number", 887, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 896, 11, `typeof(other) === "number"`,);
 return js_divide(this, other);};
 Number.prototype[Exponent] = function (other) {
-assert__b(typeof(other) === "number", 892, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 901, 11, `typeof(other) === "number"`,);
 return js_exponent(this, other);};
 Number.prototype[Mod] = function (other) {
-assert__b(typeof(other) === "number", 897, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 906, 11, `typeof(other) === "number"`,);
 return js_mod(this, other);};
 BigInt.prototype[Plus] = function (other) {
-assert__b(typeof(other) === "bigint", 902, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 911, 11, `typeof(other) === "bigint"`,);
 return js_plus(this, other);};
 BigInt.prototype[Minus] = function (other) {
-assert__b(typeof(other) === "bigint", 907, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 916, 11, `typeof(other) === "bigint"`,);
 return js_minus(this, other);};
 BigInt.prototype[Times] = function (other) {
-assert__b(typeof(other) === "bigint", 912, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 921, 11, `typeof(other) === "bigint"`,);
 return js_times(this, other);};
 BigInt.prototype[Divide] = function (other) {
-assert__b(typeof(other) === "bigint", 917, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 926, 11, `typeof(other) === "bigint"`,);
 return js_divide(this, other);};
 BigInt.prototype[Exponent] = function (other) {
-assert__b(typeof(other) === "bigint", 922, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 931, 11, `typeof(other) === "bigint"`,);
 return js_exponent(this, other);};
 BigInt.prototype[Mod] = function (other) {
-assert__b(typeof(other) === "bigint", 927, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 936, 11, `typeof(other) === "bigint"`,);
 return js_mod(this, other);};
 let ComparableMixin = new ObjectLiteral({greater_than_eq(other) {
 return or.call(greater_than.bind(this)(other), () => (eq__q.call(this, other)));
@@ -998,30 +1005,30 @@ return or.call(greater_than.bind(this)(other), () => (eq__q.call(this, other)));
 return or.call(less_than.bind(this)(other), () => (eq__q.call(this, other)));
 }});
 Number.prototype[Comparable] = new ObjectLiteral({...ComparableMixin, greater_than(other) {
-assert__b(typeof(other) === "number", 939, 13, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 948, 13, `typeof(other) === "number"`,);
 return js_greater_than(this, other);
 }, less_than(other) {
-assert__b(typeof(other) === "number", 943, 13, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 952, 13, `typeof(other) === "number"`,);
 return js_less_than(this, other);
 }});
 BigInt.prototype[Comparable] = new ObjectLiteral({...ComparableMixin, greater_than(other) {
-assert__b(typeof(other) === "bigint", 951, 13, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 960, 13, `typeof(other) === "bigint"`,);
 return js_greater_than(this, other);
 }, less_than(other) {
-assert__b(typeof(other) === "bigint", 955, 13, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 964, 13, `typeof(other) === "bigint"`,);
 return js_less_than(this, other);
 }});
 String.prototype[Plus] = function (other) {
-assert__b(typeof(other) === "string", 961, 11, `typeof(other) === "string"`,);
+assert__b(typeof(other) === "string", 970, 11, `typeof(other) === "string"`,);
 return js_plus(this, other);};
 String.prototype[Times] = function (amount) {
-assert__b(typeof(amount) === "number", 966, 11, `typeof(amount) === "number"`,);
+assert__b(typeof(amount) === "number", 975, 11, `typeof(amount) === "number"`,);
 return this.repeat(amount);};
 String.prototype[Comparable] = new ObjectLiteral({...ComparableMixin, greater_than(other) {
-assert__b(typeof(other) === "string", 973, 13, `typeof(other) === "string"`,);
+assert__b(typeof(other) === "string", 982, 13, `typeof(other) === "string"`,);
 return js_greater_than(this, other);
 }, less_than(other) {
-assert__b(typeof(other) === "string", 977, 13, `typeof(other) === "string"`,);
+assert__b(typeof(other) === "string", 986, 13, `typeof(other) === "string"`,);
 return js_less_than(this, other);
 }});
 let plus = impl_callable(function plus(other) {
@@ -1093,21 +1100,15 @@ String.prototype[Printable] = function () {
 return this;};
 Function.prototype[Printable] = function () {
 return this.name;};
-function when(cond, f) {
-if (truthy(cond(this))) {
-return f(this);
-} else {
-return this;
-};}
 function otherwise(val) {
 return or.call(this, () => val);}
 let printable = impl_callable(function printable() {
 if (truthy(nil__q.bind(this)())) {
 return this;
 } else {
-return otherwise.bind(call.bind(find.bind(construct_record.call(Map, [[Printable, function () {
+return or.call(call.bind(find.bind(construct_record.call(Map, [[Printable, function () {
 return this[Printable]();}.bind(this)], [Clone, print_for_generic_clone_object.bind(this)]]))(function (proto) {
-return this[proto];}.bind(this)))())(this);
+return this[proto];}.bind(this)))(), () => this);
 };});
 let log = impl_callable(function log(...args) {
 console.log(...args, printable.bind(this)())
@@ -1153,7 +1154,7 @@ let finite__q = impl_callable(function finite__q() {
 return or.call(bigint__q.bind(this)(), () => Number.isFinite(this));});
 let inf__q = impl_callable(function inf__q() {
 return negate.call(finite__q.bind(this)());});
-let to_lowercase = impl_callable(function to_lowercase() {
+let as_lowercase = impl_callable(function as_lowercase() {
 return this.toLowerCase();});
 let as_set = impl_callable(function as_set() {
 return new Set(this);});
@@ -1206,7 +1207,11 @@ result = call.bind(result)(initial_value)
 };
 return result;};
 Underscore.prototype[Call] = function (data, ...args) {
-return data?.[UnderscoreInterpreter](this, ...args);};
+if (truthy(nil__q.bind(data)())) {
+return Object.prototype[UnderscoreInterpreter].call(data, this, ...args);
+} else {
+return data[UnderscoreInterpreter](this, ...args);
+};};
 Underscore.prototype[Comparable] = new ObjectLiteral({less_than(val) {
 return this.insert(less_than, val);
 }, greater_than(val) {
@@ -1262,8 +1267,8 @@ Underscore.prototype[Pipe] = function (f) {
 return this.insert(pipe, f);};
 Underscore.prototype[And] = function (thunk) {
 return this.insert(and, thunk);};
-Underscore.prototype[Or] = function (other) {
-return this.insert(or, other);};
+Underscore.prototype[Or] = function (thunk) {
+return this.insert(or, thunk);};
 Underscore.prototype[Plus] = function (other) {
 return this.insert(plus, other);};
 Underscore.prototype[Minus] = function (other) {
@@ -1407,19 +1412,19 @@ return output;
 }});
 let Comp = construct_vector.call(Struct, ["Comp"]);
 Comp[Vector] = function ([map_fn, _for, collection, ...rest]) {
-assert__b(eq__q.call(_for, Keyword.for("for")), 1447, 11, `eq__q.call(_for, Keyword.for("for"))`,);
-assert__b(Call in map_fn, 1448, 11, `Call in map_fn`,);
+assert__b(eq__q.call(_for, Keyword.for("for")), 1442, 11, `eq__q.call(_for, Keyword.for("for"))`,);
+assert__b(Call in map_fn, 1443, 11, `Call in map_fn`,);
 let result = collection;
 if (truthy(eq__q.call(first.bind(rest)(), Keyword.for("where")))) {
 let [_if, filter_fn, ..._rest] = rest;
 rest = _rest
-assert__b(Call in filter_fn, 1454, 13, `Call in filter_fn`,);
+assert__b(Call in filter_fn, 1449, 13, `Call in filter_fn`,);
 result = filter.bind(result)(filter_fn)
 };
 result = map.bind(result)(map_fn)
 if (truthy(eq__q.call(first.bind(rest)(), Keyword.for("verify")))) {
 let [_verify, verify_fn, ..._rest] = rest;
-assert__b(all__q.bind(result)(verify_fn), 1462, 13, `all__q.bind(result)(verify_fn)`,);
+assert__b(all__q.bind(result)(verify_fn), 1457, 13, `all__q.bind(result)(verify_fn)`,);
 };
 return result;};
 let ZipView = construct_vector.call(Struct, ["ZipView", Keyword.for("collections")]);
@@ -2206,7 +2211,18 @@ return "continue";}
 function eval_break() {
 return "break";}
 function eval_try(node) {
-return str("try {\n", eval_ast(at.bind(node)(Keyword.for("body"))), "\n", "}", otherwise.bind(if_truthy__q.bind(has__q.bind(node)(Keyword.for("catch")))((...__args) => str(" catch (", at.bind(at.bind(node)(Keyword.for("catch")))(Keyword.for("name")), ") {\n", eval_ast(at.bind(at.bind(node)(Keyword.for("catch")))(Keyword.for("body")), "\n", "}"))))(""), otherwise.bind(if_truthy__q.bind(has__q.bind(node)(Keyword.for("finally")))((...__args) => str(" finally {\n", eval_ast(at.bind(at.bind(node)(Keyword.for("finally")))(Keyword.for("body")), "\n", "}"))))(""), "}");}
+let body_js = pipe.bind(at.bind(node)(Keyword.for("body")))(eval_ast);
+let catch_js = "";
+let finally_js = "";
+if (truthy(has__q.bind(node)(Keyword.for("catch")))) {
+let {name, body} = at.bind(node)(Keyword.for("catch"));
+catch_js = str(" catch (", name, ") {\n", eval_ast(body), "\n}")
+};
+if (truthy(has__q.bind(node)(Keyword.for("finally")))) {
+let {body} = at.bind(node)(Keyword.for("finally"));
+finally_js = str(" finally {\n", eval_ast(body), "\n}")
+};
+return str("try {\n", body_js, "\n", "}", catch_js, finally_js);}
 function get_deconstructed_obj_entry_name(node) {
 return pipe.bind(at.bind(construct_record.call(Map, [[Keyword.for("obj_reg_entry"), Keyword.for("name")], [Keyword.for("obj_entry_rename"), Keyword.for("old_name")]]))(at.bind(node)(Keyword.for("type"))))(node);}
 function get_deconstructed_array_entry_name(node) {
@@ -2226,7 +2242,7 @@ return str("export default ", eval_expr(expr));}
 function eval_label({label_name, statement}) {
 return str(label_name, ": ", eval_statement(statement));}
 function eval_statement(node) {
-return call.bind(otherwise.bind(if_truthy__q.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("label"), eval_label], [Keyword.for("if"), eval_if], [Keyword.for("unless"), eval_unless], [Keyword.for("import"), eval_import], [Keyword.for("export"), eval_export], [Keyword.for("export_default"), eval_export_default], [Keyword.for("let"), eval_let], [Keyword.for("if_let"), eval_if_let], [Keyword.for("return"), eval_return], [Keyword.for("protocol_def"), eval_protocol], [Keyword.for("impl_for"), eval_impl_for], [Keyword.for("impl_object"), eval_impl_object], [Keyword.for("define_for"), eval_define_for], [Keyword.for("for_loop"), eval_for_loop], [Keyword.for("id_assign"), eval_id_assign], [Keyword.for("assert"), eval_assert], [Keyword.for("while_loop"), eval_while_loop], [Keyword.for("loop"), eval_loop], [Keyword.for("while_let_loop"), eval_while_let_loop], [Keyword.for("continue"), eval_continue], [Keyword.for("break"), eval_break], [Keyword.for("try"), eval_try]])))((...__args) => compose(__args[0], plus.call(_,";"))))(eval_expr))(node);}
+return call.bind(pipe.bind(if_truthy__q.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("label"), eval_label], [Keyword.for("if"), eval_if], [Keyword.for("unless"), eval_unless], [Keyword.for("import"), eval_import], [Keyword.for("export"), eval_export], [Keyword.for("export_default"), eval_export_default], [Keyword.for("let"), eval_let], [Keyword.for("if_let"), eval_if_let], [Keyword.for("return"), eval_return], [Keyword.for("protocol_def"), eval_protocol], [Keyword.for("impl_for"), eval_impl_for], [Keyword.for("impl_object"), eval_impl_object], [Keyword.for("define_for"), eval_define_for], [Keyword.for("for_loop"), eval_for_loop], [Keyword.for("id_assign"), eval_id_assign], [Keyword.for("assert"), eval_assert], [Keyword.for("while_loop"), eval_while_loop], [Keyword.for("loop"), eval_loop], [Keyword.for("while_let_loop"), eval_while_let_loop], [Keyword.for("continue"), eval_continue], [Keyword.for("break"), eval_break], [Keyword.for("try"), eval_try]])))((...__args) => compose(__args[0], plus.call(_,";"))))(or.call(_, () => eval_expr)))(node);}
 function eval_ast(ast) {
 return map.bind(ast)(eval_statement).join("\n");}
 function compile(string) {
