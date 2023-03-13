@@ -15,13 +15,13 @@
     if e.key == "Enter" && guesses[active]::len() == 5  {
       active += 1
       guesses[active] = ""
-    } else { if e.key == "Backspace" {
+    } else if e.key == "Backspace" {
       guesses[active] = guesses[active].slice(0, -1)
-    } else { if e.key.trim()::len() != 1 {
+    } else if e.key.trim()::len() != 1 {
       return null
-    } else { if guesses[active]::len() < 5 {
+    } else if guesses[active]::len() < 5 {
       guesses[active] += e.key.toUpperCase()
-    } } } }
+    }
   }
 </script>
 
