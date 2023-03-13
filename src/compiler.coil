@@ -1418,7 +1418,7 @@ fn eval_op_eq({ lhs, op, rhs }) =
 fn eval_prefix_inclusive_range({ expr }) =
   // todo: do we want this to be polymoprhic based off
   // the type of `expr`? For now its going to expect numbers
-  str("new Range(-Infinity, " eval_expr(expr) ")") 
+  str("new IRange(-Infinity, " eval_expr(expr) ")") 
 
 fn eval_expr(node) = node::at(:type)::pipe(~Map{
   :str => eval_str
