@@ -1,108 +1,3 @@
-protocol Hash
-
-impl Hash for String = fn() = js_str_hash(this)
-impl Hash for Number = fn() = this
-impl Hash for Keyword = fn() = ("____coil_keyword:" + this.value)::hash()
-impl Hash for Array = fn() =
-  ::reduce(fn(value, elem, idx) = (value * 31n) + elem::hash(), 7n)
-impl Hash for ObjectLiteral = fn() =
-  ::reduce(fn(value, entry) = (value * 31n) + entry::hash(), 7n)
-impl Hash for Map = fn() =
-  ::reduce(fn(hash_value, key, value) = (hash_value * 31n) + [key value]::hash(), 7n)
-
-fn hash() = this[Hash]()
-
-// CONSTRUCT RECORD PROTOCOL
-
-protocol Record
-
-define Record for Map = fn(entries) = new Map(entries)
-define Record for ObjectLiteral = fn(entries) = entries::from_entries()
-
-fn record?() = this.constructor[Record]::as_bool()
-fn construct_record(entries) = this[Record](entries)
-
-protocol Vector
-
-fn vector?() = this.constructor[Vector]::as_bool()
-
-define Vector for Array = fn(entries) = entries
-
-fn construct_vector(entries) = this[Vector](entries)
-
-// STRUCT
-
-protocol Validation
-protocol Constructors
-// This needs to be more thought out
-// what if I want to default options.schema to {}, without
-// overriding the rest of options
-protocol Defaults
-
-fn StructValidationError(message) {
-  this.name = "StructValidationError"
-  this.message = message
-  this.stack = (new Error()).stack
-}
-
-StructValidationError.prototype = new Error()
-
-fn validate_struct(struct_name) {
-  if !(Validation keyof this) { return true }
-
-  fn error_msg(key, validator) =
-    str(struct_name " validation failed.\n"
-        "Failed at " key ".\n"
-        "Expected [" validator "]"
-        ", got value " this[key] ".")
-
-  for [key, validator] of this[Validation]::entries() {  
-    if validator::matches?(this[key]) {
-      continue
-    } else {
-      raise!(new StructValidationError(this::error_msg(key, validator)))
-    }
-  }
-}
-
-fn construct_struct_values() {
-  if !(Constructors keyof this) { return null }
-  for [key f] of this[Constructors]::entries() {
-    if typeof(f) == "function" { f = this::f }
-    if let prop_val = f::call(this[key]) {
-      this[key] = prop_val
-    }
-  }
-}
-
-fn set_struct_defaults() {
-  if !(Defaults keyof this) { return null }
-  for [key fallback] of this[Defaults]::entries() {
-    if this[key]::exists?() {
-      continue
-    } else {
-      this[key] = fallback
-    }
-  }
-}
-
-fn Struct(name, ...properties) {
-  fn Constructor(...args) {
-    let i = 0
-    for key of properties {
-      this[key] = args[i]
-      i += 1
-    }
-    this::validate_struct(name)
-    this::construct_struct_values(this)
-    this::set_struct_defaults(this)
-  }
-  // This doesn't work >:(
-  Object.defineProperty(Constructor, "name", { value: name })
-  return Constructor
-}
-define Vector for Struct = fn(args) = Struct(...args)
-
 // CALL PROTOCOL
 
 protocol Call
@@ -115,7 +10,7 @@ impl Call for ObjectLiteral = fn(key) = this[key]
 impl Call for Array = fn(index) = this.at(index)
 impl Call for String = fn(collection) {
   if typeof(collection) === "string" || collection is Keyword {
-    raise!(new TypeError("Can't 'call' a string with" + collection::as_str()))
+    raise!(new TypeError("Can't 'call' a string with " + collection::as_str()))
   } else {
     return collection::call(this)
   }
@@ -143,13 +38,11 @@ fn call(...args) = this&.[Call](...args)
 impl :bind for Set = fn(val) = ::fn() = this::call(val)
 impl :bind for Map = fn(val) = ::fn() = this::call(val)
 
+let nil? = Object.freeze(#{undefined null})
+
 protocol Pipe
 
 impl Pipe for Object = fn(callable) = callable::call(this)
-
-fn freeze() = Object.freeze(this)
-
-let nil? = #{undefined null}::freeze()
 
 fn pipe_one(callable) {
   if this::nil?() {
@@ -160,15 +53,341 @@ fn pipe_one(callable) {
 }
 
 fn pipe(...callables) =
-  callables::reduce(fn(r, c) = r::pipe_one(c), this)
+  callables::iter()::reduce(fn(r, c) = r::pipe_one(c), this)
 
 fn compose(first_fn, ...fns) = fn(...args) =
-  fns::reduce(fn (result, f) = f::call(result), first_fn::call(...args))
+  fns::iter()::reduce(fn (result, f) = f::call(result), first_fn::call(...args))
 
 fn impl_callable(f) {
   define Call for f = fn(first, ...rest) = first::f(...rest)
   return f
 }
+
+// Iterable & OrderedIterable Protocols
+
+@impl_callable
+fn iter() = this[Symbol.iterator]()
+
+let ArrayIterator = Object.getPrototypeOf([]::iter())
+let MapIterator = Object.getPrototypeOf(new Map()::iter())
+let StringIterator = Object.getPrototypeOf(""::iter())
+let SetIterator = Object.getPrototypeOf(#{}::iter())
+let GeneratorFunction = Object.getPrototypeOf(fn*(){})
+
+protocol Iterable
+
+let iterable_collection_impl = {
+  fn empty?() = this.done
+  fn* take(n) {
+    for [elem i] of this::zip(0..) {
+      if i == n { break }
+      yield elem
+    }
+  }
+  fn* drop(n) {
+    let size = this::len()
+    for [elem i] of this::zip(0..) {
+      if (size - i) > n { break }
+      yield elem
+    }
+  }
+  fn* until(f) {
+    for elem of this {
+      if f(elem) { break }
+      yield elem
+    }
+  }
+  fn* skip(n) {
+    for [elem i] of this::zip(0..) {
+      if i < n { continue }
+      yield elem
+    }
+  }
+  fn find(f) {
+    for elem of this {
+      if f(elem) {
+        return elem
+      }
+    }
+  }
+  fn* zip(...collections) {
+    let generators = [this, ...collections]::iter()::map(iter)::as_array()
+    loop {
+      let gen_states = generators::iter()::map(#(&.next()))::as_array()
+      
+      if gen_states::iter()::any?(:done) { break }
+      yield gen_states::iter()::map(:value)::as_array()
+    }
+  }
+  fn reduce(f, start) {
+    let acc = start
+    for elem of this {
+      acc = f(acc, elem)
+    }
+    return acc
+  }
+  fn* map(f) {
+    for elem of this {
+      yield f(elem)
+    }
+  }
+  fn* flat_map(f) {
+    for elem of this {
+      yield* f(elem)
+    }
+  }
+  fn each(f) {
+    for elem of this {
+      f(elem)
+    }
+  }
+  fn* keep(f) {
+    for elem of this {
+      if f(elem) {
+        yield elem
+      }
+    }
+  }
+  fn all?(f) {  
+    for elem of this {
+      if !f(elem) {
+        return false
+      }
+    }
+    return true
+  }
+  fn any?(f) {
+    for elem of this {
+      if f(elem) {
+        return true
+      }
+    }
+    return false
+  }
+}
+
+define Iterable for ArrayIterator = iterable_collection_impl
+define Iterable for StringIterator = iterable_collection_impl
+define Iterable for MapIterator = iterable_collection_impl
+define Iterable for SetIterator = iterable_collection_impl
+impl Iterable for GeneratorFunction = iterable_collection_impl
+
+fn skip(n) = this[Iterable].skip.call(this, n)
+fn take(n) = this[Iterable].take.call(this, n)
+fn drop(n) = this[Iterable].drop.call(this, n)
+fn each(f) = this[Iterable].each.call(this, f::call)
+fn until(f) = this[Iterable].until.call(this, f::call)
+fn zip(...iterables) = this[Iterable].zip.call(this, ...iterables)
+fn map(...fns) = this[Iterable].map.call(this, compose(...fns))
+fn flat_map(...fns) = this[Iterable].flat_map.call(this, compose(...fns))
+fn find(f) = this[Iterable].find.call(this, f::call)
+fn keep(f) = this[Iterable].keep.call(this, f::call)
+fn reject(f) = this::keep(compose(f, !_))
+fn any?(...fns) = this[Iterable].any?.call(this, compose(...fns))
+fn all?(...fns) = this[Iterable].all?.call(this, compose(...fns))
+fn reduce(f, start) {
+  if start::nil?() && f[Identity] {
+    start = f[Identity]
+  }
+  return this[Iterable].reduce.call(this, f::call, start)
+}
+
+protocol ReversedIterator
+
+fn* _reversed_impl() {
+  for i of 1..this::len() {
+    yield this.at(i * -1)
+  }
+}
+
+impl ReversedIterator for Array = _reversed_impl
+impl ReversedIterator for String = _reversed_impl
+
+@impl_callable
+fn reversed() = this[ReversedIterator]()
+
+// RECORD AND VECTOR PROTOCOLS
+
+protocol Record
+
+impl Record for Object = {
+  fn at(key) = this[key]
+  fn keys() = Object.keys(this)
+  fn has?(key) = key keyof this
+  fn len() = this::keys().length
+  fn empty?() = this::len() == 0
+}
+
+impl Record for ObjectLiteral = {
+  fn at(key) = this[key]
+  fn insert(key, value) = {...this, [key]: value}
+  fn merge(other) = {...this, ...other}
+  fn keys() = Object.keys(this)
+  fn has?(key) = key keyof this
+  fn len() = this::keys().length
+  fn empty?() = this::len() == 0
+}
+
+impl Record for Map = {
+  fn at(key) = this.get(key)
+  fn insert(key, value) = this.set(key, value)
+  fn merge(other) = new Map([...this.entries(), ...other.entries()])
+  fn keys() = this.keys()
+  fn has?(key) = this.has(key)
+  fn len() = this.size
+  fn empty?() = this.size === 0
+  fn first() = this.entries().next().value
+}
+
+fn insert(key, value) = this[Record].insert.call(this, key, value)
+fn merge(other) = this[Record].merge.call(this, other)
+fn keys() = this[Record].keys.call(this)
+
+define Record for Map = fn(entries) = new Map(entries)
+
+fn record?() = this[Record]::exists?()
+fn construct_record(entries) = this[Record](entries)
+
+protocol Vector
+
+fn vector?() = this[Vector]::exists?()
+
+impl Vector for Array = {
+  fn at(idx) = this.at(idx)
+  fn push(value) = [...this, value]
+  fn concat(other) = [...this, ...other]
+  fn has?(value) = this::any?(_ == value)
+  fn replace(old_value, new_value) =
+    this::iter()::map(fn(val) {
+      if val == old_value { return new_value }
+      else { return val }
+    })::as_array()
+  fn len() = this.length
+  fn empty?() = this.length === 0
+  fn first() = this[0]
+  fn last() = this.at(-1)
+}
+
+impl Vector for Set = {
+  fn push(value) = [...this, value]
+  fn concat(other) = new Set([...this, ...other])
+  fn has?(value) = this.has(value)
+  fn replace(old_value, new_value) {
+    let self = new Set(this)  
+    self.delete(old_value)
+    return self.add(new_value)
+  }
+  fn len() = this.size
+  fn empty?() = this.size === 0
+}
+
+impl Vector for String = {
+  fn push(value) = this + value
+  fn concat(other) = this + other
+  fn has?(value) = this.includes(value)
+  fn replace(old_value, new_value) = this.replace(old_value, new_value)
+  fn len() = this.length
+  fn empty?() = this.length === 0
+  fn first() = this[0]
+  fn last() = this.at(-1)
+}
+
+fn at(idx_or_key) = (this[Vector] || this[Record]).at.call(this, idx_or_key)
+fn push(value) = this[Vector].push.call(this, value)
+fn concat(other) = this[Vector].concat.call(this, other)
+fn has?(value) = (this[Vector] || this[Record]).has?.call(this, value)
+fn replace(old_value, new_value) =
+  this[Vector].replace.call(this, old_value, new_value)
+@impl_callable
+fn len() = (this[Vector] || this[Record]).len.call(this)
+@impl_callable
+fn first() = (this[Vector] || this[Record]).first.call(this)
+@impl_callable
+fn last() = (this[Vector] || this[Record]).last.call(this)
+fn empty?() {
+  if this::nil?() {
+    return true
+  } else {
+    return (this[Vector] || this[Record] || this[Iterable]).empty?.call(this)
+  }
+}
+fn not_empty?() = !this::empty?()
+
+define Vector for Array = fn(entries) = entries
+
+fn construct_vector(entries) = this[Vector](entries)
+
+// STRUCT
+// I like this, but I'm not sure if it should be in the prelude..
+protocol Validation
+protocol Constructors
+// This needs to be more thought out
+// what if I want to default options.schema to {}, without
+// overriding the rest of options
+protocol Defaults
+
+fn StructValidationError(message) {
+  this.name = "StructValidationError"
+  this.message = message
+  this.stack = (new Error()).stack
+}
+StructValidationError.prototype = new Error()
+
+fn validate_struct(struct_name) {
+  if !(Validation keyof this) { return true }
+
+  fn error_msg(key, validator) =
+    str(struct_name " validation failed.\n"
+        "Failed at " key ".\n"
+        "Expected [" validator "]"
+        ", got value " this[key] ".")
+
+  for [key, validator] of this[Validation] {  
+    if validator::matches?(this[key]) {
+      continue
+    } else {
+      raise!(new StructValidationError(this::error_msg(key, validator)))
+    }
+  }
+}
+
+fn construct_struct_values() {
+  if !(Constructors keyof this) { return null }
+  for [key f] of this[Constructors] {
+    if typeof(f) == "function" { f = this::f }
+    if let prop_val = f::call(this[key]) {
+      this[key] = prop_val
+    }
+  }
+}
+
+fn set_struct_defaults() {
+  if !(Defaults keyof this) { return null }
+  for [key fallback] of this[Defaults] {
+    if this[key]::exists?() {
+      continue
+    } else {
+      this[key] = fallback
+    }
+  }
+}
+
+fn Struct(name, ...properties) {
+  fn Constructor(...args) {
+    let i = 0
+    for key of properties {
+      this[key] = args[i]
+      i += 1
+    }
+    this::validate_struct(name)
+    this::construct_struct_values(this)
+    this::set_struct_defaults(this)
+  }
+  // This doesn't work >:(
+  Object.defineProperty(Constructor, "name", { value: name })
+  return Constructor
+}
+define Vector for Struct = fn(args) = Struct(...args)
 
 // EQUAL PROTOCOl
 
@@ -179,14 +398,15 @@ fn strict_eq?(other) = this === other
 impl Equal for Object = strict_eq?
 
 fn vector_eq?(other) {
+  if this.constructor !== other.constructor { return false }
   if this::len() != other::len() { return false }
-  return this::zip(other)::all?(fn([a, b]) = a == b)
+  return this::iter()::zip(other)::all?(fn([a, b]) = a == b)
 }
 
 fn record_eq?(other) {
-  if !other::record?() { return false }
+  if this.constructor !== other.constructor { return false }
   if this::len() != other::len() { return false }
-  return this::all?(fn(key, value) = other::at(key) == value)
+  return this::iter()::all?(fn([key, value]) = other::at(key) == value)
 }
 
 impl Equal for Set = vector_eq?
@@ -203,46 +423,7 @@ fn eq?(other) {
   }
 }
 
-// CLONE PROTOCOL
-// This is poorly thought out..
-// likely we want to get to the point where we don't need to clone anything
-// because we just have better built in immutable data structures
-// TODO: remove or limit the usage/need for this
-protocol Clone
-
-impl Clone for ObjectLiteral = {
-  fn clone() = {...this}
-  fn deep_clone() = this::map(fn(k, v) = [k, v::deep_clone()])
-}
-
-impl Clone for Array = {
-  fn clone() = this.slice()
-  fn deep_clone() = this::map(deep_clone)
-}
-
-impl Clone for Map = {
-  fn clone() = new Map(this)
-  fn deep_clone() = this::map(deep_clone)
-}
-
-impl Clone for Set = {
-  fn clone() = new Set(this)
-  fn deep_clone() = this::map(deep_clone)
-}
-
-@impl_callable
-fn clone() = this[Clone].clone.call(this)
-
-@impl_callable
-fn deep_clone() = this[Clone].deep_clone.call(this)
-
 // IDENTITY PROTOCOL
-// This is useful for being able to reduce things by +
-// which in math terms I believe means this protocol,
-// as well as Plus forms a monoid.
-// But we haven't implemented + for ObjectLiteral & Array
-// or map or set.. so um, not sure what's going on
-// going to comment them out
 protocol Identity
 
 impl Identity for Number = 0
@@ -256,608 +437,6 @@ fn identity() {
     return this[Identity]
   }
 }
-
-// COLLECTION PROTOCOL
-protocol Collection
-
-fn entries() = Object.entries(this)
-
-fn from_entries() = new ObjectLiteral(Object.fromEntries(this))
-
-fn values() = Object.values(this)
-
-// Basics every object should impl this
-impl Collection for Object = {
-  fn at(key) = this[key]
-  fn has?(property) = property keyof this
-  fn keys() = Object.keys(this)::as_set()
-}
-
-impl Symbol.iterator for ObjectLiteral = fn*() {
-  // maybe find a way to do this without constructing
-  // an entire Array with ::entries >:(
-  // best would be `for key in this { yield [key, this[key]] }`
-  // but I don't support that syntax because I don't see any other
-  // benefit to it.
-  // We could always move this to js_prelude.js, but that's no fun.
-  for [key value] of this::entries() {
-    yield [key value]
-  }
-}
-
-impl Collection for ObjectLiteral = {
-  fn at(key) = this[key]
-  fn sample() = this::values()[0]
-  fn keys() = Object.keys(this)::as_set()
-  fn each(f) = this::entries().forEach(fn ([k, v]) = f(k, v))
-  fn find(f) = this::entries().find(fn ([k, v]) = f(k, v)::pipe(truthy))
-  fn map(f) = this::entries().map(fn ([k, v]) = f(k, v))::from_entries()
-  fn flat_map(f) = this::entries().map(fn ([k, v]) = f(k::as_keyword(), v)::entries()).flat()::from_entries()
-  fn filter(f) = this::entries().filter(fn ([k, v]) = f(k::as_keyword(), v)::pipe(truthy))::from_entries()
-  fn any?(f) = this::entries().some(fn ([k, v]) = f(k, v)::pipe(truthy))
-  fn all?(f) = this::entries().every(fn ([k, v]) = f(k, v)::pipe(truthy))
-  fn reduce(f, start) {
-    let result = start
-    for [k v] of this {
-      result = f(result, k, v)
-    }
-    return result
-  }
-  fn insert(key, value) = {...this, [key]: value}
-  fn concat(other) = {...this, ...other}
-  fn update(key, update_fn) = this::insert(key, update_fn::call(this::at(key)))
-  fn empty?() = this::len() == 0
-  fn has?(key) = this[key]::as_bool()
-  fn len() = Object.keys(this).length
-  fn remove(key) {
-    let obj = this::clone()
-    js_object_delete(obj, key)
-    return obj
-  }
-}
-
-impl Collection for Array = {
-  fn at(idx) = this.at(idx)
-  fn keys() = Object.keys(this)::as_set()
-  fn sample() = this[0]
-  fn each(f) = this.forEach(#(f(&)))
-  fn find(f) = this.find(compose(#(f(&)), truthy))
-  fn map(f) = this.map(#(f(&)))
-  fn flat_map(f) = this.flatMap(#(f(&)))
-  fn filter(f) = this.filter(compose(#(f(&)), truthy))
-  fn any?(f) = this.some(compose(#(f(&)), truthy))
-  fn all?(f) = this.every(compose(#(f(&)), truthy))
-  fn reduce(f, start) = this.reduce(fn(acc, val) = f(acc, val), start)
-  fn insert(value) = [...this, value]
-  fn replace(old_value, new_value) =
-    this::map(fn(val) {
-      if val == old_value {
-        return new_value
-      } else {
-        return val
-      }
-    })
-  fn concat(other) = [...this, ...other]
-  fn update(val, update_fn) = this::map(fn(v) {
-    if val == v {
-      return update_fn::call(val)
-    } else {
-      return v
-    }
-  })
-  fn empty?() = this.length == 0
-  fn has?(val) = this.includes(val) || this::any?(fn(v) = v == val)
-  fn len() = this.length
-  fn remove(val) = this::filter(fn(v) = v != val)
-}
-
-impl Collection for Map = {
-  fn at(key) = this.get(key)
-  fn keys() = this.keys()::as_set()
-  fn sample() = this.values().next().value
-  fn each(f) {
-    for [k, v] of this {
-      f(k, v)
-    }
-  }
-  fn map(f) {
-    let new_map = new Map([])
-    for [k, v] of this {
-      new_map.set(k, f(k, v))
-    }
-    return new_map
-  }
-  fn find(f) {
-    for [k, v] of this {
-      if f(k, v) {
-        return v
-      }
-    }
-  }
-  fn flat_map(f) {
-    let new_map = new Map([])
-    for [k, v] of this {
-      for [_k, _v] of f(k, v) {
-        new_map.set(k, f(v))
-      }
-    }
-    return new_map
-  }
-  fn filter(f) {
-    let new_map = new Map([])
-    for [k, v] of this {
-      if f(k, v) {
-        new_map.set(k, f(v))
-      }
-    }
-    return new_map
-  }
-  fn any?(f) {
-    for [k, v] of this {
-      if f(k, v) {
-        return true
-      }
-    }
-    return false
-  }
-  fn all?(f) {
-    for [k, v] of this {
-      if !f(k, v) {
-        return false
-      }
-    }
-    return true
-  }
-  fn reduce(f, start) {
-    let acc = start
-    for [k, v] of this {
-      acc = f(acc, k, v)
-    }
-    return acc
-  }
-  fn insert(k, v) = this::clone().set(k, v)
-  fn concat(other) {
-    let new_map = this::clone()
-    for [k, v] of other {
-      new_map.set(k, v)
-    }
-    return new_map
-  }
-  fn update(key, update_fn) = this::insert(key, update_fn::call(this::at(key)))
-  fn empty?() = this.size == 0
-  fn has?(key) = this::at(key)::as_bool()
-  fn len() = this.size
-  fn remove(key) {
-    let map = this::clone()
-    map.remove(key)
-    return map
-  }
-}
-
-impl Collection for Set = {
-  fn at(val) {
-    if this.has(val) {
-      return val
-    }
-  }
-  fn keys() = this
-  fn sample() = this.values().next().value
-  fn each(f) {
-    for elem of this {
-      f(elem)
-    }
-  }
-  fn map(f) {
-    let out = new Set([])
-    for elem of this {
-      out.add(f(elem))
-    }
-    return out
-  }
-  fn find(f) {
-    for elem of this {
-      if f(elem) {
-        return elem
-      }
-    }
-  }
-  fn flat_map(f) {
-    let out = new Set([])
-    for elem of this {
-      for x of f(elem) {
-        out.add(x)
-      }
-    }
-    return out
-  }
-  fn reduce(f, start) {
-    let acc = start
-    for elem of this {
-      acc = f(acc, elem)
-    }
-    return acc
-  }
-  fn filter(f) {
-    let out = new Set([])
-    for elem of this {
-      if f(elem) {
-        out.add(elem)
-      }
-    }
-    return out
-  }
-
-  fn any?(f) {
-    for elem of this {
-      if f(elem) {
-        return true
-      }
-    }
-    return false
-  }
-  fn all?(f) {
-    for elem of this {
-      if !f(elem) {
-        return false
-      }
-    }
-    return true
-  }
-  fn insert(elem) = this::clone().add(elem)
-  fn concat(other) {
-    let new_set = this::clone()
-    for item of other {
-      new_set.add(item)
-    }
-    return new_set
-  }
-  fn update(key, update_fn) {
-    let new_set = this::clone()
-    new_set.remove(key)
-    new_set.add(update_fn::call(key))
-    return new_set
-  }
-  fn empty?() = this.size == 0
-  fn has?(val) = this.has(val)
-  fn len() = this.size
-  fn remove(key) {
-    let set = this::clone()
-    set.remove(key)
-    return set
-  }
-}
-
-impl Collection for String = {
-  fn at(idx) = this.at(idx)
-  fn keys() = Object.keys(this)::as_set()
-  fn sample() = this[0]
-  fn each(f) {
-    for char of this {
-      f(char)
-    }
-  }
-  fn map(f) {
-    let out = ""
-    for char of this {
-      out = out + f(char)
-    }
-    return out
-  }
-  fn flat_map(f) {
-    let out = ""
-    for char of this {
-      out = out + f(char)
-    }
-    return out
-  }
-  fn find(f) {
-    for char of this {
-      if f(char) {
-        return char
-      }
-    }
-  }
-  fn filter(f) {
-    let out = ""  
-    for char of this {
-      if f(char) {
-        out = out + char
-      }
-    }
-  }
-  fn any?(f) {
-    for char of this {
-      if f(char) {
-        return true
-      }
-    }
-    return false
-  }
-  fn all?(f) {
-    for char of this {
-      if !f(char) {
-        return false
-      }
-    }
-    return true
-  }
-  fn reduce(f, start) {
-    let out = start
-    for char of this {
-      out = f(out, char)
-    }
-    return out
-  }
-  fn insert(char) {
-    return this + char
-  }
-  fn concat(str) {
-    return this + str
-  }
-  fn update(idx, update_fn) {
-    let [before, after] = [this.slice(0, idx), this.slice(idx, -1)]
-    return before + update_fn::call(this::at(idx)) + after
-  }
-  fn empty?() = this.length == 0
-  fn has?(sub_str) = this.includes(sub_str)
-  fn len() = this.length
-  fn remove(sub_str) {
-    let idx = this.indexOf(sub_str)
-    return this.slice(0, idx) + this.slice(idx + sub_str::len())
-  }
-}
-// thoughts on naming
-// filter => keep
-// !filter => reject
-
-fn at(key_or_idx) = this[Collection].at.call(this, key_or_idx)
-fn keys() = this[Collection].keys.call(this)
-fn sample() = this[Collection].sample.call(this)
-fn each(f) = this[Collection].each.call(this, f::call)
-fn map(...fns) = this[Collection].map.call(this, compose(...fns))
-fn flat_map(...fns) = this[Collection].flat_map.call(this, compose(...fns))
-fn find(f) = this[Collection].find.call(this, f::call)
-fn filter(f) = this[Collection].filter.call(this, f::call)
-fn any?(...fns) = this[Collection].any?.call(this, compose(...fns))
-fn any!(...fns) {
-  assert! this::any?(...fns)
-  return true
-}
-fn all?(...fns) = this[Collection].all?.call(this, compose(...fns))
-fn all!(...fns) {
-  assert! this::all?(...fns)
-  return true
-}
-fn reduce(f, start) {
-  if start::nil?() {
-    start = this::sample()::identity()
-  }
-  return this[Collection].reduce.call(this, f::call, start)
-}
-fn insert(...args) = this[Collection].insert.call(this, ...args)
-fn push(val) = this::insert(val)
-fn replace(old_value, new_value) =
-  this[Collection].replace.call(this, old_value, new_value)
-fn concat(other) = this[Collection].concat.call(this, other)
-// alias
-fn merge(other) = this::concat(other)
-fn update(key, update_fn) = this[Collection].update.call(this, key, update_fn)
-fn empty?() {
-  if this::nil?() {
-    return true
-  } else {
-    return this[Collection].empty?.call(this)
-  }
-}
-fn not_empty?() = !this::empty?()
-fn has?(key_or_value) = this[Collection].has?.call(this, key_or_value)
-fn len() = this[Collection].len.call(this)
-fn remove(key_or_val) = this[Collection].remove.call(this, key_or_val)
-fn map_values(f) {
-  assert! this::record?()
-  return this::map(fn(key, value) = [key, f(value)])
-}
-fn omit(...keys) {
-  assert! this::record?()  
-  return this::filter(fn(k, v) = !keys::has?(k))
-}
-
-fn collection?() =
-  [Collection Identity]::all?(::fn(proto) = this[proto])
-    &&
-  (this::record?() || this::vector?())
-
-fn ordered_collection?() =
-  this::collection?()
-    && this[OrderedCollection]::as_bool()
-    && this[Symbol.iterator]::as_bool()
-
-// aliases for readability
-
-fn keep(callable) = this::filter(callable)
-fn discard(callable) = this::filter(compose(callable, !_))
-
-protocol OrderedCollection
-
-impl OrderedCollection for Array = {  
-  fn first() = this[0]
-  fn last() = this.at(-1)
-  fn skip(n) = this.slice(n)
-  fn drop(n) = this.slice(0, -n)
-  fn take_last(n) = this.slice(-1 - n, -1)
-  fn take(n) = this.slice(0, n)
-  fn sort(f) = this::clone().sort(f)
-  fn reverse() = this::clone().reverse()
-}
-
-impl OrderedCollection for String = {
-  fn first() = this[0]
-  fn last() = this.at(-1)
-  fn skip(n) = this.slice(n)
-  fn take_last(n) = this.slice(-1 - n, -1)
-  fn take(n) = this.slice(0, n)
-  // TODO: don't rely on Array for these
-  fn sort(f) = Array["from"](this).sort(f).join("")
-  fn reverse() = Array["from"](this).reverse().join("")
-}
-
-impl OrderedCollection for Map = {
-  fn first() = this.entries().next().value
-  fn last() = Array["from"](this).at(-1)
-  fn skip(n) = new Map(Array["from"](this).slice(n))
-  fn take_last() = new Map(Array["from"](this).slice(-1 - n, -1))
-  fn take() = new Map(Array["from"](this).slice(0, n))
-  fn sort() = new Map(Array["from"](this).sort(fn ([_k1, v1], [_k2, v2]) = v2 - v1))
-  fn reverse() = new Map(Array["from"](this).reverse())
-}
-
-// all of these need to be inlined..
-// the performance hit of
-// - checking Record vs Vector
-// - spreading
-// - calling ::insert() each step instead of
-//   mutating a temporary variable
-// gotta kill it.
-// so much repeated code, but its worse to keep it out.
-// It would be nice to have these as backup implementations
-// incase its not implemented for that collection
-
-fn each_with_index(f) {
-  if this::is_a?(Record) {
-    for [elem, i] of this::zip(0..) {
-      f::call(...elem, i)
-    }
-  } else if this::is_a?(Vector) {
-    for [elem, i] of this::zip(0..) {
-      f::call(elem, i)
-    }
-  } else {
-    raise!(new TypeError("Expected a Record or Vector"))
-  }
-}
-fn map_with_index(f) {
-  let coll = this::identity()
-  if this::record?() {
-    for [elem, i] of this::zip(0..) {
-      coll = coll::insert(...f::call(...elem, i))
-    }
-  } else {
-    for [elem, i] of this::zip(0..) {
-      coll = coll::insert(f::call(elem, i))
-    }
-  }
-  return coll
-}
-fn flat_map_with_index(f) {
-  let coll = this::identity()
-  if this::record?() {
-    for [elem, i] of this::zip(0..) {
-      coll = coll::concat(...f::call(...elem, i))
-    }
-  } else {
-    for [elem, i] of this::zip(0..) {
-      coll = coll::concat(f::call(elem, i))
-    }
-  }
-  return coll
-}
-fn find_with_index(f) {
-  if this::record?() {
-    for [elem, i] of this::zip(0..) {
-      if f::call(...elem, i) {
-        return elem
-      }
-    }
-  } else {
-    for [elem, i] of this::zip(0..) {
-      if f::call(elem, i) {
-        return elem
-      }
-    }
-  }
-}
-fn filter_with_index(f) {
-  let coll = this::identity()
-  if this::record?() {
-    for [elem, i] of this::zip(0..) {
-      if f::call(...elem, i) {
-        coll = coll::insert(elem)
-      }
-    }
-  } else {
-    for [elem, i] of this::zip(0..) {
-      if f::call(elem, i) {
-        coll = coll::insert(elem)
-      }
-    }
-  }
-  return coll
-}
-fn any_with_index?(f) {
-  if this::record?() {
-    for [elem, i] of this::zip(0..) {
-      if f::call(...elem, i) {
-        return true
-      }
-    }
-  } else {
-    for [elem, i] of this::zip(0..) {
-      if f::call(elem, i) {
-        return true
-      }
-    }
-  }
-  return false
-}
-
-fn all_with_index?(f) {
-  if this::record?() {
-    for [elem, i] of this::zip(0..) {
-      if !f::call(...elem, i) {
-        return false
-      }
-    }
-    return true
-  } else {
-    for [elem, i] of this::zip(0..) {
-      if !f::call(elem, i) {
-        return false
-      }
-    }
-    return true
-  }
-}
-
-fn reduce_with_index(f, start) {
-  let result = start || this::first()::identity()
-  if this::record?() {
-    for [elem, i] of this::zip(0..) {
-      result = f::call(result, ...elem, i)
-    }
-  } else {
-    for [elem, i] of this::zip(0..) {
-      result = f::call(result, elem, i)
-    }
-  }
-  return result
-}
-
-@impl_callable
-fn first() = this[OrderedCollection].first.call(this)
-@impl_callable
-fn last() = this[OrderedCollection].last.call(this)
-@impl_callable
-fn skip(n) = this[OrderedCollection].skip.call(this, n)
-@impl_callable
-fn drop(n) = this[OrderedCollection].drop.call(this, n)
-@impl_callable
-fn take_last(n) = this[OrderedCollection].take_last.call(this, n)
-@impl_callable
-fn take(n) = this[OrderedCollection].take.call(this, n)
-@impl_callable
-fn sort() = this[OrderedCollection].sort.call(this)
-@impl_callable
-fn reverse() = this[OrderedCollection].reverse.call(this)
 
 // OPERATORS
 
@@ -874,79 +453,61 @@ protocol And
 protocol Or
 
 impl Negate for Object = fn() = js_negate(this)
-
 impl And for Object = fn(thunk) = js_and(this, thunk)
-
 impl Or for Object = fn(thunk) = js_or(this, thunk)
-
-// this should probably be replace with Plus
-impl Plus for Set = fn(other_set) = this::merge(other_set)
-
+impl Plus for Set = fn(other_set) = this::concat(other_set)
 impl Plus for Number = fn(other) {
   assert! typeof(other) === "number"
   return js_plus(this, other)
 }
-
 impl Minus for Number = fn(other) {
   assert! typeof(other) === "number"
   return js_minus(this, other)
 }
-
 impl Times for Number = fn(other) {
   assert! typeof(other) === "number"
   return js_times(this, other)
 }
-
 impl Divide for Number = fn(other) {
   assert! typeof(other) === "number"
   return js_divide(this, other)
 }
-
 impl Exponent for Number = fn(other) {
   assert! typeof(other) === "number"
   return js_exponent(this, other)
 }
-
 impl Mod for Number = fn(other) {
   assert! typeof(other) === "number"
   return js_mod(this, other)
 }
-
 impl Plus for BigInt = fn(other) {
   assert! typeof(other) === "bigint"
   return js_plus(this, other)
 }
-
 impl Minus for BigInt = fn(other) {
   assert! typeof(other) === "bigint"
   return js_minus(this, other)
 }
-
 impl Times for BigInt = fn(other) {
   assert! typeof(other) === "bigint"
   return js_times(this, other)
 }
-
 impl Divide for BigInt = fn(other) {
   assert! typeof(other) === "bigint"
   return js_divide(this, other)
 }
-
 impl Exponent for BigInt = fn(other) {
   assert! typeof(other) === "bigint"
   return js_exponent(this, other)
 }
-
 impl Mod for BigInt = fn(other) {
   assert! typeof(other) === "bigint"
   return js_mod(this, other)
 }
-
 let ComparableMixin = {
   fn greater_than_eq(other) = this::greater_than(other) || (this == other)
   fn less_than_eq(other) = this::less_than(other) || (this == other)
 }
-
 impl Comparable for Number = {
   ...ComparableMixin,
   fn greater_than(other) {
@@ -958,7 +519,6 @@ impl Comparable for Number = {
     return js_less_than(this, other)
   }
 }
-
 impl Comparable for BigInt = {
   ...ComparableMixin,
   fn greater_than(other) {
@@ -970,17 +530,14 @@ impl Comparable for BigInt = {
     return js_less_than(this, other)
   }
 }
-
 impl Plus for String = fn(other) {
   assert! typeof(other) === "string"
   return js_plus(this, other)
 }
-
 impl Times for String = fn(amount) {
   assert! typeof(amount) === "number"
   return this.repeat(amount)
 }
-
 impl Comparable for String = {
   ...ComparableMixin,
   fn greater_than(other) {
@@ -994,12 +551,13 @@ impl Comparable for String = {
 }
 
 @impl_callable
-fn plus(other) = ~Map{
-  Plus => ::fn() = this[Plus](other),
-  Collection => ::fn() = this::concat(other)
+fn plus(other) {
+  if this[Plus] {
+    return this[Plus](other)
+  } else {
+    return (this::concat || this::merge)(other) 
+  }
 }
-  ::find(::fn(proto, f) = this[proto])
-  ::call()
 
 @impl_callable
 fn negate() {
@@ -1009,25 +567,15 @@ fn negate() {
     return this[Negate]()
   }
 }
-@impl_callable
 fn minus(other) = this[Minus](other)
-@impl_callable
 fn times(other) = this[Times](other)
-@impl_callable
 fn divide_by(other) = this[Divide](other)
-@impl_callable
 fn exponent(other) = this[Exponent](other)
-@impl_callable
 fn mod(other) = this[Mod](other)
-@impl_callable
 fn greater_than(other) = this[Comparable].greater_than.call(this, other)
-@impl_callable
 fn greater_than_eq(other) = this[Comparable].greater_than_eq.call(this, other)
-@impl_callable
 fn less_than(other) = this[Comparable].less_than.call(this, other)
-@impl_callable
 fn less_than_eq(other) = this[Comparable].less_than_eq.call(this, other)
-@impl_callable
 fn and(thunk) {
   if this::nil?() {
     return this
@@ -1035,7 +583,6 @@ fn and(thunk) {
     return this[And](thunk)
   }
 }
-@impl_callable
 fn or(thunk) {
   if this::nil?() {
     return thunk()
@@ -1045,56 +592,35 @@ fn or(thunk) {
 }
 
 // Printable
-// TODO: rename this to Inspectable, and replace all usages of this to generate pretty string with ::pretty_str
 
 protocol Printable
 
-fn _resolve_keyword_str(kw) = kw.replaceAll("__q", "?").replaceAll("__b", "!")
+fn _resolve_keyword_str(kw) = kw::replace("__q", "?")::replace("__b", "!")
 
 impl Printable for ObjectLiteral = fn() =
   Object.assign(
     new Object(),
-    this::map(fn (k, v) = [_resolve_keyword_str(k), v::printable()])
+    this::iter()
+        ::map(fn ([k, v]) = [_resolve_keyword_str(k), v::printable()])
+        ::as_obj()
   )
 
-impl Printable for Array = fn() =
-  this::map(printable)
+impl Printable for Map = fn() =
+  ::iter()::map(fn ([k, v]) = [k::printable(), v::printable()])::as_map()
 
-impl Printable for Set = fn() = "#{" + Array["from"](this::map(printable)).join(", ") + "}"
-
-fn print_for_generic_clone_object() {
-  let out = this::clone()
-  for [key, value] of this::entries() {
-    let new_key = _resolve_keyword_str(key)
-    out[new_key] = value
-    if new_key != key {
-      js_object_delete(out, key)
-    }
-  }
-  return out
-}
-
-impl Printable for Keyword = fn() =
-  ":" + _resolve_keyword_str(this.value)
-
+impl Printable for Array = fn() = ::iter()::map(printable)::as_array()
+impl Printable for Set = fn() = "#{" + this::iter()::map(printable)::as_array().join(", ") + "}"
+impl Printable for Keyword = fn() = ":" + _resolve_keyword_str(this.value)
 impl Printable for Boolean = fn() = this
-
 impl Printable for String = fn() = this
-
 impl Printable for Function = fn() = this.name
 
 @impl_callable
 fn printable() {
-  if this::nil?() {
+  if this::nil?() || !this[Printable] {
     return this
   } else {
-    // this is far too complex
-    return ~Map{
-      Printable => ::fn() = this[Printable]()
-      Clone => ::print_for_generic_clone_object
-    }
-      ::find(::fn(proto) = this[proto])
-      ::call() || this
+    return this[Printable]()
   }
 }
 
@@ -1106,101 +632,31 @@ fn log(...args) {
 
 // Helpers
 
-// THIS NEEDS TO BE RETHOUGHT
-protocol PrettyStr
-
-impl PrettyStr for ObjectLiteral = fn() {
-  let s = "{ "
-  for [key, value] of this {
-    // I think this is broken
-    s += str(key ": " value ", ")
-  }
-  return s + " }"
-}
-impl PrettyStr for Keyword = fn() = str(":" this.value)
-impl PrettyStr for String = fn() = this
-impl PrettyStr for Number = fn() = this
-impl PrettyStr for BigInt = fn() = this
-impl PrettyStr for Function = fn() = this.name
-
-@impl_callable
-fn pretty_str() = this&.[PrettyStr]()
-
-fn str(...args) = args::map(pretty_str).join("")
-
-@impl_callable
-fn int?() = Number.isInteger(this)
-
-@impl_callable
-fn bigint?() = typeof(this) === "bigint"
-
-@impl_callable
-fn float?() = typeof(this) === "number" && !int?(this)
-
-@impl_callable
-fn even?() = (this % 2) === 0
-
-@impl_callable
-fn odd?() = !this::even?()
-
-@impl_callable
-fn pos?() = this >= this::identity()
-
+fn str(...args) = args.join("")
 @impl_callable
 fn nan?() = Number.isNaN(this)
-
 @impl_callable
 fn str?() = typeof(this) == "string"
-
-@impl_callable
-fn finite?() = this::bigint?() || Number.isFinite(this)
-
-@impl_callable
-fn inf?() = !this::finite?()
-
-@impl_callable
-fn as_lowercase() = this.toLowerCase()
-
 @impl_callable
 fn as_set() = new Set(this)
-
 @impl_callable
 fn as_array() = Array["from"](this)
-
 @impl_callable
-fn as_obj() = new ObjectLiteral(this)
-
+fn as_obj() = ObjectLiteral.from_entries(this)
 @impl_callable
 fn as_map() = new Map(this)
-
 @impl_callable
 fn as_keyword() = Keyword["for"](this.toString())
-
 @impl_callable
 fn as_num() = Number(this)
-
 @impl_callable
 fn as_str() = this.toString()
-
-@impl_callable
-fn as_bool() = truthy(this)
-
 @impl_callable
 fn exists?() = !this::nil?()
 
-@impl_callable
-fn is_a?(KlassOrProtocol) {
-  if typeof(KlassOrProtocol) == "symbol" {
-    return KlassOrProtocol keyof Object.getPrototypeOf(this) ||
-           KlassOrProtocol keyof this.constructor
-  } else if typeof(KlassOrProtocol) == "function" {
-    return this is KlassOrProtocol
-  } else {
-    return false
-  }
-}
-
 impl Negate for Set = fn() = #(!this.has(&))
+
+// Underscore
 
 let Underscore = ~Struct["Underscore" :transforms]
 
@@ -1208,21 +664,16 @@ protocol UnderscoreInterpreter
 
 let _ = new Underscore([{f: fn id() = this, args: []}])
 
-impl Symbol.iterator for Underscore = fn*() {
-  for transform of this.transforms {
-    yield transform
-  }
-}
+// this is weird, see my comment on impl Iterable for Underscore
+impl Symbol.iterator for Underscore = fn() = this.insert(iter)
 
 impl :insert for Underscore = fn(f, ...args) =
   new Underscore([...this.transforms, {f, args}])
 
-define Hash for _ = fn() = 2n
-
 impl UnderscoreInterpreter for Object = fn(underscore) {
   let initial_value = this  
   let result = initial_value
-  for {f args} of underscore {
+  for {f args} of underscore.transforms {
     result = result::f::call(...args)
     // this may not always be true, but this handles And, and Or
     if result is Underscore {
@@ -1249,30 +700,37 @@ impl Comparable for Underscore = {
   fn greater_than_eq(val) = this.insert(greater_than_eq, val)
 }
 
-// TODO: this should append ! to the list instead of directly call it :/
-impl Negate for Underscore = fn() = ::fn(val) = !this::call(val)
-
+impl Negate for Underscore = fn() = this.insert(negate)
 impl Equal for Underscore = fn(other) = this.insert(eq?, other)
 
-impl Collection for Underscore = {
-  fn at(idx) = this.insert(at, idx)
-  fn sample() = this.insert(sample)
-  fn each(f) = this.insert(each, f)
+// Although I think this is cool.. it may be overkill
+// how often will we be using Underscore this way?
+impl Iterable for Underscore = {
+  fn empty?() = this.insert(empty?)
+  fn first() = this.insert(first)
+  fn take() = this.insert(take)
+  fn skip() = this.insert(skip)
   fn find(f) = this.insert(find, f)
+  fn reduce(f, start) = this.insert(reduce, f, start)
   fn map(f) = this.insert(map, f)
   fn flat_map(f) = this.insert(flat_map, f)
-  fn filter(f) = this.insert(filter, f)
-  fn any?(f) = this.insert(any?, f)
+  fn each(f) = this.insert(each, f)
+  fn keep(f) = this.insert(keep, f)
   fn all?(f) = this.insert(all? f)
-  fn reduce(f, start) = this.insert(reduce, f, start)
-  fn insert(...args) = this.insert(insert, ...args)
-  fn replace(...args) = this.insert(replace, ...args)
-  fn concat(other) = this.insert(concat, other)
-  fn update(key, update_fn) = this.insert(update, key, update_fn)
-  fn empty?() = this.insert(empty?)
-  fn has?(k) = this.insert(has? k)
+  fn any?(f) = this.insert(any?, f)
+}
+impl ReversedIterator for Underscore = fn() = this.insert(reversed)
+impl Record for Underscore = {
+  fn at(key) = this.insert(at, key)
+  fn insert(key, value) = this.insert(insert, key, value)
+  fn merge(other) = this.insert(merge, other)
+  fn has?(k) = this.insert(has?, k)
   fn len() = this.insert(len)
-  fn remove(key_or_val) = this.insert(remove, key_or_val)
+}
+impl Vector for Underscore = {
+  fn push(value) = this.insert(push, value)
+  fn concat(other) = this.insert(concat, other)
+  fn replace(old_value, new_value) = this.insert(has?, old_value, new_value)
 }
 
 impl Pipe for Underscore = fn(f) = this.insert(pipe, f)
@@ -1300,7 +758,7 @@ impl Printable for Underscore = fn() {
     "mod" => "%"
     "eq__q" => "=="
   }  
-  return str("_" this.transforms::skip(1)::map(fn({f, args}) {
+  return str("_" this.transforms::iter()::skip(1)::map(fn({f, args}) {
     if f == and {
       let [thunk] = args
       return str(" && " thunk()::printable())
@@ -1315,178 +773,47 @@ impl Printable for Underscore = fn() {
     } else {
       return str("::" s "(" args::map(printable).join(", ") ")")
     }
-  }).join(""))
+  })::reduce(+))
 }
 
-// Range
+// Ranges
 
-protocol Stepable
+protocol Inc
 
-impl Stepable for Number = {
-  fn inc() = this + 1
-  fn dec() = this - 1
-}
+impl Inc for Number = fn() = this + 1
+impl Inc for BigInt = fn() = this + 1n
+impl Inc for String = fn() = String.fromCharCode(this.charCodeAt(0) + 1)
 
-impl Stepable for BigInt = {
-  fn inc() = this + 1n
-  fn dec() = this - 1n
-}
+fn inc() = this[Inc]()
 
-impl Stepable for String = {
-  fn inc() = String.fromCharCode(this.charCodeAt(0) + 1)
-  fn dec() = String.fromCharCode(this.charCodeAt(0) - 1)
-}
+let IRange = ~Struct["IRange" :start :end]
+let ERange = ~Struct["IRange" :start :end]
 
-fn inc() = this[Stepable].inc.call(this)
-fn dec() = this[Stepable].dec.call(this)
+impl Call for IRange = fn(value) = value >= this.start && value <= this.end
+impl Call for ERange = fn(value) = value >= this.start && value < this.end
 
-let Range = ~Struct["Range" :start :end :exclusive? :transform]
-impl Constructors for Range = {exclusive?: truthy}
-impl Defaults for Range = {transform: _}
+impl Printable for IRange = fn() = str(this.start::printable() ".." this.end::printable())
+impl Printable for ERange = fn() = str(this.start::printable() "..." this.end::printable())
 
-impl Printable for Range = fn() {
-  if this.exclusive? {
-    return str(this.start::printable() "..." this.end::printable())
-  } else {
-    return str(this.start::printable() ".." this.end::printable())
-  }
-}
-
-impl UnderscoreInterpreter for Range = fn(underscore, val) {
-  let result = val
-  for {f args} of underscore {
-    result = ~Map{
-      map => fn(map_fn) = map_fn(result)
-      filter => fn(filter_fn) {
-        if filter_fn(result) {
-          return result
-        } else {
-          return :filtered
-        }
-      }
-    }::at(f)::call(...args) || result
-  }
-  return result
-}
-
-impl Symbol.iterator for Range = fn*() {
-  let i = this.start
-  let end = this.end
-  if this.exclusive? { end = end::dec() }
+impl Symbol.iterator for IRange = fn*() {
+  let {start: i, end} = this
   while i <= end {
-    let result = this.transform::call(this, i)
-    if result != :filtered {
-      yield result
-    }
+    yield i
     i = i::inc()
   }
 }
-
-impl :update for Range = fn(new_transform) = new Range(
-  this.start,
-  this.end,
-  this.exclusive?,
-  new_transform
-)
-
-impl :fill for Range = fn(val) {
-  let output = []  
-  for i of this {
-    output[i] = val
+impl Symbol.iterator for ERange = fn*() {
+  let {start: i, end} = this
+  while i < end {
+    yield i
+    i = i::inc()
   }
-  return output
-}
-
-impl Collection for Range = {
-  fn sample() = this.start
-  fn each(f) {
-    for elem of this {
-      f(elem)
-    }
-  }
-  fn reduce(f, start) {
-    let result = start
-    for elem of this {
-      result = f(result, elem)
-    }
-    return result
-  }
-  fn map(f) = this.update(this.transform::map(f))
-  fn filter(f) = this.update(this.transform::filter(f))
-  fn has?(value) = this::call(value)
-}
-
-impl Call for Range = fn(value) {
-  value = this.transform::call(this, value)
-  if value == :filtered { return false }
-  if this.exclusive? {  
-    return value >= this.start && value < this.end
-  } else {
-    return value >= this.start && value <= this.end
-  }
-}
-
-impl Clone for Range = {
-  fn clone() = new Range(this.start, this.end, this.exclusive?, this.transform)
-  fn deep_clone() = new Range(this.start::deep_clone(), this.end::deep_clone(), this.exclusive?, this.transform::deep_clone())
-}
-
-impl OrderedCollection for Range = {
-  fn first() = this.transform::call(this.start)
-  fn last() = this.transform::call(this.end)
-  fn take(n) {
-    let output = []
-    for [item, i] of this::zip(0..) {
-      if i == n { break }
-      output.push(item)
-    }
-    return output
-  }
-}
-
-let ZipView = ~Struct["ZipView" :collections]
-
-@impl_callable
-fn zip(...collections) = new ZipView([this, ...collections])
-
-@impl_callable
-fn iterator() = this[Symbol.iterator]()
-
-impl Collection for ZipView = {
-  fn map(f) {
-    let output = []  
-    for [a, b] of this {
-      output.push(f(a, b))
-    }
-    return output
-  }
-}
-
-impl Symbol.iterator for ZipView = fn*() {
-  let generators = this.collections::map(iterator)
-  loop {
-    let gen_states = generators::map(#(&.next()))
-    if gen_states::first()::at(:done) { break }
-    yield gen_states::map(:value)
-  }
-}
-
-impl :collect for ZipView = fn() {
-  let output = []  
-  for idx of 0...this.collections::first()::len() {
-    output.push([])
-    for col of this.collections {
-      output.at(-1).push(col[idx])
-    }
-  }
-  return output
 }
 
 fn DefVector() {}
 
 // This should be rethought.
-// if it wants to be `dsl` like, it should not be adhoc
-// like it is now..
+// if it wants to be `dsl` like, it should not be adhoc like it is now..
 define Vector for DefVector = fn(properties) {  
   let Constructor = null
   // TODO: this returns _ itself when its true
@@ -1504,7 +831,7 @@ define Vector for DefVector = fn(properties) {
     }
   } else {
     Constructor = fn(...args) {
-      for [key i] of properties::zip(0..) {
+      for [key i] of properties::iter()::zip(0..) {
         this[key] = args[i]
       }
     }
@@ -1518,33 +845,25 @@ fn DefRecord() {}
 define Vector for DefRecord = fn(property_name) {
   let Constructor = fn (entries) { this[property_name] = entries }
   define Record for Constructor = fn(entries) = new Constructor(entries)
-  impl Symbol.iterator for Constructor = fn*() {
-    for [key, value] of this.entries {
-      yield [key, value]
-    }
+  impl Record for Constructor = {
+    fn at(idx) = this.entries[idx]
+    // fn insert(key, value) = ~Constructor{...this, key => value}
+    // fn merge(other) = ~Constructor{...this, ...other}
+    fn keys() = this.entries::iter()::map(first)
+    fn has?(key) = this::keys()::has?(key)
+    fn len() = this.entries.length
   }
+  impl Symbol.iterator for Constructor = fn() = this.entries::iter()
   return Constructor
 }
 
-// Consider removing this
-// or rethinking it
+// Consider removing this or rethinking it
 protocol Matches
 
 fn matches?(value) = this[Matches](value)
 
-fn guard(...args) {
-  let [patterns, f] = [args.slice(0, -1), args.at(-1)]
-  return fn(...args) {
-    if patterns::matches?(args) {
-      return f(...args)
-    }
-  }
-}
-
-fn primitive?() = typeof(this) != "object" && typeof(this) != "function"
-
 impl Matches for Object = fn(value) {
-  if this::primitive?() {
+  if typeof(this) != "object" && typeof(this) != "function" {
     return this == value
   } else if Call keyof this {
     return this::call(value)
@@ -1553,9 +872,9 @@ impl Matches for Object = fn(value) {
   }
 }
 
-impl Matches for Array = fn(value) =
-  value::len() == this::len() &&
-  ::all_with_index?(fn(pattern, i) = pattern::matches?(value::at(i)))
+impl Matches for Array = fn(arr) =
+  arr::len() == this::len() &&
+  this::iter()::zip(arr)::all?(fn([pattern, val]) = pattern::matches?(val))
 
 impl Matches for Set = fn(value) = this::has?(value)
 
@@ -1568,22 +887,18 @@ impl Matches for Underscore = fn(value) {
 }
 
 impl Matches for ObjectLiteral = fn(record) =
-  ::all?(fn(key, pattern) = pattern::matches?(record::at(key::as_keyword())))
+  ::iter()::all?(fn(key, pattern) = pattern::matches?(record::at(key::as_keyword())))
 
 let Match = ~DefRecord[:entries]
 
-impl Call for Match = fn(val) {
-  for [pattern ret] of this.entries {
-    if pattern::matches?(val) {
-      return ret
-    }
-  }
-}
+impl Call for Match = fn(val) =
+  this.entries::iter()
+    ::find(fn([pattern, _ret]) = pattern::matches?(val))
+    ::pipe(1)
 
 // string helpers
-let char_alpha? = ("a".."z")::as_set() + "A".."Z"
-let char_numeric? = (0..9)::map(as_str)::as_set()
+let char_alpha? = ("a".."z")::as_set() + ("A".."Z")::as_set()
+let char_numeric? = ("0".."9")::as_set()
 let char_alpha_numeric? = char_alpha? + char_numeric?
-
-fn alpha?() = this::all?(char_alpha?)
-fn alpha_numeric?() = this::all?(char_alpha_numeric?)
+fn alpha?() = this::iter()::all?(char_alpha?)
+fn alpha_numeric?() = this::iter()::all?(char_alpha_numeric?)

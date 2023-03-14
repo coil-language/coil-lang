@@ -1,30 +1,24 @@
-// CollectionView is an efficent data structure to use
-// the same old Collection protocol methods, without
-// copying the entire array each time you ::skip(1)
-// which happens a lot during parsing.
 let CollectionView = ~Struct["CollectionView" :collection :idx]
 
 // Its only partially implemented right now because most use-cases
 // don't require the complete collections api.
-impl OrderedCollection for CollectionView = {
+impl Vector for CollectionView = {
   fn first() = this.collection::at(this.idx)
   fn last() = this.collection::last()
-  fn skip(n) = new CollectionView(this.collection, this.idx + n)
-}
-
-impl Symbol.iterator for CollectionView = fn*() {
-  for elem of this.collection {
-    yield elem
-  }
-}
-
-impl Collection for CollectionView = {
-  fn at(idx) = this.collection::at(this.idx + idx)
   fn len() = this.collection::len() - this.idx
   fn empty?() = this::len() == 0
+  fn at(idx) = this.collection::at(this.idx + idx)
 }
+impl :skip for CollectionView = fn(n) = new CollectionView(this.collection, this.idx + n)
 
-impl Printable for CollectionView = fn() = this.collection::skip(this.idx)
+impl Symbol.iterator for CollectionView = fn*() {
+  for i of this.idx..this.collection::len() {
+    yield this.collection[i]
+  }
+}
+// } = this.collection.slice(this.idx)::iter()
+
+impl Printable for CollectionView = fn() = this.collection.skip(this.idx)
 
 let Lexer = ~DefRecord[:entries]
 
@@ -183,9 +177,9 @@ impl Printable for Init = fn() = str("Init(" this.expr::printable() ")")
 let One = ~DefVector[:kw :as]
 impl ParseInstruction for One = fn([expr tokens]) {
   let {value, type} = tokens::expect_token!(this.kw)::first()
-  return [expr::merge({[this.as]: value}) tokens::skip(1)]
+  return [expr::merge({[this.as]: value}) tokens.skip(1)]
 }
-impl Printable for One = fn() = "One(kw: " + this.kw::printable() + ", as: " + this.as::printable() +  ")"
+impl Printable for One = fn() = str("One(kw: " this.kw ", as: " this.as ")")
 
 // this is starting to get complex
 // maybe we want OptionalOneOf? or something similar.
@@ -205,7 +199,7 @@ impl ParseInstruction for Optional = fn([expr tokens]) {
     return [expr tokens]
   }
 }
-impl Printable for Optional = fn() = "Optional(kw: " + this.kw::printable() + ", as: " + this.as::printable() +  ")"
+impl Printable for Optional = fn() = str("Optional(kw: " this.kw ", as: " this.as ")")
 
 impl ParseInstruction for Function = fn([_expr tokens]) = this(tokens)
 
@@ -215,12 +209,12 @@ impl ParseInstruction for Chomp = fn([expr tokens]) {
   // return [expr tokens::skip(this.kws::len())]
   let i = 0
   for kw of this.kws {
-    tokens::skip(i)::expect_token!(kw)
+    tokens.skip(i)::expect_token!(kw)
     i = i + 1
   }
-  return [expr, tokens::skip(i)]
+  return [expr, tokens.skip(i)]
 }
-impl Printable for Chomp = fn() = "Chomp(" + this.kws::printable().join(", ") + ")"
+impl Printable for Chomp = fn() = str("Chomp(" this.kws ")")
 
 let Then = ~DefVector[:parser :kw]
 impl ParseInstruction for Then = fn([expr tokens]) {
@@ -233,11 +227,11 @@ impl ParseInstruction for Then = fn([expr tokens]) {
     return [new_expr new_tokens]
   }
 }
-impl Printable for Then = fn() = str("Then(" this.parser.name ", " this.kw::printable() ")")
+impl Printable for Then = fn() = str("Then(" this.parser.name ", as:" this.kw ")")
 
 let FMap = ~DefVector[:f]
 impl ParseInstruction for FMap = fn([expr tokens]) = [this.f::call(expr) tokens]
-impl Printable for FMap = fn() = "Fmap(" + this.f.name + ")"
+impl Printable for FMap = fn() = str("Fmap(" this.f.name ")")
 
 let Until = ~DefVector[:end_kw :parser :kw]
 impl ParseInstruction for Until = fn([expr tokens]) {
@@ -273,8 +267,8 @@ impl Printable for Case = fn() = "Case(" + this.parse_map::printable() + ", as: 
 
 let Either = ~DefVector[:set :kw]
 impl ParseInstruction for Either = fn([expr tokens]) {
-  let op = this.set::at(tokens::first()::at(:type))::verify_exists!(this.set)
-  let [new_expr, rest] = [tokens::first(), tokens::skip(1)]
+  let op = this.set::call(tokens::first()::at(:type))::verify_exists!(this.set)
+  let [new_expr, rest] = [tokens::first(), tokens.skip(1)]
   return [expr::merge({[this.kw]: new_expr::at(:value)}), rest]
 }
 impl Printable for Either = fn() = "Either(" + this.set::printable() + ", as: " + this.kw::printable() + ")"
@@ -310,8 +304,8 @@ impl ParseInstruction for Parser = fn(result) {
 
 let ParseMap = ~DefRecord[:entries]
 
-impl Collection for ParseMap = {
-  fn keys() = this.entries::map(first)::as_set()
+impl Record for ParseMap = {
+  fn keys() = this.entries::iter()::map(first)::as_set()
 }
 
 impl Call for ParseMap = fn(tokens, ...args) {
@@ -324,9 +318,8 @@ impl Call for ParseMap = fn(tokens, ...args) {
     if pattern is Set && pattern::call(tokens::first()::at(:type)) {
       return parser::call(tokens, ...args)
     }
-    if pattern is Array && pattern::all_with_index?(fn(p, i) {
-      if i >= tokens::len() { return false }
-      let type = tokens::at(i)::at(:type)
+    if pattern is Array && pattern::iter()::zip(tokens)::all?(fn([p, token]) {
+      let type = token::at(:type)
       if p is Keyword { return p == type }
       if p is Set { return p::has?(type) }
       return false
@@ -343,7 +336,7 @@ impl Call for ParseMap = fn(tokens, ...args) {
 
 let math_ops = #{:mod :plus :minus :times :pow :div}
 let comparison_ops = #{:lt :gt :lt_eq :gt_eq}
-let all_math_ops = math_ops::merge(comparison_ops)
+let all_math_ops = math_ops::concat(comparison_ops)
 
 fn parse_double_eq(tokens lhs) = ~Parser[
   ~Init[{type: :double_equals, lhs}]
@@ -1150,6 +1143,12 @@ fn parse(tokens) {
 
 // START OF EVAL
 
+fn map_join(f, separator) =
+  this::iter()::map(f)::reduce(fn(acc, cur) {
+    if acc::empty?() { return cur }
+    else { return acc + separator + cur }
+  }, "")
+
 fn resolve_name(name) {
   if name == "with" { return "__coil_with" }
   if name == "case" { return "__coil_case" }
@@ -1199,7 +1198,7 @@ fn eval_property_lookup({lhs property}) =
   str(eval_expr(lhs) "." resolve_name(property))
 
 fn eval_fn_call({lhs args}) =
-  str(eval_expr(lhs) "(" args::map(eval_expr).join(", ") ")")
+  str(eval_expr(lhs) "(" args::map_join(eval_expr, ", ") ")")
 
 fn eval_id_assign_name({name}) = resolve_name(name)
 
@@ -1211,7 +1210,7 @@ fn eval_array_deconstruction_entry(node) = node::at(:type)::pipe(~Map{
 })::call(node)
 
 fn eval_array_deconstruction_names({entries}) =
-  str("[" entries::map(eval_array_deconstruction_entry).join(", ") "]")
+  str("[" entries::map_join(eval_array_deconstruction_entry ", ") "]")
 
 fn eval_obj_deconstruction_entry(node) = node::at(:type)::pipe(~Map{
   :obj_reg_entry => #(resolve_name(&::at(:name)))
@@ -1223,7 +1222,7 @@ fn eval_obj_deconstruction_entry(node) = node::at(:type)::pipe(~Map{
 })::call(node)
 
 fn eval_object_deconstruction_names({entries}) =
-  str("{" entries::map(eval_obj_deconstruction_entry).join(", ") "}")
+  str("{" entries::map_join(eval_obj_deconstruction_entry ", ") "}")
 
 fn eval_assign_expr(node) = node::at(:type)::pipe(~Map{
   :id_assign => eval_id_assign_name
@@ -1253,7 +1252,7 @@ fn eval_let({assign_expr rhs}) =
   str("let " eval_assign_expr(assign_expr) " = " eval_expr(rhs))
 
 fn eval_array({elements}) =
-  str("[" elements::map(eval_expr).join(", ") "]")
+  str("[" elements::map_join(eval_expr ", ") "]")
 
 let math_op_to_method = ~Map{
   ">" => "greater_than"
@@ -1278,12 +1277,12 @@ fn eval_fn({is_async? generator? name args body}) = str(
   "function "
     (generator? && "*")
     resolve_name(name)
-    "(" args::map(eval_assign_expr).join(", ") ") {\n"
+    "(" args::map_join(eval_assign_expr ", ") ") {\n"
     eval_ast(body)
   "}")
 
 fn eval_set({elements}) =
-  str("new Set([" elements::map(eval_expr).join(", ") "])")
+  str("new Set([" elements::map_join(eval_expr ", ") "])")
 
 fn eval_bind({lhs expr}) =
   str(eval_expr(expr) ".bind(" eval_expr(lhs) ")")
@@ -1299,7 +1298,7 @@ fn eval_dynamic_obj_entry({key_expr value}) =
 fn eval_obj_fn({name generator? is_async? args body}) =
   str((is_async? && "async")
       (generator? && "*")
-      resolve_name(name) "(" args::map(eval_assign_expr).join(", ") ") {\n"
+      resolve_name(name) "(" args::map_join(eval_assign_expr ", ") ") {\n"
       eval_ast(body) "\n}")
 
 fn eval_obj_entry(node) = node::at(:type)::pipe(~Map{
@@ -1312,7 +1311,7 @@ fn eval_obj_entry(node) = node::at(:type)::pipe(~Map{
 
 fn eval_obj_lit({entries}) =
   str("new ObjectLiteral({"
-      entries::map(eval_obj_entry).join(", ") "})")
+      entries::map_join(eval_obj_entry ", ") "})")
 
 fn eval_bind_this({expr}) = str(eval_expr(expr) ".bind(this)")
 fn eval_id_lookup({name}) = resolve_name(name)
@@ -1325,7 +1324,7 @@ fn eval_not({expr}) = str("negate.call(" eval_expr(expr) ")")
 fn eval_dynamic_access({lhs expr}) =
   str(eval_expr(lhs) "[" eval_expr(expr) "]")
 fn eval_new({constructor_name, args}) =
-  str("new " constructor_name "(" args::map(eval_expr).join(", ") ")")
+  str("new " constructor_name "(" args::map_join(eval_expr ", ") ")")
 fn eval_triple_equals({lhs rhs}) =
   str(eval_expr(lhs) " === " eval_expr(rhs))
 fn eval_triple_not_equals({lhs rhs}) =
@@ -1362,28 +1361,28 @@ fn eval_record_entry(node) = node::at(:type)::pipe(~Map{
 fn eval_record_syntax({constructor_name entries}) =
   str("construct_record.call("
         constructor_name ", "
-        "[" entries::map(eval_record_entry).join(", ") "]"
+        "[" entries::map_join(eval_record_entry ", ") "]"
       ")")
 
 fn eval_vector_syntax({constructor_name entries}) =
   str("construct_vector.call("
         constructor_name ", "
-        "[" entries::map(eval_expr).join(", ") "]"
+        "[" entries::map_join(eval_expr ", ") "]"
       ")")
 
 fn eval_inclusive_range({lhs, rhs}) {
   if rhs {
-    return str("new Range(" eval_expr(lhs) ", " eval_expr(rhs) ")")
+    return str("new IRange(" eval_expr(lhs) ", " eval_expr(rhs) ")")
   } else {
-    return str("new Range(" eval_expr(lhs) ", Infinity)")
+    return str("new IRange(" eval_expr(lhs) ", Infinity)")
   }
 }
 
 fn eval_exclusive_range({lhs, rhs}) {
   if rhs {
-    return str("new Range(" eval_expr(lhs) ", " eval_expr(rhs) ", true)")
+    return str("new ERange(" eval_expr(lhs) ", " eval_expr(rhs) ", true)")
   } else {
-    return str("new Range(" eval_expr(lhs) ", Infinity, true)")
+    return str("new ERange(" eval_expr(lhs) ", Infinity, true)")
   }
 }
 
@@ -1391,7 +1390,7 @@ fn eval_shorthand_anon_fn({expr}) =
   str("(...__args) => " eval_expr(expr))
 
 fn eval_anon_arg_id({arg_num}) =
-  str("__args[" (arg_num || 1)::dec() "]")
+  str("__args[" (arg_num || 1) - 1 "]")
 
 fn eval_decorator({name: decorator_name, fn_def args}) {
   let fn_name = fn_def::at(:name)::pipe(resolve_name)
@@ -1402,7 +1401,7 @@ fn eval_decorator({name: decorator_name, fn_def args}) {
     return str("let " fn_name " = "
       decorator_name "("
         fn_def_js ", "
-        args::map(eval_expr).join(", ")
+        args::map_join(eval_expr ", ")
       ");")
   }
 }
@@ -1418,7 +1417,7 @@ let logic_ops = ~Map{
   "&&" => "and"
 }
 
-let all_ops_to_method = math_op_to_method::concat(logic_ops)
+let all_ops_to_method = math_op_to_method::merge(logic_ops)
 
 fn eval_rhs_based_on_op(op, rhs) {
   if logic_ops::has?(op) {
@@ -1437,7 +1436,7 @@ fn eval_op_eq({ lhs, op, rhs }) =
 fn eval_prefix_inclusive_range({ expr }) =
   // todo: do we want this to be polymoprhic based off
   // the type of `expr`? For now its going to expect numbers
-  str("new Range(-Infinity, " eval_expr(expr) ")") 
+  str("new IRange(-Infinity, " eval_expr(expr) ")") 
 
 fn eval_expr(node) = node::at(:type)::pipe(~Map{
   :str => eval_str
@@ -1604,7 +1603,7 @@ fn eval_statement(node) = node::at(:type)::pipe(~Map{
     else { return eval_expr }
   })::call(node)
 
-fn eval_ast(ast) = ast::map(eval_statement).join("\n")
+fn eval_ast(ast) = ast::map_join(eval_statement "\n")
 
 fn compile(string) = lexer::call(string)
   ::pipe(fn(tokens) = new CollectionView(tokens, 0))

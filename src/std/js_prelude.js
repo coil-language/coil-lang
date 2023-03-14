@@ -3,6 +3,20 @@ function ObjectLiteral(obj) {
   Object.assign(this, obj);
 }
 
+ObjectLiteral.from_entries = function (entries) {
+  let output = new ObjectLiteral({});
+  for (let [key, value] of entries) {
+    output[key] = value;
+  }
+  return output;
+};
+
+ObjectLiteral.prototype[Symbol.iterator] = function* () {
+  for (let key in this) {
+    yield [key, this[key]];
+  }
+};
+
 function js_negate(val) {
   return !truthy(val);
 }

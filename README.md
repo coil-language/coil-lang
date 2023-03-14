@@ -7,13 +7,14 @@ Coil is an extensible dynamically typed language.
 Featuring:
 
 - Protocol-based Polymorphism
-- Rich immutable `Collection` api to provide a clear, concise & consistent API for dealing with virtually all collections
+- Rich `Iterable` protocol which allows you to use `map`, `keep` (filter), `any?` (some), and many more on virtually any iterator -- including generators.
 - Bind operator to enable clear function chaining
 - Strong data literal syntax beyond just Arrays and Object Literals - Sets, custom Vectors & custom Records.
-- No macros
+- Powerful DSL capabilities without need for macros
 
 ```
 fn tie?() =
+  ::iter()
   ::map(:status {won: 10, lost: -10})
   ::reduce(+) == 0
 
@@ -113,5 +114,5 @@ This allows us to have real deep value-based equality.
 ### No Implicit Math Type Coercion
 
 ```
-1 + '1' // throws TypeError
+1 + "1" // throws TypeError
 ```
