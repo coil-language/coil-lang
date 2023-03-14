@@ -1,0 +1,11 @@
+#!sh
+
+for test in ./test/prelude/*.test.coil
+do
+  echo "Compling '$test'"
+  output_file="${test//.\/test\//}"
+  output_file="${output_file//.test.coil/}.test.js"
+  deno run --allow-read --allow-write ./dist/compiler.js $test test/dist/$output_file
+done
+
+deno test

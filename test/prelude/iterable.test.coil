@@ -1,0 +1,26 @@
+import { assertEquals } from "https://deno.land/std@0.179.0/testing/asserts.ts";
+
+Deno.test("[1 2 3] map", fn () {
+  let plus_one = [1 2 3]::iter()::map(_ + 1)::as_array()
+  assertEquals(plus_one, [2 3 4])
+})
+
+Deno.test("[1 2 3] flat_map", fn () {
+  let itself = [1 2 3]::iter()::flat_map(#([&]))::as_array()
+  assertEquals(itself, [1 2 3])
+})
+
+Deno.test("[1 2 3] any?", fn () {
+  let has_two? = [1 2 3]::iter()::any?(_ == 2)
+  assertEquals(has_two?, true)
+})
+
+Deno.test("[1 2 3] all?", fn () {
+  let less_than_4? = [1 2 3]::iter()::all?(_ < 4)
+  assertEquals(less_than_4?, true)
+})
+
+Deno.test("[1 2 3] find first < 4", fn () {
+  let one = [1 2 3]::iter()::find(_ < 4)
+  assertEquals(one, 1)
+})
