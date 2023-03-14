@@ -25,12 +25,36 @@ Deno.test("[1 2 3] find first < 4", fn () {
   assertEquals(one, 1)
 })
 
-Deno.test("[] empty?" fn() {
+Deno.test("[] empty?", fn() {
   assertEquals([]::empty?(), true)
   assertEquals([]::iter()::empty?(), true)
 })
 
-Deno.test("[1] empty?" fn() {
+Deno.test("[1] empty?", fn() {
   assertEquals([1]::empty?(), false)
   assertEquals([1]::iter()::empty?(), false)
+})
+
+Deno.test("[]::push(1)", fn() {
+  assertEquals([]::push(1), [1])
+})
+
+Deno.test("#{}::push(1)", fn() {
+  assertEquals(#{}::push(1), #{1})
+})
+
+Deno.test("\"\"::push(\"a\")", fn() {
+  assertEquals(""::push("a"), "a")
+})
+
+Deno.test("[1 2 3]::concat([2 3 4])", fn() {
+  assertEquals([1 2 3]::concat([2 3 4]), [1 2 3 2 3 4])
+})
+
+Deno.test("#{1 2 3}::concat(#{2 3 4})", fn() {
+  assertEquals(#{1 2 3}::concat(#{2 3 4}), #{1 2 3 2 3 4})
+})
+
+Deno.test("#{1 2 3}::concat([2 3 4])", fn() {
+  assertEquals(#{1 2 3}::concat([2 3 4]), #{1 2 3 2 3 4})
 })

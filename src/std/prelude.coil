@@ -223,7 +223,11 @@ impl Record for ObjectLiteral = {
 impl Record for Map = {
   fn at(key) = this.get(key)
   fn insert(key, value) = this.set(key, value)
-  fn merge(other) = new Map([...this.entries(), ...other.entries()])
+  // using generator here to avoid allocating 2 intermediate entries arrays
+  fn merge(other) = new Map(this::fn*() {
+    yield *this.entries()
+    yield* other.entries()
+  }())
   fn keys() = this.keys()
   fn has?(key) = this.has(key)
   fn len() = this.size
@@ -261,8 +265,11 @@ impl Vector for Array = {
 }
 
 impl Vector for Set = {
-  fn push(value) = [...this, value]
-  fn concat(other) = new Set([...this, ...other])
+  fn push(value) = new Set(this).add(value)
+  fn concat(other) = new Set(this::fn*() {
+    yield* this
+    yield* other
+  }())
   fn has?(value) = this.has(value)
   fn replace(old_value, new_value) {
     let self = new Set(this)  
@@ -695,8 +702,6 @@ impl Comparable for Underscore = {
 impl Negate for Underscore = fn() = this.insert(negate)
 impl Equal for Underscore = fn(other) = this.insert(eq?, other)
 
-// Although I think this is cool.. it may be overkill
-// how often will we be using Underscore this way?
 impl Iterable for Underscore = {
   fn empty?() = this.insert(empty?)
   fn first() = this.insert(first)
@@ -779,13 +784,13 @@ impl Inc for String = fn() = String.fromCharCode(this.charCodeAt(0) + 1)
 fn inc() = this[Inc]()
 
 let IRange = ~Struct["IRange" :start :end]
-let ERange = ~Struct["IRange" :start :end]
+let ERange = ~Struct["ERange" :start :end]
 
 impl Call for IRange = fn(value) = value >= this.start && value <= this.end
 impl Call for ERange = fn(value) = value >= this.start && value < this.end
 
-impl Printable for IRange = fn() = str(this.start::printable() ".." this.end::printable())
-impl Printable for ERange = fn() = str(this.start::printable() "..." this.end::printable())
+impl Printable for IRange = fn() = str(this.start ".." this.end)
+impl Printable for ERange = fn() = str(this.start "..." this.end)
 
 impl Symbol.iterator for IRange = fn*() {
   let {start: i, end} = this
