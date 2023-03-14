@@ -24,3 +24,13 @@ Deno.test("[1 2 3] find first < 4", fn () {
   let one = [1 2 3]::iter()::find(_ < 4)
   assertEquals(one, 1)
 })
+
+Deno.test("[] empty?" fn() {
+  assertEquals([]::empty?(), true)
+  assertEquals([]::iter()::empty?(), true)
+})
+
+Deno.test("[1] empty?" fn() {
+  assertEquals([1]::empty?(), false)
+  assertEquals([1]::iter()::empty?(), false)
+})

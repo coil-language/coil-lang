@@ -77,7 +77,7 @@ let GeneratorFunction = Object.getPrototypeOf(fn*(){})
 protocol Iterable
 
 let iterable_collection_impl = {
-  fn empty?() = this.done
+  fn empty?() = this.next().done
   fn* take(n) {
     for [elem i] of this::zip(0..) {
       if i == n { break }
@@ -209,14 +209,6 @@ fn reversed() = this[ReversedIterator]()
 // RECORD AND VECTOR PROTOCOLS
 
 protocol Record
-
-impl Record for Object = {
-  fn at(key) = this[key]
-  fn keys() = Object.keys(this)
-  fn has?(key) = key keyof this
-  fn len() = this::keys().length
-  fn empty?() = this::len() == 0
-}
 
 impl Record for ObjectLiteral = {
   fn at(key) = this[key]
@@ -609,7 +601,7 @@ impl Printable for Map = fn() =
   ::iter()::map(fn ([k, v]) = [k::printable(), v::printable()])::as_map()
 
 impl Printable for Array = fn() = ::iter()::map(printable)::as_array()
-impl Printable for Set = fn() = "#{" + this::iter()::map(printable)::as_array().join(", ") + "}"
+impl Printable for Set = fn() = str("#{" this::iter()::map(printable)::as_array().join(", ") "}")
 impl Printable for Keyword = fn() = ":" + _resolve_keyword_str(this.value)
 impl Printable for Boolean = fn() = this
 impl Printable for String = fn() = this

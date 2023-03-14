@@ -2,5 +2,6 @@
 q1.txt
 q1.ts
 test.js
+example.js
 node_modules
 test/dist/**/*.js
