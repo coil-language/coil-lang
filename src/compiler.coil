@@ -1,3 +1,25 @@
+let CollectionView = ~Struct["CollectionView" :collection :idx]
+
+// Its only partially implemented right now because most use-cases
+// don't require the complete collections api.
+impl Vector for CollectionView = {
+  fn first() = this.collection::at(this.idx)
+  fn last() = this.collection::last()
+  fn len() = this.collection::len() - this.idx
+  fn empty?() = this::len() == 0
+  fn at(idx) = this.collection::at(this.idx + idx)
+}
+impl :skip for CollectionView = fn(n) = new CollectionView(this.collection, this.idx + n)
+
+impl Symbol.iterator for CollectionView = fn*() {
+  for i of this.idx..this.collection::len() {
+    yield this.collection[i]
+  }
+}
+// } = this.collection.slice(this.idx)::iter()
+
+impl Printable for CollectionView = fn() = this.collection.skip(this.idx)
+
 let Lexer = ~DefRecord[:entries]
 
 fn pass() {}
@@ -154,37 +176,45 @@ impl Printable for Init = fn() = str("Init(" this.expr::printable() ")")
 
 let One = ~DefVector[:kw :as]
 impl ParseInstruction for One = fn([expr tokens]) {
-  // let [{value, type}, rest_tokens] = tokens::expect_token!(this.kw)::iter()
-  return [expr::merge({[this.as]: value}) rest_tokens]
+  let {value, type} = tokens::expect_token!(this.kw)::first()
+  return [expr::merge({[this.as]: value}) tokens.skip(1)]
 }
-impl Printable for One = fn() = "One(kw: " + this.kw::printable() + ", as: " + this.as::printable() +  ")"
+impl Printable for One = fn() = str("One(kw: " this.kw ", as: " this.as ")")
 
+// this is starting to get complex
+// maybe we want OptionalOneOf? or something similar.
+// OR could take a note from the pattern matching algorithm
+// and use ~DefVector[:pattern :parse_fn :as] 
+// then for checking this.pattern::matches?(tokens::first()::at(:type))
+// not sure at this moment.
 let Optional = ~DefVector[:set_or_kw :parse_fn :as]
 impl ParseInstruction for Optional = fn([expr tokens]) {  
   if tokens::empty?() { return [expr tokens] }
-  let [{type}, original_tokens] = tokens::peek()
-  if (this.set_or_kw is Keyword && type == this.set_or_kw)
-  || (this.set_or_kw is Set && this.set_or_kw::call(type)) {
-    return ~Then[this.parse_fn, this.as]::parse_step([expr original_tokens])
+  let {type} = tokens::first()
+  if this.set_or_kw is Keyword && type == this.set_or_kw {
+    return ~Then[this.parse_fn, this.as]::parse_step([expr tokens])
+  } else if this.set_or_kw is Set && this.set_or_kw::call(type) {
+    return ~Then[this.parse_fn, this.as]::parse_step([expr tokens])
   } else {
-    return [expr original_tokens]
+    return [expr tokens]
   }
 }
-impl Printable for Optional = fn() = "Optional(kw: " + this.kw::printable() + ", as: " + this.as::printable() +  ")"
+impl Printable for Optional = fn() = str("Optional(kw: " this.kw ", as: " this.as ")")
 
 impl ParseInstruction for Function = fn([_expr tokens]) = this(tokens)
 
 let Chomp = ~DefVector[_ :kws]
-impl ParseInstruction for Chomp = fn([expr tokens]) {  
-  let i = 0  
-  for [kw {val, type} idx] of this.kws::zip(tokens, 0..) {
-    if kw != type {raise!(new ParseError(kw, val))}
-    i = idx
+impl ParseInstruction for Chomp = fn([expr tokens]) {
+  // this.kws::zip(tokens)::all!(fn([a b]) = a == b)
+  // return [expr tokens::skip(this.kws::len())]
+  let i = 0
+  for kw of this.kws {
+    tokens.skip(i)::expect_token!(kw)
+    i = i + 1
   }
-  // the iterator has incremented all the way past the kws.
-  return [expr, tokens::skip(i)]
+  return [expr, tokens.skip(i)]
 }
-impl Printable for Chomp = fn() = "Chomp(" + this.kws::printable().join(", ") + ")"
+impl Printable for Chomp = fn() = str("Chomp(" this.kws ")")
 
 let Then = ~DefVector[:parser :kw]
 impl ParseInstruction for Then = fn([expr tokens]) {
@@ -197,19 +227,17 @@ impl ParseInstruction for Then = fn([expr tokens]) {
     return [new_expr new_tokens]
   }
 }
-impl Printable for Then = fn() = str("Then(" this.parser.name ", " this.kw::printable() ")")
+impl Printable for Then = fn() = str("Then(" this.parser.name ", as:" this.kw ")")
 
 let FMap = ~DefVector[:f]
 impl ParseInstruction for FMap = fn([expr tokens]) = [this.f::call(expr) tokens]
-impl Printable for FMap = fn() = "Fmap(" + this.f.name + ")"
+impl Printable for FMap = fn() = str("Fmap(" this.f.name ")")
 
 let Until = ~DefVector[:end_kw :parser :kw]
 impl ParseInstruction for Until = fn([expr tokens]) {
-  let exprs = []
-  loop {
-    let [expr new_tokens] = tokens
-      ::until(_::at(:type) == this.end_kw)
-      ::pipe(this.parser)
+  let exprs = []  
+  while tokens::first()::at(:type) != this.end_kw {
+    let [expr new_tokens] = this.parser::call(tokens)
       ::verify_exists!(this)
     exprs.push(expr)
     tokens = new_tokens
@@ -231,7 +259,7 @@ impl ParseInstruction for Case = fn([expr tokens]) {
       return [new_expr new_tokens]
     }
   } else {
-    console.log(this.tokens::peek(), this.parse_map)
+    console.log(this.tokens::first(), this.parse_map)
     raise!(new Error("Case Parse Failed"))
   }
 }
@@ -239,9 +267,9 @@ impl Printable for Case = fn() = "Case(" + this.parse_map::printable() + ", as: 
 
 let Either = ~DefVector[:set :kw]
 impl ParseInstruction for Either = fn([expr tokens]) {
-  let [{value, type}, rest_tokens] = tokens::shift!()
-  let op = this.set::at(type)::verify_exists!(this.set)
-  return [expr::merge({[this.kw]: value}), rest_tokens]
+  let op = this.set::call(tokens::first()::at(:type))::verify_exists!(this.set)
+  let [new_expr, rest] = [tokens::first(), tokens.skip(1)]
+  return [expr::merge({[this.kw]: new_expr::at(:value)}), rest]
 }
 impl Printable for Either = fn() = "Either(" + this.set::printable() + ", as: " + this.kw::printable() + ")"
 
@@ -290,7 +318,8 @@ impl Call for ParseMap = fn(tokens, ...args) {
     if pattern is Set && pattern::call(tokens::first()::at(:type)) {
       return parser::call(tokens, ...args)
     }
-    if pattern is Array && tokens::iter()::zip(pattern)::all?(fn([{type} p]) {
+    if pattern is Array && pattern::iter()::zip(tokens)::all?(fn([p, token]) {
+      let type = token::at(:type)
       if p is Keyword { return p == type }
       if p is Set { return p::has?(type) }
       return false
@@ -307,7 +336,7 @@ impl Call for ParseMap = fn(tokens, ...args) {
 
 let math_ops = #{:mod :plus :minus :times :pow :div}
 let comparison_ops = #{:lt :gt :lt_eq :gt_eq}
-let all_math_ops = math_ops::merge(comparison_ops)
+let all_math_ops = math_ops::concat(comparison_ops)
 
 fn parse_double_eq(tokens lhs) = ~Parser[
   ~Init[{type: :double_equals, lhs}]
@@ -794,15 +823,8 @@ fn parse_regular_record_entry(tokens) = ~Parser[
   ~Then[parse_expr :value_expr]
 ]::call(tokens)
 
-fn parse_spread_record_entry(tokens) = ~Parser[
-  ~Init[{type: :spread_record_entry}]
-  ~Chomp[:dot_dot_dot]
-  ~Then[parse_expr :expr]
-]::call(tokens)
-
 fn parse_record_entry(tokens) = ~ParseMap{
   [:id :colon] => parse_keyword_record_entry
-  :dot_dot_dot => parse_spread_record_entry
   _ => parse_regular_record_entry
 }::call(tokens)
 
@@ -1331,13 +1353,9 @@ fn eval_regular_record_entry({key_expr value_expr}) =
 fn eval_keyword_record_entry({name expr}) =
   str("[" eval_keyword({value: str(":" name)}) ", " eval_expr(expr) "]")
 
-fn eval_spread_record_entry({expr}) =
-  str("..." eval_expr(expr))
-
 fn eval_record_entry(node) = node::at(:type)::pipe(~Map{
   :regular_record_entry => eval_regular_record_entry
   :keyword_record_entry => eval_keyword_record_entry
-  :spread_record_entry => eval_spread_record_entry
 })::call(node)
 
 fn eval_record_syntax({constructor_name entries}) =
@@ -1372,7 +1390,7 @@ fn eval_shorthand_anon_fn({expr}) =
   str("(...__args) => " eval_expr(expr))
 
 fn eval_anon_arg_id({arg_num}) =
-  str("__args[" (arg_num || 1)::dec() "]")
+  str("__args[" (arg_num || 1) - 1 "]")
 
 fn eval_decorator({name: decorator_name, fn_def args}) {
   let fn_name = fn_def::at(:name)::pipe(resolve_name)
@@ -1399,7 +1417,7 @@ let logic_ops = ~Map{
   "&&" => "and"
 }
 
-let all_ops_to_method = math_op_to_method::concat(logic_ops)
+let all_ops_to_method = math_op_to_method::merge(logic_ops)
 
 fn eval_rhs_based_on_op(op, rhs) {
   if logic_ops::has?(op) {
@@ -1588,6 +1606,7 @@ fn eval_statement(node) = node::at(:type)::pipe(~Map{
 fn eval_ast(ast) = ast::map_join(eval_statement "\n")
 
 fn compile(string) = lexer::call(string)
+  ::pipe(fn(tokens) = new CollectionView(tokens, 0))
   ::pipe(parse)
   ::pipe(eval_ast)
 

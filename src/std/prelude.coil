@@ -298,9 +298,11 @@ fn concat(other) = this[Vector].concat.call(this, other)
 fn has?(value) = (this[Vector] || this[Record]).has?.call(this, value)
 fn replace(old_value, new_value) =
   this[Vector].replace.call(this, old_value, new_value)
-fn len() = (this[Vector] || this[Record]).len.call(this, value)
+@impl_callable
+fn len() = (this[Vector] || this[Record]).len.call(this)
 @impl_callable
 fn first() = (this[Vector] || this[Record]).first.call(this)
+@impl_callable
 fn last() = (this[Vector] || this[Record]).last.call(this)
 fn empty?() {
   if this::nil?() {
@@ -396,15 +398,15 @@ fn strict_eq?(other) = this === other
 impl Equal for Object = strict_eq?
 
 fn vector_eq?(other) {
-  if !other::vector?() { return false }
+  if this.constructor !== other.constructor { return false }
   if this::len() != other::len() { return false }
-  return this::zip(other)::all?(fn([a, b]) = a == b)
+  return this::iter()::zip(other)::all?(fn([a, b]) = a == b)
 }
 
 fn record_eq?(other) {
-  if !other::record?() { return false }
+  if this.constructor !== other.constructor { return false }
   if this::len() != other::len() { return false }
-  return this::all?(fn(key, value) = other::at(key) == value)
+  return this::iter()::all?(fn([key, value]) = other::at(key) == value)
 }
 
 impl Equal for Set = vector_eq?
@@ -590,7 +592,6 @@ fn or(thunk) {
 }
 
 // Printable
-// TODO: rename this to Inspectable, and replace all usages of this to generate pretty string with ::pretty_str
 
 protocol Printable
 
@@ -757,7 +758,7 @@ impl Printable for Underscore = fn() {
     "mod" => "%"
     "eq__q" => "=="
   }  
-  return str("_" this.transforms::skip(1)::map(fn({f, args}) {
+  return str("_" this.transforms::iter()::skip(1)::map(fn({f, args}) {
     if f == and {
       let [thunk] = args
       return str(" && " thunk()::printable())
@@ -772,7 +773,7 @@ impl Printable for Underscore = fn() {
     } else {
       return str("::" s "(" args::map(printable).join(", ") ")")
     }
-  }).join(""))
+  })::reduce(+))
 }
 
 // Ranges
@@ -830,7 +831,7 @@ define Vector for DefVector = fn(properties) {
     }
   } else {
     Constructor = fn(...args) {
-      for [key i] of properties::zip(0..) {
+      for [key i] of properties::iter()::zip(0..) {
         this[key] = args[i]
       }
     }
@@ -848,8 +849,8 @@ define Vector for DefRecord = fn(property_name) {
     fn at(idx) = this.entries[idx]
     // fn insert(key, value) = ~Constructor{...this, key => value}
     // fn merge(other) = ~Constructor{...this, ...other}
-    fn keys() = this::entries::map(first)
-    fn has?(key) = this::keys::has?(key)
+    fn keys() = this.entries::iter()::map(first)
+    fn has?(key) = this::keys()::has?(key)
     fn len() = this.entries.length
   }
   impl Symbol.iterator for Constructor = fn() = this.entries::iter()
@@ -873,7 +874,7 @@ impl Matches for Object = fn(value) {
 
 impl Matches for Array = fn(arr) =
   arr::len() == this::len() &&
-  this::zip(arr)::all?(fn([pattern, val]) = pattern::matches?(val))
+  this::iter()::zip(arr)::all?(fn([pattern, val]) = pattern::matches?(val))
 
 impl Matches for Set = fn(value) = this::has?(value)
 
@@ -890,17 +891,14 @@ impl Matches for ObjectLiteral = fn(record) =
 
 let Match = ~DefRecord[:entries]
 
-impl Call for Match = fn(val) {
-  for [pattern ret] of this.entries {
-    if pattern::matches?(val) {
-      return ret
-    }
-  }
-}
+impl Call for Match = fn(val) =
+  this.entries::iter()
+    ::find(fn([pattern, _ret]) = pattern::matches?(val))
+    ::pipe(1)
 
 // string helpers
-// let char_alpha? = ("a".."z")::as_set() + ("A".."Z")::as_set()
-// let char_numeric? = ("0".."9")::as_set()
-// let char_alpha_numeric? = char_alpha? + char_numeric?
-// fn alpha?() = this::iter()::all?(char_alpha?)
-// fn alpha_numeric?() = this::iter()::all?(char_alpha_numeric?)
+let char_alpha? = ("a".."z")::as_set() + ("A".."Z")::as_set()
+let char_numeric? = ("0".."9")::as_set()
+let char_alpha_numeric? = char_alpha? + char_numeric?
+fn alpha?() = this::iter()::all?(char_alpha?)
+fn alpha_numeric?() = this::iter()::all?(char_alpha_numeric?)
