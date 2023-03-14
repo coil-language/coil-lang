@@ -7,7 +7,7 @@ Coil is an extensible dynamically typed language.
 Featuring:
 
 - Protocol-based Polymorphism
-- Rich `Iterable` protocol which allows you to use `map`, `keep` (filter), `any?` (some), and many more on virtually any iterator -- including generators.
+- Rich Symbol.iterator based `Iterable` protocol which allows you to use `map`, `keep` (filter), `any?` (some), and many more on virtually any iterator -- including generators.
 - Bind operator to enable clear function chaining
 - Strong data literal syntax beyond just Arrays and Object Literals - Sets, custom Vectors & custom Records.
 - Powerful DSL capabilities without need for macros
