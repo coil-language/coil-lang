@@ -210,10 +210,16 @@ fn reversed() = this[ReversedIterator]()
 
 protocol Record
 
+// using generator here to avoid allocating 2 intermediate entries arrays
+fn* record_merge_(other) {
+  yield *this
+  yield *other
+}
+
 impl Record for ObjectLiteral = {
   fn at(key) = this[key]
   fn insert(key, value) = {...this, [key]: value}
-  fn merge(other) = {...this, ...other}
+  fn merge(other) = ObjectLiteral.from_entries(this::record_merge_(other))
   fn keys() = Object.keys(this)
   fn has?(key) = key keyof this
   fn len() = this::keys().length
@@ -222,12 +228,22 @@ impl Record for ObjectLiteral = {
 
 impl Record for Map = {
   fn at(key) = this.get(key)
-  fn insert(key, value) = this.set(key, value)
-  // using generator here to avoid allocating 2 intermediate entries arrays
-  fn merge(other) = new Map(this::fn*() {
-    yield *this.entries()
-    yield* other.entries()
-  }())
+  fn insert(key, value) {
+    let map = new Map(this)
+    return map.set(key, value)
+  }
+  fn merge(other) {
+    if other is ObjectLiteral {
+      other = other::iter()::map(fn([k, v]) {
+        if k::as_num()::nan?() {
+          return [k::as_keyword(), v]
+        } else {
+          return [k, v]
+        }
+      })
+    }
+    return new Map(this::record_merge_(other))
+  }
   fn keys() = this.keys()
   fn has?(key) = this.has(key)
   fn len() = this.size
@@ -596,13 +612,13 @@ protocol Printable
 
 fn _resolve_keyword_str(kw) = kw::replace("__q", "?")::replace("__b", "!")
 
-impl Printable for ObjectLiteral = fn() =
-  Object.assign(
-    new Object(),
-    this::iter()
-        ::map(fn ([k, v]) = [_resolve_keyword_str(k), v::printable()])
-        ::as_obj()
-  )
+impl Printable for ObjectLiteral = fn() {
+  let output = new Object()
+  for [k, v] of this {
+    output[_resolve_keyword_str(k)] = v::printable()
+  }
+  return output
+}
 
 impl Printable for Map = fn() =
   ::iter()::map(fn ([k, v]) = [k::printable(), v::printable()])::as_map()
@@ -663,11 +679,10 @@ protocol UnderscoreInterpreter
 
 let _ = new Underscore([{f: fn id() = this, args: []}])
 
-// this is weird, see my comment on impl Iterable for Underscore
 impl Symbol.iterator for Underscore = fn() = this.insert(iter)
 
 impl :insert for Underscore = fn(f, ...args) =
-  new Underscore([...this.transforms, {f, args}])
+  new Underscore(this.transforms::push({f, args}))
 
 impl UnderscoreInterpreter for Object = fn(underscore) {
   let initial_value = this  

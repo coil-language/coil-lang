@@ -58,3 +58,31 @@ Deno.test("#{1 2 3}::concat(#{2 3 4})", fn() {
 Deno.test("#{1 2 3}::concat([2 3 4])", fn() {
   assertEquals(#{1 2 3}::concat([2 3 4]), #{1 2 3 2 3 4})
 })
+
+Deno.test("{a: 2}::merge({a: 3})", fn() {
+  assertEquals({a: 2}::merge({a: 3}), {a: 3})
+})
+
+Deno.test("{a: 2}::merge({b: 3})", fn() {
+  assertEquals({a: 2}::merge({b: 3}), {a: 2, b: 3})
+})
+
+Deno.test("{a: 2}::merge(~Map{b: 3})", fn() {
+  assertEquals({a: 2}::merge(~Map{b: 3}), {a: 2, b: 3})
+})
+
+Deno.test("{a: 2}::merge(~Map{a: 3})", fn() {
+  assertEquals({a: 2}::merge(~Map{a: 3}), {a: 3})
+})
+
+Deno.test("~Map{a: 2}::merge(~Map{a: 3})", fn() {
+  assertEquals(~Map{a: 2}::merge(~Map{a: 3}), ~Map{a: 3})
+})
+
+Deno.test("~Map{a: 2}::merge({a: 3})", fn() {
+  assertEquals(~Map{a: 2}::merge({a: 3}), ~Map{a: 3})
+})
+
+Deno.test("~Map{a: 2}::merge(~Map{b: 3})", fn() {
+  assertEquals(~Map{a: 2}::merge(~Map{b: 3}), ~Map{a: 2, b: 3})
+})
