@@ -1,4 +1,4 @@
-fn CollectionView(collection, idx) { this.collection = collection; this.idx = idx }
+fn CollectionView(@collection, @idx) {}
 
 // Its only partially implemented right now because most use-cases
 // don't require the complete collections api.
@@ -21,7 +21,7 @@ impl Symbol.iterator for CollectionView = fn*() {
 impl Printable for CollectionView = fn() = this.collection.skip(this.idx)
 
 @def_record
-fn Lexer(entries) { this.entries = entries }
+fn Lexer(@entries) {}
 
 fn pass() {}
 fn newline() {}
@@ -171,13 +171,13 @@ fn verify_exists!(parser) {
 protocol ParseInstruction
 
 @def_vector
-fn Init(expr) { this.expr = expr }
+fn Init(@expr) {}
 impl ParseInstruction for Init = fn([_expr, tokens]) =
   [this.expr tokens]
 impl Printable for Init = fn() = str("Init(" this.expr::printable() ")")
 
 @def_vector
-fn One(kw, as) { this.kw = kw; this.as = as }
+fn One(@kw, @as) {}
 impl ParseInstruction for One = fn([expr tokens]) {
   let {value, type} = tokens::expect_token!(this.kw)::first()
   return [expr::merge({[this.as]: value}) tokens.skip(1)]
@@ -185,7 +185,7 @@ impl ParseInstruction for One = fn([expr tokens]) {
 impl Printable for One = fn() = str("One(kw: " this.kw ", as: " this.as ")")
 
 @def_vector
-fn Optional(set_or_kw, parse_fn, as) { this.set_or_kw = set_or_kw; this.parse_fn = parse_fn; this.as = as;}
+fn Optional(@set_or_kw, @parse_fn, @as) {}
 impl ParseInstruction for Optional = fn([expr tokens]) {  
   if tokens::empty?() { return [expr tokens] }
   let {type} = tokens::first()
@@ -216,7 +216,7 @@ impl ParseInstruction for Chomp = fn([expr tokens]) {
 impl Printable for Chomp = fn() = str("Chomp(" this.kws ")")
 
 @def_vector
-fn Then(parser, kw) { this.parser = parser; this.kw = kw }
+fn Then(@parser, @kw) {}
 impl ParseInstruction for Then = fn([expr tokens]) {
   let result = this.parser::call(tokens)
   if result::nil?() { return [expr tokens] }
@@ -230,12 +230,12 @@ impl ParseInstruction for Then = fn([expr tokens]) {
 impl Printable for Then = fn() = str("Then(" this.parser.name ", as:" this.kw ")")
 
 @def_vector
-fn FMap(f) { this.f = f }
+fn FMap(@f) {}
 impl ParseInstruction for FMap = fn([expr tokens]) = [this.f::call(expr) tokens]
 impl Printable for FMap = fn() = str("Fmap(" this.f.name ")")
 
 @def_vector
-fn Until(end_kw, parser, kw) { this.end_kw = end_kw; this.parser = parser; this.kw = kw }
+fn Until(@end_kw, @parser, @kw) {}
 impl ParseInstruction for Until = fn([expr tokens]) {
   let exprs = []  
   while tokens::first()::at(:type) != this.end_kw {
@@ -253,7 +253,7 @@ impl ParseInstruction for Until = fn([expr tokens]) {
 impl Printable for Until = fn() = str("Until(end: " this.end_kw::printable() ", f: " this.parser.name ", as: " this.kw::printable() ")")
 
 @def_vector
-fn Case(parse_map, kw) { this.parse_map = parse_map; this.kw = kw }
+fn Case(@parse_map, @kw) {}
 impl ParseInstruction for Case = fn([expr tokens]) {
   if let [new_expr, new_tokens] = this.parse_map::call(tokens) {
     if this.kw {
@@ -269,7 +269,7 @@ impl ParseInstruction for Case = fn([expr tokens]) {
 impl Printable for Case = fn() = "Case(" + this.parse_map::printable() + ", as: " + this.kw::printable() + ")"
 
 @def_vector
-fn Either(set, kw) { this.set = set; this.kw = kw }
+fn Either(@set, @kw) {}
 impl ParseInstruction for Either = fn([expr tokens]) {
   let op = this.set::call(tokens::first()::at(:type))::verify_exists!(this.set)
   let [new_expr, rest] = [tokens::first(), tokens.skip(1)]
@@ -291,7 +291,7 @@ impl Call for Parser = fn(tokens) =
   this::parse_step([null tokens])
 
 @def_vector
-fn AbortIf(cond_fn) { this.cond_fn = cond_fn }
+fn AbortIf(@cond_fn) {}
 impl Printable for AbortIf = fn() = "~AbortIf[" + _resolve_keyword_str(this.cond_fn.name) + "]"
 
 impl ParseInstruction for Parser = fn(result) {
@@ -309,7 +309,7 @@ impl ParseInstruction for Parser = fn(result) {
 }
 
 @def_record
-fn ParseMap(entries) { this.entries = entries }
+fn ParseMap(@entries) {}
 
 impl Record for ParseMap = {
   fn keys() = this.entries::iter()::map(first)::as_set()
@@ -666,11 +666,18 @@ let parse_assign_obj = ~Parser[
   ~Chomp[:close_b]
 ]
 
+let parse_this_assign = ~Parser[
+  ~Init[{type: :this_assign}]
+  ~Chomp[:at]
+  ~One[:id :name]
+]
+
 let parse_assign_expr = ~ParseMap{
   :id => parse_assign_id
   :open_sq => parse_assign_array
   :open_b => parse_assign_obj
   :dot_dot_dot => parse_spread_assign
+  :at => parse_this_assign
 }
 
 let parse_keyword = ~Parser[
@@ -1231,11 +1238,14 @@ fn eval_obj_deconstruction_entry(node) = node::at(:type)::pipe(~Map{
 fn eval_object_deconstruction_names({entries}) =
   str("{" entries::map_join(eval_obj_deconstruction_entry ", ") "}")
 
+fn eval_this_assign({name}) = name
+
 fn eval_assign_expr(node) = node::at(:type)::pipe(~Map{
   :id_assign => eval_id_assign_name
   :spread_assign => eval_spread_assign
   :array_deconstruction => eval_array_deconstruction_names
   :object_deconstruction => eval_object_deconstruction_names
+  :this_assign => eval_this_assign
 })::call(node)
 
 fn eval_while_let_loop({assign_expr test_expr body}) = str(
@@ -1279,12 +1289,19 @@ fn eval_math_op({lhs op rhs}) = str(
     eval_expr(lhs) "," eval_expr(rhs)
   ")")
 
+fn eval_this_assignments(args) =
+  args::iter()
+    ::keep(#(&::at(:type) == :this_assign))
+    ::map(fn({name}) = str("this." name " = " name ";\n"))
+    ::reduce(+, "")
+
 fn eval_fn({is_async? generator? name args body}) = str(
   (is_async? && "async ")
   "function "
     (generator? && "*")
     resolve_name(name)
     "(" args::map_join(eval_assign_expr ", ") ") {\n"
+    eval_this_assignments(args)
     eval_ast(body)
   "}")
 

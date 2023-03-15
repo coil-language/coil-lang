@@ -603,7 +603,7 @@ impl Negate for Set = fn() = #(!this.has(&))
 
 // Underscore
 
-fn Underscore(transforms) { this.transforms = transforms }
+fn Underscore(@transforms) {}
 
 protocol UnderscoreInterpreter
 
@@ -728,8 +728,8 @@ impl Inc for String = fn() = String.fromCharCode(this.charCodeAt(0) + 1)
 
 fn inc() = this[Inc]()
 
-fn IRange(start, end) { this.start = start; this.end = end }
-fn ERange(start, end) { this.start = start; this.end = end }
+fn IRange(@start, @end) {}
+fn ERange(@start, @end) {}
 
 impl Call for IRange = fn(value) = value >= this.start && value <= this.end
 impl Call for ERange = fn(value) = value >= this.start && value < this.end
@@ -803,7 +803,7 @@ impl Matches for ObjectLiteral = fn(record) =
   ::iter()::all?(fn(key, pattern) = pattern::matches?(record::at(key::as_keyword())))
 
 @def_record
-fn Match(entries) { this.entries = entries }
+fn Match(@entries) {}
 
 impl Call for Match = fn(val) =
   this.entries::iter()
