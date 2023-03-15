@@ -1,8 +1,7 @@
-let powers_of_two_map = (1..)
-  ::iter()
-  ::map(_ ** 2)
-  ::zip(1..)
-  ::map(fn([k, v]) = [v, k])
-  ::take(10)
-  ::as_map()
-  ::log()
+let output = 0
+
+for i of 0..10000000 {
+  output += i
+}
+
+console.log(output)

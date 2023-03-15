@@ -205,7 +205,7 @@ fn reversed() = this[ReversedIterator]()
 protocol Record
 
 // using generator here to avoid allocating 2 intermediate entries arrays
-fn* record_merge_(other) {
+fn* merge_iterator(other) {
   yield *this
   yield *other
 }
@@ -213,7 +213,7 @@ fn* record_merge_(other) {
 impl Record for ObjectLiteral = {
   fn at(key) = this[key]
   fn insert(key, value) = {...this, [key]: value}
-  fn merge(other) = ObjectLiteral.from_entries(this::record_merge_(other))
+  fn merge(other) = ObjectLiteral.from_entries(this::merge_iterator(other))
   fn keys() = Object.keys(this)
   fn values() = Object.values(this)
   fn has?(key) = key keyof this
@@ -237,7 +237,7 @@ impl Record for Map = {
         }
       })
     }
-    return new Map(this::record_merge_(other))
+    return new Map(this::merge_iterator(other))
   }
   fn keys() = this.keys()
   fn values() = this.values()
@@ -263,7 +263,7 @@ fn vector?() = this[Vector]::exists?()
 impl Vector for Array = {
   fn at(idx) = this.at(idx)
   fn push(value) = [...this, value]
-  fn concat(other) = [...this, ...other]
+  fn concat(other) = this::merge_iterator(other)
   fn has?(value) = this::any?(_ == value)
   fn replace(old_value, new_value) =
     this::iter()::map(fn(val) {
@@ -278,10 +278,7 @@ impl Vector for Array = {
 
 impl Vector for Set = {
   fn push(value) = new Set(this).add(value)
-  fn concat(other) = new Set(this::fn*() {
-    yield* this
-    yield* other
-  }())
+  fn concat(other) = new Set(this::merge_iterator(other))
   fn has?(value) = this.has(value)
   fn replace(old_value, new_value) {
     let self = new Set(this)  
@@ -434,7 +431,14 @@ let ComparableMixin = {
   fn less_than_eq(other) = this::less_than(other) || (this == other)
 }
 impl Comparable for Number = {
-  ...ComparableMixin,
+  fn greater_than_eq(other) {
+    assert! typeof(other) === "number"
+    return js_greater_than_eq(this, other)
+  }
+  fn less_than_eq(other) {
+    assert! typeof(other) === "number"
+    return js_less_than_eq(this, other)
+  }
   fn greater_than(other) {
     assert! typeof(other) === "number"
     return js_greater_than(this, other)
@@ -445,7 +449,14 @@ impl Comparable for Number = {
   }
 }
 impl Comparable for BigInt = {
-  ...ComparableMixin,
+  fn greater_than_eq(other) {
+    assert! typeof(other) === "bigint"
+    return js_greater_than_eq(this, other)
+  }
+  fn less_than_eq(other) {
+    assert! typeof(other) === "bigint"
+    return js_less_than_eq(this, other)
+  }
   fn greater_than(other) {
     assert! typeof(other) === "bigint"
     return js_greater_than(this, other)
@@ -464,8 +475,14 @@ impl Times for String = fn(amount) {
   return this.repeat(amount)
 }
 impl Comparable for String = {
-  ...ComparableMixin,
-  fn greater_than(other) {
+  fn greater_than_eq(other) {
+    assert! typeof(other) === "string"
+    return js_greater_than_eq(this, other)
+  }
+  fn less_than_eq(other) {
+    assert! typeof(other) === "string"
+    return js_less_than_eq(this, other)
+  }  fn greater_than(other) {
     assert! typeof(other) === "string"
     return js_greater_than(this, other)
   }
