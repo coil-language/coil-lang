@@ -20,7 +20,8 @@ impl Symbol.iterator for CollectionView = fn*() {
 
 impl Printable for CollectionView = fn() = this.collection.skip(this.idx)
 
-let Lexer = ~DefRecord[:entries]
+@def_record
+fn Lexer(entries) { this.entries = entries }
 
 fn pass() {}
 fn newline() {}
@@ -169,25 +170,22 @@ fn verify_exists!(parser) {
 
 protocol ParseInstruction
 
-let Init = ~DefVector[:expr]
+@def_vector
+fn Init(expr) { this.expr = expr }
 impl ParseInstruction for Init = fn([_expr, tokens]) =
   [this.expr tokens]
 impl Printable for Init = fn() = str("Init(" this.expr::printable() ")")
 
-let One = ~DefVector[:kw :as]
+@def_vector
+fn One(kw, as) { this.kw = kw; this.as = as }
 impl ParseInstruction for One = fn([expr tokens]) {
   let {value, type} = tokens::expect_token!(this.kw)::first()
   return [expr::merge({[this.as]: value}) tokens.skip(1)]
 }
 impl Printable for One = fn() = str("One(kw: " this.kw ", as: " this.as ")")
 
-// this is starting to get complex
-// maybe we want OptionalOneOf? or something similar.
-// OR could take a note from the pattern matching algorithm
-// and use ~DefVector[:pattern :parse_fn :as] 
-// then for checking this.pattern::matches?(tokens::first()::at(:type))
-// not sure at this moment.
-let Optional = ~DefVector[:set_or_kw :parse_fn :as]
+@def_vector
+fn Optional(set_or_kw, parse_fn, as) { this.set_or_kw = set_or_kw; this.parse_fn = parse_fn; this.as = as;}
 impl ParseInstruction for Optional = fn([expr tokens]) {  
   if tokens::empty?() { return [expr tokens] }
   let {type} = tokens::first()
@@ -203,7 +201,8 @@ impl Printable for Optional = fn() = str("Optional(kw: " this.kw ", as: " this.a
 
 impl ParseInstruction for Function = fn([_expr tokens]) = this(tokens)
 
-let Chomp = ~DefVector[_ :kws]
+@def_vector
+fn Chomp(...kws) { this.kws = kws }
 impl ParseInstruction for Chomp = fn([expr tokens]) {
   // this.kws::zip(tokens)::all!(fn([a b]) = a == b)
   // return [expr tokens::skip(this.kws::len())]
@@ -216,7 +215,8 @@ impl ParseInstruction for Chomp = fn([expr tokens]) {
 }
 impl Printable for Chomp = fn() = str("Chomp(" this.kws ")")
 
-let Then = ~DefVector[:parser :kw]
+@def_vector
+fn Then(parser, kw) { this.parser = parser; this.kw = kw }
 impl ParseInstruction for Then = fn([expr tokens]) {
   let result = this.parser::call(tokens)
   if result::nil?() { return [expr tokens] }
@@ -229,11 +229,13 @@ impl ParseInstruction for Then = fn([expr tokens]) {
 }
 impl Printable for Then = fn() = str("Then(" this.parser.name ", as:" this.kw ")")
 
-let FMap = ~DefVector[:f]
+@def_vector
+fn FMap(f) { this.f = f }
 impl ParseInstruction for FMap = fn([expr tokens]) = [this.f::call(expr) tokens]
 impl Printable for FMap = fn() = str("Fmap(" this.f.name ")")
 
-let Until = ~DefVector[:end_kw :parser :kw]
+@def_vector
+fn Until(end_kw, parser, kw) { this.end_kw = end_kw; this.parser = parser; this.kw = kw }
 impl ParseInstruction for Until = fn([expr tokens]) {
   let exprs = []  
   while tokens::first()::at(:type) != this.end_kw {
@@ -250,7 +252,8 @@ impl ParseInstruction for Until = fn([expr tokens]) {
 }
 impl Printable for Until = fn() = str("Until(end: " this.end_kw::printable() ", f: " this.parser.name ", as: " this.kw::printable() ")")
 
-let Case = ~DefVector[:parse_map :kw]
+@def_vector
+fn Case(parse_map, kw) { this.parse_map = parse_map; this.kw = kw }
 impl ParseInstruction for Case = fn([expr tokens]) {
   if let [new_expr, new_tokens] = this.parse_map::call(tokens) {
     if this.kw {
@@ -265,7 +268,8 @@ impl ParseInstruction for Case = fn([expr tokens]) {
 }
 impl Printable for Case = fn() = "Case(" + this.parse_map::printable() + ", as: " + this.kw::printable() + ")"
 
-let Either = ~DefVector[:set :kw]
+@def_vector
+fn Either(set, kw) { this.set = set; this.kw = kw }
 impl ParseInstruction for Either = fn([expr tokens]) {
   let op = this.set::call(tokens::first()::at(:type))::verify_exists!(this.set)
   let [new_expr, rest] = [tokens::first(), tokens.skip(1)]
@@ -280,12 +284,14 @@ fn parse_step(result) {
   return this[ParseInstruction](result)
 }
 
-let Parser = ~DefVector[_ :instructions]
+@def_vector
+fn Parser(...instructions) { this.instructions = instructions }
 impl Printable for Parser = fn() = "~Parser[" + this.instructions::printable().join(", ") + "]"
 impl Call for Parser = fn(tokens) =
   this::parse_step([null tokens])
 
-let AbortIf = ~DefVector[:cond_fn]
+@def_vector
+fn AbortIf(cond_fn) { this.cond_fn = cond_fn }
 impl Printable for AbortIf = fn() = "~AbortIf[" + _resolve_keyword_str(this.cond_fn.name) + "]"
 
 impl ParseInstruction for Parser = fn(result) {
@@ -302,7 +308,8 @@ impl ParseInstruction for Parser = fn(result) {
   return result
 }
 
-let ParseMap = ~DefRecord[:entries]
+@def_record
+fn ParseMap(entries) { this.entries = entries }
 
 impl Record for ParseMap = {
   fn keys() = this.entries::iter()::map(first)::as_set()
@@ -1296,7 +1303,7 @@ fn eval_dynamic_obj_entry({key_expr value}) =
   str("[" eval_expr(key_expr)"]: " eval_expr(value))
 
 fn eval_obj_fn({name generator? is_async? args body}) =
-  str((is_async? && "async")
+  str((is_async? && "async ")
       (generator? && "*")
       resolve_name(name) "(" args::map_join(eval_assign_expr ", ") ") {\n"
       eval_ast(body) "\n}")

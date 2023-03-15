@@ -77,7 +77,6 @@ let GeneratorFunction = Object.getPrototypeOf(fn*(){})
 protocol Iterable
 
 let iterable_collection_impl = {
-  fn empty?() = this.next().done
   fn* take(n) {
     for [elem i] of this::zip(0..) {
       if i == n { break }
@@ -294,6 +293,7 @@ impl Vector for Set = {
   }
   fn len() = this.size
   fn empty?() = this.size === 0
+  fn first() = this.values().next().value
 }
 
 impl Vector for String = {
@@ -323,7 +323,7 @@ fn empty?() {
   if this::nil?() {
     return true
   } else {
-    return (this[Vector] || this[Record] || this[Iterable]).empty?.call(this)
+    return (this[Vector] || this[Record]).empty?.call(this)
   }
 }
 fn not_empty?() = !this::empty?()
@@ -822,50 +822,21 @@ impl Symbol.iterator for ERange = fn*() {
   }
 }
 
-fn DefVector() {}
-
-// This should be rethought.
-// if it wants to be `dsl` like, it should not be adhoc like it is now..
-define Vector for DefVector = fn(properties) {  
-  let Constructor = null
-  // TODO: this returns _ itself when its true
-  // that's weird, but it still works.
-  if properties::at(1) == _ {
-    let kw = properties::at(2)
-    Constructor = fn(fst, ...args) {
-      this[properties::first()] = fst
-      this[kw] = args
-    }
-  } else if properties::first() == _ {
-    let kw = properties::at(1)
-    Constructor = fn(...args) {
-      this[kw] = args
-    }
-  } else {
-    Constructor = fn(...args) {
-      for [key i] of properties::iter()::zip(0..) {
-        this[key] = args[i]
-      }
-    }
-  }
+fn def_vector(Constructor) {
   define Vector for Constructor = fn(args) = new Constructor(...args)
   return Constructor
 }
 
-fn DefRecord() {}
-
-define Vector for DefRecord = fn(property_name) {
-  let Constructor = fn (entries) { this[property_name] = entries }
+fn def_record(Constructor, key) {
+  key ||= :entries
   define Record for Constructor = fn(entries) = new Constructor(entries)
   impl Record for Constructor = {
-    fn at(idx) = this.entries[idx]
-    // fn insert(key, value) = ~Constructor{...this, key => value}
-    // fn merge(other) = ~Constructor{...this, ...other}
-    fn keys() = this.entries::iter()::map(first)
+    fn at(idx) = this[key][idx]
+    fn keys() = this[key]::iter()::map(first)
     fn has?(key) = this::keys()::has?(key)
-    fn len() = this.entries.length
+    fn len() = this[key].length
   }
-  impl Symbol.iterator for Constructor = fn() = this.entries::iter()
+  impl Symbol.iterator for Constructor = fn() = this[key]::iter()
   return Constructor
 }
 
@@ -901,7 +872,8 @@ impl Matches for Underscore = fn(value) {
 impl Matches for ObjectLiteral = fn(record) =
   ::iter()::all?(fn(key, pattern) = pattern::matches?(record::at(key::as_keyword())))
 
-let Match = ~DefRecord[:entries]
+@def_record
+fn Match(entries) { this.entries = entries }
 
 impl Call for Match = fn(val) =
   this.entries::iter()
@@ -1009,9 +981,9 @@ define :Inc for globalThis = Inc
 define :inc for globalThis = inc
 define :IRange for globalThis = IRange
 define :ERange for globalThis = ERange
-define :DefRecord for globalThis = DefRecord
-define :DefVector for globalThis = DefVector
 define :Matches for globalThis = Matches
 define :matches? for globalThis = matches?
 define :alpha? for globalThis = alpha?
 define :alpha_numeric? for globalThis = alpha_numeric?
+define :def_vector for globalThis def_vector
+define :def_record for globalThis def_record

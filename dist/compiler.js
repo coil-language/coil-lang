@@ -203,9 +203,7 @@ let SetIterator = Object.getPrototypeOf(iter.bind(new Set([]))());
 let GeneratorFunction = Object.getPrototypeOf(function *() {
 });
 const Iterable = Symbol("Iterable");
-let iterable_collection_impl = new ObjectLiteral({empty__q() {
-return this.done;
-}, *take(n) {
+let iterable_collection_impl = new ObjectLiteral({*take(n) {
 for  (let [elem, i] of zip.bind(this)(new IRange((0), Infinity))) {
 if (truthy(eq__q.call(i, n))) {
 break;
@@ -334,23 +332,15 @@ String.prototype[ReversedIterator] = _reversed_impl;
 let reversed = impl_callable(function reversed() {
 return this[ReversedIterator]();});
 const Record = Symbol("Record");
-Object.prototype[Record] = new ObjectLiteral({at(key) {
-return this[key];
-}, keys() {
-return Object.keys(this);
-}, has__q(key) {
-return key in this;
-}, len() {
-return keys.bind(this)().length;
-}, empty__q() {
-return eq__q.call(len.bind(this)(), (0));
-}});
+function *record_merge_(other) {
+yield* this
+yield* other}
 ObjectLiteral.prototype[Record] = new ObjectLiteral({at(key) {
 return this[key];
 }, insert(key, value) {
 return new ObjectLiteral({...this, [key]: value});
 }, merge(other) {
-return new ObjectLiteral({...this, ...other});
+return ObjectLiteral.from_entries(record_merge_.bind(this)(other));
 }, keys() {
 return Object.keys(this);
 }, has__q(key) {
@@ -363,9 +353,18 @@ return eq__q.call(len.bind(this)(), (0));
 Map.prototype[Record] = new ObjectLiteral({at(key) {
 return this.get(key);
 }, insert(key, value) {
-return this.set(key, value);
+let map = new Map(this);
+return map.set(key, value);
 }, merge(other) {
-return new Map([...this.entries(), ...other.entries()]);
+if (truthy(other instanceof ObjectLiteral)) {
+other = map.bind(iter.bind(other)())(function ([k, v]) {
+if (truthy(nan__q.bind(as_num.bind(k)())())) {
+return [as_keyword.bind(k)(), v];
+} else {
+return [k, v];
+};})
+};
+return new Map(record_merge_.bind(this)(other));
 }, keys() {
 return this.keys();
 }, has__q(key) {
@@ -417,9 +416,11 @@ return this[(0)];
 return this.at((-1));
 }});
 Set.prototype[Vector] = new ObjectLiteral({push(value) {
-return [...this, value];
+return new Set(this).add(value);
 }, concat(other) {
-return new Set([...this, ...other]);
+return new Set(function *() {
+yield* this
+yield* other}.bind(this)());
 }, has__q(value) {
 return this.has(value);
 }, replace(old_value, new_value) {
@@ -430,6 +431,8 @@ return self.add(new_value);
 return this.size;
 }, empty__q() {
 return this.size === (0);
+}, first() {
+return this.values().next().value;
 }});
 String.prototype[Vector] = new ObjectLiteral({push(value) {
 return plus.call(this,value);
@@ -468,7 +471,7 @@ function empty__q() {
 if (truthy(nil__q.bind(this)())) {
 return true;
 } else {
-return (or.call(this[Vector], () => or.call(this[Record], () => this[Iterable]))).empty__q.call(this);
+return (or.call(this[Vector], () => this[Record])).empty__q.call(this);
 };}
 function not_empty__q() {
 return negate.call(empty__q.bind(this)());}
@@ -598,40 +601,40 @@ return js_or(this, thunk);};
 Set.prototype[Plus] = function (other_set) {
 return concat.bind(this)(other_set);};
 Number.prototype[Plus] = function (other) {
-assert__b(typeof(other) === "number", 456, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 471, 11, `typeof(other) === "number"`,);
 return js_plus(this, other);};
 Number.prototype[Minus] = function (other) {
-assert__b(typeof(other) === "number", 460, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 475, 11, `typeof(other) === "number"`,);
 return js_minus(this, other);};
 Number.prototype[Times] = function (other) {
-assert__b(typeof(other) === "number", 464, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 479, 11, `typeof(other) === "number"`,);
 return js_times(this, other);};
 Number.prototype[Divide] = function (other) {
-assert__b(typeof(other) === "number", 468, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 483, 11, `typeof(other) === "number"`,);
 return js_divide(this, other);};
 Number.prototype[Exponent] = function (other) {
-assert__b(typeof(other) === "number", 472, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 487, 11, `typeof(other) === "number"`,);
 return js_exponent(this, other);};
 Number.prototype[Mod] = function (other) {
-assert__b(typeof(other) === "number", 476, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 491, 11, `typeof(other) === "number"`,);
 return js_mod(this, other);};
 BigInt.prototype[Plus] = function (other) {
-assert__b(typeof(other) === "bigint", 480, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 495, 11, `typeof(other) === "bigint"`,);
 return js_plus(this, other);};
 BigInt.prototype[Minus] = function (other) {
-assert__b(typeof(other) === "bigint", 484, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 499, 11, `typeof(other) === "bigint"`,);
 return js_minus(this, other);};
 BigInt.prototype[Times] = function (other) {
-assert__b(typeof(other) === "bigint", 488, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 503, 11, `typeof(other) === "bigint"`,);
 return js_times(this, other);};
 BigInt.prototype[Divide] = function (other) {
-assert__b(typeof(other) === "bigint", 492, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 507, 11, `typeof(other) === "bigint"`,);
 return js_divide(this, other);};
 BigInt.prototype[Exponent] = function (other) {
-assert__b(typeof(other) === "bigint", 496, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 511, 11, `typeof(other) === "bigint"`,);
 return js_exponent(this, other);};
 BigInt.prototype[Mod] = function (other) {
-assert__b(typeof(other) === "bigint", 500, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 515, 11, `typeof(other) === "bigint"`,);
 return js_mod(this, other);};
 let ComparableMixin = new ObjectLiteral({greater_than_eq(other) {
 return or.call(greater_than.bind(this)(other), () => (eq__q.call(this, other)));
@@ -639,30 +642,30 @@ return or.call(greater_than.bind(this)(other), () => (eq__q.call(this, other)));
 return or.call(less_than.bind(this)(other), () => (eq__q.call(this, other)));
 }});
 Number.prototype[Comparable] = new ObjectLiteral({...ComparableMixin, greater_than(other) {
-assert__b(typeof(other) === "number", 510, 13, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 525, 13, `typeof(other) === "number"`,);
 return js_greater_than(this, other);
 }, less_than(other) {
-assert__b(typeof(other) === "number", 514, 13, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 529, 13, `typeof(other) === "number"`,);
 return js_less_than(this, other);
 }});
 BigInt.prototype[Comparable] = new ObjectLiteral({...ComparableMixin, greater_than(other) {
-assert__b(typeof(other) === "bigint", 521, 13, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 536, 13, `typeof(other) === "bigint"`,);
 return js_greater_than(this, other);
 }, less_than(other) {
-assert__b(typeof(other) === "bigint", 525, 13, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 540, 13, `typeof(other) === "bigint"`,);
 return js_less_than(this, other);
 }});
 String.prototype[Plus] = function (other) {
-assert__b(typeof(other) === "string", 530, 11, `typeof(other) === "string"`,);
+assert__b(typeof(other) === "string", 545, 11, `typeof(other) === "string"`,);
 return js_plus(this, other);};
 String.prototype[Times] = function (amount) {
-assert__b(typeof(amount) === "number", 534, 11, `typeof(amount) === "number"`,);
+assert__b(typeof(amount) === "number", 549, 11, `typeof(amount) === "number"`,);
 return this.repeat(amount);};
 String.prototype[Comparable] = new ObjectLiteral({...ComparableMixin, greater_than(other) {
-assert__b(typeof(other) === "string", 540, 13, `typeof(other) === "string"`,);
+assert__b(typeof(other) === "string", 555, 13, `typeof(other) === "string"`,);
 return js_greater_than(this, other);
 }, less_than(other) {
-assert__b(typeof(other) === "string", 544, 13, `typeof(other) === "string"`,);
+assert__b(typeof(other) === "string", 559, 13, `typeof(other) === "string"`,);
 return js_less_than(this, other);
 }});
 let plus = impl_callable(function plus(other) {
@@ -711,15 +714,18 @@ const Printable = Symbol("Printable");
 function _resolve_keyword_str(kw) {
 return replace.bind(replace.bind(kw)("__q", "?"))("__b", "!");}
 ObjectLiteral.prototype[Printable] = function () {
-return Object.assign(new Object(), as_obj.bind(map.bind(iter.bind(this)())(function ([k, v]) {
-return [_resolve_keyword_str(k), printable.bind(v)()];}))());};
+let output = new Object();
+for  (let [k, v] of this) {
+output[_resolve_keyword_str(k)] = printable.bind(v)()
+};
+return output;};
 Map.prototype[Printable] = function () {
 return as_map.bind(map.bind(iter.bind(this)())(function ([k, v]) {
 return [printable.bind(k)(), printable.bind(v)()];}))();};
 Array.prototype[Printable] = function () {
 return as_array.bind(map.bind(iter.bind(this)())(printable))();};
 Set.prototype[Printable] = function () {
-return plus.call("#{",plus.call(as_array.bind(map.bind(iter.bind(this)())(printable))().join(", "),"}"));};
+return str("#{", as_array.bind(map.bind(iter.bind(this)())(printable))().join(", "), "}");};
 Keyword.prototype[Printable] = function () {
 return plus.call(":",_resolve_keyword_str(this.value));};
 Boolean.prototype[Printable] = function () {
@@ -768,7 +774,7 @@ return this;}, args: []})]);
 Underscore.prototype[Symbol.iterator] = function () {
 return this.insert(iter);};
 Underscore.prototype[Keyword.for("insert")] = function (f, ...args) {
-return new Underscore([...this.transforms, new ObjectLiteral({f, args})]);};
+return new Underscore(push.bind(this.transforms)(new ObjectLiteral({f, args})));};
 Object.prototype[UnderscoreInterpreter] = function (underscore) {
 let initial_value = this;
 let result = initial_value;
@@ -890,15 +896,15 @@ return String.fromCharCode(plus.call(this.charCodeAt((0)),(1)));};
 function inc() {
 return this[Inc]();}
 let IRange = construct_vector.call(Struct, ["IRange", Keyword.for("start"), Keyword.for("end")]);
-let ERange = construct_vector.call(Struct, ["IRange", Keyword.for("start"), Keyword.for("end")]);
+let ERange = construct_vector.call(Struct, ["ERange", Keyword.for("start"), Keyword.for("end")]);
 IRange.prototype[Call] = function (value) {
 return and.call(greater_than_eq.call(value,this.start), () => less_than_eq.call(value,this.end));};
 ERange.prototype[Call] = function (value) {
 return and.call(greater_than_eq.call(value,this.start), () => less_than.call(value,this.end));};
 IRange.prototype[Printable] = function () {
-return str(printable.bind(this.start)(), "..", printable.bind(this.end)());};
+return str(this.start, "..", this.end);};
 ERange.prototype[Printable] = function () {
-return str(printable.bind(this.start)(), "...", printable.bind(this.end)());};
+return str(this.start, "...", this.end);};
 IRange.prototype[Symbol.iterator] = function *() {
 let {start: i, end} = this;
 while (less_than_eq.call(i,end)) {
@@ -911,47 +917,26 @@ while (less_than.call(i,end)) {
 yield i
 i = inc.bind(i)()
 };};
-function DefVector() {
-}
-DefVector[Vector] = function (properties) {
-let Constructor = null;
-if (truthy(eq__q.call(at.bind(properties)((1)), _))) {
-let kw = at.bind(properties)((2));
-Constructor = function (fst, ...args) {
-this[first.bind(properties)()] = fst
-this[kw] = args}
-} else if (eq__q.call(first.bind(properties)(), _)) {
-let kw = at.bind(properties)((1));
-Constructor = function (...args) {
-this[kw] = args}
-} else {
-Constructor = function (...args) {
-for  (let [key, i] of zip.bind(iter.bind(properties)())(new IRange((0), Infinity))) {
-this[key] = args[i]
-};}
-};
+function def_vector(Constructor) {
 Constructor[Vector] = function (args) {
 return new Constructor(...args);};
-return Constructor;};
-function DefRecord() {
-}
-DefRecord[Vector] = function (property_name) {
-let Constructor = function (entries) {
-this[property_name] = entries};
+return Constructor;}
+function def_record(Constructor, key) {
+key = or.call(key, () => Keyword.for("entries"))
 Constructor[Record] = function (entries) {
 return new Constructor(entries);};
 Constructor.prototype[Record] = new ObjectLiteral({at(idx) {
-return this.entries[idx];
+return this[key][idx];
 }, keys() {
-return map.bind(iter.bind(this.entries)())(first);
+return map.bind(iter.bind(this[key])())(first);
 }, has__q(key) {
 return has__q.bind(keys.bind(this)())(key);
 }, len() {
-return this.entries.length;
+return this[key].length;
 }});
 Constructor.prototype[Symbol.iterator] = function () {
-return iter.bind(this.entries)();};
-return Constructor;};
+return iter.bind(this[key])();};
+return Constructor;}
 const Matches = Symbol("Matches");
 function matches__q(value) {
 return this[Matches](value);}
@@ -977,7 +962,8 @@ return call.bind(this)(value);
 ObjectLiteral.prototype[Matches] = function (record) {
 return all__q.bind(iter.bind(this)())(function (key, pattern) {
 return matches__q.bind(pattern)(at.bind(record)(as_keyword.bind(key)()));});};
-let Match = construct_vector.call(DefRecord, [Keyword.for("entries")]);
+let Match = def_record(function Match(entries) {
+this.entries = entries});
 Match.prototype[Call] = function (val) {
 return pipe.bind(find.bind(iter.bind(this.entries)())(function ([pattern, _ret]) {
 return matches__q.bind(pattern)(val);}))((1));};
@@ -987,7 +973,102 @@ let char_alpha_numeric__q = plus.call(char_alpha__q,char_numeric__q);
 function alpha__q() {
 return all__q.bind(iter.bind(this)())(char_alpha__q);}
 function alpha_numeric__q() {
-return all__q.bind(iter.bind(this)())(char_alpha_numeric__q);}let CollectionView = construct_vector.call(Struct, ["CollectionView", Keyword.for("collection"), Keyword.for("idx")]);
+return all__q.bind(iter.bind(this)())(char_alpha_numeric__q);}
+globalThis[Keyword.for("Call")] = Call;
+globalThis[Keyword.for("call")] = call;
+globalThis[Keyword.for("nil__q")] = nil__q;
+globalThis[Keyword.for("Pipe")] = Pipe;
+globalThis[Keyword.for("pipe")] = pipe;
+globalThis[Keyword.for("compose")] = compose;
+globalThis[Keyword.for("iter")] = iter;
+globalThis[Keyword.for("Iterable")] = Iterable;
+globalThis[Keyword.for("skip")] = skip;
+globalThis[Keyword.for("take")] = take;
+globalThis[Keyword.for("drop")] = drop;
+globalThis[Keyword.for("each")] = each;
+globalThis[Keyword.for("until")] = until;
+globalThis[Keyword.for("zip")] = zip;
+globalThis[Keyword.for("map")] = map;
+globalThis[Keyword.for("flat_map")] = flat_map;
+globalThis[Keyword.for("find")] = find;
+globalThis[Keyword.for("keep")] = keep;
+globalThis[Keyword.for("reject")] = reject;
+globalThis[Keyword.for("any__q")] = any__q;
+globalThis[Keyword.for("reduce")] = reduce;
+globalThis[Keyword.for("ReversedIterator")] = ReversedIterator;
+globalThis[Keyword.for("revered")] = reversed;
+globalThis[Keyword.for("Record")] = Record;
+globalThis[Keyword.for("insert")] = insert;
+globalThis[Keyword.for("merge")] = merge;
+globalThis[Keyword.for("keys")] = keys;
+globalThis[Keyword.for("record__q")] = record__q;
+globalThis[Keyword.for("construct_record")] = construct_record;
+globalThis[Keyword.for("Vector")] = Vector;
+globalThis[Keyword.for("vector__q")] = vector__q;
+globalThis[Keyword.for("at")] = at;
+globalThis[Keyword.for("push")] = push;
+globalThis[Keyword.for("concat")] = concat;
+globalThis[Keyword.for("has__q")] = has__q;
+globalThis[Keyword.for("replace")] = replace;
+globalThis[Keyword.for("len")] = len;
+globalThis[Keyword.for("first")] = first;
+globalThis[Keyword.for("last")] = last;
+globalThis[Keyword.for("empty__q")] = empty__q;
+globalThis[Keyword.for("not_empty__q")] = not_empty__q;
+globalThis[Keyword.for("construct_vector")] = construct_vector;
+globalThis[Keyword.for("Equal")] = Equal;
+globalThis[Keyword.for("eq__q")] = eq__q;
+globalThis[Keyword.for("Identity")] = Identity;
+globalThis[Keyword.for("identity")] = identity;
+globalThis[Keyword.for("Plus")] = Plus;
+globalThis[Keyword.for("Negate")] = Negate;
+globalThis[Keyword.for("Minus")] = Minus;
+globalThis[Keyword.for("Times")] = Times;
+globalThis[Keyword.for("Divide")] = Divide;
+globalThis[Keyword.for("Exponent")] = Exponent;
+globalThis[Keyword.for("Mod")] = Mod;
+globalThis[Keyword.for("Comparable")] = Comparable;
+globalThis[Keyword.for("LessThan")] = LessThan;
+globalThis[Keyword.for("And")] = And;
+globalThis[Keyword.for("Or")] = Or;
+globalThis[Keyword.for("plus")] = plus;
+globalThis[Keyword.for("negate")] = negate;
+globalThis[Keyword.for("minus")] = minus;
+globalThis[Keyword.for("times")] = times;
+globalThis[Keyword.for("divide_by")] = divide_by;
+globalThis[Keyword.for("exponent")] = exponent;
+globalThis[Keyword.for("mod")] = mod;
+globalThis[Keyword.for("greater_than")] = greater_than;
+globalThis[Keyword.for("greater_than_eq")] = greater_than_eq;
+globalThis[Keyword.for("less_than")] = less_than;
+globalThis[Keyword.for("less_than_eq")] = less_than_eq;
+globalThis[Keyword.for("and")] = and;
+globalThis[Keyword.for("or")] = or;
+globalThis[Keyword.for("Printable")] = Printable;
+globalThis[Keyword.for("printable")] = printable;
+globalThis[Keyword.for("log")] = log;
+globalThis[Keyword.for("str")] = str;
+globalThis[Keyword.for("nan__q")] = nan__q;
+globalThis[Keyword.for("str__q")] = str__q;
+globalThis[Keyword.for("as_set")] = as_set;
+globalThis[Keyword.for("as_array")] = as_array;
+globalThis[Keyword.for("as_obj")] = as_obj;
+globalThis[Keyword.for("as_map")] = as_map;
+globalThis[Keyword.for("as_keyword")] = as_keyword;
+globalThis[Keyword.for("as_num")] = as_num;
+globalThis[Keyword.for("as_str")] = as_str;
+globalThis[Keyword.for("exists__q")] = exists__q;
+globalThis[Keyword.for("Negate")] = Negate;
+globalThis[Keyword.for("Underscore")] = Underscore;
+globalThis[Keyword.for("_")] = _;
+globalThis[Keyword.for("Inc")] = Inc;
+globalThis[Keyword.for("inc")] = inc;
+globalThis[Keyword.for("IRange")] = IRange;
+globalThis[Keyword.for("ERange")] = ERange;
+globalThis[Keyword.for("Matches")] = Matches;
+globalThis[Keyword.for("matches__q")] = matches__q;
+globalThis[Keyword.for("alpha__q")] = alpha__q;
+globalThis[Keyword.for("alpha_numeric__q")] = alpha_numeric__q;let CollectionView = construct_vector.call(Struct, ["CollectionView", Keyword.for("collection"), Keyword.for("idx")]);
 CollectionView.prototype[Vector] = new ObjectLiteral({first() {
 return at.bind(this.collection)(this.idx);
 }, last() {
@@ -1007,7 +1088,8 @@ yield this.collection[i]
 };};
 CollectionView.prototype[Printable] = function () {
 return this.collection.skip(this.idx);};
-let Lexer = construct_vector.call(DefRecord, [Keyword.for("entries")]);
+let Lexer = def_record(function Lexer(entries) {
+this.entries = entries});
 function pass() {
 }
 function newline() {
@@ -1045,7 +1127,7 @@ found = true
 break;
 };
 };
-assert__b(found, 57, 13, `found`,);
+assert__b(found, 58, 13, `found`,);
 };
 return tokens;};
 let lexer = construct_record.call(Lexer, [[/^\n/, newline], [/^\s+/, pass], [/^\/\/.*/, pass], [/^\,/, pass], [/^\;/, pass], [/^#/, Keyword.for("hash")], [/^\~/, Keyword.for("tilde")], [/^if\b/, Keyword.for("if")], [/^is\b/, Keyword.for("is")], [/^unless\b/, Keyword.for("unless")], [/^else\b/, Keyword.for("else")], [/^return\b/, Keyword.for("return")], [/^import\b/, Keyword.for("import")], [/^export\b/, Keyword.for("export")], [/^default\b/, Keyword.for("default")], [/^from\b/, Keyword.for("from")], [/^let\b/, Keyword.for("let")], [/^protocol\b/, Keyword.for("protocol")], [/^for\b/, Keyword.for("for")], [/^try\b/, Keyword.for("try")], [/^catch\b/, Keyword.for("catch")], [/^finally\b/, Keyword.for("finally")], [/^while\b/, Keyword.for("while")], [/^loop\b/, Keyword.for("loop")], [/^continue\b/, Keyword.for("continue")], [/^break\b/, Keyword.for("break")], [/^of\b/, Keyword.for("of")], [/^impl\b/, Keyword.for("impl")], [/^define\b/, Keyword.for("define")], [/^yield\b/, Keyword.for("yield")], [/^async\b/, Keyword.for("async")], [/^await\b/, Keyword.for("await")], [/^assert\!/, Keyword.for("assert__b")], [/^new\b/, Keyword.for("new")], [/^keyof\b/, Keyword.for("keyof")], [/^\=\>/, Keyword.for("arrow")], [/^\@/, Keyword.for("at")], [/^\&\&/, Keyword.for("and_and")], [/^\|\|/, Keyword.for("or_or")], [/^\=\=\=/, Keyword.for("triple_eq")], [/^\!\=\=/, Keyword.for("triple_not_eq")], [/^\=\=/, Keyword.for("double_eq")], [/^\!\=/, Keyword.for("not_eq")], [/^\!/, Keyword.for("bang")], [/^\=/, Keyword.for("eq")], [/^fn\b/, Keyword.for("fn")], [/^\{/, Keyword.for("open_b")], [/^\}/, Keyword.for("close_b")], [/^\(/, Keyword.for("open_p")], [/^\)/, Keyword.for("close_p")], [/^[\-\+]?\d+n/, Keyword.for("big_int")], [/^[\-\+]?(\d*\.)?\d+/, Keyword.for("num")], [/^\.\.\./, Keyword.for("dot_dot_dot")], [/^\.\./, Keyword.for("dot_dot")], [/^\./, Keyword.for("dot")], [/^\/.*\/[a-z]?/, Keyword.for("regex_lit")], [/^\>\=/, Keyword.for("gt_eq")], [/^\<\=/, Keyword.for("lt_eq")], [/^\>/, Keyword.for("gt")], [/^\</, Keyword.for("lt")], [/^\+/, Keyword.for("plus")], [/^\%/, Keyword.for("mod")], [/^\-/, Keyword.for("minus")], [/^\*\*/, Keyword.for("pow")], [/^\*/, Keyword.for("times")], [/^\&/, Keyword.for("single_and")], [/^\:\:/, Keyword.for("double_colon")], [/^\:[a-zA-Z_\?\!\$0-9]+/, Keyword.for("keyword")], [/^\:/, Keyword.for("colon")], [/^\//, Keyword.for("div")], [/^\[/, Keyword.for("open_sq")], [/^\]/, Keyword.for("close_sq")], [/^\"([^\\\"]|\\.)*\"/s, Keyword.for("string_lit")], [/^[a-zA-Z_\?\!\$0-9]+/, Keyword.for("id")]]);
@@ -1066,18 +1148,24 @@ raise__b(new Error(plus.call("Parser Failed - Expected ",printable.bind(parser)(
 return this;
 };}
 const ParseInstruction = Symbol("ParseInstruction");
-let Init = construct_vector.call(DefVector, [Keyword.for("expr")]);
+let Init = def_vector(function Init(expr) {
+this.expr = expr});
 Init.prototype[ParseInstruction] = function ([_expr, tokens]) {
 return [this.expr, tokens];};
 Init.prototype[Printable] = function () {
 return str("Init(", printable.bind(this.expr)(), ")");};
-let One = construct_vector.call(DefVector, [Keyword.for("kw"), Keyword.for("as")]);
+let One = def_vector(function One(kw, as) {
+this.kw = kw
+this.as = as});
 One.prototype[ParseInstruction] = function ([expr, tokens]) {
 let {value, type} = first.bind(expect_token__b.bind(tokens)(this.kw))();
 return [merge.bind(expr)(new ObjectLiteral({[this.as]: value})), tokens.skip((1))];};
 One.prototype[Printable] = function () {
 return str("One(kw: ", this.kw, ", as: ", this.as, ")");};
-let Optional = construct_vector.call(DefVector, [Keyword.for("set_or_kw"), Keyword.for("parse_fn"), Keyword.for("as")]);
+let Optional = def_vector(function Optional(set_or_kw, parse_fn, as) {
+this.set_or_kw = set_or_kw
+this.parse_fn = parse_fn
+this.as = as});
 Optional.prototype[ParseInstruction] = function ([expr, tokens]) {
 if (truthy(empty__q.bind(tokens)())) {
 return [expr, tokens];
@@ -1094,7 +1182,8 @@ Optional.prototype[Printable] = function () {
 return str("Optional(kw: ", this.kw, ", as: ", this.as, ")");};
 Function.prototype[ParseInstruction] = function ([_expr, tokens]) {
 return this(tokens);};
-let Chomp = construct_vector.call(DefVector, [_, Keyword.for("kws")]);
+let Chomp = def_vector(function Chomp(...kws) {
+this.kws = kws});
 Chomp.prototype[ParseInstruction] = function ([expr, tokens]) {
 let i = (0);
 for  (let kw of this.kws) {
@@ -1104,7 +1193,9 @@ i = plus.call(i,(1))
 return [expr, tokens.skip(i)];};
 Chomp.prototype[Printable] = function () {
 return str("Chomp(", this.kws, ")");};
-let Then = construct_vector.call(DefVector, [Keyword.for("parser"), Keyword.for("kw")]);
+let Then = def_vector(function Then(parser, kw) {
+this.parser = parser
+this.kw = kw});
 Then.prototype[ParseInstruction] = function ([expr, tokens]) {
 let result = call.bind(this.parser)(tokens);
 if (truthy(nil__q.bind(result)())) {
@@ -1118,12 +1209,16 @@ return [new_expr, new_tokens];
 };};
 Then.prototype[Printable] = function () {
 return str("Then(", this.parser.name, ", as:", this.kw, ")");};
-let FMap = construct_vector.call(DefVector, [Keyword.for("f")]);
+let FMap = def_vector(function FMap(f) {
+this.f = f});
 FMap.prototype[ParseInstruction] = function ([expr, tokens]) {
 return [call.bind(this.f)(expr), tokens];};
 FMap.prototype[Printable] = function () {
 return str("Fmap(", this.f.name, ")");};
-let Until = construct_vector.call(DefVector, [Keyword.for("end_kw"), Keyword.for("parser"), Keyword.for("kw")]);
+let Until = def_vector(function Until(end_kw, parser, kw) {
+this.end_kw = end_kw
+this.parser = parser
+this.kw = kw});
 Until.prototype[ParseInstruction] = function ([expr, tokens]) {
 let exprs = [];
 while (negate.call(eq__q.call(at.bind(first.bind(tokens)())(Keyword.for("type")), this.end_kw))) {
@@ -1138,7 +1233,9 @@ return [exprs, tokens];
 };};
 Until.prototype[Printable] = function () {
 return str("Until(end: ", printable.bind(this.end_kw)(), ", f: ", this.parser.name, ", as: ", printable.bind(this.kw)(), ")");};
-let Case = construct_vector.call(DefVector, [Keyword.for("parse_map"), Keyword.for("kw")]);
+let Case = def_vector(function Case(parse_map, kw) {
+this.parse_map = parse_map
+this.kw = kw});
 Case.prototype[ParseInstruction] = function ([expr, tokens]) {
 let __coil_if_let_temp = call.bind(this.parse_map)(tokens);
 if (truthy(__coil_if_let_temp)) {
@@ -1154,7 +1251,9 @@ raise__b(new Error("Case Parse Failed"))
 };};
 Case.prototype[Printable] = function () {
 return plus.call("Case(",plus.call(printable.bind(this.parse_map)(),plus.call(", as: ",plus.call(printable.bind(this.kw)(),")"))));};
-let Either = construct_vector.call(DefVector, [Keyword.for("set"), Keyword.for("kw")]);
+let Either = def_vector(function Either(set, kw) {
+this.set = set
+this.kw = kw});
 Either.prototype[ParseInstruction] = function ([expr, tokens]) {
 let op = verify_exists__b.bind(call.bind(this.set)(at.bind(first.bind(tokens)())(Keyword.for("type"))))(this.set);
 let [new_expr, rest] = [first.bind(tokens)(), tokens.skip((1))];
@@ -1166,12 +1265,14 @@ if (truthy(negate.call((ParseInstruction in this)))) {
 console.log("This is not parsable:", printable.bind(this)())
 };
 return this[ParseInstruction](result);}
-let Parser = construct_vector.call(DefVector, [_, Keyword.for("instructions")]);
+let Parser = def_vector(function Parser(...instructions) {
+this.instructions = instructions});
 Parser.prototype[Printable] = function () {
 return plus.call("~Parser[",plus.call(printable.bind(this.instructions)().join(", "),"]"));};
 Parser.prototype[Call] = function (tokens) {
 return parse_step.bind(this)([null, tokens]);};
-let AbortIf = construct_vector.call(DefVector, [Keyword.for("cond_fn")]);
+let AbortIf = def_vector(function AbortIf(cond_fn) {
+this.cond_fn = cond_fn});
 AbortIf.prototype[Printable] = function () {
 return plus.call("~AbortIf[",plus.call(_resolve_keyword_str(this.cond_fn.name),"]"));};
 Parser.prototype[ParseInstruction] = function (result) {
@@ -1186,7 +1287,8 @@ continue;
 result = parse_step.bind(instruction)(result)
 };
 return result;};
-let ParseMap = construct_vector.call(DefRecord, [Keyword.for("entries")]);
+let ParseMap = def_record(function ParseMap(entries) {
+this.entries = entries});
 ParseMap.prototype[Record] = new ObjectLiteral({keys() {
 return as_set.bind(map.bind(iter.bind(this.entries)())(first))();
 }});
@@ -1468,7 +1570,7 @@ return "";
 } else if (eq__q.call(at.bind(branch)(Keyword.for("type")), Keyword.for("else"))) {
 return str(" else {\n", eval_ast(or.call(at.bind(branch)(Keyword.for("body")), () => [])), "\n}");
 } else {
-assert__b(eq__q.call(at.bind(branch)(Keyword.for("type")), Keyword.for("else_if")), 1159, 13, `eq__q.call(at.bind(branch)(Keyword.for("type")), Keyword.for("else_if"))`,);
+assert__b(eq__q.call(at.bind(branch)(Keyword.for("type")), Keyword.for("else_if")), 1166, 13, `eq__q.call(at.bind(branch)(Keyword.for("type")), Keyword.for("else_if"))`,);
 return str(" else if (", eval_expr(at.bind(branch)(Keyword.for("expr"))), ") {\n", eval_ast(or.call(at.bind(branch)(Keyword.for("pass")), () => [])), "\n}", eval_if_branch(at.bind(branch)(Keyword.for("fail"))));
 };}
 function eval_if({expr, pass, fail}) {
@@ -1526,7 +1628,7 @@ return resolve_name(id);}
 function eval_dynamic_obj_entry({key_expr, value}) {
 return str("[", eval_expr(key_expr), "]: ", eval_expr(value));}
 function eval_obj_fn({name, generator__q, is_async__q, args, body}) {
-return str((and.call(is_async__q, () => "async")), (and.call(generator__q, () => "*")), resolve_name(name), "(", map_join.bind(args)(eval_assign_expr, ", "), ") {\n", eval_ast(body), "\n}");}
+return str((and.call(is_async__q, () => "async ")), (and.call(generator__q, () => "*")), resolve_name(name), "(", map_join.bind(args)(eval_assign_expr, ", "), ") {\n", eval_ast(body), "\n}");}
 function eval_obj_entry(node) {
 return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("reg_obj_entry"), eval_reg_obj_entry], [Keyword.for("obj_shorthand_entry"), eval_obj_shorthand_entry], [Keyword.for("dynamic_obj_entry"), eval_dynamic_obj_entry], [Keyword.for("spread_obj_entry"), eval_spread], [Keyword.for("fn"), eval_obj_fn]])))(node);}
 function eval_obj_lit({entries}) {
