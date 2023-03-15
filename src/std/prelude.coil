@@ -332,78 +332,6 @@ define Vector for Array = fn(entries) = entries
 
 fn construct_vector(entries) = this[Vector](entries)
 
-// STRUCT
-// I like this, but I'm not sure if it should be in the prelude..
-protocol Validation
-protocol Constructors
-// This needs to be more thought out
-// what if I want to default options.schema to {}, without
-// overriding the rest of options
-protocol Defaults
-
-fn StructValidationError(message) {
-  this.name = "StructValidationError"
-  this.message = message
-  this.stack = (new Error()).stack
-}
-StructValidationError.prototype = new Error()
-
-fn validate_struct(struct_name) {
-  if !(Validation keyof this) { return true }
-
-  fn error_msg(key, validator) =
-    str(struct_name " validation failed.\n"
-        "Failed at " key ".\n"
-        "Expected [" validator "]"
-        ", got value " this[key] ".")
-
-  for [key, validator] of this[Validation] {  
-    if validator::matches?(this[key]) {
-      continue
-    } else {
-      raise!(new StructValidationError(this::error_msg(key, validator)))
-    }
-  }
-}
-
-fn construct_struct_values() {
-  if !(Constructors keyof this) { return null }
-  for [key f] of this[Constructors] {
-    if typeof(f) == "function" { f = this::f }
-    if let prop_val = f::call(this[key]) {
-      this[key] = prop_val
-    }
-  }
-}
-
-fn set_struct_defaults() {
-  if !(Defaults keyof this) { return null }
-  for [key fallback] of this[Defaults] {
-    if this[key]::exists?() {
-      continue
-    } else {
-      this[key] = fallback
-    }
-  }
-}
-
-fn Struct(name, ...properties) {
-  fn Constructor(...args) {
-    let i = 0
-    for key of properties {
-      this[key] = args[i]
-      i += 1
-    }
-    this::validate_struct(name)
-    this::construct_struct_values(this)
-    this::set_struct_defaults(this)
-  }
-  // This doesn't work >:(
-  Object.defineProperty(Constructor, "name", { value: name })
-  return Constructor
-}
-define Vector for Struct = fn(args) = Struct(...args)
-
 // EQUAL PROTOCOl
 
 protocol Equal
@@ -673,7 +601,7 @@ impl Negate for Set = fn() = #(!this.has(&))
 
 // Underscore
 
-let Underscore = ~Struct["Underscore" :transforms]
+fn Underscore(transforms) { this.transforms = transforms }
 
 protocol UnderscoreInterpreter
 
@@ -798,8 +726,8 @@ impl Inc for String = fn() = String.fromCharCode(this.charCodeAt(0) + 1)
 
 fn inc() = this[Inc]()
 
-let IRange = ~Struct["IRange" :start :end]
-let ERange = ~Struct["ERange" :start :end]
+fn IRange(start, end) { this.start = start; this.end = end }
+fn ERange(start, end) { this.start = start; this.end = end }
 
 impl Call for IRange = fn(value) = value >= this.start && value <= this.end
 impl Call for ERange = fn(value) = value >= this.start && value < this.end
@@ -931,7 +859,6 @@ define :last for globalThis = last
 define :empty? for globalThis = empty?
 define :not_empty? for globalThis = not_empty?
 define :construct_vector for globalThis = construct_vector
-// TODO: remove struct from prelude
 define :Equal for globalThis = Equal
 define :eq? for globalThis = eq?
 define :Identity for globalThis = Identity
@@ -985,5 +912,5 @@ define :Matches for globalThis = Matches
 define :matches? for globalThis = matches?
 define :alpha? for globalThis = alpha?
 define :alpha_numeric? for globalThis = alpha_numeric?
-define :def_vector for globalThis def_vector
-define :def_record for globalThis def_record
+define :def_vector for globalThis = def_vector
+define :def_record for globalThis = def_record

@@ -1,4 +1,4 @@
-let CollectionView = ~Struct["CollectionView" :collection :idx]
+fn CollectionView(collection, idx) { this.collection = collection; this.idx = idx }
 
 // Its only partially implemented right now because most use-cases
 // don't require the complete collections api.

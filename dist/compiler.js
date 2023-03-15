@@ -479,66 +479,6 @@ Array[Vector] = function (entries) {
 return entries;};
 function construct_vector(entries) {
 return this[Vector](entries);}
-const Validation = Symbol("Validation");
-const Constructors = Symbol("Constructors");
-const Defaults = Symbol("Defaults");
-function StructValidationError(message) {
-this.name = "StructValidationError"
-this.message = message
-this.stack = (new Error()).stack}
-StructValidationError.prototype = new Error()
-function validate_struct(struct_name) {
-if (truthy(negate.call((Validation in this)))) {
-return true;
-};
-function error_msg(key, validator) {
-return str(struct_name, " validation failed.\n", "Failed at ", key, ".\n", "Expected [", validator, "]", ", got value ", this[key], ".");}
-for  (let [key, validator] of this[Validation]) {
-if (truthy(matches__q.bind(validator)(this[key]))) {
-continue;
-} else {
-raise__b(new StructValidationError(error_msg.bind(this)(key, validator)))
-};
-};}
-function construct_struct_values() {
-if (truthy(negate.call((Constructors in this)))) {
-return null;
-};
-for  (let [key, f] of this[Constructors]) {
-if (truthy(eq__q.call(typeof(f), "function"))) {
-f = f.bind(this)
-};
-let __coil_if_let_temp = call.bind(f)(this[key]);
-if (truthy(__coil_if_let_temp)) {
-let prop_val = __coil_if_let_temp;
-this[key] = prop_val
-};
-};}
-function set_struct_defaults() {
-if (truthy(negate.call((Defaults in this)))) {
-return null;
-};
-for  (let [key, fallback] of this[Defaults]) {
-if (truthy(exists__q.bind(this[key])())) {
-continue;
-} else {
-this[key] = fallback
-};
-};}
-function Struct(name, ...properties) {
-function Constructor(...args) {
-let i = (0);
-for  (let key of properties) {
-this[key] = args[i]
-i = plus.call(i, (1))
-};
-validate_struct.bind(this)(name)
-construct_struct_values.bind(this)(this)
-set_struct_defaults.bind(this)(this)}
-Object.defineProperty(Constructor, "name", new ObjectLiteral({value: name}))
-return Constructor;}
-Struct[Vector] = function (args) {
-return Struct(...args);};
 const Equal = Symbol("Equal");
 function strict_eq__q(other) {
 return this === other;}
@@ -601,40 +541,40 @@ return js_or(this, thunk);};
 Set.prototype[Plus] = function (other_set) {
 return concat.bind(this)(other_set);};
 Number.prototype[Plus] = function (other) {
-assert__b(typeof(other) === "number", 471, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 400, 11, `typeof(other) === "number"`,);
 return js_plus(this, other);};
 Number.prototype[Minus] = function (other) {
-assert__b(typeof(other) === "number", 475, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 404, 11, `typeof(other) === "number"`,);
 return js_minus(this, other);};
 Number.prototype[Times] = function (other) {
-assert__b(typeof(other) === "number", 479, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 408, 11, `typeof(other) === "number"`,);
 return js_times(this, other);};
 Number.prototype[Divide] = function (other) {
-assert__b(typeof(other) === "number", 483, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 412, 11, `typeof(other) === "number"`,);
 return js_divide(this, other);};
 Number.prototype[Exponent] = function (other) {
-assert__b(typeof(other) === "number", 487, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 416, 11, `typeof(other) === "number"`,);
 return js_exponent(this, other);};
 Number.prototype[Mod] = function (other) {
-assert__b(typeof(other) === "number", 491, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 420, 11, `typeof(other) === "number"`,);
 return js_mod(this, other);};
 BigInt.prototype[Plus] = function (other) {
-assert__b(typeof(other) === "bigint", 495, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 424, 11, `typeof(other) === "bigint"`,);
 return js_plus(this, other);};
 BigInt.prototype[Minus] = function (other) {
-assert__b(typeof(other) === "bigint", 499, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 428, 11, `typeof(other) === "bigint"`,);
 return js_minus(this, other);};
 BigInt.prototype[Times] = function (other) {
-assert__b(typeof(other) === "bigint", 503, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 432, 11, `typeof(other) === "bigint"`,);
 return js_times(this, other);};
 BigInt.prototype[Divide] = function (other) {
-assert__b(typeof(other) === "bigint", 507, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 436, 11, `typeof(other) === "bigint"`,);
 return js_divide(this, other);};
 BigInt.prototype[Exponent] = function (other) {
-assert__b(typeof(other) === "bigint", 511, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 440, 11, `typeof(other) === "bigint"`,);
 return js_exponent(this, other);};
 BigInt.prototype[Mod] = function (other) {
-assert__b(typeof(other) === "bigint", 515, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 444, 11, `typeof(other) === "bigint"`,);
 return js_mod(this, other);};
 let ComparableMixin = new ObjectLiteral({greater_than_eq(other) {
 return or.call(greater_than.bind(this)(other), () => (eq__q.call(this, other)));
@@ -642,30 +582,30 @@ return or.call(greater_than.bind(this)(other), () => (eq__q.call(this, other)));
 return or.call(less_than.bind(this)(other), () => (eq__q.call(this, other)));
 }});
 Number.prototype[Comparable] = new ObjectLiteral({...ComparableMixin, greater_than(other) {
-assert__b(typeof(other) === "number", 525, 13, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 454, 13, `typeof(other) === "number"`,);
 return js_greater_than(this, other);
 }, less_than(other) {
-assert__b(typeof(other) === "number", 529, 13, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 458, 13, `typeof(other) === "number"`,);
 return js_less_than(this, other);
 }});
 BigInt.prototype[Comparable] = new ObjectLiteral({...ComparableMixin, greater_than(other) {
-assert__b(typeof(other) === "bigint", 536, 13, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 465, 13, `typeof(other) === "bigint"`,);
 return js_greater_than(this, other);
 }, less_than(other) {
-assert__b(typeof(other) === "bigint", 540, 13, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 469, 13, `typeof(other) === "bigint"`,);
 return js_less_than(this, other);
 }});
 String.prototype[Plus] = function (other) {
-assert__b(typeof(other) === "string", 545, 11, `typeof(other) === "string"`,);
+assert__b(typeof(other) === "string", 474, 11, `typeof(other) === "string"`,);
 return js_plus(this, other);};
 String.prototype[Times] = function (amount) {
-assert__b(typeof(amount) === "number", 549, 11, `typeof(amount) === "number"`,);
+assert__b(typeof(amount) === "number", 478, 11, `typeof(amount) === "number"`,);
 return this.repeat(amount);};
 String.prototype[Comparable] = new ObjectLiteral({...ComparableMixin, greater_than(other) {
-assert__b(typeof(other) === "string", 555, 13, `typeof(other) === "string"`,);
+assert__b(typeof(other) === "string", 484, 13, `typeof(other) === "string"`,);
 return js_greater_than(this, other);
 }, less_than(other) {
-assert__b(typeof(other) === "string", 559, 13, `typeof(other) === "string"`,);
+assert__b(typeof(other) === "string", 488, 13, `typeof(other) === "string"`,);
 return js_less_than(this, other);
 }});
 let plus = impl_callable(function plus(other) {
@@ -767,7 +707,8 @@ let exists__q = impl_callable(function exists__q() {
 return negate.call(nil__q.bind(this)());});
 Set.prototype[Negate] = function () {
 return (...__args) => negate.call(this.has(__args[0]));};
-let Underscore = construct_vector.call(Struct, ["Underscore", Keyword.for("transforms")]);
+function Underscore(transforms) {
+this.transforms = transforms}
 const UnderscoreInterpreter = Symbol("UnderscoreInterpreter");
 let _ = new Underscore([new ObjectLiteral({f: function id() {
 return this;}, args: []})]);
@@ -895,8 +836,12 @@ String.prototype[Inc] = function () {
 return String.fromCharCode(plus.call(this.charCodeAt((0)),(1)));};
 function inc() {
 return this[Inc]();}
-let IRange = construct_vector.call(Struct, ["IRange", Keyword.for("start"), Keyword.for("end")]);
-let ERange = construct_vector.call(Struct, ["ERange", Keyword.for("start"), Keyword.for("end")]);
+function IRange(start, end) {
+this.start = start
+this.end = end}
+function ERange(start, end) {
+this.start = start
+this.end = end}
 IRange.prototype[Call] = function (value) {
 return and.call(greater_than_eq.call(value,this.start), () => less_than_eq.call(value,this.end));};
 ERange.prototype[Call] = function (value) {
@@ -1068,7 +1013,11 @@ globalThis[Keyword.for("ERange")] = ERange;
 globalThis[Keyword.for("Matches")] = Matches;
 globalThis[Keyword.for("matches__q")] = matches__q;
 globalThis[Keyword.for("alpha__q")] = alpha__q;
-globalThis[Keyword.for("alpha_numeric__q")] = alpha_numeric__q;let CollectionView = construct_vector.call(Struct, ["CollectionView", Keyword.for("collection"), Keyword.for("idx")]);
+globalThis[Keyword.for("alpha_numeric__q")] = alpha_numeric__q;
+globalThis[Keyword.for("def_vector")] = def_vector;
+globalThis[Keyword.for("def_record")] = def_record;function CollectionView(collection, idx) {
+this.collection = collection
+this.idx = idx}
 CollectionView.prototype[Vector] = new ObjectLiteral({first() {
 return at.bind(this.collection)(this.idx);
 }, last() {
