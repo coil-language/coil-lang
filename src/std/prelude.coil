@@ -184,12 +184,7 @@ fn keep(f) = this[Iterable].keep.call(this, f::call)
 fn reject(f) = this::keep(compose(f, !_))
 fn any?(...fns) = this[Iterable].any?.call(this, compose(...fns))
 fn all?(...fns) = this[Iterable].all?.call(this, compose(...fns))
-fn reduce(f, start) {
-  if start::nil?() && f[Identity] {
-    start = f[Identity]
-  }
-  return this[Iterable].reduce.call(this, f::call, start)
-}
+fn reduce(f, start) = this[Iterable].reduce.call(this, f::call, start)
 
 protocol ReversedIterator
 
@@ -365,21 +360,6 @@ fn eq?(other) {
     return this === other
   } else {
     return this[Equal](other)
-  }
-}
-
-// IDENTITY PROTOCOL
-protocol Identity
-
-impl Identity for Number = 0
-impl Identity for BigInt = 0n
-impl Identity for String = ""
-
-fn identity() {
-  if this::nil?() {
-    return this
-  } else {
-    return this[Identity]
   }
 }
 
@@ -699,23 +679,19 @@ impl Printable for Underscore = fn() {
     "minus" => "-"
     "mod" => "%"
     "eq__q" => "=="
-  }  
+    "and" => "&&"
+    "or" => "||"
+  }
   return str("_" this.transforms::iter()::skip(1)::map(fn({f, args}) {
-    if f == and {
-      let [thunk] = args
-      return str(" && " thunk()::printable())
-    } else if f == or {
-      let [thunk] = args
-      return str(" || " thunk()::printable())
-    }
-    let s = f::printable()
-    if let op = fn_to_op::call(s) {
+    let fn_name = f::printable()
+    if let op = fn_to_op::call(fn_name) {
       let [rhs] = args
+      if #{and, or}::call(f) { rhs = rhs() }
       return str(" " op " " rhs::printable())
     } else {
-      return str("::" s "(" args::map(printable).join(", ") ")")
+      return str("::" fn_name "(" args::iter()::map(printable)::as_array().join(", ") ")")
     }
-  })::reduce(+))
+  })::reduce(+, ""))
 }
 
 // Ranges
@@ -737,20 +713,15 @@ impl Call for ERange = fn(value) = value >= this.start && value < this.end
 impl Printable for IRange = fn() = str(this.start ".." this.end)
 impl Printable for ERange = fn() = str(this.start "..." this.end)
 
-impl Symbol.iterator for IRange = fn*() {
+fn make_range_iter(compare_to) = fn*() {
   let {start: i, end} = this
-  while i <= end {
+  while i::compare_to(end) {
     yield i
     i = i::inc()
   }
 }
-impl Symbol.iterator for ERange = fn*() {
-  let {start: i, end} = this
-  while i < end {
-    yield i
-    i = i::inc()
-  }
-}
+impl Symbol.iterator for IRange = make_range_iter(<=)
+impl Symbol.iterator for ERange = make_range_iter(<)
 
 fn def_vector(Constructor) {
   define Vector for Constructor = fn(args) = new Constructor(...args)
@@ -863,8 +834,6 @@ define :not_empty? for globalThis = not_empty?
 define :construct_vector for globalThis = construct_vector
 define :Equal for globalThis = Equal
 define :eq? for globalThis = eq?
-define :Identity for globalThis = Identity
-define :identity for globalThis = identity
 define :Plus for globalThis = Plus
 define :Negate for globalThis = Negate
 define :Minus for globalThis = Minus
