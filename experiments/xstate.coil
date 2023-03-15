@@ -32,8 +32,10 @@ fn foo(root_node, msgs) = new Proxy({}, {
 
 protocol ResolveAssignExpr
 
-export let Target = ~DefVector[:state]
-export let Assign = ~DefRecord[:properties]
+@def_vector
+fn Target(state) { this.state = state }
+@def_record(:properties)
+fn Assign(properties) { this.properties = properties }
 
 impl ResolveAssignExpr for Function = fn(ctx_key, ctx, args) =
   this(ctx, args)

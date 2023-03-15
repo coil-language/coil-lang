@@ -220,6 +220,7 @@ impl Record for ObjectLiteral = {
   fn insert(key, value) = {...this, [key]: value}
   fn merge(other) = ObjectLiteral.from_entries(this::record_merge_(other))
   fn keys() = Object.keys(this)
+  fn values() = Object.values(this)
   fn has?(key) = key keyof this
   fn len() = this::keys().length
   fn empty?() = this::len() == 0
@@ -244,6 +245,7 @@ impl Record for Map = {
     return new Map(this::record_merge_(other))
   }
   fn keys() = this.keys()
+  fn values() = this.values()
   fn has?(key) = this.has(key)
   fn len() = this.size
   fn empty?() = this.size === 0

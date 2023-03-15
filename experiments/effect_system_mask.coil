@@ -1,6 +1,5 @@
-let Point = ~Struct["Point" :x :y]
-
-let Polygon = ~Struct["Polygon" :points]
+fn Point(x, y) { this.x = x; this.y = y }
+fn Polygon(points) { this.points = points }
 
 let state = "inactive"
 let masks = []

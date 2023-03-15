@@ -1,4 +1,4 @@
-let Comp = ~Struct["Comp"]
+fn Comp() {}
 
 define Vector for Comp = fn([map_fn, _for, collection, ...rest]) {
   assert! _for == :for
