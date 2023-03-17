@@ -760,7 +760,7 @@ fn parse_new(tokens) = ~Parser[
 ]::call(tokens)
 
 fn parse_num_raw(tokens) =
-  parse_num::call(tokens)::pipe(fn([expr, tokens]) = [expr::at(:value)::to_i(), tokens])
+  parse_num::call(tokens)::pipe(fn([expr, tokens]) = [expr::at(:value)::as_num(), tokens])
 
 let parse_anon_arg_id = ~Parser[
   ~Init[{type: :anon_arg_id}]
