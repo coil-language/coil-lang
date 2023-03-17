@@ -75,6 +75,8 @@ let SetIterator = Object.getPrototypeOf(#{}::iter())
 let GeneratorFunction = Object.getPrototypeOf(fn*(){})
 
 protocol Iterable
+protocol Break
+protocol Next
 
 let iterable_collection_impl = {
   fn* take(n) {
@@ -137,7 +139,9 @@ let iterable_collection_impl = {
   }
   fn each(f) {
     for elem of this {
-      f(elem)
+      let result = f(elem)
+      if result == Break { break }
+      if result == Continue { continue }
     }
   }
   fn* keep(f) {
@@ -185,20 +189,7 @@ fn reject(f) = this::keep(compose(f, !_))
 fn any?(...fns) = this[Iterable].any?.call(this, compose(...fns))
 fn all?(...fns) = this[Iterable].all?.call(this, compose(...fns))
 fn reduce(f, start) = this[Iterable].reduce.call(this, f::call, start)
-
-protocol ReversedIterator
-
-fn* _reversed_impl() {
-  for i of 1..this::len() {
-    yield this.at(i * -1)
-  }
-}
-
-impl ReversedIterator for Array = _reversed_impl
-impl ReversedIterator for String = _reversed_impl
-
-@impl_callable
-fn reversed() = this[ReversedIterator]()
+fn order_by(...key_callables) = this[Iterable].order_by.call(this, compose(...key_callables))
 
 // RECORD AND VECTOR PROTOCOLS
 
@@ -482,7 +473,8 @@ impl Comparable for String = {
   fn less_than_eq(other) {
     assert! typeof(other) === "string"
     return js_less_than_eq(this, other)
-  }  fn greater_than(other) {
+  }
+  fn greater_than(other) {
     assert! typeof(other) === "string"
     return js_greater_than(this, other)
   }
@@ -658,7 +650,6 @@ impl Iterable for Underscore = {
   fn all?(f) = this.insert(all? f)
   fn any?(f) = this.insert(any?, f)
 }
-impl ReversedIterator for Underscore = fn() = this.insert(reversed)
 impl Record for Underscore = {
   fn at(key) = this.insert(at, key)
   fn insert(key, value) = this.insert(insert, key, value)
@@ -828,8 +819,6 @@ define :keep for globalThis = keep
 define :reject for globalThis = reject
 define :any? for globalThis = any?
 define :reduce for globalThis = reduce
-define :ReversedIterator for globalThis = ReversedIterator
-define :revered for globalThis = reversed
 define :Record for globalThis = Record
 define :insert for globalThis = insert
 define :merge for globalThis = merge
