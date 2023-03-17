@@ -1,0 +1,64 @@
+// This file is attempting to develop a system
+// for writing "sync" feeling http calls, with auto
+// parallelization when possible.
+// This goes beyond async/await, because it will track
+// dependencies between requests & auto parallelize them.
+
+protocol Url
+protocol Query
+protocol Chain
+
+fn make_req(obj) =
+  fetch(command[Url], new URLSearchParams(obj[Query]))
+
+let http = {
+  fn get(url, query, chain) {
+    chain || = []  
+    return new Proxy({}, {
+      fn get(_, prop) {
+        if prop == Url {
+          return url
+        } else if prop == Query {
+          return query
+        } else if prop == Chain {
+          return chain
+        } else {
+          return http.get(url, query, chain::push(prop))
+        }
+      }
+    })
+  }
+  fn interpret(commands) {
+    let sequences = ~Map{
+      http.get("/user") => ~Map{
+        http.get("/friends", {id}) => ~Map{}
+      }
+      http.get("/metadata") => ~Map{}
+    }
+
+    for command of commands {
+      if command[Url] && !command[Query] {
+        sequences.set(command, ~Map{})
+      } else if command[Query] {
+        command[Query]::iter()::each(fn([key, val] {  
+          if let [http, req_map] = sequences::iter()::find(fn([req, _map]) =
+            val[Url] == req[Url] && val[Query] == req[Query]) {
+            sequences.set(http, req_map::set())
+            return Break
+          }
+        })
+      }
+    }
+  }
+}
+
+// @interpret_async
+// @resolve(~ResolveMap{
+//   "/friends" => fn(req) = req.json()
+// })
+fn do_stuff() {
+  let {name, id} = http.get("/user")
+  let friends = http.get("/friends", {id})
+  let metadata = http.get("/metadata")
+  return [name, friends, metadata]
+}
