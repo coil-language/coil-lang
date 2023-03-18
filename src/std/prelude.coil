@@ -657,11 +657,13 @@ impl Record for Underscore = {
   fn len() = this.insert(len)
 }
 impl Vector for Underscore = {
+  fn at(key) = this.insert(at, key)
   fn push(value) = this.insert(push, value)
   fn concat(other) = this.insert(concat, other)
   fn replace(old_value, new_value) = this.insert(has?, old_value, new_value)
+  fn len() = this.insert(len)
+  fn has?(k) = this.insert(has?, k)
 }
-
 impl Pipe for Underscore = fn(f) = this.insert(pipe, f)
 impl And for Underscore = fn(thunk) = this.insert(and, thunk)
 impl Or for Underscore = fn(thunk) = this.insert(or, thunk)

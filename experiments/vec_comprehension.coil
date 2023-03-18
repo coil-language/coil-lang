@@ -6,19 +6,19 @@ fn eval_expr(val, f) {
       ::map(fn([key, idx]) = [key, val::at(idx)])
       ::as_obj()
       ::pipe(f)
+  } else if this is Keyword {
+    return f::call(val::at(this))
   } else if this::record?() {
-
+    // idk what to do here
   }
 }
 
 define Vector for Array = fn(tokens) {
-  let [name, _for, expr, _of, iterable] = tokens
-  let output = []
-  for elem of iterable {
-    output.push(expr::eval_expr(elem, name))
-  }
-  return output
+  let tokens_iter = tokens::iter()
+  let f = tokens_iter::until(fn(x) = x === :for)::pipe(#(compose(...&)))
+  let [expr, _of, iterable] = tokens_iter
+  return iterable::map(fn(elem) = expr::eval_expr(elem, f))::as_array()
 }
 
-~Array[:name :for _ :of [{name: "marcelle"}]]
+~Array[_ >= 80 :for :score :of [{score: 80}]]
   ::log()
