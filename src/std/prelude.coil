@@ -53,10 +53,10 @@ fn pipe_one(callable) {
 }
 
 fn pipe(...callables) =
-  callables::iter()::reduce(fn(r, c) = r::pipe_one(c), this)
+  callables::reduce(fn(r, c) = r::pipe_one(c), this)
 
 fn compose(first_fn, ...fns) = fn(...args) =
-  fns::iter()::reduce(fn (result, f) = f::call(result), first_fn::call(...args))
+  fns::reduce(fn (result, f) = f::call(result), first_fn::call(...args))
 
 fn impl_callable(f) {
   define Call for f = fn(first, ...rest) = first::f(...rest)
@@ -112,12 +112,12 @@ let iterable_collection_impl = {
     }
   }
   fn* zip(...collections) {
-    let generators = [this, ...collections]::iter()::map(iter)::as_array()
+    let generators = [this, ...collections]::map(iter)::as_array()
     loop {
-      let gen_states = generators::iter()::map(#(&.next()))::as_array()
+      let gen_states = generators::map(#(&.next()))::as_array()
       
-      if gen_states::iter()::any?(:done) { break }
-      yield gen_states::iter()::map(:value)::as_array()
+      if gen_states::any?(:done) { break }
+      yield gen_states::map(:value)::as_array()
     }
   }
   fn reduce(f, start) {
@@ -175,21 +175,20 @@ define Iterable for MapIterator = iterable_collection_impl
 define Iterable for SetIterator = iterable_collection_impl
 impl Iterable for GeneratorFunction = iterable_collection_impl
 
-fn skip(n) = this[Iterable].skip.call(this, n)
-fn take(n) = this[Iterable].take.call(this, n)
-fn drop(n) = this[Iterable].drop.call(this, n)
-fn each(f) = this[Iterable].each.call(this, f::call)
-fn until(f) = this[Iterable].until.call(this, f::call)
-fn zip(...iterables) = this[Iterable].zip.call(this, ...iterables)
-fn map(...fns) = this[Iterable].map.call(this, compose(...fns))
-fn flat_map(...fns) = this[Iterable].flat_map.call(this, compose(...fns))
-fn find(f) = this[Iterable].find.call(this, f::call)
-fn keep(f) = this[Iterable].keep.call(this, f::call)
+fn skip(n) = this::iter()[Iterable].skip.call(this, n)
+fn take(n) = this::iter()[Iterable].take.call(this, n)
+fn drop(n) = this::iter()[Iterable].drop.call(this, n)
+fn each(f) = this::iter()[Iterable].each.call(this, f::call)
+fn until(f) = this::iter()[Iterable].until.call(this, f::call)
+fn zip(...iterables) = this::iter()[Iterable].zip.call(this, ...iterables)
+fn map(...fns) = this::iter()[Iterable].map.call(this, compose(...fns))
+fn flat_map(...fns) = this::iter()[Iterable].flat_map.call(this, compose(...fns))
+fn find(f) = this::iter()[Iterable].find.call(this, f::call)
+fn keep(f) = this::iter()[Iterable].keep.call(this, f::call)
 fn reject(f) = this::keep(compose(f, !_))
-fn any?(...fns) = this[Iterable].any?.call(this, compose(...fns))
-fn all?(...fns) = this[Iterable].all?.call(this, compose(...fns))
-fn reduce(f, start) = this[Iterable].reduce.call(this, f::call, start)
-fn order_by(...key_callables) = this[Iterable].order_by.call(this, compose(...key_callables))
+fn any?(...fns) = this::iter()[Iterable].any?.call(this, compose(...fns))
+fn all?(...fns) = this::iter()[Iterable].all?.call(this, compose(...fns))
+fn reduce(f, start) = this::iter()[Iterable].reduce.call(this, f::call, start)
 
 // RECORD AND VECTOR PROTOCOLS
 
@@ -220,7 +219,7 @@ impl Record for Map = {
   }
   fn merge(other) {
     if other is ObjectLiteral {
-      other = other::iter()::map(fn([k, v]) {
+      other = other::map(fn([k, v]) {
         if k::as_num()::nan?() {
           return [k::as_keyword(), v]
         } else {
@@ -257,7 +256,7 @@ impl Vector for Array = {
   fn concat(other) = this::merge_iterator(other)
   fn has?(value) = this::any?(_ == value)
   fn replace(old_value, new_value) =
-    this::iter()::map(fn(val) {
+    this::map(fn(val) {
       if val == old_value { return new_value }
       else { return val }
     })::as_array()
@@ -328,13 +327,13 @@ impl Equal for Object = strict_eq?
 fn vector_eq?(other) {
   if this.constructor !== other.constructor { return false }
   if this::len() != other::len() { return false }
-  return this::iter()::zip(other)::all?(fn([a, b]) = a == b)
+  return this::zip(other)::all?(fn([a, b]) = a == b)
 }
 
 fn record_eq?(other) {
   if this.constructor !== other.constructor { return false }
   if this::len() != other::len() { return false }
-  return this::iter()::all?(fn([key, value]) = other::at(key) == value)
+  return this::all?(fn([key, value]) = other::at(key) == value)
 }
 
 impl Equal for Set = vector_eq?
@@ -540,10 +539,10 @@ impl Printable for ObjectLiteral = fn() {
 }
 
 impl Printable for Map = fn() =
-  ::iter()::map(fn ([k, v]) = [k::printable(), v::printable()])::as_map()
+  ::map(fn ([k, v]) = [k::printable(), v::printable()])::as_map()
 
-impl Printable for Array = fn() = ::iter()::map(printable)::as_array()
-impl Printable for Set = fn() = str("#{" this::iter()::map(printable)::as_array().join(", ") "}")
+impl Printable for Array = fn() = ::map(printable)::as_array()
+impl Printable for Set = fn() = str("#{" this::map(printable)::as_array().join(", ") "}")
 impl Printable for Keyword = fn() = ":" + _resolve_keyword_str(this.value)
 impl Printable for Boolean = fn() = this
 impl Printable for String = fn() = this
@@ -690,14 +689,14 @@ impl Printable for Underscore = fn() {
     "and" => "&&"
     "or" => "||"
   }
-  return str("_" this.transforms::iter()::skip(1)::map(fn({f, args}) {
+  return str("_" this.transforms::skip(1)::map(fn({f, args}) {
     let fn_name = f::printable()
     if let op = fn_to_op::call(fn_name) {
       let [rhs] = args
       if #{and, or}::call(f) { rhs = rhs() }
       return str(" " op " " rhs::printable())
     } else {
-      return str("::" fn_name "(" args::iter()::map(printable)::as_array().join(", ") ")")
+      return str("::" fn_name "(" args::map(printable)::as_array().join(", ") ")")
     }
   })::reduce(+, ""))
 }
@@ -741,7 +740,7 @@ fn def_record(Constructor, key) {
   define Record for Constructor = fn(entries) = new Constructor(entries)
   impl Record for Constructor = {
     fn at(idx) = this[key][idx]
-    fn keys() = this[key]::iter()::map(first)
+    fn keys() = this[key]::map(first)
     fn has?(key) = this::keys()::has?(key)
     fn len() = this[key].length
   }
@@ -766,7 +765,7 @@ impl Matches for Object = fn(value) {
 
 impl Matches for Array = fn(arr) =
   arr::len() == this::len() &&
-  this::iter()::zip(arr)::all?(fn([pattern, val]) = pattern::matches?(val))
+  this::zip(arr)::all?(fn([pattern, val]) = pattern::matches?(val))
 
 impl Matches for Set = fn(value) = this::has?(value)
 
@@ -779,13 +778,13 @@ impl Matches for Underscore = fn(value) {
 }
 
 impl Matches for ObjectLiteral = fn(record) =
-  ::iter()::all?(fn(key, pattern) = pattern::matches?(record::at(key::as_keyword())))
+  ::all?(fn(key, pattern) = pattern::matches?(record::at(key::as_keyword())))
 
 @def_record
 fn Match(@entries) {}
 
 impl Call for Match = fn(val) =
-  this.entries::iter()
+  this.entries
     ::find(fn([pattern, _ret]) = pattern::matches?(val))
     ::pipe(1)
 
@@ -793,8 +792,8 @@ impl Call for Match = fn(val) =
 let char_alpha? = ("a".."z")::as_set() + ("A".."Z")::as_set()
 let char_numeric? = ("0".."9")::as_set()
 let char_alpha_numeric? = char_alpha? + char_numeric?
-fn alpha?() = this::iter()::all?(char_alpha?)
-fn alpha_numeric?() = this::iter()::all?(char_alpha_numeric?)
+fn alpha?() = this::all?(char_alpha?)
+fn alpha_numeric?() = this::all?(char_alpha_numeric?)
 
 // GLOBAL EXPORTS
 
