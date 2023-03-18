@@ -1,10 +1,13 @@
-fn eval_expr(val, name) {
-  if this is Array {
-    for [id, idx] of this::zip(0..) {
-      if name == id {
-        return val::at(idx)
-      }
-    }
+fn eval_expr(val, f) {
+  if this === _ {
+    return f::call(val)
+  } else if this::vector?() {
+    return ::zip(0..)
+      ::map(fn([key, idx]) = [key, val::at(idx)])
+      ::as_obj()
+      ::pipe(f)
+  } else if this::record?() {
+
   }
 }
 
@@ -17,5 +20,5 @@ define Vector for Array = fn(tokens) {
   return output
 }
 
-~Array[:elem :for [:elem :idx] :of [1 2 3]::zip(0..)]
+~Array[:name :for _ :of [{name: "marcelle"}]]
   ::log()
