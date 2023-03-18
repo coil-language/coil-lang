@@ -1,10 +1,13 @@
 fn extract_from(elem) {
-  if this::vector?() {
+  if this is Underscore {
+    return this::call(elem)
+  } else if this::vector?() {
     return ::zip(0..)
       ::map(fn([key, idx]) = [key, elem::at(idx)])
       ::as_obj()
   } else if this::record?() {
     // idk what to do here
+    assert! false
   } else {
     return this::call(elem)
   }
@@ -27,5 +30,5 @@ define Vector for Array = fn(tokens) {
     ::as_array()
 }
 
-~Array[_ :for :score :of [{score: 80} {score: 20}] :unless _ >= 80]
+~Array[_ :for _ :of [{score: 80} {score: 20}] :unless :score _ >= 80]
   ::log()
