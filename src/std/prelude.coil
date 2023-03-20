@@ -63,10 +63,16 @@ fn impl_callable(f) {
   return f
 }
 
-// Iterable & OrderedIterable Protocols
+// Iterable Protocol
 
 @impl_callable
-fn iter() = this[Symbol.iterator]()
+fn iter() {
+  if this::nil?() {
+    return [][Symbol.iterator]()
+  } else {
+    return this[Symbol.iterator]()
+  }
+}
 
 let ArrayIterator = Object.getPrototypeOf([]::iter())
 let MapIterator = Object.getPrototypeOf(new Map()::iter())
@@ -115,11 +121,12 @@ let iterable_collection_impl = {
     let generators = [this, ...collections]::map(iter)::as_array()
     loop {
       let gen_states = generators::map(#(&.next()))::as_array()
-      
       if gen_states::any?(:done) { break }
       yield gen_states::map(:value)::as_array()
     }
   }
+  fn sort() = ::as_array().sort()
+  fn sort_by(f) = ::as_array().sort(fn(a, b) = f(a) - f(b))
   fn reduce(f, start) {
     let acc = start
     for elem of this {
@@ -292,6 +299,8 @@ impl Vector for String = {
 }
 
 fn at(idx_or_key) = (this[Vector] || this[Record]).at.call(this, idx_or_key)
+// this should be on a protocol so it can be generic.
+fn dig(...keys) = keys::reduce(fn(obj, key) = obj::at(key), this)
 fn push(value) = this[Vector].push.call(this, value)
 fn concat(other) = this[Vector].concat.call(this, other)
 fn has?(value) = (this[Vector] || this[Record]).has?.call(this, value)
@@ -542,7 +551,7 @@ impl Printable for Map = fn() =
   ::map(fn ([k, v]) = [k::printable(), v::printable()])::as_map()
 
 impl Printable for Array = fn() = ::map(printable)::as_array()
-impl Printable for Set = fn() = str("#{" this::map(printable)::as_array().join(", ") "}")
+impl Printable for Set = fn() = str("#{" this::map(printable)::as_array().join(" ") "}")
 impl Printable for Keyword = fn() = ":" + _resolve_keyword_str(this.value)
 impl Printable for Boolean = fn() = this
 impl Printable for String = fn() = this
@@ -563,27 +572,33 @@ fn log(...args) {
   return this
 }
 
-// Helpers
+// Global Helpers
 
 fn str(...args) = args.join("")
 @impl_callable
 fn nan?() = Number.isNaN(this)
+// there's probably a better way to do this.
+@impl_callable
+fn num?() = !Number(this)::nan?()
 @impl_callable
 fn str?() = typeof(this) == "string"
 @impl_callable
-fn as_set() = new Set(this)
+fn as_set() = new Set(this::iter())
 @impl_callable
-fn as_array() = Array["from"](this)
+fn as_array() = Array["from"](this::iter())
 @impl_callable
-fn as_obj() = ObjectLiteral.from_entries(this)
+fn as_obj() = ObjectLiteral.from_entries(this::iter())
 @impl_callable
-fn as_map() = new Map(this)
+fn as_map() = new Map(this::iter())
 @impl_callable
 fn as_keyword() = Keyword["for"](this.toString())
 @impl_callable
 fn as_num() = Number(this)
 @impl_callable
-fn as_str() = this.toString()
+fn as_str() {
+  if this::nil?() { return "" }
+  else { return this.toString() }
+}
 @impl_callable
 fn exists?() = !this::nil?()
 
