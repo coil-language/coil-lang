@@ -1,0 +1,38 @@
+// ideas for randomly generating data.
+// could be taken to extremes to something like faker.js
+
+protocol DataGenerator
+
+fn generate_data(...args) = this[DataGenerator](...args)
+
+define DataGenerator for :xs_float = Math.random
+define DataGenerator for :sm_float = fn() = Math.random() * 50
+define DataGenerator for :lg_float = fn() = Math.random() * 100000000
+define DataGenerator for :med_float = fn() = Math.random() * 1000
+define DataGenerator for :xs_int = fn() = Math.floor(Math.random() * 10)
+define DataGenerator for :sm_int = fn() = Math.floor(Math.random() * 50)
+define DataGenerator for :lg_int = fn() = Math.floor(Math.random() * 100000000)
+define DataGenerator for :int_of = fn(max_size) = Math.floor(Math.random() * max_size)
+
+impl DataGenerator for Set = fn(max_size) =
+  (0..:int_of::generate_data(max_size || 50))
+    ::map(#(:int_of::generate_data(this.size)))
+    ::map(::as_array())
+    ::as_array()
+
+define DataGenerator for :str_set = fn(set, max_size) =
+  (0..:int_of::generate_data(max_size || 50))
+    ::map(#(:int_of::generate_data(set.size)))
+    ::map(set::as_array())
+    ::reduce(+, "")
+
+
+@def_record
+fn Fake(@entries) {}
+
+impl DataGenerator for Fake = fn() = ::map(fn([key, kind]) = [key, kind::generate_data()])::as_obj()
+
+// ~Fake{name: :name
+//       age: :pos_int}
+
+console.log(:str_set::generate_data(char_alpha_numeric?))
