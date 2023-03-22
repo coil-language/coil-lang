@@ -3,31 +3,33 @@
 
 protocol Random
 
-define Random for :float = fn() = Math.random() * 100
-define Random for :int = fn() = Math.floor(Math.random() * 100)
-
-impl Random for Set = fn(initial) {
-  fn rand_idx() = Math.floor(Math.random() * this.size)
-  let indices = (0..:int::random())::map(this::rand_idx)::as_set()::sort()
-  let prev_idx = indices::first()
-  let arr = ::as_array()
-  let output = initial
-  for idx of indices {
-    output = output::push(arr[idx])
-  }
-  return output
-}
-
 fn random(...args) = this[Random](...args)
 
-console.log(:float::random())
+define Random for :xs_float = Math.random
+define Random for :sm_float = fn() = Math.random() * 50
+define Random for :lg_float = fn() = Math.random() * 100000000
+define Random for :med_float = fn() = Math.random() * 1000
+define Random for :xs_int = fn() = Math.floor(Math.random() * 10)
+define Random for :sm_int = fn() = Math.floor(Math.random() * 50)
+define Random for :lg_int = fn() = Math.floor(Math.random() * 100000000)
+define Random for :int_of = fn(max_size) = Math.floor(Math.random() * max_size)
+
+impl Random for Set = fn(max_size) {
+  let size = Math.min(:sm_int::random(), max_size || 50)
+  return (0..size)
+    ::map(#(:int_of::random(this.size)))
+    ::map(::as_array())
+    ::as_array()
+}
+
+// console.log(:float::random())
 
 @def_record
 fn Fake(@entries) {}
 
 impl Random for Fake = fn() = ::map(fn([key, kind]) = [key, kind::random()])::as_obj()
 
-~Fake{name: :name
-      age: :pos_int}
+// ~Fake{name: :name
+//       age: :pos_int}
 
-console.log(char_alpha_numeric?::random(""))
+console.log(char_alpha_numeric?::random())
