@@ -1342,7 +1342,7 @@ fn eval_id_lookup({name}) = resolve_name(name)
 fn eval_num({value}) = str("(" value ")")
 fn eval_big_int({value}) = value
 fn eval_double_equals({lhs rhs}) = str(
-  resolve_name("eq?") ".call(" eval_expr(lhs) ", " eval_expr(rhs) ")")
+  resolve_name("equals?") ".call(" eval_expr(lhs) ", " eval_expr(rhs) ")")
 fn eval_not_equals(node) = str("negate.call(" eval_double_equals(node) ")")
 fn eval_not({expr}) = str("negate.call(" eval_expr(expr) ")")
 fn eval_dynamic_access({lhs expr}) =

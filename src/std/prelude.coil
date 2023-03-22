@@ -44,16 +44,13 @@ protocol Pipe
 
 impl Pipe for Object = fn(callable) = callable::call(this)
 
-fn pipe_one(callable) {
+fn pipe(callable) {
   if this::nil?() {
     return callable::call(this)
   } else {
     return this[Pipe](callable)
   }
 }
-
-fn pipe(...callables) =
-  callables::reduce(fn(r, c) = r::pipe_one(c), this)
 
 fn compose(first_fn, ...fns) = fn(...args) =
   fns::reduce(fn (result, f) = f::call(result), first_fn::call(...args))
@@ -74,15 +71,7 @@ fn iter() {
   }
 }
 
-let ArrayIterator = Object.getPrototypeOf([]::iter())
-let MapIterator = Object.getPrototypeOf(new Map()::iter())
-let StringIterator = Object.getPrototypeOf(""::iter())
-let SetIterator = Object.getPrototypeOf(#{}::iter())
-let GeneratorFunction = Object.getPrototypeOf(fn*(){})
-
 protocol Iterable
-protocol Break
-protocol Next
 
 let iterable_collection_impl = {
   fn* take(n) {
@@ -147,8 +136,6 @@ let iterable_collection_impl = {
   fn each(f) {
     for elem of this {
       let result = f(elem)
-      if result == Break { break }
-      if result == Continue { continue }
     }
   }
   fn* keep(f) {
@@ -175,6 +162,12 @@ let iterable_collection_impl = {
     return false
   }
 }
+
+let ArrayIterator = Object.getPrototypeOf([]::iter())
+let MapIterator = Object.getPrototypeOf(new Map()::iter())
+let StringIterator = Object.getPrototypeOf(""::iter())
+let SetIterator = Object.getPrototypeOf(#{}::iter())
+let GeneratorFunction = Object.getPrototypeOf(fn*(){})
 
 define Iterable for ArrayIterator = iterable_collection_impl
 define Iterable for StringIterator = iterable_collection_impl
@@ -215,11 +208,12 @@ impl Record for ObjectLiteral = {
   fn merge(other) = ObjectLiteral.from_entries(this::merge_iterator(other))
   fn keys() = Object.keys(this)
   fn values() = Object.values(this)
-  fn has?(key) = key keyof this
+  fn has?(key) = key::as_str() keyof this
   fn len() = this::keys().length
   fn empty?() = this::len() == 0
 }
 
+// hacking on immutable operations onto Map feels wrong.
 impl Record for Map = {
   fn at(key) = this.get(key)
   fn insert(key, value) {
@@ -301,8 +295,6 @@ impl Vector for String = {
 }
 
 fn at(idx_or_key) = (this[Vector] || this[Record]).at.call(this, idx_or_key)
-// this should be on a protocol so it can be generic.
-fn dig(...keys) = keys::reduce(fn(obj, key) = obj::at(key), this)
 fn push(value) = this[Vector].push.call(this, value)
 fn concat(other) = this[Vector].concat.call(this, other)
 fn has?(value) = (this[Vector] || this[Record]).has?.call(this, value)
@@ -314,6 +306,7 @@ fn len() = (this[Vector] || this[Record]).len.call(this)
 fn first() = (this[Vector] || this[Record]).first.call(this)
 @impl_callable
 fn last() = (this[Vector] || this[Record]).last.call(this)
+@impl_callable
 fn empty?() {
   if this::nil?() {
     return true
@@ -321,6 +314,7 @@ fn empty?() {
     return (this[Vector] || this[Record]).empty?.call(this)
   }
 }
+@impl_callable
 fn not_empty?() = !this::empty?()
 
 define Vector for Array = fn(entries) = entries
@@ -331,29 +325,29 @@ fn construct_vector(entries) = this[Vector](entries)
 
 protocol Equal
 
-fn strict_eq?(other) = this === other
+impl Equal for Object = fn(other) = this === other
 
-impl Equal for Object = strict_eq?
-
-fn vector_eq?(other) {
-  if this.constructor !== other.constructor { return false }
-  if this::len() != other::len() { return false }
-  return this::zip(other)::all?(fn([a, b]) = a == b)
+impl Equal for Set = fn(other) {
+  if !(other is Set) { return false }
+  if other.size !== this.size { return false }
+  return ::all?(fn(val) = other.has(val))
+}
+impl Equal for Array = fn(other) {
+  if !(other is Array) { return false }
+  if other.length !== this.length { return false }
+  return ::zip(other)::all?(fn([a, b]) = a == b)
 }
 
-fn record_eq?(other) {
+fn record_equals?(other) {
   if this.constructor !== other.constructor { return false }
   if this::len() != other::len() { return false }
   return this::all?(fn([key, value]) = other::at(key) == value)
 }
-
-impl Equal for Set = vector_eq?
-impl Equal for Array = vector_eq?
-impl Equal for Map = record_eq?
-impl Equal for ObjectLiteral = record_eq?
+impl Equal for Map = record_equals?
+impl Equal for ObjectLiteral = record_equals?
 
 @impl_callable
-fn eq?(other) {
+fn equals?(other) {
   if this::nil?() {
     return this === other
   } else {
@@ -427,10 +421,6 @@ impl Mod for BigInt = fn(other) {
   assert! typeof(other) === "bigint"
   return js_mod(this, other)
 }
-let ComparableMixin = {
-  fn greater_than_eq(other) = this::greater_than(other) || (this == other)
-  fn less_than_eq(other) = this::less_than(other) || (this == other)
-}
 impl Comparable for Number = {
   fn greater_than_eq(other) {
     assert! typeof(other) === "number"
@@ -495,14 +485,7 @@ impl Comparable for String = {
 }
 
 @impl_callable
-fn plus(other) {
-  if this[Plus] {
-    return this[Plus](other)
-  } else {
-    return (this::concat || this::merge)(other) 
-  }
-}
-
+fn plus(other) = this[Plus](other)
 @impl_callable
 fn negate() {
   if this::nil?() {
@@ -536,6 +519,7 @@ fn or(thunk) {
 }
 
 // Printable
+// This api is crufty, I'm not gonna lie.
 
 protocol Printable
 
@@ -650,7 +634,7 @@ impl Comparable for Underscore = {
 }
 
 impl Negate for Underscore = fn() = this.insert(negate)
-impl Equal for Underscore = fn(other) = this.insert(eq?, other)
+impl Equal for Underscore = fn(other) = this.insert(equals?, other)
 
 impl Iterable for Underscore = {
   fn empty?() = this.insert(empty?)
@@ -754,16 +738,9 @@ fn def_vector(Constructor) {
   return Constructor
 }
 
-fn def_record(Constructor, key) {
-  key ||= :entries
+fn def_record(Constructor) {
   define Record for Constructor = fn(entries) = new Constructor(entries)
-  impl Record for Constructor = {
-    fn at(idx) = this[key][idx]
-    fn keys() = this[key]::map(first)
-    fn has?(key) = this::keys()::has?(key)
-    fn len() = this[key].length
-  }
-  impl Symbol.iterator for Constructor = fn() = this[key]::iter()
+  impl Symbol.iterator for Constructor = fn() = this.entries::iter()
   return Constructor
 }
 
@@ -817,7 +794,7 @@ define :empty? for globalThis = empty?
 define :not_empty? for globalThis = not_empty?
 define :construct_vector for globalThis = construct_vector
 define :Equal for globalThis = Equal
-define :eq? for globalThis = eq?
+define :equals? for globalThis = equals?
 define :Plus for globalThis = Plus
 define :Negate for globalThis = Negate
 define :Minus for globalThis = Minus

@@ -33,9 +33,9 @@ fn foo(root_node, msgs) = new Proxy({}, {
 protocol ResolveAssignExpr
 
 @def_vector
-fn Target(state) { this.state = state }
-@def_record(:properties)
-fn Assign(properties) { this.properties = properties }
+fn Target(@state) {}
+@def_record
+fn Assign(@entries) {}
 
 impl ResolveAssignExpr for Function = fn(ctx_key, ctx, args) =
   this(ctx, args)
@@ -71,13 +71,13 @@ impl ResolveAssignExpr for Underscore = fn(ctx_key, ctx, xstate_args) {
 protocol GenerateXState
 
 impl GenerateXState for Assign = fn(event) {
-  let assign_obj = this.properties::from_entries()::map(fn(key, value) {
+  let assign_obj = ::map(fn([key, value]) {
     if value&.[ResolveAssignExpr] {
       return [key, fn(ctx, args) = value::resolve_assign_expr(key, ctx, args)]
     } else {
       return [key, fn(_ctx, _args) = value]
     }
-  })
+  })::as_obj()
   return event::update(:actions _::push(assign(assign_obj)))
 }
 
