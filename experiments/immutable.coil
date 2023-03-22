@@ -1,0 +1,178 @@
+// The module naively implements persistent immutable vector & dict
+
+// Immutable Vec implementation
+
+fn VecMergeNode(@left, @right) {
+  this.length = left.length + right.length
+}
+fn VecPushNode(@left, @node) {
+  this.length = left.length + 1
+}
+fn VecNode(@list) {
+  this.length = list.length
+}
+
+impl Printable for VecMergeNode = fn() = ::map(printable)::as_array()
+impl Printable for VecPushNode = fn() = ::map(printable)::as_array()
+impl Printable for VecNode = fn() = ::map(printable)::as_array()
+
+impl Symbol.iterator for VecPushNode = fn*() {
+  yield* this.left
+  yield this.node
+}
+impl Symbol.iterator for VecNode = fn() = this.list::iter()
+impl Symbol.iterator for VecMergeNode = fn*() {
+  yield* this.left
+  yield* this.right
+}
+
+impl Vector for VecMergeNode = {
+  fn len() = this.length
+  fn at(idx) {
+    if idx < this.left::len() {
+      return this.left::at(idx)
+    } else {
+      return this.right::at(idx - this.left::len())
+    }
+  }
+  // maybe we can copy .right & append up to a certain 
+  // point, because small lists should be fast to shallow copy
+  // better than having very nested trees later.
+  fn push(item) = new VecPushNode(this, item)
+  fn concat(vec) = new VecMergeNode(this, vec)
+  fn last() = this.right::last()
+  fn first() = this.left::first()
+  fn has?(val) = this.left::has?(val) || this.right::has?(val)
+  fn empty?() = false
+}
+
+impl Vector for VecPushNode = {
+  fn len() = this.length
+  fn at(idx) {
+    if idx < this.left::len() {
+      return this.left::at(idx)
+    } else if idx == this.left::len() {
+      return this.node
+    }
+  }
+  fn push(item) = new VecMergeNode(this.left, [this.node, item])
+  // we can probably optimize this for cases that vec is a small array/vec
+  fn concat(vec) = new VecMergeNode(this, vec)
+  fn last() = this.node
+  fn first() = this.left::first()
+  fn has?(val) = this.node == val || this.left::has?(val)
+  fn empty?() = false
+}
+
+impl Vector for VecNode = {
+  fn len() = this.length
+  fn at(idx) = this.list.at(idx)
+  fn push(item) = new VecPushNode(this, item)
+  fn concat(vec) = new VecMergeNode(this, vec)
+  fn last() = this.list.at(-1)
+  fn first() = this.list.at(0)
+  fn has?(val) = this.list::has?(val)
+  fn empty?() = this::len() == 0
+}
+impl :remove for VecPushNode = fn(val) {
+  if this.node == val { return this.left }
+  else { return new VecPushNode(this.left.remove(val), this.node) }
+}
+impl :remove for VecNode = fn(value) {
+  let idx = this.list.findIndex(fn(item) = item == value)
+  return new VecMergeNode(this.list.slice(0, idx), this.list.slice(idx + 1))
+}
+impl :remove for VecMergeNode = fn(value) =
+  new VecMergeNode(this.left.remove(value), this.right.remove(value))
+
+fn Vec() {}
+
+define Vector for Vec = fn(items) = new VecNode(items)
+
+impl Plus for VecNode = fn(other) = this::concat(other)
+impl Plus for VecPushNode = fn(other) = this::concat(other)
+impl Plus for VecMergeNode = fn(other) = this::concat(other)
+
+// Immutable Dict 
+
+fn DictMergeNode(@left, @right) {
+  this.length = left::len() + right::len()
+}
+fn DictPushNode(@left, @key, @value) {
+  this.length = left::len() + 1
+}
+fn DictNode(entries) {
+  this.dict = ObjectLiteral.from_entries(entries)
+  this.length = Object.keys(this.dict).length
+}
+
+impl Printable for DictMergeNode = fn() = ::map(printable)::pipe(Object.fromEntries)
+impl Printable for DictPushNode = fn() = ::map(printable)::pipe(Object.fromEntries)
+impl Printable for DictNode = fn() = ::map(printable)::pipe(Object.fromEntries)
+
+impl Symbol.iterator for DictMergeNode = fn*() {
+  yield* this.left
+  yield* this.right
+}
+
+impl Symbol.iterator for DictPushNode = fn*() {
+  yield* this.left
+  yield [this.key this.right]
+}
+
+impl Symbol.iterator for DictNode = fn() = this.dict::iter()
+
+fn Dict() {}
+
+define Record for Dict = fn(entries) = new DictNode(entries)
+
+impl Record for DictMergeNode = {
+  fn at(key) = this.right::at(key) || this.left::at(key)
+  fn insert(key, value) = new DictPushNode(this, key, value)
+  fn merge(other) = new DictMergeNode(this, other)
+  fn keys() = this.left::keys()::concat(this.right::keys())
+  fn values() = this.right::values()::concat(this.left::values())
+  fn has?(key) = this.right::has?(key) || this.left::has?(key)
+  fn len() = this.length
+  fn empty?() = false
+}
+
+impl Record for DictPushNode = {
+  fn at(key) {
+    if this.key == key {
+      return value
+    } else {
+      return this.left::at(key)
+    }
+  }
+  fn insert(key, value) = new DictMergeNode(this, {[this.key]: this.value, [key]: value})
+  fn merge(other) = new DictMergeNode(this, other)
+  fn keys() = this.left::keys()::push(this.key)
+  fn values() = this.left::values()::push(this.value)
+  fn has?(key) {
+    if this.key == key {
+      return true
+    } else {
+      return this.left::has?(key)
+    }
+  }
+  fn len() = this.length
+  fn empty?() = false
+}
+
+impl Record for DictNode = {
+  fn at(key) = this.dict[key]
+  fn insert(key, value) = new DictPushNode(this, key, value)
+  fn merge(other) = new DictMergeNode(this, other)
+  fn keys() = Object.keys(this.dict)
+  fn values() = Object.values(this.dict)
+  fn has?(key) = key::as_str() keyof this.dict
+  fn len() = this.length
+  fn empty?() = this.length === 0
+}
+
+impl Plus for DictNode = fn(other) = this::merge(other)
+impl Plus for DictPushNode = fn(other) = this::merge(other)
+impl Plus for DictMergeNode = fn(other) = this::merge(other)
+
+~[:id]::log()

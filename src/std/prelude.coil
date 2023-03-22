@@ -373,6 +373,7 @@ impl Negate for Object = fn() = js_negate(this)
 impl And for Object = fn(thunk) = js_and(this, thunk)
 impl Or for Object = fn(thunk) = js_or(this, thunk)
 impl Plus for Set = fn(other_set) = this::concat(other_set)
+impl Plus for Array = fn(arr) = this::concat(arr)
 impl Plus for Number = fn(other) {
   assert! typeof(other) === "number"
   return js_plus(this, other)

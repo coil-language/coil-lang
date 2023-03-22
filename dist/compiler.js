@@ -197,12 +197,6 @@ return [][Symbol.iterator]();
 } else {
 return this[Symbol.iterator]();
 };});
-let ArrayIterator = Object.getPrototypeOf(iter.bind([])());
-let MapIterator = Object.getPrototypeOf(iter.bind(new Map())());
-let StringIterator = Object.getPrototypeOf(iter.bind("")());
-let SetIterator = Object.getPrototypeOf(iter.bind(new Set([]))());
-let GeneratorFunction = Object.getPrototypeOf(function *() {
-});
 const Iterable = Symbol("Iterable");
 let iterable_collection_impl = new ObjectLiteral({*take(n) {
 for  (let [elem, i] of zip.bind(this)(new IRange((0), Infinity))) {
@@ -292,6 +286,12 @@ return true;
 };
 return false;
 }});
+let ArrayIterator = Object.getPrototypeOf(iter.bind([])());
+let MapIterator = Object.getPrototypeOf(iter.bind(new Map())());
+let StringIterator = Object.getPrototypeOf(iter.bind("")());
+let SetIterator = Object.getPrototypeOf(iter.bind(new Set([]))());
+let GeneratorFunction = Object.getPrototypeOf(function *() {
+});
 ArrayIterator[Iterable] = iterable_collection_impl;
 StringIterator[Iterable] = iterable_collection_impl;
 MapIterator[Iterable] = iterable_collection_impl;
@@ -536,98 +536,91 @@ Object.prototype[Or] = function (thunk) {
 return js_or(this, thunk);};
 Set.prototype[Plus] = function (other_set) {
 return concat.bind(this)(other_set);};
+Array.prototype[Plus] = function (arr) {
+return concat.bind(this)(arr);};
 Number.prototype[Plus] = function (other) {
-assert__b(typeof(other) === "number", 375, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 376, 11, `typeof(other) === "number"`,);
 return js_plus(this, other);};
 Number.prototype[Minus] = function (other) {
-assert__b(typeof(other) === "number", 379, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 380, 11, `typeof(other) === "number"`,);
 return js_minus(this, other);};
 Number.prototype[Times] = function (other) {
-assert__b(typeof(other) === "number", 383, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 384, 11, `typeof(other) === "number"`,);
 return js_times(this, other);};
 Number.prototype[Divide] = function (other) {
-assert__b(typeof(other) === "number", 387, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 388, 11, `typeof(other) === "number"`,);
 return js_divide(this, other);};
 Number.prototype[Exponent] = function (other) {
-assert__b(typeof(other) === "number", 391, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 392, 11, `typeof(other) === "number"`,);
 return js_exponent(this, other);};
 Number.prototype[Mod] = function (other) {
-assert__b(typeof(other) === "number", 395, 11, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 396, 11, `typeof(other) === "number"`,);
 return js_mod(this, other);};
 BigInt.prototype[Plus] = function (other) {
-assert__b(typeof(other) === "bigint", 399, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 400, 11, `typeof(other) === "bigint"`,);
 return js_plus(this, other);};
 BigInt.prototype[Minus] = function (other) {
-assert__b(typeof(other) === "bigint", 403, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 404, 11, `typeof(other) === "bigint"`,);
 return js_minus(this, other);};
 BigInt.prototype[Times] = function (other) {
-assert__b(typeof(other) === "bigint", 407, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 408, 11, `typeof(other) === "bigint"`,);
 return js_times(this, other);};
 BigInt.prototype[Divide] = function (other) {
-assert__b(typeof(other) === "bigint", 411, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 412, 11, `typeof(other) === "bigint"`,);
 return js_divide(this, other);};
 BigInt.prototype[Exponent] = function (other) {
-assert__b(typeof(other) === "bigint", 415, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 416, 11, `typeof(other) === "bigint"`,);
 return js_exponent(this, other);};
 BigInt.prototype[Mod] = function (other) {
-assert__b(typeof(other) === "bigint", 419, 11, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 420, 11, `typeof(other) === "bigint"`,);
 return js_mod(this, other);};
-let ComparableMixin = new ObjectLiteral({greater_than_eq(other) {
-return or.call(greater_than.bind(this)(other), () => (equals__q.call(this, other)));
-}, less_than_eq(other) {
-return or.call(less_than.bind(this)(other), () => (equals__q.call(this, other)));
-}});
 Number.prototype[Comparable] = new ObjectLiteral({greater_than_eq(other) {
-assert__b(typeof(other) === "number", 428, 13, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 425, 13, `typeof(other) === "number"`,);
 return js_greater_than_eq(this, other);
 }, less_than_eq(other) {
-assert__b(typeof(other) === "number", 432, 13, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 429, 13, `typeof(other) === "number"`,);
 return js_less_than_eq(this, other);
 }, greater_than(other) {
-assert__b(typeof(other) === "number", 436, 13, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 433, 13, `typeof(other) === "number"`,);
 return js_greater_than(this, other);
 }, less_than(other) {
-assert__b(typeof(other) === "number", 440, 13, `typeof(other) === "number"`,);
+assert__b(typeof(other) === "number", 437, 13, `typeof(other) === "number"`,);
 return js_less_than(this, other);
 }});
 BigInt.prototype[Comparable] = new ObjectLiteral({greater_than_eq(other) {
-assert__b(typeof(other) === "bigint", 446, 13, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 443, 13, `typeof(other) === "bigint"`,);
 return js_greater_than_eq(this, other);
 }, less_than_eq(other) {
-assert__b(typeof(other) === "bigint", 450, 13, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 447, 13, `typeof(other) === "bigint"`,);
 return js_less_than_eq(this, other);
 }, greater_than(other) {
-assert__b(typeof(other) === "bigint", 454, 13, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 451, 13, `typeof(other) === "bigint"`,);
 return js_greater_than(this, other);
 }, less_than(other) {
-assert__b(typeof(other) === "bigint", 458, 13, `typeof(other) === "bigint"`,);
+assert__b(typeof(other) === "bigint", 455, 13, `typeof(other) === "bigint"`,);
 return js_less_than(this, other);
 }});
 String.prototype[Plus] = function (other) {
-assert__b(typeof(other) === "string", 463, 11, `typeof(other) === "string"`,);
+assert__b(typeof(other) === "string", 460, 11, `typeof(other) === "string"`,);
 return js_plus(this, other);};
 String.prototype[Times] = function (amount) {
-assert__b(typeof(amount) === "number", 467, 11, `typeof(amount) === "number"`,);
+assert__b(typeof(amount) === "number", 464, 11, `typeof(amount) === "number"`,);
 return this.repeat(amount);};
 String.prototype[Comparable] = new ObjectLiteral({greater_than_eq(other) {
-assert__b(typeof(other) === "string", 472, 13, `typeof(other) === "string"`,);
+assert__b(typeof(other) === "string", 469, 13, `typeof(other) === "string"`,);
 return js_greater_than_eq(this, other);
 }, less_than_eq(other) {
-assert__b(typeof(other) === "string", 476, 13, `typeof(other) === "string"`,);
+assert__b(typeof(other) === "string", 473, 13, `typeof(other) === "string"`,);
 return js_less_than_eq(this, other);
 }, greater_than(other) {
-assert__b(typeof(other) === "string", 480, 13, `typeof(other) === "string"`,);
+assert__b(typeof(other) === "string", 477, 13, `typeof(other) === "string"`,);
 return js_greater_than(this, other);
 }, less_than(other) {
-assert__b(typeof(other) === "string", 484, 13, `typeof(other) === "string"`,);
+assert__b(typeof(other) === "string", 481, 13, `typeof(other) === "string"`,);
 return js_less_than(this, other);
 }});
 let plus = impl_callable(function plus(other) {
-if (truthy(this[Plus])) {
-return this[Plus](other);
-} else {
-return (or.call(concat.bind(this), () => merge.bind(this)))(other);
-};});
+return this[Plus](other);});
 let negate = impl_callable(function negate() {
 if (truthy(nil__q.bind(this)())) {
 return true;
@@ -886,21 +879,11 @@ function def_vector(Constructor) {
 Constructor[Vector] = function (args) {
 return new Constructor(...args);};
 return Constructor;}
-function def_record(Constructor, key) {
-key = or.call(key, () => Keyword.for("entries"))
+function def_record(Constructor) {
 Constructor[Record] = function (entries) {
 return new Constructor(entries);};
-Constructor.prototype[Record] = new ObjectLiteral({at(idx) {
-return this[key][idx];
-}, keys() {
-return map.bind(this[key])(first);
-}, has__q(key) {
-return has__q.bind(keys.bind(this)())(key);
-}, len() {
-return this[key].length;
-}});
 Constructor.prototype[Symbol.iterator] = function () {
-return iter.bind(this[key])();};
+return iter.bind(this.entries)();};
 return Constructor;}
 let char_alpha__q = plus.call(as_set.bind((new IRange("a", "z")))(),as_set.bind((new IRange("A", "Z")))());
 let char_numeric__q = as_set.bind((new IRange("0", "9")))();
@@ -950,6 +933,7 @@ globalThis[Keyword.for("empty__q")] = empty__q;
 globalThis[Keyword.for("not_empty__q")] = not_empty__q;
 globalThis[Keyword.for("construct_vector")] = construct_vector;
 globalThis[Keyword.for("Equal")] = Equal;
+globalThis[Keyword.for("equals__q")] = equals__q;
 globalThis[Keyword.for("Plus")] = Plus;
 globalThis[Keyword.for("Negate")] = Negate;
 globalThis[Keyword.for("Minus")] = Minus;
@@ -1414,6 +1398,10 @@ function parse_regular_record_entry(tokens) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("regular_record_entry")})]), construct_vector.call(Then, [parse_expr, Keyword.for("key_expr")]), construct_vector.call(Chomp, [Keyword.for("arrow")]), construct_vector.call(Then, [parse_expr, Keyword.for("value_expr")])]))(tokens);}
 function parse_record_entry(tokens) {
 return call.bind(construct_record.call(ParseMap, [[[Keyword.for("id"), Keyword.for("colon")], parse_keyword_record_entry], [_, parse_regular_record_entry]]))(tokens);}
+function parse_default_record_syntax(tokens) {
+return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("default_record_syntax")})]), construct_vector.call(Chomp, [Keyword.for("tilde")]), construct_vector.call(Chomp, [Keyword.for("open_b")]), construct_vector.call(Until, [Keyword.for("close_b"), parse_record_entry, Keyword.for("entries")]), construct_vector.call(Chomp, [Keyword.for("close_b")])]))(tokens);}
+function parse_default_vector_syntax(tokens) {
+return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("default_vector_syntax")})]), construct_vector.call(Chomp, [Keyword.for("tilde")]), construct_vector.call(Chomp, [Keyword.for("open_sq")]), construct_vector.call(Until, [Keyword.for("close_sq"), parse_expr, Keyword.for("entries")]), construct_vector.call(Chomp, [Keyword.for("close_sq")])]))(tokens);}
 function parse_record_syntax(tokens) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("record_syntax")})]), construct_vector.call(Chomp, [Keyword.for("tilde")]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("constructor_name")]), construct_vector.call(Chomp, [Keyword.for("open_b")]), construct_vector.call(Until, [Keyword.for("close_b"), parse_record_entry, Keyword.for("entries")]), construct_vector.call(Chomp, [Keyword.for("close_b")])]))(tokens);}
 function parse_vector_syntax(tokens) {
@@ -1422,7 +1410,7 @@ function parse_set(tokens) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("set")})]), construct_vector.call(Chomp, [Keyword.for("hash"), Keyword.for("open_b")]), construct_vector.call(Until, [Keyword.for("close_b"), parse_expr, Keyword.for("elements")]), construct_vector.call(Chomp, [Keyword.for("close_b")])]))(tokens);}
 function parse_prefix_inclusive_range(tokens) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("prefix_inclusive_range")})]), construct_vector.call(Chomp, [Keyword.for("dot_dot")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")])]))(tokens);}
-let SINGLE_EXPR_PARSE_MAP = construct_record.call(ParseMap, [[Keyword.for("string_lit"), parse_str], [Keyword.for("regex_lit"), parse_regex], [Keyword.for("keyword"), parse_keyword], [Keyword.for("open_p"), parse_paren_expr], [Keyword.for("yield"), parse_yield], [Keyword.for("await"), parse_await], [Keyword.for("id"), parse_id], [Keyword.for("at"), parse_decorator], [Keyword.for("num"), parse_num], [Keyword.for("big_int"), parse_big_int], [Keyword.for("open_sq"), parse_array], [Keyword.for("dot_dot"), parse_prefix_inclusive_range], [Keyword.for("dot_dot_dot"), parse_spread], [Keyword.for("double_colon"), parse_bind_this], [Keyword.for("bang"), parse_not], [Keyword.for("new"), parse_new], [Keyword.for("single_and"), parse_anon_arg_id], [Keyword.for("open_b"), parse_obj], [Keyword.for("and_and"), parse_unapplied_and_and], [Keyword.for("or_or"), parse_unapplied_or_or], [all_math_ops, parse_unapplied_math_op], [[Keyword.for("hash"), Keyword.for("open_p")], parse_shorthand_anon_fn], [[Keyword.for("hash"), Keyword.for("open_b")], parse_set], [[Keyword.for("async"), Keyword.for("fn")], parse_fn], [Keyword.for("fn"), parse_fn], [[Keyword.for("tilde"), Keyword.for("id"), Keyword.for("open_b")], parse_record_syntax], [[Keyword.for("tilde"), Keyword.for("id"), Keyword.for("open_sq")], parse_vector_syntax]]);
+let SINGLE_EXPR_PARSE_MAP = construct_record.call(ParseMap, [[Keyword.for("string_lit"), parse_str], [Keyword.for("regex_lit"), parse_regex], [Keyword.for("keyword"), parse_keyword], [Keyword.for("open_p"), parse_paren_expr], [Keyword.for("yield"), parse_yield], [Keyword.for("await"), parse_await], [Keyword.for("id"), parse_id], [Keyword.for("at"), parse_decorator], [Keyword.for("num"), parse_num], [Keyword.for("big_int"), parse_big_int], [Keyword.for("open_sq"), parse_array], [Keyword.for("dot_dot"), parse_prefix_inclusive_range], [Keyword.for("dot_dot_dot"), parse_spread], [Keyword.for("double_colon"), parse_bind_this], [Keyword.for("bang"), parse_not], [Keyword.for("new"), parse_new], [Keyword.for("single_and"), parse_anon_arg_id], [Keyword.for("open_b"), parse_obj], [Keyword.for("and_and"), parse_unapplied_and_and], [Keyword.for("or_or"), parse_unapplied_or_or], [all_math_ops, parse_unapplied_math_op], [[Keyword.for("hash"), Keyword.for("open_p")], parse_shorthand_anon_fn], [[Keyword.for("hash"), Keyword.for("open_b")], parse_set], [[Keyword.for("async"), Keyword.for("fn")], parse_fn], [Keyword.for("fn"), parse_fn], [[Keyword.for("tilde"), Keyword.for("open_sq")], parse_default_vector_syntax], [[Keyword.for("tilde"), Keyword.for("open_b")], parse_default_record_syntax], [[Keyword.for("tilde"), Keyword.for("id"), Keyword.for("open_b")], parse_record_syntax], [[Keyword.for("tilde"), Keyword.for("id"), Keyword.for("open_sq")], parse_vector_syntax]]);
 function parse_single_expr(tokens) {
 return call.bind(SINGLE_EXPR_PARSE_MAP)(tokens);}
 function parse_1_2_expr(tokens) {
@@ -1515,7 +1503,7 @@ return "";
 } else if (equals__q.call(at.bind(branch)(Keyword.for("type")), Keyword.for("else"))) {
 return str(" else {\n", eval_ast(or.call(at.bind(branch)(Keyword.for("body")), () => [])), "\n}");
 } else {
-assert__b(equals__q.call(at.bind(branch)(Keyword.for("type")), Keyword.for("else_if")), 1173, 13, `equals__q.call(at.bind(branch)(Keyword.for("type")), Keyword.for("else_if"))`,);
+assert__b(equals__q.call(at.bind(branch)(Keyword.for("type")), Keyword.for("else_if")), 1191, 13, `equals__q.call(at.bind(branch)(Keyword.for("type")), Keyword.for("else_if"))`,);
 return str(" else if (", eval_expr(at.bind(branch)(Keyword.for("expr"))), ") {\n", eval_ast(or.call(at.bind(branch)(Keyword.for("pass")), () => [])), "\n}", eval_if_branch(at.bind(branch)(Keyword.for("fail"))));
 };}
 function eval_if({expr, pass, fail}) {
@@ -1633,6 +1621,10 @@ function eval_keyword_record_entry({name, expr}) {
 return str("[", eval_keyword(new ObjectLiteral({value: str(":", name)})), ", ", eval_expr(expr), "]");}
 function eval_record_entry(node) {
 return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("regular_record_entry"), eval_regular_record_entry], [Keyword.for("keyword_record_entry"), eval_keyword_record_entry]])))(node);}
+function eval_default_record_syntax({constructor_name, entries}) {
+return str("construct_record.call(Dict, [", map_join.bind(entries)(eval_record_entry, ", "), "])");}
+function eval_default_vector_syntax({entries}) {
+return str("construct_vector.call(Vec, [", map_join.bind(entries)(eval_expr, ", "), "])");}
 function eval_record_syntax({constructor_name, entries}) {
 return str("construct_record.call(", constructor_name, ", ", "[", map_join.bind(entries)(eval_record_entry, ", "), "]", ")");}
 function eval_vector_syntax({constructor_name, entries}) {
@@ -1684,7 +1676,7 @@ return str(eval_expr(lhs), " = ", call.bind(all_ops_to_method)(op), ".call(", ev
 function eval_prefix_inclusive_range({expr}) {
 return str("new IRange(-Infinity, ", eval_expr(expr), ")");}
 function eval_expr(node) {
-return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("str"), eval_str], [Keyword.for("regex_lit"), eval_regex_lit], [Keyword.for("decorator"), eval_decorator], [Keyword.for("keyword"), eval_keyword], [Keyword.for("and_dot"), eval_and_dot], [Keyword.for("prefix_inclusive_range"), eval_prefix_inclusive_range], [Keyword.for("partial_fn_call"), eval_partial_fn_call], [Keyword.for("partial_obj_dyn_access"), eval_partial_obj_dyn_access], [Keyword.for("property_lookup"), eval_property_lookup], [Keyword.for("id_lookup"), eval_id_lookup], [Keyword.for("fn_call"), eval_fn_call], [Keyword.for("num"), eval_num], [Keyword.for("big_int"), eval_big_int], [Keyword.for("array"), eval_array], [Keyword.for("math_op"), eval_math_op], [Keyword.for("double_equals"), eval_double_equals], [Keyword.for("not_equals"), eval_not_equals], [Keyword.for("not"), eval_not], [Keyword.for("fn"), eval_fn], [Keyword.for("bind"), eval_bind], [Keyword.for("anon_arg_id"), eval_anon_arg_id], [Keyword.for("set"), eval_set], [Keyword.for("obj_lit"), eval_obj_lit], [Keyword.for("bind_this"), eval_bind_this], [Keyword.for("dynamic_access"), eval_dynamic_access], [Keyword.for("new"), eval_new], [Keyword.for("triple_equals"), eval_triple_equals], [Keyword.for("triple_not_equals"), eval_triple_not_equals], [Keyword.for("spread"), eval_spread], [Keyword.for("is"), eval_is], [Keyword.for("and_and"), eval_and_and], [Keyword.for("or_or"), eval_or_or], [Keyword.for("snd_assign"), eval_snd_assign], [Keyword.for("await"), eval_await], [Keyword.for("yield"), eval_yield], [Keyword.for("record_syntax"), eval_record_syntax], [Keyword.for("vector_syntax"), eval_vector_syntax], [Keyword.for("paren_expr"), eval_paren_expr], [Keyword.for("unapplied_math_op"), eval_unapplied_math_op], [Keyword.for("unapplied_and_and"), eval_unapplied_and_and], [Keyword.for("unapplied_or_or"), eval_unapplied_or_or], [Keyword.for("shorthand_anon_fn"), eval_shorthand_anon_fn], [Keyword.for("inclusive_range"), eval_inclusive_range], [Keyword.for("exclusive_range"), eval_exclusive_range], [Keyword.for("keyof"), eval_keyof], [Keyword.for("op_eq"), eval_op_eq]])))(node);}
+return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("str"), eval_str], [Keyword.for("regex_lit"), eval_regex_lit], [Keyword.for("decorator"), eval_decorator], [Keyword.for("keyword"), eval_keyword], [Keyword.for("and_dot"), eval_and_dot], [Keyword.for("prefix_inclusive_range"), eval_prefix_inclusive_range], [Keyword.for("partial_fn_call"), eval_partial_fn_call], [Keyword.for("partial_obj_dyn_access"), eval_partial_obj_dyn_access], [Keyword.for("property_lookup"), eval_property_lookup], [Keyword.for("id_lookup"), eval_id_lookup], [Keyword.for("fn_call"), eval_fn_call], [Keyword.for("num"), eval_num], [Keyword.for("big_int"), eval_big_int], [Keyword.for("array"), eval_array], [Keyword.for("math_op"), eval_math_op], [Keyword.for("double_equals"), eval_double_equals], [Keyword.for("not_equals"), eval_not_equals], [Keyword.for("not"), eval_not], [Keyword.for("fn"), eval_fn], [Keyword.for("bind"), eval_bind], [Keyword.for("anon_arg_id"), eval_anon_arg_id], [Keyword.for("set"), eval_set], [Keyword.for("obj_lit"), eval_obj_lit], [Keyword.for("bind_this"), eval_bind_this], [Keyword.for("dynamic_access"), eval_dynamic_access], [Keyword.for("new"), eval_new], [Keyword.for("triple_equals"), eval_triple_equals], [Keyword.for("triple_not_equals"), eval_triple_not_equals], [Keyword.for("spread"), eval_spread], [Keyword.for("is"), eval_is], [Keyword.for("and_and"), eval_and_and], [Keyword.for("or_or"), eval_or_or], [Keyword.for("snd_assign"), eval_snd_assign], [Keyword.for("await"), eval_await], [Keyword.for("yield"), eval_yield], [Keyword.for("default_record_syntax"), eval_default_record_syntax], [Keyword.for("default_vector_syntax"), eval_default_vector_syntax], [Keyword.for("record_syntax"), eval_record_syntax], [Keyword.for("vector_syntax"), eval_vector_syntax], [Keyword.for("paren_expr"), eval_paren_expr], [Keyword.for("unapplied_math_op"), eval_unapplied_math_op], [Keyword.for("unapplied_and_and"), eval_unapplied_and_and], [Keyword.for("unapplied_or_or"), eval_unapplied_or_or], [Keyword.for("shorthand_anon_fn"), eval_shorthand_anon_fn], [Keyword.for("inclusive_range"), eval_inclusive_range], [Keyword.for("exclusive_range"), eval_exclusive_range], [Keyword.for("keyof"), eval_keyof], [Keyword.for("op_eq"), eval_op_eq]])))(node);}
 function eval_return({expr}) {
 return str("return ", eval_expr(expr));}
 function eval_protocol({name}) {

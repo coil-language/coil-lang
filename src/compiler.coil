@@ -16,7 +16,6 @@ impl Symbol.iterator for CollectionView = fn*() {
     yield this.collection[i]
   }
 }
-// } = this.collection.slice(this.idx)::iter()
 
 impl Printable for CollectionView = fn() = this.collection.skip(this.idx)
 
@@ -842,6 +841,22 @@ fn parse_record_entry(tokens) = ~ParseMap{
   _ => parse_regular_record_entry
 }::call(tokens)
 
+fn parse_default_record_syntax(tokens) = ~Parser[
+  ~Init[{type: :default_record_syntax}]
+  ~Chomp[:tilde]
+  ~Chomp[:open_b]
+  ~Until[:close_b parse_record_entry :entries]
+  ~Chomp[:close_b]
+]::call(tokens)
+
+fn parse_default_vector_syntax(tokens) = ~Parser[
+  ~Init[{type: :default_vector_syntax}]
+  ~Chomp[:tilde]
+  ~Chomp[:open_sq]
+  ~Until[:close_sq parse_expr :entries]
+  ~Chomp[:close_sq]
+]::call(tokens)
+
 fn parse_record_syntax(tokens) = ~Parser[
   ~Init[{type: :record_syntax}]
   ~Chomp[:tilde]
@@ -899,6 +914,8 @@ let SINGLE_EXPR_PARSE_MAP = ~ParseMap{
   [:hash :open_b] => parse_set
   [:async :fn] => parse_fn
   :fn => parse_fn
+  [:tilde :open_sq] => parse_default_vector_syntax
+  [:tilde :open_b] => parse_default_record_syntax
   [:tilde :id :open_b] => parse_record_syntax
   [:tilde :id :open_sq] => parse_vector_syntax
 }
@@ -1382,9 +1399,21 @@ fn eval_record_entry(node) = node::at(:type)::pipe(~Map{
   :keyword_record_entry => eval_keyword_record_entry
 })::call(node)
 
+fn eval_default_record_syntax({constructor_name entries}) =
+  str("construct_record.call(Dict, [" entries::map_join(eval_record_entry ", ") "])")
+
+fn eval_default_vector_syntax({entries}) =
+  str("construct_vector.call(Vec, [" entries::map_join(eval_expr ", ") "])")
+
 fn eval_record_syntax({constructor_name entries}) =
-  str("construct_record.call("
-        constructor_name ", "
+  str("construct_record.call(" constructor_name ", "
+        // should we consider not creating an intermediate array here
+        // I don't really understand how fn(...args) works if 
+        // there's a perf gain there or not.
+        // Feels like speculation, but this is a big breaking change
+        // so we should do it asap if we want to.
+        // This goes the same `eval_vector_syntax`,
+        // `eval_default_vector_syntax`, `eval_default_record_syntax`
         "[" entries::map_join(eval_record_entry ", ") "]"
       ")")
 
@@ -1498,6 +1527,8 @@ fn eval_expr(node) = node::at(:type)::pipe(~Map{
   :snd_assign => eval_snd_assign
   :await => eval_await
   :yield => eval_yield
+  :default_record_syntax => eval_default_record_syntax
+  :default_vector_syntax => eval_default_vector_syntax
   :record_syntax => eval_record_syntax
   :vector_syntax => eval_vector_syntax
   :paren_expr => eval_paren_expr
