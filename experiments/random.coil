@@ -1,0 +1,33 @@
+// ideas for randomly generating data.
+// could be taken to extremes to something like faker.js
+
+protocol Random
+
+define Random for :float = fn() = Math.random() * 100
+define Random for :int = fn() = Math.floor(Math.random() * 100)
+
+impl Random for Set = fn(initial) {
+  fn rand_idx() = Math.floor(Math.random() * this.size)
+  let indices = (0..:int::random())::map(this::rand_idx)::as_set()::sort()
+  let prev_idx = indices::first()
+  let arr = ::as_array()
+  let output = initial
+  for idx of indices {
+    output = output::push(arr[idx])
+  }
+  return output
+}
+
+fn random(...args) = this[Random](...args)
+
+console.log(:float::random())
+
+@def_record
+fn Fake(@entries) {}
+
+impl Random for Fake = fn() = ::map(fn([key, kind]) = [key, kind::random()])::as_obj()
+
+~Fake{name: :name
+      age: :pos_int}
+
+console.log(char_alpha_numeric?::random(""))
