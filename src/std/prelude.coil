@@ -767,46 +767,6 @@ fn def_record(Constructor, key) {
   return Constructor
 }
 
-// Consider removing this or rethinking it
-protocol Matches
-
-fn matches?(value) = this[Matches](value)
-
-impl Matches for Object = fn(value) {
-  if typeof(this) != "object" && typeof(this) != "function" {
-    return this == value
-  } else if Call keyof this {
-    return this::call(value)
-  } else {
-    return this == value
-  }
-}
-
-impl Matches for Array = fn(arr) =
-  arr::len() == this::len() &&
-  this::zip(arr)::all?(fn([pattern, val]) = pattern::matches?(val))
-
-impl Matches for Set = fn(value) = this::has?(value)
-
-impl Matches for Underscore = fn(value) {
-  if value::nil?() {
-    return false
-  } else {
-    return this::call(value)
-  }
-}
-
-impl Matches for ObjectLiteral = fn(record) =
-  ::all?(fn(key, pattern) = pattern::matches?(record::at(key::as_keyword())))
-
-@def_record
-fn Match(@entries) {}
-
-impl Call for Match = fn(val) =
-  this.entries
-    ::find(fn([pattern, _ret]) = pattern::matches?(val))
-    ::pipe(1)
-
 // string helpers
 let char_alpha? = ("a".."z")::as_set() + ("A".."Z")::as_set()
 let char_numeric? = ("0".."9")::as_set()
@@ -903,8 +863,6 @@ define :Inc for globalThis = Inc
 define :inc for globalThis = inc
 define :IRange for globalThis = IRange
 define :ERange for globalThis = ERange
-define :Matches for globalThis = Matches
-define :matches? for globalThis = matches?
 define :alpha? for globalThis = alpha?
 define :alpha_numeric? for globalThis = alpha_numeric?
 define :def_vector for globalThis = def_vector
