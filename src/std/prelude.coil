@@ -196,6 +196,8 @@ fn reject(f) = this::keep(compose(f, !_))
 fn any?(...fns) = this::iter()[Iterable].any?.call(this, compose(...fns))
 fn all?(...fns) = this::iter()[Iterable].all?.call(this, compose(...fns))
 fn reduce(f, start) = this::iter()[Iterable].reduce.call(this, f::call, start)
+fn sort() = this::iter()[Iterable].sort.call(this)
+fn sort_by(f) = this::iter()[Iterable].sort.call(this, f::call)
 
 // RECORD AND VECTOR PROTOCOLS
 
