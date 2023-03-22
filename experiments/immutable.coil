@@ -175,4 +175,17 @@ impl Plus for DictNode = fn(other) = this::merge(other)
 impl Plus for DictPushNode = fn(other) = this::merge(other)
 impl Plus for DictMergeNode = fn(other) = this::merge(other)
 
-~[:id]::log()
+let arr = ~[]
+
+for _ of 0..100000 {
+  let rand_array = Array["from"]({length: 50})::map(Math.random)::as_array()::pipe(#(new VecNode(&)))
+  arr += rand_array
+}
+
+
+// let arr = []
+
+// for _ of 0..100000 {
+//   let rand_array = Array["from"]({length: 50})::map(Math.random)
+//   arr = [...arr, ...rand_array]
+// }
