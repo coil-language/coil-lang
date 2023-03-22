@@ -2,6 +2,8 @@
 
 // Immutable Vec implementation
 
+let MAX_SIZE = 500
+
 fn VecMergeNode(@left, @right) {
   this.length = left.length + right.length
 }
@@ -26,6 +28,10 @@ impl Symbol.iterator for VecMergeNode = fn*() {
   yield* this.right
 }
 
+// Should we consider making a VecMergeNode vs MaxVecMergeNode
+// to avoid having to make the if this.right::len() > MAX_SIZE
+// on every concat.
+
 impl Vector for VecMergeNode = {
   fn len() = this.length
   fn at(idx) {
@@ -38,14 +44,32 @@ impl Vector for VecMergeNode = {
   // maybe we can copy .right & append up to a certain 
   // point, because small lists should be fast to shallow copy
   // better than having very nested trees later.
-  fn push(item) = new VecPushNode(this, item)
-  fn concat(vec) = new VecMergeNode(this, vec)
+  fn push(item) {
+    if this.right::len() === MAX_SIZE {  
+      return new VecPushNode(this, item)
+    } else {
+      // we are assuming that this.left is "full"
+      return new VecMergeNode(this.left, [...this.right, item])
+    }
+  }
+  fn concat(vec) {
+    // again we are assuming that this.left is "full"
+    if this.right::len() > MAX_SIZE {  
+      return new VecMergeNode(this, vec)
+    } else {
+      return new VecMergeNode(this.left, [...this.right, ...vec])
+    }
+  }
   fn last() = this.right::last()
   fn first() = this.left::first()
   fn has?(val) = this.left::has?(val) || this.right::has?(val)
   fn empty?() = false
 }
 
+// we could just remove the notion of a PushNode all together
+// it seems like a premature optimization that actually will make ::concat very slow
+// maybe?
+// its possible that slowness will happen with MergeNode aswell.
 impl Vector for VecPushNode = {
   fn len() = this.length
   fn at(idx) {
@@ -57,7 +81,22 @@ impl Vector for VecPushNode = {
   }
   fn push(item) = new VecMergeNode(this.left, [this.node, item])
   // we can probably optimize this for cases that vec is a small array/vec
-  fn concat(vec) = new VecMergeNode(this, vec)
+  fn concat(vec) {
+    if (vec::len() + this.left::len() + 1) === MAX_SIZE {
+      return new VecMergeNode(this, vec)
+    }
+    if (vec::len() + this.left::len() + 1) > MAX_SIZE {
+      // this could break the assumption that this.left is "full"..
+      // meaning that the tree leafs could potentially have a lot of small lists.
+      // What we could do is break up vec to make the following cond be true
+      // this.left::len() + new_vec::len() + 1 == MAX_SIZE
+      let new_vec_idx = MAX_SIZE - vec::len()
+      let [new_left, new_vec] = [vec::take(new_vec_idx), vec::skip(new_vec_idx)]
+      return new VecMergeNode([...this.left, this.node, ...new_left], new_vec)
+    } else {
+      return new VecNode([...this.left, this.node, ...vec])
+    }
+  }
   fn last() = this.node
   fn first() = this.left::first()
   fn has?(val) = this.node == val || this.left::has?(val)
@@ -175,17 +214,26 @@ impl Plus for DictNode = fn(other) = this::merge(other)
 impl Plus for DictPushNode = fn(other) = this::merge(other)
 impl Plus for DictMergeNode = fn(other) = this::merge(other)
 
-let arr = ~[]
+// vecs are essentially trees of arrays
+fn as_vec() = Vec::construct_vector(this::as_array())
+fn as_dict() = Dict::construct_record(this::as_array())
+
+let vec = ~[]
 
 for _ of 0..100000 {
-  let rand_array = Array["from"]({length: 50})::map(Math.random)::as_array()::pipe(#(new VecNode(&)))
-  arr += rand_array
+  let rand_vec = Array["from"]({length: 50})::map(Math.random)::as_vec()
+  vec += rand_vec
 }
 
+// so uh, this feels wrong :)
+console.log(vec)
+// ~[:id :name :age]::skip(2)::as_vec()::log()
 
 // let arr = []
+// let rand_array = Array["from"]({length: 500})::map(Math.random)
+// arr = [...arr, ...rand_array]
 
-// for _ of 0..100000 {
-//   let rand_array = Array["from"]({length: 50})::map(Math.random)
-//   arr = [...arr, ...rand_array]
-// }
+
+// let arr = ~[]
+// let rand_array = Array["from"]({length: 500})::map(Math.random)::as_array()::pipe(#(new VecNode(&)))
+// arr += rand_array
