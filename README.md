@@ -1,118 +1,59 @@
 # Coil-Lang
 
-[try it out](https://coil-lang.netlify.app/)
-
-Coil is an extensible dynamically typed language.
-
-Featuring:
-
-- Protocol-based Polymorphism
-- Rich Symbol.iterator based `Iterable` protocol which allows you to use `map`, `keep` (filter), `any?` (some), and many more on virtually any iterator -- including generators.
-- Bind operator to enable clear function chaining
-- Strong data literal syntax beyond just Arrays and Object Literals - Sets, custom Vectors & custom Records.
-- Powerful DSL capabilities without need for macros
+Coil is a delightful small yet expressive dynamic language.
 
 ```
-fn tie?() =
-  ::iter()
-  ::map(:status {won: 10, lost: -10})
-  ::reduce(+) == 0
-
-[{status: "won"}, {status: "lost"}]
-  ::tie?() // true
-```
-
-## Data Literals
-
-### Strings
-
-```
-"this is a string"
-
-"strings can be
-
-multi-line"
-```
-
-### Numbers
-
-```
--123.123
-```
-
-### Booleans
-
-```
-true
-false
-```
-
-### Keywords
-
-```
-:this_is_a_keyword
-```
-
-### Arrays
-
-```
-["string", :keyword, 123]
-```
-
-### Object Literals
-
-```
-{ key: "value" }
-```
-
-### Set Notation
-
-```
-#{1 2 3}
-```
-
-## Functions
-
-```
-fn add(a, b) {
-  return a + b
+let score_to_letter_grade = ~CallMap{
+  0...50 => :F
+  50...60 => :D
+  60...70 => :C
+  70...80 => :B
+  80.. => :A
 }
+
+let top_students =
+  [{name: "marcelle", score: 53} {name: "jill", score: 80} {name: "john", score: 92}]
+    ::keep(:score score_to_letter_grade #{:A :B})
+    ::map(:name)
+    ::as_set() // #{"john" "jill"}
 ```
+
+# Key Principles
 
 ## Bind operator
 
-```
-fn pos?() = this >= 0
-console.log(1::pos?()) // true
-```
-
-## Differences from JavaScript
-
-### Truthiness
-
-Truthiness is defined as anything that isn't null, undefined, or false.
+The bind operator is a very simple syntactic sugar for `Function.prototype.bind`.
 
 ```
-if "" {
-  console.log("this works!")
+a::b == b.bind(a)
+a::b(10) == b.bind(a)(10)
+```
+
+This is really powerful because it lets you chain function calls without being tied to object properties/methods.
+
+## Data's Primary Function
+
+In coil there's a notion that every piece of data has a primary function.
+
+Records map from keys to values, arrays from indices to entries, sets let you know if a value exists within it..
+
+To do that, there is a protocol called "Call", it exposes 1 function "call"
+
+```
+{name: "Marcelle"}::call(:name) // "Marcelle"
+[:one :two :three]::call(0) // :one
+#{:A :B :C}::call(:A) // :A
+```
+
+This protocol can be extended, here is the complete implementation of CallMap that was used in the first example.
+
+```
+@def_record // to let you use the ~CallMap{} syntax, instead of new CallMap(..)
+fn CallMap(@entries) {}
+impl Call for CallMap = fn(value) =
+  ::find(fn([callable, _]) = callable::call(value))
+  ::pipe(fn([_, val]) = val)
 }
-if 0 {
-  console.log("this works too!")
-}
 ```
 
-### Value Equality
-
-In coil, we maintain the `===` strict equality operator without changes, but `==` uses the `Equal` protocol.
-
-This allows us to have real deep value-based equality.
-
-```
-{ a: [{ b: [10] }] } == { a: [{ b: [10] }] } // true
-```
-
-### No Implicit Math Type Coercion
-
-```
-1 + "1" // throws TypeError
-```
+When you combine this with the custom record & vector syntax, you get very expressive & clear code. "Here's what the data looks like, and this is what does."

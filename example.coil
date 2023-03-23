@@ -1,7 +1,17 @@
-let output = 0
-
-for i of 0..10000000 {
-  output += i
+fn IncSet(elems) { this.map = elems::map(fn(val) = [val, false])::as_map() }
+impl Call for IncSet = fn(val) {
+  if this.map.get(val) {
+    return false
+  } else {
+    this.map.set(val, true)
+    return true
+  }
 }
+fn as_inc_set() = new IncSet(this)
 
-console.log(output)
+fn distinct() = ::keep(::as_inc_set())
+
+[1 2 2 3 3 4]
+  ::distinct()
+  ::as_array()
+  ::log()

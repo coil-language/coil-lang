@@ -184,7 +184,7 @@ fn zip(...iterables) = this::iter()[Iterable].zip.call(this, ...iterables)
 fn map(...fns) = this::iter()[Iterable].map.call(this, compose(...fns))
 fn flat_map(...fns) = this::iter()[Iterable].flat_map.call(this, compose(...fns))
 fn find(f) = this::iter()[Iterable].find.call(this, f::call)
-fn keep(f) = this::iter()[Iterable].keep.call(this, f::call)
+fn keep(...fns) = this::iter()[Iterable].keep.call(this, compose(...fns))
 fn reject(f) = this::keep(compose(f, !_))
 fn any?(...fns) = this::iter()[Iterable].any?.call(this, compose(...fns))
 fn all?(...fns) = this::iter()[Iterable].all?.call(this, compose(...fns))
@@ -571,6 +571,18 @@ fn log(...args) {
   return this
 }
 
+protocol ToString
+
+impl ToString for Object = fn() = this.toString()
+
+impl ToString for GeneratorFunction = fn() {
+  let output = ""  
+  for char of this {
+    output += char
+  }
+  return output
+}
+
 // Global Helpers
 
 fn str(...args) = args.join("")
@@ -596,7 +608,7 @@ fn as_num() = Number(this)
 @impl_callable
 fn as_str() {
   if this::nil?() { return "" }
-  else { return this.toString() }
+  else { return this[ToString]() }
 }
 @impl_callable
 fn exists?() = !this::nil?()
@@ -763,6 +775,12 @@ let char_numeric? = ("0".."9")::as_set()
 let char_alpha_numeric? = char_alpha? + char_numeric?
 fn alpha?() = this::all?(char_alpha?)
 fn alpha_numeric?() = this::all?(char_alpha_numeric?)
+
+@def_record
+fn CallMap(@entries) {}
+impl Call for CallMap = fn(value) =
+  ::find(fn([callable, _]) = callable::call(value))
+  ::pipe(fn([_, val]) = val)
 
 // GLOBAL EXPORTS
 
