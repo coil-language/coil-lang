@@ -48,7 +48,7 @@ To do that, there is a protocol called "Call", it exposes 1 function "call"
 This protocol can be extended, here is the complete implementation of CallMap that was used in the first example.
 
 ```
-@def_record // to let you use the ~CallMap{} syntax, instead of new CallMap(..)
+@def_record
 fn CallMap(@entries) {}
 impl Call for CallMap = fn(value) =
   ::find(fn([callable, _]) = callable::call(value))
