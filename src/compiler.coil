@@ -56,7 +56,7 @@ impl Call for Lexer = fn(str) {
         break
       }
     }
-    assert! found
+    if !found { raise!(new Error("Not token matched.")) }
   }
 
   return tokens
@@ -95,7 +95,6 @@ let lexer = ~Lexer{
   /^yield\b/ => :yield
   /^async\b/ => :async
   /^await\b/ => :await
-  /^assert\!/ => :assert!
   /^new\b/ => :new
   /^keyof\b/ => :keyof
   /^\=\>/ => :arrow
@@ -1034,14 +1033,6 @@ fn parse_for_loop(tokens) = ~Parser[
   block(:body)
 ]::call(tokens)
 
-fn parse_assert(tokens) = ~Parser[
-  ~Init[{type: :assert}]
-  ~Chomp[:assert!]
-  ~Then[fn(tokens) = [tokens::first() tokens] :token]
-  ~Then[parse_expr :expr]
-  ~Optional[:string_lit parse_str :msg]
-]::call(tokens)
-
 fn parse_loop(tokens) = ~Parser[
   ~Init[{type: :loop}]
   ~Chomp[:loop]
@@ -1134,7 +1125,6 @@ fn parse_statement(tokens) = ~ParseMap{
   :let => parse_let
   :for => parse_for_loop
   :unless => parse_unless
-  :assert! => parse_assert
   :define => parse_define
   :try => parse_try
   :protocol => parse_protocol
@@ -1197,12 +1187,15 @@ fn eval_if_branch(branch) {
       eval_ast(branch::at(:body) || [])
     "\n}")
   } else {
-    assert! branch::at(:type) == :else_if
-    return str(
-      " else if (" eval_expr(branch::at(:expr)) ") {\n"
-        eval_ast(branch::at(:pass) || [])
-      "\n}" eval_if_branch(branch::at(:fail))
-    )
+    if branch::at(:type) == :else_if {
+      return str(
+        " else if (" eval_expr(branch::at(:expr)) ") {\n"
+          eval_ast(branch::at(:pass) || [])
+        "\n}" eval_if_branch(branch::at(:fail))
+      )
+    } else {
+      raise!(new Error("Expected else if"))
+    }
   }
 }
 
@@ -1561,15 +1554,6 @@ fn eval_for_loop({is_await? assign_expr iterable_expr body}) =
 fn eval_id_assign({name, expr}) =
   str(resolve_name(name) " = " eval_expr(expr))
 
-fn eval_assert({expr token msg}) =
-  str(resolve_name("assert!") "("
-      eval_expr(expr) ", "
-      token::at(:line) ", "
-      token::at(:col) ", "
-      "`" eval_expr(expr) "`,"
-      msg
-      ")")
-
 fn eval_while_loop({test_expr body}) =
   str("while (" eval_expr(test_expr) ") {\n"
       eval_ast(body) "\n"
@@ -1645,7 +1629,6 @@ fn eval_statement(node) = node::at(:type)::pipe(~Map{
   :define_for => eval_define_for
   :for_loop => eval_for_loop
   :id_assign => eval_id_assign
-  :assert => eval_assert
   :while_loop => eval_while_loop
   :loop => eval_loop
   :while_let_loop => eval_while_let_loop

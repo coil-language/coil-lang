@@ -258,6 +258,14 @@ impl Vector for Array = {
   fn push(value) = [...this, value]
   fn concat(other) = this::merge_iterator(other)
   fn has?(value) = this::any?(_ == value)
+  fn update_at(idx, f) {
+    let [before after] = [this::take(idx), this::skip(idx + 1)]
+    return [...before, f(::at(idx)), ...after]
+  }
+  fn insert_at(idx, val) {
+    let [before after] = [this::take(idx), this::skip(idx + 1)]
+    return [...before, val, ...after]
+  }
   fn replace(old_value, new_value) =
     this::map(fn(val) {
       if val == old_value { return new_value }
@@ -300,6 +308,10 @@ fn concat(other) = this[Vector].concat.call(this, other)
 fn has?(value) = (this[Vector] || this[Record]).has?.call(this, value)
 fn replace(old_value, new_value) =
   this[Vector].replace.call(this, old_value, new_value)
+fn update_at(idx, callable) =
+  this[Vector].update_at.call(this, idx, callable::call)
+fn insert_at(idx, value) =
+  this[Vector].insert_at.call(this, idx, value)
 @impl_callable
 fn len() = (this[Vector] || this[Record]).len.call(this)
 @impl_callable
@@ -375,113 +387,113 @@ impl Or for Object = fn(thunk) = js_or(this, thunk)
 impl Plus for Set = fn(other_set) = this::concat(other_set)
 impl Plus for Array = fn(arr) = this::concat(arr)
 impl Plus for Number = fn(other) {
-  assert! typeof(other) === "number"
-  return js_plus(this, other)
+  if typeof(other) === "number" { return js_plus(this, other) }
+  else { raise!("Expected number") }
 }
 impl Minus for Number = fn(other) {
-  assert! typeof(other) === "number"
-  return js_minus(this, other)
+  if typeof(other) === "number" { return js_minus(this, other) }
+  else { raise!("Expected number") }
 }
 impl Times for Number = fn(other) {
-  assert! typeof(other) === "number"
-  return js_times(this, other)
+  if typeof(other) === "number" { return js_times(this, other) }
+  else { raise!("Expected number") }
 }
 impl Divide for Number = fn(other) {
-  assert! typeof(other) === "number"
-  return js_divide(this, other)
+  if typeof(other) === "number" { return js_divide(this, other) }
+  else { raise!("Expected number") }
 }
 impl Exponent for Number = fn(other) {
-  assert! typeof(other) === "number"
-  return js_exponent(this, other)
+  if typeof(other) === "number" { return js_exponent(this, other) }
+  else { raise!(new Error("Expected number")) }
 }
 impl Mod for Number = fn(other) {
-  assert! typeof(other) === "number"
-  return js_mod(this, other)
+  if typeof(other) === "number" { return js_mod(this, other) }
+  else { raise!(new Error("Expected number")) }
 }
 impl Plus for BigInt = fn(other) {
-  assert! typeof(other) === "bigint"
-  return js_plus(this, other)
+  if typeof(other) === "bigint" { return js_plus(this, other) }
+  else { raise!(new Error("Expected bigint")) }
 }
 impl Minus for BigInt = fn(other) {
-  assert! typeof(other) === "bigint"
-  return js_minus(this, other)
+  if typeof(other) === "bigint" { return js_minus(this, other) }
+  else { raise!(new Error("Expected bigint")) }
 }
 impl Times for BigInt = fn(other) {
-  assert! typeof(other) === "bigint"
-  return js_times(this, other)
+  if typeof(other) === "bigint" { return js_times(this, other) }
+  else { raise!(new Error("Expected bigint")) }
 }
 impl Divide for BigInt = fn(other) {
-  assert! typeof(other) === "bigint"
-  return js_divide(this, other)
+  if typeof(other) === "bigint" { return js_divide(this, other) }
+  else { raise!(new Error("Expected bigint")) }
 }
 impl Exponent for BigInt = fn(other) {
-  assert! typeof(other) === "bigint"
-  return js_exponent(this, other)
+  if typeof(other) === "bigint" { return js_exponent(this, other) }
+  else { raise!(new Error("Expected bigint")) }
 }
 impl Mod for BigInt = fn(other) {
-  assert! typeof(other) === "bigint"
-  return js_mod(this, other)
+  if typeof(other) === "bigint" { return js_mod(this, other) }
+  else { raise!(new Error("Expected bigint")) }
 }
 impl Comparable for Number = {
   fn greater_than_eq(other) {
-    assert! typeof(other) === "number"
-    return js_greater_than_eq(this, other)
+    if typeof(other) === "number" { return js_greater_than_eq(this, other) }
+    else { raise!(new Error("Expected number")) }
   }
   fn less_than_eq(other) {
-    assert! typeof(other) === "number"
-    return js_less_than_eq(this, other)
+    if typeof(other) === "number" { return js_less_than_eq(this, other) }
+    else { raise!(new Error("Expected number")) }
   }
   fn greater_than(other) {
-    assert! typeof(other) === "number"
-    return js_greater_than(this, other)
+    if typeof(other) === "number" { return js_greater_than(this, other) }
+    else { raise!(new Error("Expected number")) }
   }
   fn less_than(other) {
-    assert! typeof(other) === "number"
-    return js_less_than(this, other)
+    if typeof(other) === "number" { return js_less_than(this, other) }
+    else { raise!(new Error("Expected number")) }
   }
 }
 impl Comparable for BigInt = {
   fn greater_than_eq(other) {
-    assert! typeof(other) === "bigint"
-    return js_greater_than_eq(this, other)
+    if typeof(other) === "bigint" { return js_greater_than_eq(this, other) }
+    else { raise!(new Error("Expected bigint")) }
   }
   fn less_than_eq(other) {
-    assert! typeof(other) === "bigint"
-    return js_less_than_eq(this, other)
+    if typeof(other) === "bigint" { return js_less_than_eq(this, other) }
+    else { raise!(new Error("Expected bigint")) }
   }
   fn greater_than(other) {
-    assert! typeof(other) === "bigint"
-    return js_greater_than(this, other)
+    if typeof(other) === "bigint" { return js_greater_than(this, other) }
+    else { raise!(new Error("Expected bigint")) }
   }
   fn less_than(other) {
-    assert! typeof(other) === "bigint"
-    return js_less_than(this, other)
+    if typeof(other) === "bigint" { return js_less_than(this, other) }
+    else { raise!(new Error("Expected bigint")) }
   }
 }
 impl Plus for String = fn(other) {
-  assert! typeof(other) === "string"
-  return js_plus(this, other)
+  if typeof(other) === "string" { return js_plus(this, other) }
+  else { raise!(new Error("Expected string")) }
 }
 impl Times for String = fn(amount) {
-  assert! typeof(amount) === "number"
-  return this.repeat(amount)
+  if typeof(amount) === "number" { return this.repeat(amount) }
+  else { raise!(new Error("Expected number")) }
 }
 impl Comparable for String = {
   fn greater_than_eq(other) {
-    assert! typeof(other) === "string"
-    return js_greater_than_eq(this, other)
+    if typeof(other) === "string" { return js_greater_than_eq(this, other) }
+    else { raise!(new Error("Expected string")) }
   }
   fn less_than_eq(other) {
-    assert! typeof(other) === "string"
-    return js_less_than_eq(this, other)
+    if typeof(other) === "string" { return js_less_than_eq(this, other) }
+    else { raise!(new Error("Expected string")) }
   }
   fn greater_than(other) {
-    assert! typeof(other) === "string"
-    return js_greater_than(this, other)
+    if typeof(other) === "string" { return js_greater_than(this, other) }
+    else { raise!(new Error("Expected string")) }
   }
   fn less_than(other) {
-    assert! typeof(other) === "string"
-    return js_less_than(this, other)
+    if typeof(other) === "string" { return js_less_than(this, other) }
+    else { raise!(new Error("Expected string")) }
   }
 }
 
