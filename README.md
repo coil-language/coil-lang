@@ -53,7 +53,6 @@ fn CallMap(@entries) {}
 impl Call for CallMap = fn(value) =
   ::find(fn([callable, _]) = callable::call(value))
   ::pipe(fn([_, val]) = val)
-}
 ```
 
 When you combine this with the custom record & vector syntax, you get very expressive & clear code. "Here's what the data looks like, and this is what does."
