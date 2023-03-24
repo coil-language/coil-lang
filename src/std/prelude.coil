@@ -611,6 +611,14 @@ fn as_str() {
   else { return this[ToString]() }
 }
 @impl_callable
+fn* as_gen_iter() {
+  if this::exists?() {
+    for elem of this {
+      yield elem
+    }
+  }
+}
+@impl_callable
 fn exists?() = !this::nil?()
 
 impl Negate for Set = fn() = #(!this.has(&))

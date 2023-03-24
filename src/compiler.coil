@@ -186,10 +186,19 @@ impl Printable for One = fn() = str("One(kw: " this.kw ", as: " this.as ")")
 fn Optional(@set_or_kw, @parse_fn, @as) {}
 impl ParseInstruction for Optional = fn([expr tokens]) {  
   if tokens::empty?() { return [expr tokens] }
+  // this is getting hairy, reimplementing ParseMap here..
+  fn check_set(type) =
+    ::any?(fn(val) {
+      if val == type {
+        return true
+      } else if Vector keyof val {
+        return val::has?(type)
+      }
+    })
   let {type} = tokens::first()
   if this.set_or_kw is Keyword && type == this.set_or_kw {
     return ~Then[this.parse_fn, this.as]::parse_step([expr tokens])
-  } else if this.set_or_kw is Set && this.set_or_kw::call(type) {
+  } else if this.set_or_kw is Set && this.set_or_kw::check_set(type) {
     return ~Then[this.parse_fn, this.as]::parse_step([expr tokens])
   } else {
     return [expr tokens]
@@ -296,7 +305,7 @@ impl ParseInstruction for Parser = fn(result) {
   for instruction of this.instructions {
     if instruction is AbortIf {
       if instruction.cond_fn::call(result) {
-        return null
+        return
       } else {
         continue
       }
@@ -314,7 +323,7 @@ impl Record for ParseMap = {
 }
 
 impl Call for ParseMap = fn(tokens, ...args) {
-  if tokens::empty?() { return null }
+  if tokens::empty?() { return }
 
   for [pattern parser] of this.entries {
     if pattern == _ {
@@ -1015,7 +1024,7 @@ let parse_protocol = ~Parser[
 let parse_return = ~Parser[
   ~Init[{type: :return}]
   ~Chomp[:return]
-  ~Then[parse_expr :expr]
+  ~Optional[SINGLE_EXPR_PARSE_MAP::keys() parse_expr :expr]
 ]
 
 let parse_await_modifier = ~Parser[
@@ -1535,7 +1544,13 @@ fn eval_expr(node) = node::at(:type)::pipe(~Map{
   :op_eq => eval_op_eq
 })::call(node)
 
-fn eval_return({expr}) = str("return " eval_expr(expr))
+fn eval_return({expr}) {
+  if expr {  
+    return str("return " eval_expr(expr))
+  } else {
+    return "return"
+  }
+}
 fn eval_protocol({name}) = str("const " resolve_name(name) " = Symbol(\"" name "\")")
 fn eval_impl_for({proto_expr constructor expr}) =
   str(constructor ".prototype[" eval_expr(proto_expr) "] = " eval_expr(expr))

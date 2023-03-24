@@ -315,8 +315,8 @@ function flat_map(...fns) {
 return iter.bind(this)()[Iterable].flat_map.call(this, compose(...fns));}
 function find(f) {
 return iter.bind(this)()[Iterable].find.call(this, call.bind(f));}
-function keep(f) {
-return iter.bind(this)()[Iterable].keep.call(this, call.bind(f));}
+function keep(...fns) {
+return iter.bind(this)()[Iterable].keep.call(this, compose(...fns));}
 function reject(f) {
 return keep.bind(this)(compose(f, negate.call(_)));}
 function any__q(...fns) {
@@ -778,6 +778,15 @@ return this[Printable]();
 let log = impl_callable(function log(...args) {
 console.log(...args, printable.bind(this)())
 return this;});
+const ToString = Symbol("ToString");
+Object.prototype[ToString] = function () {
+return this.toString();};
+GeneratorFunction.prototype[ToString] = function () {
+let output = "";
+for  (let char of this) {
+output = plus.call(output, char)
+};
+return output;};
 function str(...args) {
 return args.join("");}
 let nan__q = impl_callable(function nan__q() {
@@ -802,7 +811,13 @@ let as_str = impl_callable(function as_str() {
 if (truthy(nil__q.bind(this)())) {
 return "";
 } else {
-return this.toString();
+return this[ToString]();
+};});
+let as_gen_iter = impl_callable(function *as_gen_iter() {
+if (truthy(exists__q.bind(this)())) {
+for  (let elem of this) {
+yield elem
+};
 };});
 let exists__q = impl_callable(function exists__q() {
 return negate.call(nil__q.bind(this)());});
@@ -980,6 +995,13 @@ function alpha__q() {
 return all__q.bind(this)(char_alpha__q);}
 function alpha_numeric__q() {
 return all__q.bind(this)(char_alpha_numeric__q);}
+let CallMap = def_record(function CallMap(entries) {
+this.entries = entries;
+});
+CallMap.prototype[Call] = function (value) {
+return pipe.bind(find.bind(this)(function ([callable, _]) {
+return call.bind(callable)(value);}))(function ([_, val]) {
+return val;});};
 globalThis[Keyword.for("Call")] = Call;
 globalThis[Keyword.for("call")] = call;
 globalThis[Keyword.for("nil__q")] = nil__q;
@@ -1181,10 +1203,17 @@ Optional.prototype[ParseInstruction] = function ([expr, tokens]) {
 if (truthy(empty__q.bind(tokens)())) {
 return [expr, tokens];
 };
+function check_set(type) {
+return any__q.bind(this)(function (val) {
+if (truthy(equals__q.call(val, type))) {
+return true;
+} else if (Vector in val) {
+return has__q.bind(val)(type);
+};});}
 let {type} = first.bind(tokens)();
 if (truthy(and.call(this.set_or_kw instanceof Keyword, () => equals__q.call(type, this.set_or_kw)))) {
 return parse_step.bind(construct_vector.call(Then, [this.parse_fn, this.as]))([expr, tokens]);
-} else if (and.call(this.set_or_kw instanceof Set, () => call.bind(this.set_or_kw)(type))) {
+} else if (and.call(this.set_or_kw instanceof Set, () => check_set.bind(this.set_or_kw)(type))) {
 return parse_step.bind(construct_vector.call(Then, [this.parse_fn, this.as]))([expr, tokens]);
 } else {
 return [expr, tokens];
@@ -1296,7 +1325,7 @@ Parser.prototype[ParseInstruction] = function (result) {
 for  (let instruction of this.instructions) {
 if (truthy(instruction instanceof AbortIf)) {
 if (truthy(call.bind(instruction.cond_fn)(result))) {
-return null;
+return;
 } else {
 continue;
 };
@@ -1312,7 +1341,7 @@ return as_set.bind(map.bind(iter.bind(this.entries)())(first))();
 }});
 ParseMap.prototype[Call] = function (tokens, ...args) {
 if (truthy(empty__q.bind(tokens)())) {
-return null;
+return;
 };
 for  (let [pattern, parser] of this.entries) {
 if (truthy(equals__q.call(pattern, _))) {
@@ -1523,7 +1552,7 @@ return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new
 let parse_impl_for = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("impl_for")})]), construct_vector.call(Chomp, [Keyword.for("impl")]), construct_vector.call(Then, [parse_expr, Keyword.for("proto_expr")]), construct_vector.call(Chomp, [Keyword.for("for")]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("constructor")]), construct_vector.call(Chomp, [Keyword.for("eq")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")])]);
 let parse_define = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("define_for")})]), construct_vector.call(Chomp, [Keyword.for("define")]), construct_vector.call(Then, [parse_expr, Keyword.for("proto_expr")]), construct_vector.call(Chomp, [Keyword.for("for")]), construct_vector.call(Then, [parse_single_expr, Keyword.for("src_expr")]), construct_vector.call(Chomp, [Keyword.for("eq")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")])]);
 let parse_protocol = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("protocol_def")})]), construct_vector.call(Chomp, [Keyword.for("protocol")]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")])]);
-let parse_return = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("return")})]), construct_vector.call(Chomp, [Keyword.for("return")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")])]);
+let parse_return = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("return")})]), construct_vector.call(Chomp, [Keyword.for("return")]), construct_vector.call(Optional, [keys.bind(SINGLE_EXPR_PARSE_MAP)(), parse_expr, Keyword.for("expr")])]);
 let parse_await_modifier = construct_vector.call(Parser, [construct_vector.call(Init, [true]), construct_vector.call(Chomp, [Keyword.for("await")])]);
 function parse_for_loop(tokens) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("for_loop")})]), construct_vector.call(Chomp, [Keyword.for("for")]), construct_vector.call(Optional, [Keyword.for("await"), parse_await_modifier, Keyword.for("is_await__q")]), construct_vector.call(Then, [parse_assign_expr, Keyword.for("assign_expr")]), construct_vector.call(Chomp, [Keyword.for("of")]), construct_vector.call(Then, [parse_expr, Keyword.for("iterable_expr")]), block(Keyword.for("body"))]))(tokens);}
@@ -1768,7 +1797,11 @@ return str("new IRange(-Infinity, ", eval_expr(expr), ")");}
 function eval_expr(node) {
 return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("str"), eval_str], [Keyword.for("regex_lit"), eval_regex_lit], [Keyword.for("decorator"), eval_decorator], [Keyword.for("keyword"), eval_keyword], [Keyword.for("and_dot"), eval_and_dot], [Keyword.for("prefix_inclusive_range"), eval_prefix_inclusive_range], [Keyword.for("partial_fn_call"), eval_partial_fn_call], [Keyword.for("partial_obj_dyn_access"), eval_partial_obj_dyn_access], [Keyword.for("property_lookup"), eval_property_lookup], [Keyword.for("id_lookup"), eval_id_lookup], [Keyword.for("fn_call"), eval_fn_call], [Keyword.for("num"), eval_num], [Keyword.for("big_int"), eval_big_int], [Keyword.for("array"), eval_array], [Keyword.for("math_op"), eval_math_op], [Keyword.for("double_equals"), eval_double_equals], [Keyword.for("not_equals"), eval_not_equals], [Keyword.for("not"), eval_not], [Keyword.for("fn"), eval_fn], [Keyword.for("bind"), eval_bind], [Keyword.for("anon_arg_id"), eval_anon_arg_id], [Keyword.for("set"), eval_set], [Keyword.for("obj_lit"), eval_obj_lit], [Keyword.for("bind_this"), eval_bind_this], [Keyword.for("dynamic_access"), eval_dynamic_access], [Keyword.for("new"), eval_new], [Keyword.for("triple_equals"), eval_triple_equals], [Keyword.for("triple_not_equals"), eval_triple_not_equals], [Keyword.for("spread"), eval_spread], [Keyword.for("is"), eval_is], [Keyword.for("and_and"), eval_and_and], [Keyword.for("or_or"), eval_or_or], [Keyword.for("snd_assign"), eval_snd_assign], [Keyword.for("await"), eval_await], [Keyword.for("yield"), eval_yield], [Keyword.for("default_record_syntax"), eval_default_record_syntax], [Keyword.for("default_vector_syntax"), eval_default_vector_syntax], [Keyword.for("record_syntax"), eval_record_syntax], [Keyword.for("vector_syntax"), eval_vector_syntax], [Keyword.for("paren_expr"), eval_paren_expr], [Keyword.for("unapplied_math_op"), eval_unapplied_math_op], [Keyword.for("unapplied_and_and"), eval_unapplied_and_and], [Keyword.for("unapplied_or_or"), eval_unapplied_or_or], [Keyword.for("shorthand_anon_fn"), eval_shorthand_anon_fn], [Keyword.for("inclusive_range"), eval_inclusive_range], [Keyword.for("exclusive_range"), eval_exclusive_range], [Keyword.for("keyof"), eval_keyof], [Keyword.for("op_eq"), eval_op_eq]])))(node);}
 function eval_return({expr}) {
-return str("return ", eval_expr(expr));}
+if (truthy(expr)) {
+return str("return ", eval_expr(expr));
+} else {
+return "return";
+};}
 function eval_protocol({name}) {
 return str("const ", resolve_name(name), " = Symbol(\"", name, "\")");}
 function eval_impl_for({proto_expr, constructor, expr}) {
