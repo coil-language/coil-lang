@@ -1,6 +1,6 @@
 # Coil-Lang
 
-Coil is a delightful small yet expressive dynamic language.
+Coil is a delightfully small yet expressive language.
 
 ```
 let score_to_letter_grade = ~CallMap{
@@ -29,7 +29,12 @@ a::b == b.bind(a)
 a::b(10) == b.bind(a)(10)
 ```
 
-This is really powerful because it lets you chain function calls without being tied to object properties/methods.
+This has 2 big implications:
+
+1 - functions are automatically chainable without being tied to an explicit object model.
+2 - this provides a very sane subset of partial application.
+
+These two notions together provide a very powerful building block (built into javascript!) that we can use to express large operations.
 
 ## Data's Primary Function
 
