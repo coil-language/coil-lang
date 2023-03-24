@@ -1,6 +1,6 @@
 # Coil-Lang
 
-Coil is a delightfully small yet expressive language.
+Coil is a delightfully small yet powerful language.
 
 ```
 let score_to_letter_grade = ~CallMap{
@@ -15,7 +15,7 @@ let top_students =
   [{name: "marcelle", score: 53} {name: "jill", score: 80} {name: "john", score: 74}]
     ::keep(:score score_to_letter_grade #{:A :B})
     ::map(:name)
-    ::as_set() // #{"john" "jill"}
+    ::as_set() // #{"jill" "john"}
 ```
 
 # Key Principles
