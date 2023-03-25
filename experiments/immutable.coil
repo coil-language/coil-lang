@@ -1,4 +1,16 @@
 // The module naively implements persistent immutable vector & dict
+// we need hash to implement these data structures properly
+// one note on syntax.. #{} should denote an immutable persistent set
+
+protocol HashCode
+
+impl HashCode for Number = fn() = BigInt(this)
+impl HashCode for String = fn() = js_str_hash(this)
+impl HashCode for Keyword = fn() = str("__keyword_hash__" this)::hash()
+impl HashCode for Array = fn() = ::reduce(fn(code, val) = (code * 31n) + val::hash(), 7n)
+impl HashCode for Set = fn() = ::reduce(fn(code, val) = (code * 31n) + val::hash(), 3n)
+
+fn hash() = this[HashCode]()
 
 // Immutable Vec implementation
 
@@ -218,21 +230,21 @@ impl Plus for DictMergeNode = fn(other) = this::merge(other)
 fn as_vec() = Vec::construct_vector(this::as_array())
 fn as_dict() = Dict::construct_record(this::as_array())
 
-let vec = ~[]
+// let vec = ~[]
 
-for _ of 0..100000 {
-  let rand_vec = Array["from"]({length: 50})::map(Math.random)::as_vec()
-  vec += rand_vec
-}
+// for _ of 0..100000 {
+//   let rand_vec = Array["from"]({length: 50})::map(Math.random)::as_vec()
+//   vec += rand_vec
+// }
 
 // so uh, this feels wrong :)
-console.log(vec)
+// console.log(vec::as_array())
 // ~[:id :name :age]::skip(2)::as_vec()::log()
 
 // let arr = []
 // let rand_array = Array["from"]({length: 500})::map(Math.random)
 // arr = [...arr, ...rand_array]
-
+// console.log(~{:a => 10})
 
 // let arr = ~[]
 // let rand_array = Array["from"]({length: 500})::map(Math.random)::as_array()::pipe(#(new VecNode(&)))
