@@ -185,7 +185,7 @@ fn map(...fns) = this::iter()[Iterable].map.call(this, compose(...fns))
 fn flat_map(...fns) = this::iter()[Iterable].flat_map.call(this, compose(...fns))
 fn find(f) = this::iter()[Iterable].find.call(this, f::call)
 fn keep(...fns) = this::iter()[Iterable].keep.call(this, compose(...fns))
-fn reject(f) = this::keep(compose(f, !_))
+fn reject(...fns) = this::keep(compose(...fns, !_))
 fn any?(...fns) = this::iter()[Iterable].any?.call(this, compose(...fns))
 fn all?(...fns) = this::iter()[Iterable].all?.call(this, compose(...fns))
 fn reduce(f, start) = this::iter()[Iterable].reduce.call(this, f::call, start)
@@ -195,6 +195,7 @@ fn sort_by(f) = this::iter()[Iterable].sort.call(this, f::call)
 // RECORD AND VECTOR PROTOCOLS
 
 protocol Record
+protocol MutableRecord
 
 // using generator here to avoid allocating 2 intermediate entries arrays
 fn* merge_iterator(other) {
@@ -210,28 +211,11 @@ impl Record for ObjectLiteral = {
   fn values() = Object.values(this)
   fn has?(key) = key::as_str() keyof this
   fn len() = this::keys().length
-  fn empty?() = this::len() == 0
+  fn empty?() = this::len() === 0
 }
 
-// hacking on immutable operations onto Map feels wrong.
 impl Record for Map = {
   fn at(key) = this.get(key)
-  fn insert(key, value) {
-    let map = new Map(this)
-    return map.set(key, value)
-  }
-  fn merge(other) {
-    if other is ObjectLiteral {
-      other = other::map(fn([k, v]) {
-        if k::as_num()::nan?() {
-          return [k::as_keyword(), v]
-        } else {
-          return [k, v]
-        }
-      })
-    }
-    return new Map(this::merge_iterator(other))
-  }
   fn keys() = this.keys()
   fn values() = this.values()
   fn has?(key) = this.has(key)
@@ -240,8 +224,15 @@ impl Record for Map = {
   fn first() = this.entries().next().value
 }
 
+impl MutableRecord for Map = {
+  fn insert!(key, value) = this.set(key, value)
+  fn merge!(other) = other::each(fn([k, v]) = this.set(k, v))
+}
+
 fn insert(key, value) = this[Record].insert.call(this, key, value)
 fn merge(other) = this[Record].merge.call(this, other)
+fn insert!(key, value) = this[MutableRecord].insert!.call(this, key, value)
+fn merge!(other) = this[MutableRecord].merge!.call(this, other)
 fn keys() = this[Record].keys.call(this)
 
 define Record for Map = fn(entries) = new Map(entries)
@@ -266,11 +257,13 @@ impl Vector for Array = {
     let [before after] = [this::take(idx), this::skip(idx + 1)]
     return [...before, val, ...after]
   }
-  fn replace(old_value, new_value) =
-    this::map(fn(val) {
-      if val == old_value { return new_value }
-      else { return val }
-    })::as_array()
+  fn replace(old_value, new_value) = ::map(fn(val) {
+    if val == old_value {
+      return new_value
+    } else {
+      return val
+    }
+  })
   fn len() = this.length
   fn empty?() = this.length === 0
   fn first() = this[0]
@@ -588,9 +581,10 @@ impl ToString for GeneratorFunction = fn() {
 fn str(...args) = args.join("")
 @impl_callable
 fn nan?() = Number.isNaN(this)
-// there's probably a better way to do this.
 @impl_callable
-fn num?() = !Number(this)::nan?()
+fn num?() = typeof(this) == "number"
+@impl_callable
+fn bigint?() = typeof(this) == "bigint"
 @impl_callable
 fn str?() = typeof(this) == "string"
 @impl_callable
