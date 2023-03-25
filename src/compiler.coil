@@ -12,7 +12,7 @@ impl Vector for CollectionView = {
 impl :skip for CollectionView = fn(n) = new CollectionView(this.collection, this.idx + n)
 
 impl Symbol.iterator for CollectionView = fn*() {
-  for i of this.idx..this.collection::len() {
+  for i of this.idx..=this.collection::len() {
     yield this.collection[i]
   }
 }
@@ -495,14 +495,14 @@ fn parse_adjacent_1_2_expr(tokens) = ~Parser[
 fn parse_inclusive_range(tokens lhs) = ~Parser[
   ~AbortIf[not_adjacent?]
   ~Init[{type: :inclusive_range, lhs}]
-  ~Chomp[:dot_dot]
+  ~Chomp[:dot_dot :eq]
   ~Optional[SINGLE_EXPR_PARSE_MAP::keys() parse_adjacent_1_2_expr :rhs]
 ]::call(tokens)
 
 fn parse_exclusive_range(tokens lhs) = ~Parser[
   ~AbortIf[not_adjacent?]
   ~Init[{type: :exclusive_range, lhs}]
-  ~Chomp[:dot_dot_dot]
+  ~Chomp[:dot_dot]
   ~Optional[SINGLE_EXPR_PARSE_MAP::keys() parse_adjacent_1_2_expr :rhs]
 ]::call(tokens)
 
@@ -534,13 +534,13 @@ fn parse_op_eq(tokens lhs) = ~Parser[
 fn parse_snd_expr_step(tokens, lhs) = ~ParseMap{
   :single_and => parse_and_dot
   :dot => parse_dot
-  :dot_dot => parse_inclusive_range
-  :dot_dot_dot => parse_exclusive_range
   :open_p => parse_fn_call
   :double_colon => parse_infix_bind
   :open_sq => parse_object_dynamic_access
   :is => parse_is
   :eq => parse_snd_assign
+  [:dot_dot :eq] => parse_inclusive_range
+  :dot_dot => parse_exclusive_range
   [assignable_ops :eq] => parse_op_eq
   math_ops => parse_math_op
 }::call(tokens, lhs)
@@ -892,6 +892,12 @@ fn parse_set(tokens) = ~Parser[
 
 fn parse_prefix_inclusive_range(tokens) = ~Parser[
   ~Init[{type: :prefix_inclusive_range}]
+  ~Chomp[:dot_dot :eq]
+  ~Then[parse_expr :expr]
+]::call(tokens)
+
+fn parse_prefix_exclusive_range(tokens) = ~Parser[
+  ~Init[{type: :prefix_exclusive_range}]
   ~Chomp[:dot_dot]
   ~Then[parse_expr :expr]
 ]::call(tokens)
@@ -908,7 +914,6 @@ let SINGLE_EXPR_PARSE_MAP = ~ParseMap{
   :num => parse_num
   :big_int => parse_big_int
   :open_sq => parse_array
-  :dot_dot => parse_prefix_inclusive_range
   :dot_dot_dot => parse_spread
   :double_colon => parse_bind_this
   :bang => parse_not
@@ -917,6 +922,8 @@ let SINGLE_EXPR_PARSE_MAP = ~ParseMap{
   :open_b => parse_obj
   :and_and => parse_unapplied_and_and
   :or_or => parse_unapplied_or_or
+  [:dot_dot :eq] => parse_prefix_inclusive_range
+  :dot_dot => parse_prefix_exclusive_range
   all_math_ops => parse_unapplied_math_op
   [:hash :open_p] => parse_shorthand_anon_fn
   [:hash :open_b] => parse_set
@@ -1435,9 +1442,9 @@ fn eval_inclusive_range({lhs, rhs}) {
 
 fn eval_exclusive_range({lhs, rhs}) {
   if rhs {
-    return str("new ERange(" eval_expr(lhs) ", " eval_expr(rhs) ", true)")
+    return str("new ERange(" eval_expr(lhs) ", " eval_expr(rhs) ")")
   } else {
-    return str("new ERange(" eval_expr(lhs) ", Infinity, true)")
+    return str("new ERange(" eval_expr(lhs) ", Infinity)")
   }
 }
 
@@ -1489,9 +1496,15 @@ fn eval_op_eq({ lhs, op, rhs }) =
       eval_rhs_based_on_op(op rhs) ")")
 
 fn eval_prefix_inclusive_range({ expr }) =
-  // todo: do we want this to be polymoprhic based off
+  // todo: do we want this to be polymorphic based off
   // the type of `expr`? For now its going to expect numbers
+  // I think a better solution is to have an UnboundedInclusiveRange type
   str("new IRange(-Infinity, " eval_expr(expr) ")") 
+
+fn eval_prefix_exclusive_range({ expr }) =
+  // todo: do we want this to be polymorphic based off
+  // the type of `expr`? For now its going to expect numbers
+  str("new ERange(-Infinity, " eval_expr(expr) ")") 
 
 fn eval_expr(node) = node::at(:type)::pipe(~Map{
   :str => eval_str
@@ -1500,6 +1513,7 @@ fn eval_expr(node) = node::at(:type)::pipe(~Map{
   :keyword => eval_keyword
   :and_dot => eval_and_dot
   :prefix_inclusive_range => eval_prefix_inclusive_range
+  :prefix_exclusive_range => eval_prefix_exclusive_range
   :partial_fn_call => eval_partial_fn_call
   :partial_obj_dyn_access => eval_partial_obj_dyn_access
   :property_lookup => eval_property_lookup

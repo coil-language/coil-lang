@@ -199,7 +199,7 @@ return this[Symbol.iterator]();
 };});
 const Iterable = Symbol("Iterable");
 let iterable_collection_impl = new ObjectLiteral({*take(n) {
-for  (let [elem, i] of zip.bind(this)(new IRange((0), Infinity))) {
+for  (let [elem, i] of zip.bind(this)(new ERange((0), Infinity))) {
 if (truthy(equals__q.call(i, n))) {
 break;
 };
@@ -207,7 +207,7 @@ yield elem
 };
 }, *drop(n) {
 let size = len.bind(this)();
-for  (let [elem, i] of zip.bind(this)(new IRange((0), Infinity))) {
+for  (let [elem, i] of zip.bind(this)(new ERange((0), Infinity))) {
 if (truthy(greater_than.call((minus.call(size,i)),n))) {
 break;
 };
@@ -221,7 +221,7 @@ break;
 yield elem
 };
 }, *skip(n) {
-for  (let [elem, i] of zip.bind(this)(new IRange((0), Infinity))) {
+for  (let [elem, i] of zip.bind(this)(new ERange((0), Infinity))) {
 if (truthy(less_than.call(i,n))) {
 continue;
 };
@@ -317,8 +317,8 @@ function find(f) {
 return iter.bind(this)()[Iterable].find.call(this, call.bind(f));}
 function keep(...fns) {
 return iter.bind(this)()[Iterable].keep.call(this, compose(...fns));}
-function reject(f) {
-return keep.bind(this)(compose(f, negate.call(_)));}
+function reject(...fns) {
+return keep.bind(this)(compose(...fns, negate.call(_)));}
 function any__q(...fns) {
 return iter.bind(this)()[Iterable].any__q.call(this, compose(...fns));}
 function all__q(...fns) {
@@ -330,6 +330,7 @@ return iter.bind(this)()[Iterable].sort.call(this);}
 function sort_by(f) {
 return iter.bind(this)()[Iterable].sort.call(this, call.bind(f));}
 const Record = Symbol("Record");
+const MutableRecord = Symbol("MutableRecord");
 function *merge_iterator(other) {
 yield* this
 yield* other}
@@ -348,27 +349,16 @@ return as_str.bind(key)() in this;
 }, len() {
 return keys.bind(this)().length;
 }, empty__q() {
-return equals__q.call(len.bind(this)(), (0));
+return len.bind(this)() === (0);
 }});
 Map.prototype[Record] = new ObjectLiteral({at(key) {
 return this.get(key);
-}, insert(key, value) {
-let map = new Map(this);
-return map.set(key, value);
-}, merge(other) {
-if (truthy(other instanceof ObjectLiteral)) {
-other = map.bind(other)(function ([k, v]) {
-if (truthy(nan__q.bind(as_num.bind(k)())())) {
-return [as_keyword.bind(k)(), v];
-} else {
-return [k, v];
-};})
-};
-return new Map(merge_iterator.bind(this)(other));
 }, keys() {
 return this.keys();
 }, values() {
 return this.values();
+}, merge(other) {
+return new Map([...this, ...other]);
 }, has__q(key) {
 return this.has(key);
 }, len() {
@@ -378,10 +368,20 @@ return this.size === (0);
 }, first() {
 return this.entries().next().value;
 }});
+Map.prototype[MutableRecord] = new ObjectLiteral({insert__b(key, value) {
+return this.set(key, value);
+}, merge__b(other) {
+return each.bind(other)(function ([k, v]) {
+return this.set(k, v);});
+}});
 function insert(key, value) {
 return this[Record].insert.call(this, key, value);}
 function merge(other) {
 return this[Record].merge.call(this, other);}
+function insert__b(key, value) {
+return this[MutableRecord].insert__b.call(this, key, value);}
+function merge__b(other) {
+return this[MutableRecord].merge__b.call(this, other);}
 function keys() {
 return this[Record].keys.call(this);}
 Map[Record] = function (entries) {
@@ -408,12 +408,12 @@ return [...before, f(at.bind(this)(idx)), ...after];
 let [before, after] = [take.bind(this)(idx), skip.bind(this)(plus.call(idx,(1)))];
 return [...before, val, ...after];
 }, replace(old_value, new_value) {
-return as_array.bind(map.bind(this)(function (val) {
+return map.bind(this)(function (val) {
 if (truthy(equals__q.call(val, old_value))) {
 return new_value;
 } else {
 return val;
-};}))();
+};});
 }, len() {
 return this.length;
 }, empty__q() {
@@ -792,7 +792,9 @@ return args.join("");}
 let nan__q = impl_callable(function nan__q() {
 return Number.isNaN(this);});
 let num__q = impl_callable(function num__q() {
-return negate.call(nan__q.bind(Number(this))());});
+return equals__q.call(typeof(this), "number");});
+let bigint__q = impl_callable(function bigint__q() {
+return equals__q.call(typeof(this), "bigint");});
 let str__q = impl_callable(function str__q() {
 return equals__q.call(typeof(this), "string");});
 let as_set = impl_callable(function as_set() {
@@ -966,9 +968,9 @@ return and.call(greater_than_eq.call(value,this.start), () => less_than_eq.call(
 ERange.prototype[Call] = function (value) {
 return and.call(greater_than_eq.call(value,this.start), () => less_than.call(value,this.end));};
 IRange.prototype[Printable] = function () {
-return str(this.start, "..", this.end);};
+return str(this.start, "..=", this.end);};
 ERange.prototype[Printable] = function () {
-return str(this.start, "...", this.end);};
+return str(this.start, "..", this.end);};
 function make_range_iter(compare_to) {
 return function *() {
 let {start: i, end} = this;
@@ -988,8 +990,8 @@ return new Constructor(entries);};
 Constructor.prototype[Symbol.iterator] = function () {
 return iter.bind(this.entries)();};
 return Constructor;}
-let char_alpha__q = plus.call(as_set.bind((new IRange("a", "z")))(),as_set.bind((new IRange("A", "Z")))());
-let char_numeric__q = as_set.bind((new IRange("0", "9")))();
+let char_alpha__q = plus.call(as_set.bind((new ERange("a", "z")))(),as_set.bind((new ERange("A", "Z")))());
+let char_numeric__q = as_set.bind((new ERange("0", "9")))();
 let char_alpha_numeric__q = plus.call(char_alpha__q,char_numeric__q);
 function alpha__q() {
 return all__q.bind(this)(char_alpha__q);}
@@ -1422,9 +1424,9 @@ return greater_than_eq.call((minus.call(current.col,end_of_prev_token)),(1));}
 function parse_adjacent_1_2_expr(tokens) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(AbortIf, [not_adjacent__q]), construct_vector.call(Then, [parse_1_2_expr])]))(tokens);}
 function parse_inclusive_range(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(AbortIf, [not_adjacent__q]), construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("inclusive_range"), lhs})]), construct_vector.call(Chomp, [Keyword.for("dot_dot")]), construct_vector.call(Optional, [keys.bind(SINGLE_EXPR_PARSE_MAP)(), parse_adjacent_1_2_expr, Keyword.for("rhs")])]))(tokens);}
+return call.bind(construct_vector.call(Parser, [construct_vector.call(AbortIf, [not_adjacent__q]), construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("inclusive_range"), lhs})]), construct_vector.call(Chomp, [Keyword.for("dot_dot"), Keyword.for("eq")]), construct_vector.call(Optional, [keys.bind(SINGLE_EXPR_PARSE_MAP)(), parse_adjacent_1_2_expr, Keyword.for("rhs")])]))(tokens);}
 function parse_exclusive_range(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(AbortIf, [not_adjacent__q]), construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("exclusive_range"), lhs})]), construct_vector.call(Chomp, [Keyword.for("dot_dot_dot")]), construct_vector.call(Optional, [keys.bind(SINGLE_EXPR_PARSE_MAP)(), parse_adjacent_1_2_expr, Keyword.for("rhs")])]))(tokens);}
+return call.bind(construct_vector.call(Parser, [construct_vector.call(AbortIf, [not_adjacent__q]), construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("exclusive_range"), lhs})]), construct_vector.call(Chomp, [Keyword.for("dot_dot")]), construct_vector.call(Optional, [keys.bind(SINGLE_EXPR_PARSE_MAP)(), parse_adjacent_1_2_expr, Keyword.for("rhs")])]))(tokens);}
 function parse_fn_call(tokens, lhs) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(AbortIf, [not_adjacent__q]), construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("fn_call"), lhs})]), construct_vector.call(Chomp, [Keyword.for("open_p")]), construct_vector.call(Until, [Keyword.for("close_p"), parse_expr, Keyword.for("args")]), construct_vector.call(Chomp, [Keyword.for("close_p")])]))(tokens);}
 function parse_object_dynamic_access(tokens, lhs) {
@@ -1433,7 +1435,7 @@ let assignable_ops = concat.bind(math_ops)([Keyword.for("or_or"), Keyword.for("a
 function parse_op_eq(tokens, lhs) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("op_eq"), lhs})]), construct_vector.call(Either, [assignable_ops, Keyword.for("op")]), construct_vector.call(Chomp, [Keyword.for("eq")]), construct_vector.call(Then, [parse_expr, Keyword.for("rhs")])]))(tokens);}
 function parse_snd_expr_step(tokens, lhs) {
-return call.bind(construct_record.call(ParseMap, [[Keyword.for("single_and"), parse_and_dot], [Keyword.for("dot"), parse_dot], [Keyword.for("dot_dot"), parse_inclusive_range], [Keyword.for("dot_dot_dot"), parse_exclusive_range], [Keyword.for("open_p"), parse_fn_call], [Keyword.for("double_colon"), parse_infix_bind], [Keyword.for("open_sq"), parse_object_dynamic_access], [Keyword.for("is"), parse_is], [Keyword.for("eq"), parse_snd_assign], [[assignable_ops, Keyword.for("eq")], parse_op_eq], [math_ops, parse_math_op]]))(tokens, lhs);}
+return call.bind(construct_record.call(ParseMap, [[Keyword.for("single_and"), parse_and_dot], [Keyword.for("dot"), parse_dot], [Keyword.for("open_p"), parse_fn_call], [Keyword.for("double_colon"), parse_infix_bind], [Keyword.for("open_sq"), parse_object_dynamic_access], [Keyword.for("is"), parse_is], [Keyword.for("eq"), parse_snd_assign], [[Keyword.for("dot_dot"), Keyword.for("eq")], parse_inclusive_range], [Keyword.for("dot_dot"), parse_exclusive_range], [[assignable_ops, Keyword.for("eq")], parse_op_eq], [math_ops, parse_math_op]]))(tokens, lhs);}
 function parse_snd_expr([lhs, tokens]) {
 let __coil_while_let_temp = parse_snd_expr_step(tokens, lhs);
 while (__coil_while_let_temp) {
@@ -1528,8 +1530,10 @@ return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new
 function parse_set(tokens) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("set")})]), construct_vector.call(Chomp, [Keyword.for("hash"), Keyword.for("open_b")]), construct_vector.call(Until, [Keyword.for("close_b"), parse_expr, Keyword.for("elements")]), construct_vector.call(Chomp, [Keyword.for("close_b")])]))(tokens);}
 function parse_prefix_inclusive_range(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("prefix_inclusive_range")})]), construct_vector.call(Chomp, [Keyword.for("dot_dot")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")])]))(tokens);}
-let SINGLE_EXPR_PARSE_MAP = construct_record.call(ParseMap, [[Keyword.for("string_lit"), parse_str], [Keyword.for("regex_lit"), parse_regex], [Keyword.for("keyword"), parse_keyword], [Keyword.for("open_p"), parse_paren_expr], [Keyword.for("yield"), parse_yield], [Keyword.for("await"), parse_await], [Keyword.for("id"), parse_id], [Keyword.for("at"), parse_decorator], [Keyword.for("num"), parse_num], [Keyword.for("big_int"), parse_big_int], [Keyword.for("open_sq"), parse_array], [Keyword.for("dot_dot"), parse_prefix_inclusive_range], [Keyword.for("dot_dot_dot"), parse_spread], [Keyword.for("double_colon"), parse_bind_this], [Keyword.for("bang"), parse_not], [Keyword.for("new"), parse_new], [Keyword.for("single_and"), parse_anon_arg_id], [Keyword.for("open_b"), parse_obj], [Keyword.for("and_and"), parse_unapplied_and_and], [Keyword.for("or_or"), parse_unapplied_or_or], [all_math_ops, parse_unapplied_math_op], [[Keyword.for("hash"), Keyword.for("open_p")], parse_shorthand_anon_fn], [[Keyword.for("hash"), Keyword.for("open_b")], parse_set], [[Keyword.for("async"), Keyword.for("fn")], parse_fn], [Keyword.for("fn"), parse_fn], [[Keyword.for("tilde"), Keyword.for("open_sq")], parse_default_vector_syntax], [[Keyword.for("tilde"), Keyword.for("open_b")], parse_default_record_syntax], [[Keyword.for("tilde"), Keyword.for("id"), Keyword.for("open_b")], parse_record_syntax], [[Keyword.for("tilde"), Keyword.for("id"), Keyword.for("open_sq")], parse_vector_syntax]]);
+return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("prefix_inclusive_range")})]), construct_vector.call(Chomp, [Keyword.for("dot_dot"), Keyword.for("eq")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")])]))(tokens);}
+function parse_prefix_exclusive_range(tokens) {
+return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("prefix_exclusive_range")})]), construct_vector.call(Chomp, [Keyword.for("dot_dot")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")])]))(tokens);}
+let SINGLE_EXPR_PARSE_MAP = construct_record.call(ParseMap, [[Keyword.for("string_lit"), parse_str], [Keyword.for("regex_lit"), parse_regex], [Keyword.for("keyword"), parse_keyword], [Keyword.for("open_p"), parse_paren_expr], [Keyword.for("yield"), parse_yield], [Keyword.for("await"), parse_await], [Keyword.for("id"), parse_id], [Keyword.for("at"), parse_decorator], [Keyword.for("num"), parse_num], [Keyword.for("big_int"), parse_big_int], [Keyword.for("open_sq"), parse_array], [Keyword.for("dot_dot_dot"), parse_spread], [Keyword.for("double_colon"), parse_bind_this], [Keyword.for("bang"), parse_not], [Keyword.for("new"), parse_new], [Keyword.for("single_and"), parse_anon_arg_id], [Keyword.for("open_b"), parse_obj], [Keyword.for("and_and"), parse_unapplied_and_and], [Keyword.for("or_or"), parse_unapplied_or_or], [[Keyword.for("dot_dot"), Keyword.for("eq")], parse_prefix_inclusive_range], [Keyword.for("dot_dot"), parse_prefix_exclusive_range], [all_math_ops, parse_unapplied_math_op], [[Keyword.for("hash"), Keyword.for("open_p")], parse_shorthand_anon_fn], [[Keyword.for("hash"), Keyword.for("open_b")], parse_set], [[Keyword.for("async"), Keyword.for("fn")], parse_fn], [Keyword.for("fn"), parse_fn], [[Keyword.for("tilde"), Keyword.for("open_sq")], parse_default_vector_syntax], [[Keyword.for("tilde"), Keyword.for("open_b")], parse_default_record_syntax], [[Keyword.for("tilde"), Keyword.for("id"), Keyword.for("open_b")], parse_record_syntax], [[Keyword.for("tilde"), Keyword.for("id"), Keyword.for("open_sq")], parse_vector_syntax]]);
 function parse_single_expr(tokens) {
 return call.bind(SINGLE_EXPR_PARSE_MAP)(tokens);}
 function parse_1_2_expr(tokens) {
@@ -1756,9 +1760,9 @@ return str("new IRange(", eval_expr(lhs), ", Infinity)");
 };}
 function eval_exclusive_range({lhs, rhs}) {
 if (truthy(rhs)) {
-return str("new ERange(", eval_expr(lhs), ", ", eval_expr(rhs), ", true)");
+return str("new ERange(", eval_expr(lhs), ", ", eval_expr(rhs), ")");
 } else {
-return str("new ERange(", eval_expr(lhs), ", Infinity, true)");
+return str("new ERange(", eval_expr(lhs), ", Infinity)");
 };}
 function eval_shorthand_anon_fn({expr}) {
 return str("(...__args) => ", eval_expr(expr));}
@@ -1794,8 +1798,10 @@ function eval_op_eq({lhs, op, rhs}) {
 return str(eval_expr(lhs), " = ", call.bind(all_ops_to_method)(op), ".call(", eval_expr(lhs), ", ", eval_rhs_based_on_op(op, rhs), ")");}
 function eval_prefix_inclusive_range({expr}) {
 return str("new IRange(-Infinity, ", eval_expr(expr), ")");}
+function eval_prefix_exclusive_range({expr}) {
+return str("new ERange(-Infinity, ", eval_expr(expr), ")");}
 function eval_expr(node) {
-return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("str"), eval_str], [Keyword.for("regex_lit"), eval_regex_lit], [Keyword.for("decorator"), eval_decorator], [Keyword.for("keyword"), eval_keyword], [Keyword.for("and_dot"), eval_and_dot], [Keyword.for("prefix_inclusive_range"), eval_prefix_inclusive_range], [Keyword.for("partial_fn_call"), eval_partial_fn_call], [Keyword.for("partial_obj_dyn_access"), eval_partial_obj_dyn_access], [Keyword.for("property_lookup"), eval_property_lookup], [Keyword.for("id_lookup"), eval_id_lookup], [Keyword.for("fn_call"), eval_fn_call], [Keyword.for("num"), eval_num], [Keyword.for("big_int"), eval_big_int], [Keyword.for("array"), eval_array], [Keyword.for("math_op"), eval_math_op], [Keyword.for("double_equals"), eval_double_equals], [Keyword.for("not_equals"), eval_not_equals], [Keyword.for("not"), eval_not], [Keyword.for("fn"), eval_fn], [Keyword.for("bind"), eval_bind], [Keyword.for("anon_arg_id"), eval_anon_arg_id], [Keyword.for("set"), eval_set], [Keyword.for("obj_lit"), eval_obj_lit], [Keyword.for("bind_this"), eval_bind_this], [Keyword.for("dynamic_access"), eval_dynamic_access], [Keyword.for("new"), eval_new], [Keyword.for("triple_equals"), eval_triple_equals], [Keyword.for("triple_not_equals"), eval_triple_not_equals], [Keyword.for("spread"), eval_spread], [Keyword.for("is"), eval_is], [Keyword.for("and_and"), eval_and_and], [Keyword.for("or_or"), eval_or_or], [Keyword.for("snd_assign"), eval_snd_assign], [Keyword.for("await"), eval_await], [Keyword.for("yield"), eval_yield], [Keyword.for("default_record_syntax"), eval_default_record_syntax], [Keyword.for("default_vector_syntax"), eval_default_vector_syntax], [Keyword.for("record_syntax"), eval_record_syntax], [Keyword.for("vector_syntax"), eval_vector_syntax], [Keyword.for("paren_expr"), eval_paren_expr], [Keyword.for("unapplied_math_op"), eval_unapplied_math_op], [Keyword.for("unapplied_and_and"), eval_unapplied_and_and], [Keyword.for("unapplied_or_or"), eval_unapplied_or_or], [Keyword.for("shorthand_anon_fn"), eval_shorthand_anon_fn], [Keyword.for("inclusive_range"), eval_inclusive_range], [Keyword.for("exclusive_range"), eval_exclusive_range], [Keyword.for("keyof"), eval_keyof], [Keyword.for("op_eq"), eval_op_eq]])))(node);}
+return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("str"), eval_str], [Keyword.for("regex_lit"), eval_regex_lit], [Keyword.for("decorator"), eval_decorator], [Keyword.for("keyword"), eval_keyword], [Keyword.for("and_dot"), eval_and_dot], [Keyword.for("prefix_inclusive_range"), eval_prefix_inclusive_range], [Keyword.for("prefix_exclusive_range"), eval_prefix_exclusive_range], [Keyword.for("partial_fn_call"), eval_partial_fn_call], [Keyword.for("partial_obj_dyn_access"), eval_partial_obj_dyn_access], [Keyword.for("property_lookup"), eval_property_lookup], [Keyword.for("id_lookup"), eval_id_lookup], [Keyword.for("fn_call"), eval_fn_call], [Keyword.for("num"), eval_num], [Keyword.for("big_int"), eval_big_int], [Keyword.for("array"), eval_array], [Keyword.for("math_op"), eval_math_op], [Keyword.for("double_equals"), eval_double_equals], [Keyword.for("not_equals"), eval_not_equals], [Keyword.for("not"), eval_not], [Keyword.for("fn"), eval_fn], [Keyword.for("bind"), eval_bind], [Keyword.for("anon_arg_id"), eval_anon_arg_id], [Keyword.for("set"), eval_set], [Keyword.for("obj_lit"), eval_obj_lit], [Keyword.for("bind_this"), eval_bind_this], [Keyword.for("dynamic_access"), eval_dynamic_access], [Keyword.for("new"), eval_new], [Keyword.for("triple_equals"), eval_triple_equals], [Keyword.for("triple_not_equals"), eval_triple_not_equals], [Keyword.for("spread"), eval_spread], [Keyword.for("is"), eval_is], [Keyword.for("and_and"), eval_and_and], [Keyword.for("or_or"), eval_or_or], [Keyword.for("snd_assign"), eval_snd_assign], [Keyword.for("await"), eval_await], [Keyword.for("yield"), eval_yield], [Keyword.for("default_record_syntax"), eval_default_record_syntax], [Keyword.for("default_vector_syntax"), eval_default_vector_syntax], [Keyword.for("record_syntax"), eval_record_syntax], [Keyword.for("vector_syntax"), eval_vector_syntax], [Keyword.for("paren_expr"), eval_paren_expr], [Keyword.for("unapplied_math_op"), eval_unapplied_math_op], [Keyword.for("unapplied_and_and"), eval_unapplied_and_and], [Keyword.for("unapplied_or_or"), eval_unapplied_or_or], [Keyword.for("shorthand_anon_fn"), eval_shorthand_anon_fn], [Keyword.for("inclusive_range"), eval_inclusive_range], [Keyword.for("exclusive_range"), eval_exclusive_range], [Keyword.for("keyof"), eval_keyof], [Keyword.for("op_eq"), eval_op_eq]])))(node);}
 function eval_return({expr}) {
 if (truthy(expr)) {
 return str("return ", eval_expr(expr));

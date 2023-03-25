@@ -218,6 +218,7 @@ impl Record for Map = {
   fn at(key) = this.get(key)
   fn keys() = this.keys()
   fn values() = this.values()
+  fn merge(other) = new Map([...this, ...other])
   fn has?(key) = this.has(key)
   fn len() = this.size
   fn empty?() = this.size === 0
@@ -747,8 +748,8 @@ fn ERange(@start, @end) {}
 impl Call for IRange = fn(value) = value >= this.start && value <= this.end
 impl Call for ERange = fn(value) = value >= this.start && value < this.end
 
-impl Printable for IRange = fn() = str(this.start ".." this.end)
-impl Printable for ERange = fn() = str(this.start "..." this.end)
+impl Printable for IRange = fn() = str(this.start "..=" this.end)
+impl Printable for ERange = fn() = str(this.start ".." this.end)
 
 fn make_range_iter(compare_to) = fn*() {
   let {start: i, end} = this
@@ -772,8 +773,8 @@ fn def_record(Constructor) {
 }
 
 // string helpers
-let char_alpha? = ("a".."z")::as_set() + ("A".."Z")::as_set()
-let char_numeric? = ("0".."9")::as_set()
+let char_alpha? = ("a"..="z")::as_set() + ("A"..="Z")::as_set()
+let char_numeric? = ("0"..="9")::as_set()
 let char_alpha_numeric? = char_alpha? + char_numeric?
 fn alpha?() = this::all?(char_alpha?)
 fn alpha_numeric?() = this::all?(char_alpha_numeric?)

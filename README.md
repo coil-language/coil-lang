@@ -4,10 +4,10 @@ Coil is a delightfully small yet powerful language.
 
 ```
 let score_to_letter_grade = ~CallMap{
-  0...50 => :F
-  50...60 => :D
-  60...70 => :C
-  70...80 => :B
+  ..50 => :F
+  50..60 => :D
+  60..70 => :C
+  70..80 => :B
   80.. => :A
 }
 
