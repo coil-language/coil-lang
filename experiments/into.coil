@@ -1,0 +1,27 @@
+// here lies a way to generically implement something like clojure's `into`
+// along with Rename, which I thought is kind of cool
+
+protocol Into
+fn def_into(Ctor, ...properties) {
+  define Into for Ctor = fn() =
+    ::sort_by(0 properties.indexOf)
+    ::map(1)
+    ::pipe(fn(args) = new Ctor(...args))
+  return Ctor
+}
+
+fn into(Ctor) = Ctor[Into].call(this)
+
+@def_record
+fn Rename(@entries) {}
+impl Call for Rename = fn(obj) =
+  ::map(fn([old_key, new_key]) = [new_key obj[old_key]])
+
+@def_into(:x :y)
+fn Point(@x, @y) {}
+
+let a = [{point_x: 10, point_y: 20}]
+  ::map(~Rename{point_x: :x, point_y: :y})
+  ::map(fn(p) = p::into(Point))
+  ::as_array()
+  ::log()
