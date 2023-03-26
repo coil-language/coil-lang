@@ -331,6 +331,12 @@ fn construct_vector(entries) = this[Vector](entries)
 
 protocol Equal
 
+fn impl_equal(Ctor, ...keys) {
+  impl Equal for Ctor = fn(other) =
+    other is Ctor && keys::all?(::fn(key) = this[key] == other[key])
+  return Ctor
+}
+
 impl Equal for Object = fn(other) = this === other
 
 impl Equal for Set = fn(other) {
@@ -742,29 +748,16 @@ impl Inc for String = fn() = String.fromCharCode(this.charCodeAt(0) + 1)
 
 fn inc() = this[Inc]()
 
+@impl_equal(:start, :end)
 fn IRange(@start, @end) {}
+@impl_equal(:start, :end)
 fn ERange(@start, @end) {}
+@impl_equal(:end)
 fn IRangeNoMin(@end) {}
+@impl_equal(:start)
 fn ERangeNoMax(@start) {}
+@impl_equal(:end)
 fn ERangeNoMin(@end) {}
-
-impl Equal for IRange = fn(other) =
-  other is IRange &&
-  other.start == this.start &&
-  other.end == this.end
-impl Equal for ERange = fn(other) =
-  other is ERange &&
-  other.start == this.start &&
-  other.end == this.end
-impl Equal for IRangeNoMin = fn(other) =
-  other is IRangeNoMin &&
-  other.end == this.end
-impl Equal for ERangeNoMax = fn(other) =
-  other is ERangeNoMax &&
-  other.start == this.start
-impl Equal for ERangeNoMin = fn(other) =
-  other is ERangeNoMin &&
-  other.end == this.end
 
 impl Call for IRange = fn(value) = value >= this.start && value <= this.end
 impl Call for ERange = fn(value) = value >= this.start && value < this.end
