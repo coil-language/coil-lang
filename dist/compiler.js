@@ -963,23 +963,53 @@ function ERange(start, end) {
 this.start = start;
 this.end = end;
 }
+function IRangeNoMin(end) {
+this.end = end;
+}
+function ERangeNoMax(start) {
+this.start = start;
+}
+function ERangeNoMin(end) {
+this.end = end;
+}
 IRange.prototype[Call] = function (value) {
 return and.call(greater_than_eq.call(value,this.start), () => less_than_eq.call(value,this.end));};
 ERange.prototype[Call] = function (value) {
 return and.call(greater_than_eq.call(value,this.start), () => less_than.call(value,this.end));};
+IRangeNoMin.prototype[Call] = function (value) {
+return less_than_eq.call(value,this.end);};
+ERangeNoMax.prototype[Call] = function (value) {
+return greater_than_eq.call(value,this.start);};
+ERangeNoMin.prototype[Call] = function (value) {
+return less_than.call(value,this.end);};
 IRange.prototype[Printable] = function () {
 return str(this.start, "..=", this.end);};
 ERange.prototype[Printable] = function () {
 return str(this.start, "..", this.end);};
-function make_range_iter(compare_to) {
-return function *() {
+IRangeNoMin.prototype[Printable] = function () {
+return str("..=", this.end);};
+ERangeNoMax.prototype[Printable] = function () {
+return str(this.start, "..");};
+ERangeNoMin.prototype[Printable] = function () {
+return str("..", this.end);};
+IRange.prototype[Symbol.iterator] = function *() {
 let {start: i, end} = this;
-while (compare_to.bind(i)(end)) {
+while (less_than_eq.call(i,end)) {
 yield i
 i = inc.bind(i)()
-};};}
-IRange.prototype[Symbol.iterator] = make_range_iter(less_than_eq);
-ERange.prototype[Symbol.iterator] = make_range_iter(less_than);
+};};
+ERange.prototype[Symbol.iterator] = function *() {
+let {start: i, end} = this;
+while (less_than.call(i,end)) {
+yield i
+i = inc.bind(i)()
+};};
+ERangeNoMax.prototype[Symbol.iterator] = function *() {
+let i = this.start;
+while (true) {
+yield i
+i = inc.bind(i)()
+};};
 function def_vector(Constructor) {
 Constructor[Vector] = function (args) {
 return new Constructor(...args);};
@@ -990,8 +1020,8 @@ return new Constructor(entries);};
 Constructor.prototype[Symbol.iterator] = function () {
 return iter.bind(this.entries)();};
 return Constructor;}
-let char_alpha__q = plus.call(as_set.bind((new ERange("a", "z")))(),as_set.bind((new ERange("A", "Z")))());
-let char_numeric__q = as_set.bind((new ERange("0", "9")))();
+let char_alpha__q = plus.call(as_set.bind((new IRange("a", "z")))(),as_set.bind((new IRange("A", "Z")))());
+let char_numeric__q = as_set.bind((new IRange("0", "9")))();
 let char_alpha_numeric__q = plus.call(char_alpha__q,char_numeric__q);
 function alpha__q() {
 return all__q.bind(this)(char_alpha__q);}
@@ -1529,11 +1559,9 @@ function parse_vector_syntax(tokens) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("vector_syntax")})]), construct_vector.call(Chomp, [Keyword.for("tilde")]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("constructor_name")]), construct_vector.call(Chomp, [Keyword.for("open_sq")]), construct_vector.call(Until, [Keyword.for("close_sq"), parse_expr, Keyword.for("entries")]), construct_vector.call(Chomp, [Keyword.for("close_sq")])]))(tokens);}
 function parse_set(tokens) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("set")})]), construct_vector.call(Chomp, [Keyword.for("hash"), Keyword.for("open_b")]), construct_vector.call(Until, [Keyword.for("close_b"), parse_expr, Keyword.for("elements")]), construct_vector.call(Chomp, [Keyword.for("close_b")])]))(tokens);}
-function parse_prefix_inclusive_range(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("prefix_inclusive_range")})]), construct_vector.call(Chomp, [Keyword.for("dot_dot"), Keyword.for("eq")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")])]))(tokens);}
 function parse_prefix_exclusive_range(tokens) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("prefix_exclusive_range")})]), construct_vector.call(Chomp, [Keyword.for("dot_dot")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")])]))(tokens);}
-let SINGLE_EXPR_PARSE_MAP = construct_record.call(ParseMap, [[Keyword.for("string_lit"), parse_str], [Keyword.for("regex_lit"), parse_regex], [Keyword.for("keyword"), parse_keyword], [Keyword.for("open_p"), parse_paren_expr], [Keyword.for("yield"), parse_yield], [Keyword.for("await"), parse_await], [Keyword.for("id"), parse_id], [Keyword.for("at"), parse_decorator], [Keyword.for("num"), parse_num], [Keyword.for("big_int"), parse_big_int], [Keyword.for("open_sq"), parse_array], [Keyword.for("dot_dot_dot"), parse_spread], [Keyword.for("double_colon"), parse_bind_this], [Keyword.for("bang"), parse_not], [Keyword.for("new"), parse_new], [Keyword.for("single_and"), parse_anon_arg_id], [Keyword.for("open_b"), parse_obj], [Keyword.for("and_and"), parse_unapplied_and_and], [Keyword.for("or_or"), parse_unapplied_or_or], [[Keyword.for("dot_dot"), Keyword.for("eq")], parse_prefix_inclusive_range], [Keyword.for("dot_dot"), parse_prefix_exclusive_range], [all_math_ops, parse_unapplied_math_op], [[Keyword.for("hash"), Keyword.for("open_p")], parse_shorthand_anon_fn], [[Keyword.for("hash"), Keyword.for("open_b")], parse_set], [[Keyword.for("async"), Keyword.for("fn")], parse_fn], [Keyword.for("fn"), parse_fn], [[Keyword.for("tilde"), Keyword.for("open_sq")], parse_default_vector_syntax], [[Keyword.for("tilde"), Keyword.for("open_b")], parse_default_record_syntax], [[Keyword.for("tilde"), Keyword.for("id"), Keyword.for("open_b")], parse_record_syntax], [[Keyword.for("tilde"), Keyword.for("id"), Keyword.for("open_sq")], parse_vector_syntax]]);
+let SINGLE_EXPR_PARSE_MAP = construct_record.call(ParseMap, [[Keyword.for("string_lit"), parse_str], [Keyword.for("regex_lit"), parse_regex], [Keyword.for("keyword"), parse_keyword], [Keyword.for("open_p"), parse_paren_expr], [Keyword.for("yield"), parse_yield], [Keyword.for("await"), parse_await], [Keyword.for("id"), parse_id], [Keyword.for("at"), parse_decorator], [Keyword.for("num"), parse_num], [Keyword.for("big_int"), parse_big_int], [Keyword.for("open_sq"), parse_array], [Keyword.for("dot_dot_dot"), parse_spread], [Keyword.for("double_colon"), parse_bind_this], [Keyword.for("bang"), parse_not], [Keyword.for("new"), parse_new], [Keyword.for("single_and"), parse_anon_arg_id], [Keyword.for("open_b"), parse_obj], [Keyword.for("and_and"), parse_unapplied_and_and], [Keyword.for("or_or"), parse_unapplied_or_or], [Keyword.for("dot_dot"), parse_prefix_exclusive_range], [all_math_ops, parse_unapplied_math_op], [[Keyword.for("hash"), Keyword.for("open_p")], parse_shorthand_anon_fn], [[Keyword.for("hash"), Keyword.for("open_b")], parse_set], [[Keyword.for("async"), Keyword.for("fn")], parse_fn], [Keyword.for("fn"), parse_fn], [[Keyword.for("tilde"), Keyword.for("open_sq")], parse_default_vector_syntax], [[Keyword.for("tilde"), Keyword.for("open_b")], parse_default_record_syntax], [[Keyword.for("tilde"), Keyword.for("id"), Keyword.for("open_b")], parse_record_syntax], [[Keyword.for("tilde"), Keyword.for("id"), Keyword.for("open_sq")], parse_vector_syntax]]);
 function parse_single_expr(tokens) {
 return call.bind(SINGLE_EXPR_PARSE_MAP)(tokens);}
 function parse_1_2_expr(tokens) {
@@ -1756,13 +1784,13 @@ function eval_inclusive_range({lhs, rhs}) {
 if (truthy(rhs)) {
 return str("new IRange(", eval_expr(lhs), ", ", eval_expr(rhs), ")");
 } else {
-return str("new IRange(", eval_expr(lhs), ", Infinity)");
+return str("new IRangeNoMax(", eval_expr(lhs), ")");
 };}
 function eval_exclusive_range({lhs, rhs}) {
 if (truthy(rhs)) {
 return str("new ERange(", eval_expr(lhs), ", ", eval_expr(rhs), ")");
 } else {
-return str("new ERange(", eval_expr(lhs), ", Infinity)");
+return str("new ERangeNoMax(", eval_expr(lhs), ")");
 };}
 function eval_shorthand_anon_fn({expr}) {
 return str("(...__args) => ", eval_expr(expr));}
@@ -1796,12 +1824,10 @@ return eval_expr(rhs);
 };}
 function eval_op_eq({lhs, op, rhs}) {
 return str(eval_expr(lhs), " = ", call.bind(all_ops_to_method)(op), ".call(", eval_expr(lhs), ", ", eval_rhs_based_on_op(op, rhs), ")");}
-function eval_prefix_inclusive_range({expr}) {
-return str("new IRange(-Infinity, ", eval_expr(expr), ")");}
 function eval_prefix_exclusive_range({expr}) {
-return str("new ERange(-Infinity, ", eval_expr(expr), ")");}
+return str("new ERangeNoMin(", eval_expr(expr), ")");}
 function eval_expr(node) {
-return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("str"), eval_str], [Keyword.for("regex_lit"), eval_regex_lit], [Keyword.for("decorator"), eval_decorator], [Keyword.for("keyword"), eval_keyword], [Keyword.for("and_dot"), eval_and_dot], [Keyword.for("prefix_inclusive_range"), eval_prefix_inclusive_range], [Keyword.for("prefix_exclusive_range"), eval_prefix_exclusive_range], [Keyword.for("partial_fn_call"), eval_partial_fn_call], [Keyword.for("partial_obj_dyn_access"), eval_partial_obj_dyn_access], [Keyword.for("property_lookup"), eval_property_lookup], [Keyword.for("id_lookup"), eval_id_lookup], [Keyword.for("fn_call"), eval_fn_call], [Keyword.for("num"), eval_num], [Keyword.for("big_int"), eval_big_int], [Keyword.for("array"), eval_array], [Keyword.for("math_op"), eval_math_op], [Keyword.for("double_equals"), eval_double_equals], [Keyword.for("not_equals"), eval_not_equals], [Keyword.for("not"), eval_not], [Keyword.for("fn"), eval_fn], [Keyword.for("bind"), eval_bind], [Keyword.for("anon_arg_id"), eval_anon_arg_id], [Keyword.for("set"), eval_set], [Keyword.for("obj_lit"), eval_obj_lit], [Keyword.for("bind_this"), eval_bind_this], [Keyword.for("dynamic_access"), eval_dynamic_access], [Keyword.for("new"), eval_new], [Keyword.for("triple_equals"), eval_triple_equals], [Keyword.for("triple_not_equals"), eval_triple_not_equals], [Keyword.for("spread"), eval_spread], [Keyword.for("is"), eval_is], [Keyword.for("and_and"), eval_and_and], [Keyword.for("or_or"), eval_or_or], [Keyword.for("snd_assign"), eval_snd_assign], [Keyword.for("await"), eval_await], [Keyword.for("yield"), eval_yield], [Keyword.for("default_record_syntax"), eval_default_record_syntax], [Keyword.for("default_vector_syntax"), eval_default_vector_syntax], [Keyword.for("record_syntax"), eval_record_syntax], [Keyword.for("vector_syntax"), eval_vector_syntax], [Keyword.for("paren_expr"), eval_paren_expr], [Keyword.for("unapplied_math_op"), eval_unapplied_math_op], [Keyword.for("unapplied_and_and"), eval_unapplied_and_and], [Keyword.for("unapplied_or_or"), eval_unapplied_or_or], [Keyword.for("shorthand_anon_fn"), eval_shorthand_anon_fn], [Keyword.for("inclusive_range"), eval_inclusive_range], [Keyword.for("exclusive_range"), eval_exclusive_range], [Keyword.for("keyof"), eval_keyof], [Keyword.for("op_eq"), eval_op_eq]])))(node);}
+return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("str"), eval_str], [Keyword.for("regex_lit"), eval_regex_lit], [Keyword.for("decorator"), eval_decorator], [Keyword.for("keyword"), eval_keyword], [Keyword.for("and_dot"), eval_and_dot], [Keyword.for("prefix_exclusive_range"), eval_prefix_exclusive_range], [Keyword.for("partial_fn_call"), eval_partial_fn_call], [Keyword.for("partial_obj_dyn_access"), eval_partial_obj_dyn_access], [Keyword.for("property_lookup"), eval_property_lookup], [Keyword.for("id_lookup"), eval_id_lookup], [Keyword.for("fn_call"), eval_fn_call], [Keyword.for("num"), eval_num], [Keyword.for("big_int"), eval_big_int], [Keyword.for("array"), eval_array], [Keyword.for("math_op"), eval_math_op], [Keyword.for("double_equals"), eval_double_equals], [Keyword.for("not_equals"), eval_not_equals], [Keyword.for("not"), eval_not], [Keyword.for("fn"), eval_fn], [Keyword.for("bind"), eval_bind], [Keyword.for("anon_arg_id"), eval_anon_arg_id], [Keyword.for("set"), eval_set], [Keyword.for("obj_lit"), eval_obj_lit], [Keyword.for("bind_this"), eval_bind_this], [Keyword.for("dynamic_access"), eval_dynamic_access], [Keyword.for("new"), eval_new], [Keyword.for("triple_equals"), eval_triple_equals], [Keyword.for("triple_not_equals"), eval_triple_not_equals], [Keyword.for("spread"), eval_spread], [Keyword.for("is"), eval_is], [Keyword.for("and_and"), eval_and_and], [Keyword.for("or_or"), eval_or_or], [Keyword.for("snd_assign"), eval_snd_assign], [Keyword.for("await"), eval_await], [Keyword.for("yield"), eval_yield], [Keyword.for("default_record_syntax"), eval_default_record_syntax], [Keyword.for("default_vector_syntax"), eval_default_vector_syntax], [Keyword.for("record_syntax"), eval_record_syntax], [Keyword.for("vector_syntax"), eval_vector_syntax], [Keyword.for("paren_expr"), eval_paren_expr], [Keyword.for("unapplied_math_op"), eval_unapplied_math_op], [Keyword.for("unapplied_and_and"), eval_unapplied_and_and], [Keyword.for("unapplied_or_or"), eval_unapplied_or_or], [Keyword.for("shorthand_anon_fn"), eval_shorthand_anon_fn], [Keyword.for("inclusive_range"), eval_inclusive_range], [Keyword.for("exclusive_range"), eval_exclusive_range], [Keyword.for("keyof"), eval_keyof], [Keyword.for("op_eq"), eval_op_eq]])))(node);}
 function eval_return({expr}) {
 if (truthy(expr)) {
 return str("return ", eval_expr(expr));

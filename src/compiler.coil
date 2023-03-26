@@ -890,12 +890,6 @@ fn parse_set(tokens) = ~Parser[
   ~Chomp[:close_b]
 ]::call(tokens)
 
-fn parse_prefix_inclusive_range(tokens) = ~Parser[
-  ~Init[{type: :prefix_inclusive_range}]
-  ~Chomp[:dot_dot :eq]
-  ~Then[parse_expr :expr]
-]::call(tokens)
-
 fn parse_prefix_exclusive_range(tokens) = ~Parser[
   ~Init[{type: :prefix_exclusive_range}]
   ~Chomp[:dot_dot]
@@ -922,7 +916,6 @@ let SINGLE_EXPR_PARSE_MAP = ~ParseMap{
   :open_b => parse_obj
   :and_and => parse_unapplied_and_and
   :or_or => parse_unapplied_or_or
-  [:dot_dot :eq] => parse_prefix_inclusive_range
   :dot_dot => parse_prefix_exclusive_range
   all_math_ops => parse_unapplied_math_op
   [:hash :open_p] => parse_shorthand_anon_fn
@@ -1436,7 +1429,7 @@ fn eval_inclusive_range({lhs, rhs}) {
   if rhs {
     return str("new IRange(" eval_expr(lhs) ", " eval_expr(rhs) ")")
   } else {
-    return str("new IRange(" eval_expr(lhs) ", Infinity)")
+    return str("new IRangeNoMax(" eval_expr(lhs) ")")
   }
 }
 
@@ -1444,7 +1437,7 @@ fn eval_exclusive_range({lhs, rhs}) {
   if rhs {
     return str("new ERange(" eval_expr(lhs) ", " eval_expr(rhs) ")")
   } else {
-    return str("new ERange(" eval_expr(lhs) ", Infinity)")
+    return str("new ERangeNoMax(" eval_expr(lhs) ")")
   }
 }
 
@@ -1495,16 +1488,8 @@ fn eval_op_eq({ lhs, op, rhs }) =
       eval_expr(lhs) ", "
       eval_rhs_based_on_op(op rhs) ")")
 
-fn eval_prefix_inclusive_range({ expr }) =
-  // todo: do we want this to be polymorphic based off
-  // the type of `expr`? For now its going to expect numbers
-  // I think a better solution is to have an UnboundedInclusiveRange type
-  str("new IRange(-Infinity, " eval_expr(expr) ")") 
-
 fn eval_prefix_exclusive_range({ expr }) =
-  // todo: do we want this to be polymorphic based off
-  // the type of `expr`? For now its going to expect numbers
-  str("new ERange(-Infinity, " eval_expr(expr) ")") 
+  str("new ERangeNoMin(" eval_expr(expr) ")") 
 
 fn eval_expr(node) = node::at(:type)::pipe(~Map{
   :str => eval_str
@@ -1512,7 +1497,6 @@ fn eval_expr(node) = node::at(:type)::pipe(~Map{
   :decorator => eval_decorator
   :keyword => eval_keyword
   :and_dot => eval_and_dot
-  :prefix_inclusive_range => eval_prefix_inclusive_range
   :prefix_exclusive_range => eval_prefix_exclusive_range
   :partial_fn_call => eval_partial_fn_call
   :partial_obj_dyn_access => eval_partial_obj_dyn_access

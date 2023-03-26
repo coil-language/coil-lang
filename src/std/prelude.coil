@@ -744,22 +744,43 @@ fn inc() = this[Inc]()
 
 fn IRange(@start, @end) {}
 fn ERange(@start, @end) {}
+fn IRangeNoMin(@end) {}
+fn ERangeNoMax(@start) {}
+fn ERangeNoMin(@end) {}
 
 impl Call for IRange = fn(value) = value >= this.start && value <= this.end
 impl Call for ERange = fn(value) = value >= this.start && value < this.end
+impl Call for IRangeNoMin = fn(value) = value <= this.end
+impl Call for ERangeNoMax = fn(value) = value >= this.start
+impl Call for ERangeNoMin = fn(value) = value < this.end
 
 impl Printable for IRange = fn() = str(this.start "..=" this.end)
 impl Printable for ERange = fn() = str(this.start ".." this.end)
+impl Printable for IRangeNoMin = fn() = str("..=" this.end)
+impl Printable for ERangeNoMax = fn() = str(this.start "..")
+impl Printable for ERangeNoMin = fn() = str(".." this.end)
 
-fn make_range_iter(compare_to) = fn*() {
+impl Symbol.iterator for IRange = fn*() {
   let {start: i, end} = this
-  while i::compare_to(end) {
+  while i <= end {
     yield i
     i = i::inc()
   }
 }
-impl Symbol.iterator for IRange = make_range_iter(<=)
-impl Symbol.iterator for ERange = make_range_iter(<)
+impl Symbol.iterator for ERange = fn*() {
+  let {start: i, end} = this
+  while i < end {
+    yield i
+    i = i::inc()
+  }
+}
+impl Symbol.iterator for ERangeNoMax = fn*() {
+  let i = this.start  
+  loop {
+    yield i
+    i = i::inc()
+  }
+}
 
 fn def_vector(Constructor) {
   define Vector for Constructor = fn(args) = new Constructor(...args)
