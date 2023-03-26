@@ -199,7 +199,7 @@ return this[Symbol.iterator]();
 };});
 const Iterable = Symbol("Iterable");
 let iterable_collection_impl = new ObjectLiteral({*take(n) {
-for  (let [elem, i] of zip.bind(this)(new ERange((0), Infinity))) {
+for  (let [elem, i] of zip.bind(this)(new ERangeNoMax((0)))) {
 if (truthy(equals__q.call(i, n))) {
 break;
 };
@@ -207,7 +207,7 @@ yield elem
 };
 }, *drop(n) {
 let size = len.bind(this)();
-for  (let [elem, i] of zip.bind(this)(new ERange((0), Infinity))) {
+for  (let [elem, i] of zip.bind(this)(new ERangeNoMax((0)))) {
 if (truthy(greater_than.call((minus.call(size,i)),n))) {
 break;
 };
@@ -221,7 +221,7 @@ break;
 yield elem
 };
 }, *skip(n) {
-for  (let [elem, i] of zip.bind(this)(new ERange((0), Infinity))) {
+for  (let [elem, i] of zip.bind(this)(new ERangeNoMax((0)))) {
 if (truthy(less_than.call(i,n))) {
 continue;
 };
@@ -760,7 +760,7 @@ return [printable.bind(k)(), printable.bind(v)()];}))();};
 Array.prototype[Printable] = function () {
 return as_array.bind(map.bind(this)(printable))();};
 Set.prototype[Printable] = function () {
-return str("#{", as_array.bind(map.bind(this)(printable))().join(" "), "}");};
+return str("#{", as_array.bind(map.bind(this)(printable))().join(", "), "}");};
 Keyword.prototype[Printable] = function () {
 return plus.call(":",_resolve_keyword_str(this.value));};
 Boolean.prototype[Printable] = function () {
@@ -972,6 +972,16 @@ this.start = start;
 function ERangeNoMin(end) {
 this.end = end;
 }
+IRange.prototype[Equal] = function (other) {
+return and.call(other instanceof IRange, () => and.call(equals__q.call(other.start, this.start), () => equals__q.call(other.end, this.end)));};
+ERange.prototype[Equal] = function (other) {
+return and.call(other instanceof ERange, () => and.call(equals__q.call(other.start, this.start), () => equals__q.call(other.end, this.end)));};
+IRangeNoMin.prototype[Equal] = function (other) {
+return and.call(other instanceof IRangeNoMin, () => equals__q.call(other.end, this.end));};
+ERangeNoMax.prototype[Equal] = function (other) {
+return and.call(other instanceof ERangeNoMax, () => equals__q.call(other.start, this.start));};
+ERangeNoMin.prototype[Equal] = function (other) {
+return and.call(other instanceof ERangeNoMin, () => equals__q.call(other.end, this.end));};
 IRange.prototype[Call] = function (value) {
 return and.call(greater_than_eq.call(value,this.start), () => less_than_eq.call(value,this.end));};
 ERange.prototype[Call] = function (value) {
@@ -1030,6 +1040,15 @@ return all__q.bind(this)(char_alpha_numeric__q);}
 let CallMap = def_record(function CallMap(entries) {
 this.entries = entries;
 });
+CallMap.prototype[Record] = new ObjectLiteral({keys() {
+return map.bind(this)(first);
+}, values() {
+return map.bind(this)(values);
+}, len() {
+return keys.bind(this)().length;
+}, empty__q() {
+return len.bind(this)() === (0);
+}});
 CallMap.prototype[Call] = function (value) {
 return pipe.bind(find.bind(this)(function ([callable, _]) {
 return call.bind(callable)(value);}))(function ([_, val]) {
@@ -1560,7 +1579,7 @@ return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new
 function parse_set(tokens) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("set")})]), construct_vector.call(Chomp, [Keyword.for("hash"), Keyword.for("open_b")]), construct_vector.call(Until, [Keyword.for("close_b"), parse_expr, Keyword.for("elements")]), construct_vector.call(Chomp, [Keyword.for("close_b")])]))(tokens);}
 function parse_prefix_exclusive_range(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("prefix_exclusive_range")})]), construct_vector.call(Chomp, [Keyword.for("dot_dot")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")])]))(tokens);}
+return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("prefix_exclusive_range")})]), construct_vector.call(Chomp, [Keyword.for("dot_dot")]), construct_vector.call(Then, [parse_1_2_expr, Keyword.for("expr")])]))(tokens);}
 let SINGLE_EXPR_PARSE_MAP = construct_record.call(ParseMap, [[Keyword.for("string_lit"), parse_str], [Keyword.for("regex_lit"), parse_regex], [Keyword.for("keyword"), parse_keyword], [Keyword.for("open_p"), parse_paren_expr], [Keyword.for("yield"), parse_yield], [Keyword.for("await"), parse_await], [Keyword.for("id"), parse_id], [Keyword.for("at"), parse_decorator], [Keyword.for("num"), parse_num], [Keyword.for("big_int"), parse_big_int], [Keyword.for("open_sq"), parse_array], [Keyword.for("dot_dot_dot"), parse_spread], [Keyword.for("double_colon"), parse_bind_this], [Keyword.for("bang"), parse_not], [Keyword.for("new"), parse_new], [Keyword.for("single_and"), parse_anon_arg_id], [Keyword.for("open_b"), parse_obj], [Keyword.for("and_and"), parse_unapplied_and_and], [Keyword.for("or_or"), parse_unapplied_or_or], [Keyword.for("dot_dot"), parse_prefix_exclusive_range], [all_math_ops, parse_unapplied_math_op], [[Keyword.for("hash"), Keyword.for("open_p")], parse_shorthand_anon_fn], [[Keyword.for("hash"), Keyword.for("open_b")], parse_set], [[Keyword.for("async"), Keyword.for("fn")], parse_fn], [Keyword.for("fn"), parse_fn], [[Keyword.for("tilde"), Keyword.for("open_sq")], parse_default_vector_syntax], [[Keyword.for("tilde"), Keyword.for("open_b")], parse_default_record_syntax], [[Keyword.for("tilde"), Keyword.for("id"), Keyword.for("open_b")], parse_record_syntax], [[Keyword.for("tilde"), Keyword.for("id"), Keyword.for("open_sq")], parse_vector_syntax]]);
 function parse_single_expr(tokens) {
 return call.bind(SINGLE_EXPR_PARSE_MAP)(tokens);}

@@ -893,7 +893,7 @@ fn parse_set(tokens) = ~Parser[
 fn parse_prefix_exclusive_range(tokens) = ~Parser[
   ~Init[{type: :prefix_exclusive_range}]
   ~Chomp[:dot_dot]
-  ~Then[parse_expr :expr]
+  ~Then[parse_1_2_expr :expr]
 ]::call(tokens)
 
 let SINGLE_EXPR_PARSE_MAP = ~ParseMap{
