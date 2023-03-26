@@ -604,8 +604,6 @@ protocol UnderscoreInterpreter
 
 let _ = new Underscore([{f: fn id() = this, args: []}])
 
-impl Symbol.iterator for Underscore = fn() = this.insert(iter)
-
 impl :insert for Underscore = fn(f, ...args) =
   new Underscore(this.transforms::push({f, args}))
 
