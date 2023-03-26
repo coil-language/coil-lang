@@ -544,7 +544,7 @@ impl Printable for Map = fn() =
   ::map(fn ([k, v]) = [k::printable(), v::printable()])::as_map()
 
 impl Printable for Array = fn() = ::map(printable)::as_array()
-impl Printable for Set = fn() = str("#{" this::map(printable)::as_array().join(" ") "}")
+impl Printable for Set = fn() = str("#{" this::map(printable)::as_array().join(", ") "}")
 impl Printable for Keyword = fn() = ":" + _resolve_keyword_str(this.value)
 impl Printable for Boolean = fn() = this
 impl Printable for String = fn() = this
@@ -748,6 +748,24 @@ fn IRangeNoMin(@end) {}
 fn ERangeNoMax(@start) {}
 fn ERangeNoMin(@end) {}
 
+impl Equal for IRange = fn(other) =
+  other is IRange &&
+  other.start == this.start &&
+  other.end == this.end
+impl Equal for ERange = fn(other) =
+  other is ERange &&
+  other.start == this.start &&
+  other.end == this.end
+impl Equal for IRangeNoMin = fn(other) =
+  other is IRangeNoMin &&
+  other.end == this.end
+impl Equal for ERangeNoMax = fn(other) =
+  other is ERangeNoMax &&
+  other.start == this.start
+impl Equal for ERangeNoMin = fn(other) =
+  other is ERangeNoMin &&
+  other.end == this.end
+
 impl Call for IRange = fn(value) = value >= this.start && value <= this.end
 impl Call for ERange = fn(value) = value >= this.start && value < this.end
 impl Call for IRangeNoMin = fn(value) = value <= this.end
@@ -802,6 +820,12 @@ fn alpha_numeric?() = this::all?(char_alpha_numeric?)
 
 @def_record
 fn CallMap(@entries) {}
+impl Record for CallMap = {
+  fn keys() = ::map(first)::as_array()
+  fn values() = ::map(values)
+  fn len() = this::keys().length
+  fn empty?() = this::len() === 0
+}
 impl Call for CallMap = fn(value) =
   ::find(fn([callable, _]) = callable::call(value))
   ::pipe(fn([_, val]) = val)
