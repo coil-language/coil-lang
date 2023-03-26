@@ -163,39 +163,34 @@ let iterable_collection_impl = {
   }
 }
 
-let ArrayIterator = Object.getPrototypeOf([]::iter())
-let MapIterator = Object.getPrototypeOf(new Map()::iter())
-let StringIterator = Object.getPrototypeOf(""::iter())
-let SetIterator = Object.getPrototypeOf(#{}::iter())
-let GeneratorFunction = Object.getPrototypeOf(fn*(){})
+fn iterable_impl() {
+  if this[Iterable] {
+    return this[Iterable]
+  } else {
+    return iterable_collection_impl
+  }
+}
 
-define Iterable for ArrayIterator = iterable_collection_impl
-define Iterable for StringIterator = iterable_collection_impl
-define Iterable for MapIterator = iterable_collection_impl
-define Iterable for SetIterator = iterable_collection_impl
-impl Iterable for GeneratorFunction = iterable_collection_impl
-
-fn skip(n) = this::iter()[Iterable].skip.call(this, n)
-fn take(n) = this::iter()[Iterable].take.call(this, n)
-fn drop(n) = this::iter()[Iterable].drop.call(this, n)
-fn each(f) = this::iter()[Iterable].each.call(this, f::call)
-fn until(f) = this::iter()[Iterable].until.call(this, f::call)
-fn zip(...iterables) = this::iter()[Iterable].zip.call(this, ...iterables)
-fn map(...fns) = this::iter()[Iterable].map.call(this, compose(...fns))
-fn flat_map(...fns) = this::iter()[Iterable].flat_map.call(this, compose(...fns))
-fn find(f) = this::iter()[Iterable].find.call(this, f::call)
-fn keep(...fns) = this::iter()[Iterable].keep.call(this, compose(...fns))
-fn reject(...fns) = this::keep(compose(...fns, !_))
-fn any?(...fns) = this::iter()[Iterable].any?.call(this, compose(...fns))
-fn all?(...fns) = this::iter()[Iterable].all?.call(this, compose(...fns))
-fn reduce(f, start) = this::iter()[Iterable].reduce.call(this, f::call, start)
-fn sort() = this::iter()[Iterable].sort.call(this)
-fn sort_by(f) = this::iter()[Iterable].sort.call(this, f::call)
+fn skip(n) = ::iterable_impl().skip.call(this, n)
+fn take(n) = ::iterable_impl().take.call(this, n)
+fn drop(n) = ::iterable_impl().drop.call(this, n)
+fn each(f) = ::iterable_impl().each.call(this, f::call)
+fn until(...fns) = ::iterable_impl().until.call(this, compose(...fns))
+fn zip(...iterables) = ::iterable_impl().zip.call(this, ...iterables)
+fn map(...fns) = ::iterable_impl().map.call(this, compose(...fns))
+fn flat_map(...fns) = ::iterable_impl().flat_map.call(this, compose(...fns))
+fn find(...fns) = ::iterable_impl().find.call(this, compose(...fns))
+fn keep(...fns) = ::iterable_impl().keep.call(this, compose(...fns))
+fn reject(...fns) = ::keep(...fns, !_)
+fn any?(...fns) = ::iterable_impl().any?.call(this, compose(...fns))
+fn all?(...fns) = ::iterable_impl().all?.call(this, compose(...fns))
+fn reduce(f, start) = ::iterable_impl().reduce.call(this, f::call, start)
+fn sort() = ::iterable_impl().sort.call(this)
+fn sort_by(...fns) = ::iterable_impl().sort.call(this, compose(...fns))
 
 // RECORD AND VECTOR PROTOCOLS
 
 protocol Record
-protocol MutableRecord
 
 // using generator here to avoid allocating 2 intermediate entries arrays
 fn* merge_iterator(other) {
@@ -225,15 +220,8 @@ impl Record for Map = {
   fn first() = this.entries().next().value
 }
 
-impl MutableRecord for Map = {
-  fn insert!(key, value) = this.set(key, value)
-  fn merge!(other) = other::each(fn([k, v]) = this.set(k, v))
-}
-
 fn insert(key, value) = this[Record].insert.call(this, key, value)
 fn merge(other) = this[Record].merge.call(this, other)
-fn insert!(key, value) = this[MutableRecord].insert!.call(this, key, value)
-fn merge!(other) = this[MutableRecord].merge!.call(this, other)
 fn keys() = this[Record].keys.call(this)
 
 define Record for Map = fn(entries) = new Map(entries)
@@ -575,14 +563,6 @@ protocol ToString
 
 impl ToString for Object = fn() = this.toString()
 
-impl ToString for GeneratorFunction = fn() {
-  let output = ""  
-  for char of this {
-    output += char
-  }
-  return output
-}
-
 // Global Helpers
 
 fn str(...args) = args.join("")
@@ -610,14 +590,6 @@ fn as_num() = Number(this)
 fn as_str() {
   if this::nil?() { return "" }
   else { return this[ToString]() }
-}
-@impl_callable
-fn* as_gen_iter() {
-  if this::exists?() {
-    for elem of this {
-      yield elem
-    }
-  }
 }
 @impl_callable
 fn exists?() = !this::nil?()
@@ -813,12 +785,6 @@ fn alpha_numeric?() = this::all?(char_alpha_numeric?)
 
 @def_record
 fn CallMap(@entries) {}
-impl Record for CallMap = {
-  fn keys() = ::map(first)::as_array()
-  fn values() = ::map(values)
-  fn len() = this::keys().length
-  fn empty?() = this::len() === 0
-}
 impl Call for CallMap = fn(value) =
   ::find(fn([callable, _]) = callable::call(value))
   ::pipe(fn([_, val]) = val)
