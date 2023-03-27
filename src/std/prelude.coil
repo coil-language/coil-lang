@@ -55,14 +55,14 @@ fn pipe(callable) {
 fn compose(first_fn, ...fns) = fn(...args) =
   fns::reduce(fn (result, f) = f::call(result), first_fn::call(...args))
 
-fn impl_callable(f) {
+fn def_call(f) {
   define Call for f = fn(first, ...rest) = first::f(...rest)
   return f
 }
 
 // Iterable Protocol
 
-@impl_callable
+@def_call
 fn iter() {
   if this::nil?() {
     return [][Symbol.iterator]()
@@ -294,13 +294,13 @@ fn update_at(idx, callable) =
   this[Vector].update_at.call(this, idx, callable::call)
 fn insert_at(idx, value) =
   this[Vector].insert_at.call(this, idx, value)
-@impl_callable
+@def_call
 fn len() = (this[Vector] || this[Record]).len.call(this)
-@impl_callable
+@def_call
 fn first() = (this[Vector] || this[Record]).first.call(this)
-@impl_callable
+@def_call
 fn last() = (this[Vector] || this[Record]).last.call(this)
-@impl_callable
+@def_call
 fn empty?() {
   if this::nil?() {
     return true
@@ -308,7 +308,7 @@ fn empty?() {
     return (this[Vector] || this[Record]).empty?.call(this)
   }
 }
-@impl_callable
+@def_call
 fn not_empty?() = !this::empty?()
 
 define Vector for Array = fn(entries) = entries
@@ -346,7 +346,7 @@ fn record_equals?(other) {
 impl Equal for Map = record_equals?
 impl Equal for ObjectLiteral = record_equals?
 
-@impl_callable
+@def_call
 fn equals?(other) {
   if this::nil?() {
     return this === other
@@ -485,9 +485,9 @@ impl Comparable for String = {
   }
 }
 
-@impl_callable
+@def_call
 fn plus(other) = this[Plus](other)
-@impl_callable
+@def_call
 fn negate() {
   if this::nil?() {
     return true
@@ -544,7 +544,7 @@ impl Printable for Boolean = fn() = this
 impl Printable for String = fn() = this
 impl Printable for Function = fn() = this.name
 
-@impl_callable
+@def_call
 fn printable() {
   if this::nil?() || !this[Printable] {
     return this
@@ -553,7 +553,7 @@ fn printable() {
   }
 }
 
-@impl_callable
+@def_call
 fn log(...args) {  
   console.log(...args, this::printable())
   return this
@@ -566,32 +566,32 @@ impl ToString for Object = fn() = this.toString()
 // Global Helpers
 
 fn str(...args) = args.join("")
-@impl_callable
+@def_call
 fn nan?() = Number.isNaN(this)
-@impl_callable
+@def_call
 fn num?() = typeof(this) == "number"
-@impl_callable
+@def_call
 fn bigint?() = typeof(this) == "bigint"
-@impl_callable
+@def_call
 fn str?() = typeof(this) == "string"
-@impl_callable
+@def_call
 fn as_set() = new Set(this::iter())
-@impl_callable
+@def_call
 fn as_array() = Array["from"](this::iter())
-@impl_callable
+@def_call
 fn as_obj() = ObjectLiteral.from_entries(this::iter())
-@impl_callable
+@def_call
 fn as_map() = new Map(this::iter())
-@impl_callable
+@def_call
 fn as_keyword() = Keyword["for"](this.toString())
-@impl_callable
+@def_call
 fn as_num() = Number(this)
-@impl_callable
+@def_call
 fn as_str() {
   if this::nil?() { return "" }
   else { return this[ToString]() }
 }
-@impl_callable
+@def_call
 fn exists?() = !this::nil?()
 
 impl Negate for Set = fn() = #(!this.has(&))

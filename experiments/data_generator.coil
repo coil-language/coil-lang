@@ -1,9 +1,9 @@
 protocol Sample
 
-@impl_callable
+@def_call
 fn sample(...args) = this[Sample](...args)
 
-@impl_callable
+@def_call
 fn* sample_stream(...args) {
   loop {
     yield this::sample(...args)

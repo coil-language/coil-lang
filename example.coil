@@ -1,17 +1,29 @@
-fn IncSet(elems) { this.map = elems::map(fn(val) = [val, false])::as_map() }
-impl Call for IncSet = fn(val) {
-  if this.map.get(val) {
-    return false
-  } else {
-    this.map.set(val, true)
-    return true
-  }
+// here lies a way to generically implement something like clojure's `into`
+// along with Rename, which I thought is kind of cool
+
+protocol Into
+fn def_into(Ctor, ...properties) {
+  define Into for Ctor = fn() =
+    ::sort_by(0 properties.indexOf)
+    ::map(1)
+    ::pipe(fn(args) = new Ctor(...args))
+  return Ctor
 }
-fn as_inc_set() = new IncSet(this)
 
-fn distinct() = ::keep(::as_inc_set())
+fn into(Ctor) = Ctor[Into].call(this)
 
-[1 2 2 3 3 4]
-  ::distinct()
+@def_record
+fn Rename(@entries) {}
+impl Call for Rename = fn(obj) =
+  ::map(fn([old_key, new_key]) = [new_key, obj::at(old_key)])
+
+@def_into(:x :y)
+fn Point(@x, @y) {}
+
+@def_call
+fn as_point() = ::into(Point)
+
+[{point_x: 10, point_y: 20}]
+  ::map(Rename{point_x: :x, point_y: :y} as_point)
   ::as_array()
   ::log()

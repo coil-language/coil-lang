@@ -8,7 +8,7 @@ impl HashCode for Array = fn() = ::reduce(fn(code, val) = (code * 31n) + val::ha
 impl HashCode for Set = fn() = ::reduce(fn(code, val) = (code * 31n) + val::hash(), 3n)
 impl HashCode for ObjectLiteral = fn() =
   ::reduce(fn(code, [key, val]) = (code * 31n) + [val val]::hash(), 7n)
-@impl_callable
+@def_call
 fn hash() = this[HashCode]()
 
 @def_vector
