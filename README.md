@@ -36,6 +36,33 @@ This has 2 big implications:
 
 These two notions together provide a very powerful building block (built into javascript!) that we can use to express large operations.
 
+## Protocols
+
+Protocols provide a sane, simple & powerful way to do polymorphism.
+
+```
+// definition
+protocol Greet
+
+// impls
+impl Greet for Person = fn() = str("Hi there, I'm " this.name)
+
+impl Greet for Dog = fn() = "Woof"
+
+// protocol function
+fn greet() = this[Greet]()
+
+// usage
+new Dog()::greet() // Woof
+new Person("Marcelle")::greet() // Hi there, I'm marcelle
+```
+
+If this looks somewhat familiar to you JavaScript folks, its because its just prototypes with symbols.
+
+Working with prototypes in JavaScript has been increasingly considered "bad practice", but Symbols due to their uniqueness property bring ease-of-mind back to extending prototypes.
+
+Coil has taken a different syntax to reorient & provide a sane set of best practices when dealing with prototypes.
+
 ## Data's Primary Function
 
 In coil there's a notion that every piece of data has a primary function.
