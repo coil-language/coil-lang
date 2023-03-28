@@ -135,3 +135,4 @@ function raise__b(err) {
 
 globalThis["Keyword"] = Keyword;
 globalThis["ObjectLiteral"] = ObjectLiteral;
+globalThis["truthy"] = truthy;

@@ -10,9 +10,18 @@ fn impl_lint(Ctor, type) {
   return Ctor
 }
 
+fn has_node?(linter) = ::all?(fn(node) =
+  linter[Lint](node) || node::at(:body)::pipe(#(&::has_node?(linter)))
+)
+
+fn has_no_nodes?(linter) = ::has_node?(linter)::negate()
+
+
 define Lint for log = fn(other) = other::log("Lint")
 
 impl Lint for String = fn(other) = this === other
+
+impl Lint for Underscore = fn(other) = this::call(other)
 
 impl Lint for Array = fn(other) =
   other is Array && this::len() == other::len() &&
@@ -24,26 +33,36 @@ fn Decorator(@entries) {}
 @impl_lint(:fn)
 fn Fn(@entries) {}
 
+@impl_lint(:fn_call)
+fn FnCall(@entries) {}
+
+@impl_lint(:id_lookup)
+fn IdLookup(@entries) {}
+
 @impl_lint(:this_assign)
 fn ThisAssign(@entries) {}
 
 fn check_rule({query, check, message}) =
   ::keep(fn(node) = query[Lint](node))
   ::reject(check)
+  // ::as_array()
+  // ::log()
   ::each(fn(node) = node::log(message))
 
 let example_program = "
-@def_record
-fn Struct(@entres) {}
+fn do_stuff() {
+  other_stuff!()
+}
 "
 
-let query = ~Decorator{name: "def_record"}
+let query = ~Fn{name: _::last() != "!"}
 
-fn check(node) = node::pipe(:fn_def :args 0 :name) == "entries"
+fn check({body}) = body
+  ::has_no_nodes?(~FnCall{lhs: ~IdLookup{name: _::last() == "!"}})
 
 let message = "
-All constructors that use @def_record must have
-exactly one argument of @entries
+Side effects must be propagated by convention of appending '!'
+to the name of functions that call effectful functions.
 "
 
 let rule = {query, check, message}

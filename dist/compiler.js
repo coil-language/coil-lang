@@ -135,6 +135,7 @@ function raise__b(err) {
 
 globalThis["Keyword"] = Keyword;
 globalThis["ObjectLiteral"] = ObjectLiteral;
+globalThis["truthy"] = truthy;
 const Call = Symbol("Call");
 Symbol.prototype[Call] = function (obj, ...args) {
 return obj[this](...args);};
@@ -878,6 +879,8 @@ return this.insert(merge, other);
 return this.insert(has__q, k);
 }, len() {
 return this.insert(len);
+}, last() {
+return this.insert(last);
 }});
 Underscore.prototype[Vector] = new ObjectLiteral({at(key) {
 return this.insert(at, key);
@@ -891,6 +894,8 @@ return this.insert(has__q, old_value, new_value);
 return this.insert(len);
 }, has__q(k) {
 return this.insert(has__q, k);
+}, last() {
+return this.insert(last);
 }});
 Underscore.prototype[Pipe] = function (f) {
 return this.insert(pipe, f);};
