@@ -1,0 +1,55 @@
+import {lex_and_parse} from "./dist/compiler.js"
+
+protocol Lint
+
+fn impl_lint(Ctor, type) {
+  Ctor = def_record(Ctor)
+  impl Lint for Ctor = fn(node) =
+    node::at(:type) == type &&
+    ::all?(fn([key, val]) = val[Lint](node::at(key)))
+  return Ctor
+}
+
+define Lint for log = fn(other) = other::log("Lint")
+
+impl Lint for String = fn(other) = this === other
+
+impl Lint for Array = fn(other) =
+  other is Array && this::len() == other::len() &&
+  ::zip(other)::all?(fn([rule, val]) = rule[Lint](val))
+
+@impl_lint(:decorator)
+fn Decorator(@entries) {}
+
+@impl_lint(:fn)
+fn Fn(@entries) {}
+
+@impl_lint(:this_assign)
+fn ThisAssign(@entries) {}
+
+fn check_rule({query, check, message}) =
+  ::keep(fn(node) = query[Lint](node))
+  ::reject(check)
+  ::each(fn(node) = node::log(message))
+
+let example_program = "
+@def_record
+fn Struct(@entres) {}
+"
+
+let query = ~Decorator{name: "def_record"}
+
+fn check(node) = node::pipe(:fn_def :args 0 :name) == "entries"
+
+let message = "
+All constructors that use @def_record must have
+exactly one argument of @entries
+"
+
+let rule = {query, check, message}
+
+fn check_program(program_str, rule) = program_str
+  ::pipe(lex_and_parse)
+  ::pipe(#(&::check_rule(rule)))
+
+check_program(example_program, rule)
