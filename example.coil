@@ -24,6 +24,6 @@ fn Point(@x, @y) {}
 fn as_point() = ::into(Point)
 
 [{point_x: 10, point_y: 20}]
-  ::map(Rename{point_x: :x, point_y: :y} as_point)
+  ::map(~Rename{point_x: :x, point_y: :y} as_point)
   ::as_array()
   ::log()
