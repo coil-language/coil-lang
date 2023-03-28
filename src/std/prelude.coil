@@ -44,11 +44,12 @@ protocol Pipe
 
 impl Pipe for Object = fn(callable) = callable::call(this)
 
-fn pipe(callable) {
+fn pipe(...callables) {
+  let f = compose(...callables)  
   if this::nil?() {
-    return callable::call(this)
+    return f(this)
   } else {
-    return this[Pipe](callable)
+    return this[Pipe](f)
   }
 }
 
@@ -809,6 +810,7 @@ define :find for globalThis = find
 define :keep for globalThis = keep
 define :reject for globalThis = reject
 define :any? for globalThis = any?
+define :all? for globalThis = all?
 define :reduce for globalThis = reduce
 define :Record for globalThis = Record
 define :insert for globalThis = insert

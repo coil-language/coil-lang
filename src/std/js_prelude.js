@@ -132,3 +132,6 @@ function raise__b(err) {
   console.log(err);
   throw err;
 }
+
+globalThis["Keyword"] = Keyword;
+globalThis["ObjectLiteral"] = ObjectLiteral;

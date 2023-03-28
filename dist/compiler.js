@@ -132,6 +132,9 @@ function raise__b(err) {
   console.log(err);
   throw err;
 }
+
+globalThis["Keyword"] = Keyword;
+globalThis["ObjectLiteral"] = ObjectLiteral;
 const Call = Symbol("Call");
 Symbol.prototype[Call] = function (obj, ...args) {
 return obj[this](...args);};
@@ -177,21 +180,22 @@ let nil__q = Object.freeze(new Set([undefined, null]));
 const Pipe = Symbol("Pipe");
 Object.prototype[Pipe] = function (callable) {
 return call.bind(callable)(this);};
-function pipe(callable) {
+function pipe(...callables) {
+let f = compose(...callables);
 if (truthy(nil__q.bind(this)())) {
-return call.bind(callable)(this);
+return f(this);
 } else {
-return this[Pipe](callable);
+return this[Pipe](f);
 };}
 function compose(first_fn, ...fns) {
 return function (...args) {
 return reduce.bind(fns)(function (result, f) {
 return call.bind(f)(result);}, call.bind(first_fn)(...args));};}
-function impl_callable(f) {
+function def_call(f) {
 f[Call] = function (first, ...rest) {
 return f.bind(first)(...rest);};
 return f;}
-let iter = impl_callable(function iter() {
+let iter = def_call(function iter() {
 if (truthy(nil__q.bind(this)())) {
 return [][Symbol.iterator]();
 } else {
@@ -286,51 +290,45 @@ return true;
 };
 return false;
 }});
-let ArrayIterator = Object.getPrototypeOf(iter.bind([])());
-let MapIterator = Object.getPrototypeOf(iter.bind(new Map())());
-let StringIterator = Object.getPrototypeOf(iter.bind("")());
-let SetIterator = Object.getPrototypeOf(iter.bind(new Set([]))());
-let GeneratorFunction = Object.getPrototypeOf(function *() {
-});
-ArrayIterator[Iterable] = iterable_collection_impl;
-StringIterator[Iterable] = iterable_collection_impl;
-MapIterator[Iterable] = iterable_collection_impl;
-SetIterator[Iterable] = iterable_collection_impl;
-GeneratorFunction.prototype[Iterable] = iterable_collection_impl;
+function iterable_impl() {
+if (truthy(this[Iterable])) {
+return this[Iterable];
+} else {
+return iterable_collection_impl;
+};}
 function skip(n) {
-return iter.bind(this)()[Iterable].skip.call(this, n);}
+return iterable_impl.bind(this)().skip.call(this, n);}
 function take(n) {
-return iter.bind(this)()[Iterable].take.call(this, n);}
+return iterable_impl.bind(this)().take.call(this, n);}
 function drop(n) {
-return iter.bind(this)()[Iterable].drop.call(this, n);}
+return iterable_impl.bind(this)().drop.call(this, n);}
 function each(f) {
-return iter.bind(this)()[Iterable].each.call(this, call.bind(f));}
-function until(f) {
-return iter.bind(this)()[Iterable].until.call(this, call.bind(f));}
+return iterable_impl.bind(this)().each.call(this, call.bind(f));}
+function until(...fns) {
+return iterable_impl.bind(this)().until.call(this, compose(...fns));}
 function zip(...iterables) {
-return iter.bind(this)()[Iterable].zip.call(this, ...iterables);}
+return iterable_impl.bind(this)().zip.call(this, ...iterables);}
 function map(...fns) {
-return iter.bind(this)()[Iterable].map.call(this, compose(...fns));}
+return iterable_impl.bind(this)().map.call(this, compose(...fns));}
 function flat_map(...fns) {
-return iter.bind(this)()[Iterable].flat_map.call(this, compose(...fns));}
-function find(f) {
-return iter.bind(this)()[Iterable].find.call(this, call.bind(f));}
+return iterable_impl.bind(this)().flat_map.call(this, compose(...fns));}
+function find(...fns) {
+return iterable_impl.bind(this)().find.call(this, compose(...fns));}
 function keep(...fns) {
-return iter.bind(this)()[Iterable].keep.call(this, compose(...fns));}
+return iterable_impl.bind(this)().keep.call(this, compose(...fns));}
 function reject(...fns) {
-return keep.bind(this)(compose(...fns, negate.call(_)));}
+return keep.bind(this)(...fns, negate.call(_));}
 function any__q(...fns) {
-return iter.bind(this)()[Iterable].any__q.call(this, compose(...fns));}
+return iterable_impl.bind(this)().any__q.call(this, compose(...fns));}
 function all__q(...fns) {
-return iter.bind(this)()[Iterable].all__q.call(this, compose(...fns));}
+return iterable_impl.bind(this)().all__q.call(this, compose(...fns));}
 function reduce(f, start) {
-return iter.bind(this)()[Iterable].reduce.call(this, call.bind(f), start);}
+return iterable_impl.bind(this)().reduce.call(this, call.bind(f), start);}
 function sort() {
-return iter.bind(this)()[Iterable].sort.call(this);}
-function sort_by(f) {
-return iter.bind(this)()[Iterable].sort.call(this, call.bind(f));}
+return iterable_impl.bind(this)().sort.call(this);}
+function sort_by(...fns) {
+return iterable_impl.bind(this)().sort.call(this, compose(...fns));}
 const Record = Symbol("Record");
-const MutableRecord = Symbol("MutableRecord");
 function *merge_iterator(other) {
 yield* this
 yield* other}
@@ -368,20 +366,10 @@ return this.size === (0);
 }, first() {
 return this.entries().next().value;
 }});
-Map.prototype[MutableRecord] = new ObjectLiteral({insert__b(key, value) {
-return this.set(key, value);
-}, merge__b(other) {
-return each.bind(other)(function ([k, v]) {
-return this.set(k, v);});
-}});
 function insert(key, value) {
 return this[Record].insert.call(this, key, value);}
 function merge(other) {
 return this[Record].merge.call(this, other);}
-function insert__b(key, value) {
-return this[MutableRecord].insert__b.call(this, key, value);}
-function merge__b(other) {
-return this[MutableRecord].merge__b.call(this, other);}
 function keys() {
 return this[Record].keys.call(this);}
 Map[Record] = function (entries) {
@@ -471,25 +459,30 @@ function update_at(idx, callable) {
 return this[Vector].update_at.call(this, idx, call.bind(callable));}
 function insert_at(idx, value) {
 return this[Vector].insert_at.call(this, idx, value);}
-let len = impl_callable(function len() {
+let len = def_call(function len() {
 return (or.call(this[Vector], () => this[Record])).len.call(this);});
-let first = impl_callable(function first() {
+let first = def_call(function first() {
 return (or.call(this[Vector], () => this[Record])).first.call(this);});
-let last = impl_callable(function last() {
+let last = def_call(function last() {
 return (or.call(this[Vector], () => this[Record])).last.call(this);});
-let empty__q = impl_callable(function empty__q() {
+let empty__q = def_call(function empty__q() {
 if (truthy(nil__q.bind(this)())) {
 return true;
 } else {
 return (or.call(this[Vector], () => this[Record])).empty__q.call(this);
 };});
-let not_empty__q = impl_callable(function not_empty__q() {
+let not_empty__q = def_call(function not_empty__q() {
 return negate.call(empty__q.bind(this)());});
 Array[Vector] = function (entries) {
 return entries;};
 function construct_vector(entries) {
 return this[Vector](entries);}
 const Equal = Symbol("Equal");
+function impl_equal(Ctor, ...keys) {
+Ctor.prototype[Equal] = function (other) {
+return and.call(other instanceof Ctor, () => all__q.bind(keys)(function (key) {
+return equals__q.call(this[key], other[key]);}.bind(this)));};
+return Ctor;}
 Object.prototype[Equal] = function (other) {
 return this === other;};
 Set.prototype[Equal] = function (other) {
@@ -521,7 +514,7 @@ return all__q.bind(this)(function ([key, value]) {
 return equals__q.call(at.bind(other)(key), value);});}
 Map.prototype[Equal] = record_equals__q;
 ObjectLiteral.prototype[Equal] = record_equals__q;
-let equals__q = impl_callable(function equals__q(other) {
+let equals__q = def_call(function equals__q(other) {
 if (truthy(nil__q.bind(this)())) {
 return this === other;
 } else {
@@ -707,9 +700,9 @@ return js_less_than(this, other);
 raise__b(new Error("Expected string"))
 };
 }});
-let plus = impl_callable(function plus(other) {
+let plus = def_call(function plus(other) {
 return this[Plus](other);});
-let negate = impl_callable(function negate() {
+let negate = def_call(function negate() {
 if (truthy(nil__q.bind(this)())) {
 return true;
 } else {
@@ -769,59 +762,47 @@ String.prototype[Printable] = function () {
 return this;};
 Function.prototype[Printable] = function () {
 return this.name;};
-let printable = impl_callable(function printable() {
+let printable = def_call(function printable() {
 if (truthy(or.call(nil__q.bind(this)(), () => negate.call(this[Printable])))) {
 return this;
 } else {
 return this[Printable]();
 };});
-let log = impl_callable(function log(...args) {
+let log = def_call(function log(...args) {
 console.log(...args, printable.bind(this)())
 return this;});
 const ToString = Symbol("ToString");
 Object.prototype[ToString] = function () {
 return this.toString();};
-GeneratorFunction.prototype[ToString] = function () {
-let output = "";
-for  (let char of this) {
-output = plus.call(output, char)
-};
-return output;};
 function str(...args) {
 return args.join("");}
-let nan__q = impl_callable(function nan__q() {
+let nan__q = def_call(function nan__q() {
 return Number.isNaN(this);});
-let num__q = impl_callable(function num__q() {
+let num__q = def_call(function num__q() {
 return equals__q.call(typeof(this), "number");});
-let bigint__q = impl_callable(function bigint__q() {
+let bigint__q = def_call(function bigint__q() {
 return equals__q.call(typeof(this), "bigint");});
-let str__q = impl_callable(function str__q() {
+let str__q = def_call(function str__q() {
 return equals__q.call(typeof(this), "string");});
-let as_set = impl_callable(function as_set() {
+let as_set = def_call(function as_set() {
 return new Set(iter.bind(this)());});
-let as_array = impl_callable(function as_array() {
+let as_array = def_call(function as_array() {
 return Array["from"](iter.bind(this)());});
-let as_obj = impl_callable(function as_obj() {
+let as_obj = def_call(function as_obj() {
 return ObjectLiteral.from_entries(iter.bind(this)());});
-let as_map = impl_callable(function as_map() {
+let as_map = def_call(function as_map() {
 return new Map(iter.bind(this)());});
-let as_keyword = impl_callable(function as_keyword() {
+let as_keyword = def_call(function as_keyword() {
 return Keyword["for"](this.toString());});
-let as_num = impl_callable(function as_num() {
+let as_num = def_call(function as_num() {
 return Number(this);});
-let as_str = impl_callable(function as_str() {
+let as_str = def_call(function as_str() {
 if (truthy(nil__q.bind(this)())) {
 return "";
 } else {
 return this[ToString]();
 };});
-let as_gen_iter = impl_callable(function *as_gen_iter() {
-if (truthy(exists__q.bind(this)())) {
-for  (let elem of this) {
-yield elem
-};
-};});
-let exists__q = impl_callable(function exists__q() {
+let exists__q = def_call(function exists__q() {
 return negate.call(nil__q.bind(this)());});
 Set.prototype[Negate] = function () {
 return (...__args) => negate.call(this.has(__args[0]));};
@@ -831,8 +812,6 @@ this.transforms = transforms;
 const UnderscoreInterpreter = Symbol("UnderscoreInterpreter");
 let _ = new Underscore([new ObjectLiteral({f: function id() {
 return this;}, args: []})]);
-Underscore.prototype[Symbol.iterator] = function () {
-return this.insert(iter);};
 Underscore.prototype[Keyword.for("insert")] = function (f, ...args) {
 return new Underscore(push.bind(this.transforms)(new ObjectLiteral({f, args})));};
 Object.prototype[UnderscoreInterpreter] = function (underscore) {
@@ -955,33 +934,23 @@ String.prototype[Inc] = function () {
 return String.fromCharCode(plus.call(this.charCodeAt((0)),(1)));};
 function inc() {
 return this[Inc]();}
-function IRange(start, end) {
+let IRange = impl_equal(function IRange(start, end) {
 this.start = start;
 this.end = end;
-}
-function ERange(start, end) {
+}, Keyword.for("start"), Keyword.for("end"));
+let ERange = impl_equal(function ERange(start, end) {
 this.start = start;
 this.end = end;
-}
-function IRangeNoMin(end) {
+}, Keyword.for("start"), Keyword.for("end"));
+let IRangeNoMin = impl_equal(function IRangeNoMin(end) {
 this.end = end;
-}
-function ERangeNoMax(start) {
+}, Keyword.for("end"));
+let ERangeNoMax = impl_equal(function ERangeNoMax(start) {
 this.start = start;
-}
-function ERangeNoMin(end) {
+}, Keyword.for("start"));
+let ERangeNoMin = impl_equal(function ERangeNoMin(end) {
 this.end = end;
-}
-IRange.prototype[Equal] = function (other) {
-return and.call(other instanceof IRange, () => and.call(equals__q.call(other.start, this.start), () => equals__q.call(other.end, this.end)));};
-ERange.prototype[Equal] = function (other) {
-return and.call(other instanceof ERange, () => and.call(equals__q.call(other.start, this.start), () => equals__q.call(other.end, this.end)));};
-IRangeNoMin.prototype[Equal] = function (other) {
-return and.call(other instanceof IRangeNoMin, () => equals__q.call(other.end, this.end));};
-ERangeNoMax.prototype[Equal] = function (other) {
-return and.call(other instanceof ERangeNoMax, () => equals__q.call(other.start, this.start));};
-ERangeNoMin.prototype[Equal] = function (other) {
-return and.call(other instanceof ERangeNoMin, () => equals__q.call(other.end, this.end));};
+}, Keyword.for("end"));
 IRange.prototype[Call] = function (value) {
 return and.call(greater_than_eq.call(value,this.start), () => less_than_eq.call(value,this.end));};
 ERange.prototype[Call] = function (value) {
@@ -1040,15 +1009,6 @@ return all__q.bind(this)(char_alpha_numeric__q);}
 let CallMap = def_record(function CallMap(entries) {
 this.entries = entries;
 });
-CallMap.prototype[Record] = new ObjectLiteral({keys() {
-return map.bind(this)(first);
-}, values() {
-return map.bind(this)(values);
-}, len() {
-return keys.bind(this)().length;
-}, empty__q() {
-return len.bind(this)() === (0);
-}});
 CallMap.prototype[Call] = function (value) {
 return pipe.bind(find.bind(this)(function ([callable, _]) {
 return call.bind(callable)(value);}))(function ([_, val]) {
@@ -1073,6 +1033,7 @@ globalThis[Keyword.for("find")] = find;
 globalThis[Keyword.for("keep")] = keep;
 globalThis[Keyword.for("reject")] = reject;
 globalThis[Keyword.for("any__q")] = any__q;
+globalThis[Keyword.for("all__q")] = all__q;
 globalThis[Keyword.for("reduce")] = reduce;
 globalThis[Keyword.for("Record")] = Record;
 globalThis[Keyword.for("insert")] = insert;
@@ -1913,15 +1874,21 @@ return eval_expr;
 };}))(node);}
 function eval_ast(ast) {
 return map_join.bind(ast)(eval_statement, "\n");}
+export function lex_and_parse(string) {
+return pipe.bind(pipe.bind(call.bind(lexer)(string))(function (tokens) {
+return new CollectionView(tokens, (0));}))(parse);};
 function compile(string) {
 return pipe.bind(pipe.bind(pipe.bind(call.bind(lexer)(string))(function (tokens) {
 return new CollectionView(tokens, (0));}))(parse))(eval_ast);}
-function compile_file(src_file_name, out_name, prelude_src) {
+function compile_file(src_file_name, out_name) {
+let src = Deno.readTextFileSync(src_file_name);
+Deno.writeTextFile(out_name, compile(src))}
+function compile_file_and_prelude(src_file_name, out_name, prelude_src) {
 let prelude = Deno.readTextFileSync("./src/std/js_prelude.js");
 prelude = plus.call(prelude,compile(Deno.readTextFileSync(prelude_src)))
 let src = Deno.readTextFileSync(src_file_name);
 Deno.writeTextFile(out_name, plus.call(prelude,compile(src)))}
-if (truthy(globalThis.Deno)) {
+if (truthy(and.call(globalThis.Deno, () => not_empty__q.bind(Deno.args)()))) {
 let src_file_name = Deno.args[(0)];
 let out_name = Deno.args[(1)];
 let prelude_src = "./src/std/prelude.coil";
@@ -1933,12 +1900,14 @@ continue;
 };
 console.log("Rebuilding...")
 try {
-compile_file(src_file_name, out_name, prelude_src)
+compile_file_and_prelude(src_file_name, out_name, prelude_src)
 } catch (e) {
 console.error("Compile Failed", e)
 };
 };
+} else if (equals__q.call(Deno.args[(2)], "-no-prelude")) {
+compile_file(src_file_name, out_name)
 } else {
-compile_file(src_file_name, out_name, prelude_src)
+compile_file_and_prelude(src_file_name, out_name, prelude_src)
 };
 };

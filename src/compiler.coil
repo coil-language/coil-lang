@@ -1656,19 +1656,28 @@ fn eval_statement(node) = node::at(:type)::pipe(~Map{
 
 fn eval_ast(ast) = ast::map_join(eval_statement "\n")
 
+export fn lex_and_parse(string) = lexer::call(string)
+  ::pipe(fn(tokens) = new CollectionView(tokens, 0))
+  ::pipe(parse)
+
 fn compile(string) = lexer::call(string)
   ::pipe(fn(tokens) = new CollectionView(tokens, 0))
   ::pipe(parse)
   ::pipe(eval_ast)
 
-fn compile_file(src_file_name, out_name, prelude_src) {
+fn compile_file(src_file_name, out_name) {
+  let src = Deno.readTextFileSync(src_file_name)
+  Deno.writeTextFile(out_name, compile(src))
+}
+
+fn compile_file_and_prelude(src_file_name, out_name, prelude_src) {
   let prelude = Deno.readTextFileSync("./src/std/js_prelude.js")
   prelude = prelude + compile(Deno.readTextFileSync(prelude_src))
   let src = Deno.readTextFileSync(src_file_name)
   Deno.writeTextFile(out_name, prelude + compile(src))
 }
 
-if globalThis.Deno {
+if globalThis.Deno && Deno.args::not_empty?() {
   let src_file_name = Deno.args[0]
   let out_name = Deno.args[1]
   let prelude_src = "./src/std/prelude.coil"
@@ -1679,12 +1688,14 @@ if globalThis.Deno {
       if event.kind != "modify" { continue }
       console.log("Rebuilding...")
       try {
-        compile_file(src_file_name, out_name, prelude_src)
+        compile_file_and_prelude(src_file_name, out_name, prelude_src)
       } catch e {
         console.error("Compile Failed", e)
       }
     }
+  } else if Deno.args[2] == "-no-prelude" {
+    compile_file(src_file_name, out_name)
   } else {
-    compile_file(src_file_name, out_name, prelude_src)
-  }
+    compile_file_and_prelude(src_file_name, out_name, prelude_src)
+  } 
 }
