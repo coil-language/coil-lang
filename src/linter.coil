@@ -10,12 +10,11 @@ fn impl_lint(Ctor, type) {
   return Ctor
 }
 
-fn has_node?(linter) = ::all?(fn(node) =
+fn has_node?(linter) = ::not_empty?() && ::all?(fn(node) =
   linter[Lint](node) || node::at(:body)::pipe(#(&::has_node?(linter)))
 )
 
 fn has_no_nodes?(linter) = ::has_node?(linter)::negate()
-
 
 define Lint for log = fn(other) = other::log("Lint")
 
@@ -42,12 +41,16 @@ fn IdLookup(@entries) {}
 @impl_lint(:this_assign)
 fn ThisAssign(@entries) {}
 
-fn check_rule({query, check, message}) =
+fn check_rule({query, check, message}, program_str) =
   ::keep(fn(node) = query[Lint](node))
   ::reject(check)
-  // ::as_array()
-  // ::log()
-  ::each(fn(node) = node::log(message))
+  ::each(fn(node) = 
+    node
+      ::pipe(:pos :line _ - 1)
+      ::pipe(fn(line) = line..=(line + 3))
+      ::pipe(fn({start, end}) = program_str.split("\n").slice(start, end).join("\n> "))
+      ::log(message "\n>")
+  )
 
 let example_program = "
 fn do_stuff() {
@@ -69,6 +72,6 @@ let rule = {query, check, message}
 
 fn check_program(program_str, rule) = program_str
   ::pipe(lex_and_parse)
-  ::pipe(#(&::check_rule(rule)))
+  ::pipe(#(&::check_rule(rule, program_str)))
 
 check_program(example_program, rule)

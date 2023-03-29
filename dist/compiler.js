@@ -1195,11 +1195,13 @@ raise__b(new Error(plus.call("Parser Failed - Expected ",printable.bind(parser)(
 return this;
 };}
 const ParseInstruction = Symbol("ParseInstruction");
+function line_and_col({line, col}) {
+return new ObjectLiteral({line, col});}
 let Init = def_vector(function Init(expr) {
 this.expr = expr;
 });
 Init.prototype[ParseInstruction] = function ([_expr, tokens]) {
-return [this.expr, tokens];};
+return [new ObjectLiteral({...this.expr, pos: line_and_col(first.bind(tokens)())}), tokens];};
 Init.prototype[Printable] = function () {
 return str("Init(", printable.bind(this.expr)(), ")");};
 let One = def_vector(function One(kw, as) {
@@ -1466,7 +1468,7 @@ function parse_decorator(tokens) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("decorator")})]), construct_vector.call(Chomp, [Keyword.for("at")]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")]), construct_vector.call(Optional, [Keyword.for("open_p"), parse_call_expr, Keyword.for("args")]), construct_vector.call(Then, [parse_fn, Keyword.for("fn_def")])]))(tokens);}
 let parse_regex = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("regex_lit")})]), construct_vector.call(One, [Keyword.for("regex_lit"), Keyword.for("value")])]);
 let parse_str = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("str")})]), construct_vector.call(One, [Keyword.for("string_lit"), Keyword.for("value")])]);
-let parse_id = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("id_lookup")})]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")])]);
+let parse_id = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("id_lookup")})]), construct_vector.call(Either, [new Set([Keyword.for("id"), Keyword.for("import")]), Keyword.for("name")])]);
 function parse_reg_obj_entry(tokens) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("reg_obj_entry")})]), construct_vector.call(Either, [new Set([Keyword.for("id"), Keyword.for("num")]), Keyword.for("key")]), construct_vector.call(Chomp, [Keyword.for("colon")]), construct_vector.call(Then, [parse_expr, Keyword.for("value")])]))(tokens);}
 let parse_obj_shorthand_entry = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("obj_shorthand_entry")})]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("id")])]);

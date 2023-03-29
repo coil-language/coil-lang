@@ -168,10 +168,12 @@ fn verify_exists!(parser) {
 
 protocol ParseInstruction
 
+fn line_and_col({line, col}) = {line, col}
+
 @def_vector
 fn Init(@expr) {}
 impl ParseInstruction for Init = fn([_expr, tokens]) =
-  [this.expr tokens]
+  [{...this.expr, pos: line_and_col(tokens::first())} tokens]
 impl Printable for Init = fn() = str("Init(" this.expr::printable() ")")
 
 @def_vector
@@ -579,7 +581,7 @@ let parse_str = ~Parser[
 
 let parse_id = ~Parser[
   ~Init[{type: :id_lookup}]
-  ~One[:id :name]
+  ~Either[#{:id :import} :name]
 ]
 
 fn parse_reg_obj_entry(tokens) = ~Parser[
