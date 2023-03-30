@@ -384,12 +384,14 @@ function vector__q() {
 return exists__q.bind(this[Vector])();}
 Array.prototype[Vector] = new ObjectLiteral({at(idx) {
 return this.at(idx);
-}, push(value) {
-return [...this, value];
+}, push(val) {
+return [...this, val];
+}, prepend(val) {
+return [val, ...this];
 }, concat(other) {
 return merge_iterator.bind(this)(other);
-}, has__q(value) {
-return any__q.bind(this)(equals__q.call(_, value));
+}, has__q(val) {
+return any__q.bind(this)(equals__q.call(_, val));
 }, update_at(idx, f) {
 let [before, after] = [take.bind(this)(idx), skip.bind(this)(plus.call(idx,(1)))];
 return [...before, f(at.bind(this)(idx)), ...after];
@@ -429,14 +431,16 @@ return this.size === (0);
 }, first() {
 return this.values().next().value;
 }});
-String.prototype[Vector] = new ObjectLiteral({push(value) {
-return plus.call(this,value);
+String.prototype[Vector] = new ObjectLiteral({push(val) {
+return plus.call(this,val);
+}, prepend(val) {
+return plus.call(val,this);
 }, concat(other) {
 return plus.call(this,other);
-}, has__q(value) {
-return this.includes(value);
-}, replace(old_value, new_value) {
-return this.replace(old_value, new_value);
+}, has__q(val) {
+return this.includes(val);
+}, replace(old_val, new_val) {
+return this.replace(old_val, new_val);
 }, len() {
 return this.length;
 }, empty__q() {
@@ -448,18 +452,20 @@ return this.at((-1));
 }});
 function at(idx_or_key) {
 return (or.call(this[Vector], () => this[Record])).at.call(this, idx_or_key);}
-function push(value) {
-return this[Vector].push.call(this, value);}
+function push(val) {
+return this[Vector].push.call(this, val);}
+function prepend(val) {
+return this[Vector].prepend.call(this, val);}
 function concat(other) {
 return this[Vector].concat.call(this, other);}
-function has__q(value) {
-return (or.call(this[Vector], () => this[Record])).has__q.call(this, value);}
+function has__q(val) {
+return (or.call(this[Vector], () => this[Record])).has__q.call(this, val);}
 function replace(old_value, new_value) {
 return this[Vector].replace.call(this, old_value, new_value);}
 function update_at(idx, callable) {
 return this[Vector].update_at.call(this, idx, call.bind(callable));}
-function insert_at(idx, value) {
-return this[Vector].insert_at.call(this, idx, value);}
+function insert_at(idx, val) {
+return this[Vector].insert_at.call(this, idx, val);}
 let len = def_call(function len() {
 return (or.call(this[Vector], () => this[Record])).len.call(this);});
 let first = def_call(function first() {
@@ -886,6 +892,8 @@ Underscore.prototype[Vector] = new ObjectLiteral({at(key) {
 return this.insert(at, key);
 }, push(value) {
 return this.insert(push, value);
+}, prepend(value) {
+return this.insert(prepend, value);
 }, concat(other) {
 return this.insert(concat, other);
 }, replace(old_value, new_value) {
@@ -1050,6 +1058,7 @@ globalThis[Keyword.for("Vector")] = Vector;
 globalThis[Keyword.for("vector__q")] = vector__q;
 globalThis[Keyword.for("at")] = at;
 globalThis[Keyword.for("push")] = push;
+globalThis[Keyword.for("prepend")] = prepend;
 globalThis[Keyword.for("concat")] = concat;
 globalThis[Keyword.for("has__q")] = has__q;
 globalThis[Keyword.for("replace")] = replace;
@@ -1452,7 +1461,7 @@ let assignable_ops = concat.bind(math_ops)([Keyword.for("or_or"), Keyword.for("a
 function parse_op_eq(tokens, lhs) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("op_eq"), lhs})]), construct_vector.call(Either, [assignable_ops, Keyword.for("op")]), construct_vector.call(Chomp, [Keyword.for("eq")]), construct_vector.call(Then, [parse_expr, Keyword.for("rhs")])]))(tokens);}
 function parse_snd_expr_step(tokens, lhs) {
-return call.bind(construct_record.call(ParseMap, [[Keyword.for("single_and"), parse_and_dot], [Keyword.for("dot"), parse_dot], [Keyword.for("open_p"), parse_fn_call], [Keyword.for("double_colon"), parse_infix_bind], [Keyword.for("open_sq"), parse_object_dynamic_access], [Keyword.for("is"), parse_is], [Keyword.for("eq"), parse_snd_assign], [[Keyword.for("dot_dot"), Keyword.for("eq")], parse_inclusive_range], [Keyword.for("dot_dot"), parse_exclusive_range], [[assignable_ops, Keyword.for("eq")], parse_op_eq], [math_ops, parse_math_op]]))(tokens, lhs);}
+return call.bind(construct_record.call(ParseMap, [[Keyword.for("dot"), parse_dot], [Keyword.for("open_p"), parse_fn_call], [Keyword.for("double_colon"), parse_infix_bind], [Keyword.for("open_sq"), parse_object_dynamic_access], [Keyword.for("is"), parse_is], [Keyword.for("eq"), parse_snd_assign], [[Keyword.for("single_and"), Keyword.for("dot")], parse_and_dot], [[Keyword.for("dot_dot"), Keyword.for("eq")], parse_inclusive_range], [Keyword.for("dot_dot"), parse_exclusive_range], [[assignable_ops, Keyword.for("eq")], parse_op_eq], [math_ops, parse_math_op]]))(tokens, lhs);}
 function parse_snd_expr([lhs, tokens]) {
 let __coil_while_let_temp = parse_snd_expr_step(tokens, lhs);
 while (__coil_while_let_temp) {

@@ -59,17 +59,19 @@ impl Aggregate for Query = fn() = {
   initial: ::map(fn([k, v]) = [k, []])::as_obj()
 }
 
-
+fn format_program_str(line_num) = this.split("\n")
+  ::skip(line_num - 1)
+  ::take(5)
+  ::until(empty?)
+  ::map(_::prepend("\n> "))
+  ::reduce(+, "")
 
 fn check_rule({query, check}, program_str) =
   ::reduce(query[Aggregate]().operator, query[Aggregate]().initial)
   ::pipe(check)
   ::each(fn({node, message}) = node
-    ::pipe(:pos :line _ - 1)
-    ::pipe(fn(line) = line..=(line + 3))
-    ::pipe(fn({start, end}) = program_str.split("\n").slice(start, end)::keep(not_empty?)::as_array().join("\n> "))
-    ::log(message "\n>")
-  )
+    ::pipe(:pos :line program_str::format_program_str)
+    ::log(message))
 
 let example_program = "
 protocol Deprecated
@@ -79,9 +81,9 @@ fn deprecated(f, msg) {
 }
 
 @deprecated(\"Use 'new_add' instead\")
-fn old_add(a, b) = a + b
+fn add(a, b) = a + b
 
-old_add(2, 3)
+add(2, 3)
 "
 
 let query = ~Query{
@@ -94,8 +96,9 @@ fn check({deprecated_fns, fn_calls}) = fn_calls
   ::map(fn(fn_node) = {
     node: fn_node,
     message: deprecated_fns
-      ::find(:fn_def :name _ == fn_node::pipe(:lhs :name))
-      ::pipe(:args 0 :value)
+      ::find(:fn_def :name #{fn_node::pipe(:lhs :name)})
+      ::pipe(:args)
+      ::pipe(first :value)
   })
 
 let rule = {query, check}

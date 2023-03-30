@@ -534,13 +534,13 @@ fn parse_op_eq(tokens lhs) = ~Parser[
 ]::call(tokens)
 
 fn parse_snd_expr_step(tokens, lhs) = ~ParseMap{
-  :single_and => parse_and_dot
   :dot => parse_dot
   :open_p => parse_fn_call
   :double_colon => parse_infix_bind
   :open_sq => parse_object_dynamic_access
   :is => parse_is
   :eq => parse_snd_assign
+  [:single_and :dot] => parse_and_dot
   [:dot_dot :eq] => parse_inclusive_range
   :dot_dot => parse_exclusive_range
   [assignable_ops :eq] => parse_op_eq

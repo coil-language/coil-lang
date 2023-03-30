@@ -236,9 +236,10 @@ fn vector?() = this[Vector]::exists?()
 
 impl Vector for Array = {
   fn at(idx) = this.at(idx)
-  fn push(value) = [...this, value]
+  fn push(val) = [...this, val]
+  fn prepend(val) = [val, ...this]
   fn concat(other) = this::merge_iterator(other)
-  fn has?(value) = this::any?(_ == value)
+  fn has?(val) = this::any?(_ == val)
   fn update_at(idx, f) {
     let [before after] = [this::take(idx), this::skip(idx + 1)]
     return [...before, f(::at(idx)), ...after]
@@ -275,10 +276,11 @@ impl Vector for Set = {
 }
 
 impl Vector for String = {
-  fn push(value) = this + value
+  fn push(val) = this + val
+  fn prepend(val) = val + this
   fn concat(other) = this + other
-  fn has?(value) = this.includes(value)
-  fn replace(old_value, new_value) = this.replace(old_value, new_value)
+  fn has?(val) = this.includes(val)
+  fn replace(old_val, new_val) = this.replace(old_val, new_val)
   fn len() = this.length
   fn empty?() = this.length === 0
   fn first() = this[0]
@@ -286,15 +288,16 @@ impl Vector for String = {
 }
 
 fn at(idx_or_key) = (this[Vector] || this[Record]).at.call(this, idx_or_key)
-fn push(value) = this[Vector].push.call(this, value)
+fn push(val) = this[Vector].push.call(this, val)
+fn prepend(val) = this[Vector].prepend.call(this, val)
 fn concat(other) = this[Vector].concat.call(this, other)
-fn has?(value) = (this[Vector] || this[Record]).has?.call(this, value)
+fn has?(val) = (this[Vector] || this[Record]).has?.call(this, val)
 fn replace(old_value, new_value) =
   this[Vector].replace.call(this, old_value, new_value)
 fn update_at(idx, callable) =
   this[Vector].update_at.call(this, idx, callable::call)
-fn insert_at(idx, value) =
-  this[Vector].insert_at.call(this, idx, value)
+fn insert_at(idx, val) =
+  this[Vector].insert_at.call(this, idx, val)
 @def_call
 fn len() = (this[Vector] || this[Record]).len.call(this)
 @def_call
@@ -666,6 +669,7 @@ impl Record for Underscore = {
 impl Vector for Underscore = {
   fn at(key) = this.insert(at, key)
   fn push(value) = this.insert(push, value)
+  fn prepend(value) = this.insert(prepend, value)
   fn concat(other) = this.insert(concat, other)
   fn replace(old_value, new_value) = this.insert(has?, old_value, new_value)
   fn len() = this.insert(len)
@@ -824,6 +828,7 @@ define :Vector for globalThis = Vector
 define :vector? for globalThis = vector?
 define :at for globalThis = at
 define :push for globalThis = push
+define :prepend for globalThis = prepend
 define :concat for globalThis = concat
 define :has? for globalThis = has?
 define :replace for globalThis = replace
