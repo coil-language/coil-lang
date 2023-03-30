@@ -1,0 +1,107 @@
+import {lex_and_parse} from "./dist/compiler.js"
+
+protocol Lint
+
+fn impl_lint(Ctor, type) {
+  Ctor = def_record(Ctor)
+  impl Lint for Ctor = fn(node) =
+    node::at(:type) == type &&
+    ::all?(fn([key, val]) = val[Lint](node::at(key)))
+  return Ctor
+}
+
+fn has_node?(linter) = ::not_empty?() && ::all?(fn(node) =
+  linter[Lint](node) || node::at(:body)::pipe(#(&::has_node?(linter)))
+)
+
+fn has_no_nodes?(linter) = ::has_node?(linter)::negate()
+
+define Lint for log = fn(other) = other::log("Lint")
+
+impl Lint for String = fn(other) = this === other
+
+impl Lint for Underscore = fn(other) = this::call(other)
+
+impl Lint for Array = fn(other) =
+  other is Array && this::len() == other::len() &&
+  ::zip(other)::all?(fn([rule, val]) = rule[Lint](val))
+
+@impl_lint(:decorator)
+fn Decorator(@entries) {}
+
+@impl_lint(:fn)
+fn Fn(@entries) {}
+
+@impl_lint(:fn_call)
+fn FnCall(@entries) {}
+
+@impl_lint(:id_lookup)
+fn IdLookup(@entries) {}
+
+@impl_lint(:this_assign)
+fn ThisAssign(@entries) {}
+
+
+protocol Aggregate
+
+@def_record
+fn Query(@entries) {}
+
+impl Aggregate for Query = fn() = {
+  operator: ::fn(aggregate, node) {
+    for [key, linter] of this {
+      if linter[Lint](node) {
+        aggregate = aggregate::insert(key, aggregate::at(key)::push(node))
+      }
+    }
+    return aggregate
+  },
+  initial: ::map(fn([k, v]) = [k, []])::as_obj()
+}
+
+
+
+fn check_rule({query, check}, program_str) =
+  ::reduce(query[Aggregate]().operator, query[Aggregate]().initial)
+  ::pipe(check)
+  ::each(fn({node, message}) = node
+    ::pipe(:pos :line _ - 1)
+    ::pipe(fn(line) = line..=(line + 3))
+    ::pipe(fn({start, end}) = program_str.split("\n").slice(start, end)::keep(not_empty?)::as_array().join("\n> "))
+    ::log(message "\n>")
+  )
+
+let example_program = "
+protocol Deprecated
+fn deprecated(f, msg) {
+  define Deprecated for f = true
+  return f
+}
+
+@deprecated(\"Use 'new_add' instead\")
+fn old_add(a, b) = a + b
+
+old_add(2, 3)
+"
+
+let query = ~Query{
+  deprecated_fns: ~Decorator{name: "deprecated"},
+  fn_calls: ~FnCall{lhs: ~IdLookup{}}
+}
+
+fn check({deprecated_fns, fn_calls}) = fn_calls
+  ::keep(:lhs :name deprecated_fns::map(:fn_def :name)::as_set())
+  ::map(fn(fn_node) = {
+    node: fn_node,
+    message: deprecated_fns
+      ::find(:fn_def :name _ == fn_node::pipe(:lhs :name))
+      ::pipe(:args 0 :value)
+  })
+
+let rule = {query, check}
+
+fn check_program(program_str, rule) = program_str
+  ::pipe(lex_and_parse)
+  ::pipe(#(&::check_rule(rule, program_str)))
+
+check_program(example_program, rule)
