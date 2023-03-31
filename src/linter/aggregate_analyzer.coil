@@ -41,7 +41,6 @@ fn IdLookup(@entries) {}
 @impl_lint(:this_assign)
 fn ThisAssign(@entries) {}
 
-
 protocol Aggregate
 
 @def_record
@@ -59,14 +58,8 @@ impl Aggregate for Query = fn() = {
   initial: ::map(fn([k, v]) = [k, []])::as_obj()
 }
 
-fn format_program_str(line_num) = this
-  // Making this split lazy is pretty tricky
-  // I'm worried about splitting on huge files
-  // but anyways I'm probably doing premature optimization
-  // trying to get a lazy split right now.
-  // At some point, a lazy split will be important
-  // but not yet.
-  .split("\n", "")
+fn format_program_str(line_num) = 
+  ::split("\n")
   ::skip(line_num - 1)
   ::take(5)
   ::until(empty?)

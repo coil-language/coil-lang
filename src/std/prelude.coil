@@ -74,7 +74,7 @@ fn iter() {
 
 @def_call
 // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterator_protocol
-fn iter?() = ::iter() === this
+fn iter?() = this&.[Symbol.iterator] && ::iter() === this
 
 protocol Iterable
 
@@ -166,6 +166,19 @@ let iterable_collection_impl = {
     }
     return false
   }
+  fn* split(val, init) {
+    init ||= val::EMPTY()
+    let chunk = init
+    for elem of this {
+      if elem == val {
+        yield chunk
+        chunk = init
+      } else {
+        chunk = chunk::push(elem)
+      }
+    }
+    yield chunk
+  }
 }
 
 fn iterable_impl() {
@@ -192,6 +205,7 @@ fn all?(...fns) = ::iterable_impl().all?.call(this, compose(...fns))
 fn reduce(f, start) = ::iterable_impl().reduce.call(this, f::call, start)
 fn sort() = ::iterable_impl().sort.call(this)
 fn sort_by(...fns) = ::iterable_impl().sort.call(this, compose(...fns))
+fn split(val, init) = ::iterable_impl().split.call(this, val, init)
 
 // RECORD AND VECTOR PROTOCOLS
 
@@ -203,7 +217,7 @@ fn* merge_iterator(other) {
   yield *other
 }
 
-impl Record for ObjectLiteral = {
+impl Record for ObjectLiteral = {  
   fn at(key) = this[key]
   fn insert(key, value) = {...this, [key]: value}
   fn merge(other) = ObjectLiteral.from_entries(this::merge_iterator(other))
@@ -239,6 +253,7 @@ protocol Vector
 fn vector?() = this[Vector]::exists?()
 
 impl Vector for Array = {
+  EMPTY: []
   fn at(idx) = this.at(idx)
   fn push(val) = [...this, val]
   fn prepend(val) = [val, ...this]
@@ -266,6 +281,7 @@ impl Vector for Array = {
 }
 
 impl Vector for Set = {
+  EMPTY: #{}  
   fn push(value) = new Set(this).add(value)
   fn concat(other) = new Set(this::merge_iterator(other))
   fn has?(value) = this.has(value)
@@ -280,6 +296,7 @@ impl Vector for Set = {
 }
 
 impl Vector for String = {
+  EMPTY: ""  
   fn push(val) = this + val
   fn prepend(val) = val + this
   fn concat(other) = this + other
@@ -291,6 +308,7 @@ impl Vector for String = {
   fn last() = this.at(-1)
 }
 
+fn EMPTY() = this[Vector].EMPTY
 fn at(idx_or_key) = (this[Vector] || this[Record]).at.call(this, idx_or_key)
 fn push(val) = this[Vector].push.call(this, val)
 fn prepend(val) = this[Vector].prepend.call(this, val)
@@ -567,11 +585,6 @@ fn log(...args) {
   return this
 }
 
-// Its not clear the use case of this
-protocol ToString
-
-impl ToString for Object = fn() = this.toString()
-
 // Global Helpers
 
 fn str(...args) = args.join("")
@@ -602,7 +615,7 @@ fn as_str() {
   } else if this::iter?() {
     return ::reduce(+, "")
   } else {
-    return this[ToString]()
+    return this.toString()
   }
 }
 @def_call
@@ -821,6 +834,7 @@ define :zip for globalThis = zip
 define :map for globalThis = map
 define :flat_map for globalThis = flat_map
 define :find for globalThis = find
+define :split for globalThis = split
 define :keep for globalThis = keep
 define :reject for globalThis = reject
 define :any? for globalThis = any?

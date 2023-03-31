@@ -203,7 +203,7 @@ return [][Symbol.iterator]();
 return this[Symbol.iterator]();
 };});
 let iter__q = def_call(function iter__q() {
-return iter.bind(this)() === this;});
+return and.call(this?.[Symbol.iterator], () => iter.bind(this)() === this);});
 const Iterable = Symbol("Iterable");
 let iterable_collection_impl = new ObjectLiteral({*take(n) {
 for  (let [elem, i] of zip.bind(this)(new ERangeNoMax((0)))) {
@@ -292,6 +292,18 @@ return true;
 };
 };
 return false;
+}, *split(val, init) {
+init = or.call(init, () => EMPTY.bind(val)())
+let chunk = init;
+for  (let elem of this) {
+if (truthy(equals__q.call(elem, val))) {
+yield chunk
+chunk = init
+} else {
+chunk = push.bind(chunk)(elem)
+};
+};
+yield chunk
 }});
 function iterable_impl() {
 if (truthy(this[Iterable])) {
@@ -331,6 +343,8 @@ function sort() {
 return iterable_impl.bind(this)().sort.call(this);}
 function sort_by(...fns) {
 return iterable_impl.bind(this)().sort.call(this, compose(...fns));}
+function split(val, init) {
+return iterable_impl.bind(this)().split.call(this, val, init);}
 const Record = Symbol("Record");
 function *merge_iterator(other) {
 yield* this
@@ -384,7 +398,7 @@ return this[Record](entries);}
 const Vector = Symbol("Vector");
 function vector__q() {
 return exists__q.bind(this[Vector])();}
-Array.prototype[Vector] = new ObjectLiteral({at(idx) {
+Array.prototype[Vector] = new ObjectLiteral({EMPTY: [], at(idx) {
 return this.at(idx);
 }, push(val) {
 return [...this, val];
@@ -416,7 +430,7 @@ return this[(0)];
 }, last() {
 return this.at((-1));
 }});
-Set.prototype[Vector] = new ObjectLiteral({push(value) {
+Set.prototype[Vector] = new ObjectLiteral({EMPTY: new Set([]), push(value) {
 return new Set(this).add(value);
 }, concat(other) {
 return new Set(merge_iterator.bind(this)(other));
@@ -433,7 +447,7 @@ return this.size === (0);
 }, first() {
 return this.values().next().value;
 }});
-String.prototype[Vector] = new ObjectLiteral({push(val) {
+String.prototype[Vector] = new ObjectLiteral({EMPTY: "", push(val) {
 return plus.call(this,val);
 }, prepend(val) {
 return plus.call(val,this);
@@ -452,6 +466,8 @@ return this[(0)];
 }, last() {
 return this.at((-1));
 }});
+function EMPTY() {
+return this[Vector].EMPTY;}
 function at(idx_or_key) {
 return (or.call(this[Vector], () => this[Record])).at.call(this, idx_or_key);}
 function push(val) {
@@ -780,9 +796,6 @@ return this[Printable]();
 let log = def_call(function log(...args) {
 console.log(...args, printable.bind(this)())
 return this;});
-const ToString = Symbol("ToString");
-Object.prototype[ToString] = function () {
-return this.toString();};
 function str(...args) {
 return args.join("");}
 let nan__q = def_call(function nan__q() {
@@ -811,7 +824,7 @@ return "";
 } else if (iter__q.bind(this)()) {
 return reduce.bind(this)(plus, "");
 } else {
-return this[ToString]();
+return this.toString();
 };});
 let exists__q = def_call(function exists__q() {
 return negate.call(nil__q.bind(this)());});
@@ -1045,6 +1058,7 @@ globalThis[Keyword.for("zip")] = zip;
 globalThis[Keyword.for("map")] = map;
 globalThis[Keyword.for("flat_map")] = flat_map;
 globalThis[Keyword.for("find")] = find;
+globalThis[Keyword.for("split")] = split;
 globalThis[Keyword.for("keep")] = keep;
 globalThis[Keyword.for("reject")] = reject;
 globalThis[Keyword.for("any__q")] = any__q;
