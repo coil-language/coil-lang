@@ -23,12 +23,11 @@ b
 c
 "
   ::split("\n")
-  ::take(10)
-  ::as_array()
+  ::as_str()
   ::log()
 
-[1 2 3 4 5 0 3 4 5 6]
-  ::split(0 [])
-  ::take(10)
-  ::as_array()
-  ::log()
+// [1 2 3 4 5 0 3 4 5 6]
+//   ::split(0 [])
+//   ::take(10)
+//   ::as_array()
+//   ::log()

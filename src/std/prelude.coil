@@ -72,6 +72,10 @@ fn iter() {
   }
 }
 
+@def_call
+// See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterator_protocol
+fn iter?() = ::iter() === this
+
 protocol Iterable
 
 let iterable_collection_impl = {
@@ -563,6 +567,7 @@ fn log(...args) {
   return this
 }
 
+// Its not clear the use case of this
 protocol ToString
 
 impl ToString for Object = fn() = this.toString()
@@ -592,8 +597,13 @@ fn as_keyword() = Keyword["for"](this.toString())
 fn as_num() = Number(this)
 @def_call
 fn as_str() {
-  if this::nil?() { return "" }
-  else { return this[ToString]() }
+  if this::nil?() {
+    return ""
+  } else if this::iter?() {
+    return ::reduce(+, "")
+  } else {
+    return this[ToString]()
+  }
 }
 @def_call
 fn exists?() = !this::nil?()
