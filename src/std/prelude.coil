@@ -45,7 +45,7 @@ protocol Pipe
 impl Pipe for Object = fn(callable) = callable::call(this)
 
 fn pipe(...callables) {
-  let f = compose(...callables)  
+  let f = compose(...callables)
   if this::nil?() {
     return f(this)
   } else {
@@ -150,7 +150,7 @@ let iterable_collection_impl = {
       }
     }
   }
-  fn all?(f) {  
+  fn all?(f) {
     for elem of this {
       if !f(elem) {
         return false
@@ -217,7 +217,7 @@ fn* merge_iterator(other) {
   yield *other
 }
 
-impl Record for ObjectLiteral = {  
+impl Record for ObjectLiteral = {
   fn at(key) = this[key]
   fn insert(key, value) = {...this, [key]: value}
   fn merge(other) = ObjectLiteral.from_entries(this::merge_iterator(other))
@@ -281,12 +281,12 @@ impl Vector for Array = {
 }
 
 impl Vector for Set = {
-  EMPTY: #{}  
+  EMPTY: #{}
   fn push(value) = new Set(this).add(value)
   fn concat(other) = new Set(this::merge_iterator(other))
   fn has?(value) = this.has(value)
   fn replace(old_value, new_value) {
-    let self = new Set(this)  
+    let self = new Set(this)
     self.delete(old_value)
     return self.add(new_value)
   }
@@ -296,7 +296,7 @@ impl Vector for Set = {
 }
 
 impl Vector for String = {
-  EMPTY: ""  
+  EMPTY: ""
   fn push(val) = this + val
   fn prepend(val) = val + this
   fn concat(other) = this + other
@@ -580,7 +580,7 @@ fn printable() {
 }
 
 @def_call
-fn log(...args) {  
+fn log(...args) {
   console.log(...args, this::printable())
   return this
 }
@@ -633,7 +633,7 @@ impl :insert for Underscore = fn(f, ...args) =
   new Underscore(this.transforms::push({f, args}))
 
 impl UnderscoreInterpreter for Object = fn(underscore) {
-  let initial_value = this  
+  let initial_value = this
   let result = initial_value
   for {f args} of underscore.transforms {
     result = result::f::call(...args)
@@ -784,7 +784,7 @@ impl Symbol.iterator for ERange = fn*() {
   }
 }
 impl Symbol.iterator for ERangeNoMax = fn*() {
-  let i = this.start  
+  let i = this.start
   loop {
     yield i
     i = i::inc()
