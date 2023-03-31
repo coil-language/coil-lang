@@ -202,6 +202,8 @@ return [][Symbol.iterator]();
 } else {
 return this[Symbol.iterator]();
 };});
+let iter__q = def_call(function iter__q() {
+return iter.bind(this)() === this;});
 const Iterable = Symbol("Iterable");
 let iterable_collection_impl = new ObjectLiteral({*take(n) {
 for  (let [elem, i] of zip.bind(this)(new ERangeNoMax((0)))) {
@@ -806,13 +808,13 @@ return Number(this);});
 let as_str = def_call(function as_str() {
 if (truthy(nil__q.bind(this)())) {
 return "";
+} else if (iter__q.bind(this)()) {
+return reduce.bind(this)(plus, "");
 } else {
 return this[ToString]();
 };});
 let exists__q = def_call(function exists__q() {
 return negate.call(nil__q.bind(this)());});
-Set.prototype[Negate] = function () {
-return (...__args) => negate.call(this.has(__args[0]));};
 function Underscore(transforms) {
 this.transforms = transforms;
 }

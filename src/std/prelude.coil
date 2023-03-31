@@ -608,8 +608,6 @@ fn as_str() {
 @def_call
 fn exists?() = !this::nil?()
 
-impl Negate for Set = fn() = #(!this.has(&))
-
 // Underscore
 
 fn Underscore(@transforms) {}
