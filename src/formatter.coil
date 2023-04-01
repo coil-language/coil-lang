@@ -15,39 +15,65 @@ fn format() {
   try {
     return ::at(:type)[Format]::call(this)
   } catch e {
-    ::at(:type)::log("Unknown format node")
+    ::at(:type)::log(e "Unknown format node")
   }
 }
 
-define Format for :let = fn({assign_expr, rhs}) =
-  str("let " assign_expr::format() " = " rhs::format())
+fn size_based(max_len, kw) =
+  fn(obj) {
+    let dispatch = null
+    if obj[kw]::len() > max_len {
+      dispatch = str("lg_" obj[:type].toString())::as_keyword()
+    } else {
+      dispatch = str("sm_" obj[:type].toString())::as_keyword()
+    }
+    return dispatch[Format]::call(obj)
+  }
+
 define Format for :id_assign = :name
 define Format for :id_lookup = :name
 define Format for :num = :value
-define Format for :array_deconstruction = fn({entries}) =
-  str("[" entries::map(format)::join(" ") "]")
-define Format for :double_equals = fn({lhs, rhs}) =
-  str(lhs::format() " == " rhs::format())
-define Format for :not_equals = fn({lhs, rhs}) =
-  str(lhs::format() " != " rhs::format())
 define Format for :str = :value
 define Format for :keyword = :value
-define Format for :define_for = fn({proto_expr, src_expr, expr}) =
-  str("define " proto_expr::format() " for " src_expr::format() " = " expr::format())
-define Format for :impl_for = fn({proto_expr, constructor, expr}) =
-  str("impl " proto_expr::format() " for " constructor " = " expr::format())
-define Format for :array = fn({elements}) =
-  str("[" elements::map(format)::join(" ") "]")
-define Format for :bind = fn({lhs, expr}) =
-  str(lhs::format() "::" expr::format())
-define Format for :math_op = fn({lhs, op, rhs}) =
-  str(lhs::format() " " op " " rhs::format())
-define Format for :fn_call = fn({lhs, args}) =
-  str(lhs::format() "(" args::map(format)::join(" ") ")")
 define Format for :bind_this = fn({expr}) = str("::" expr::format())
 
+define Format for :let = fn({assign_expr, rhs}) =
+  str("let " assign_expr::format() " = " rhs::format())
+
+define Format for :array_deconstruction = fn({entries}) =
+  str("[" entries::map(format)::join(" ") "]")
+
+define Format for :double_equals = fn({lhs, rhs}) =
+  str(lhs::format() " == " rhs::format())
+
+define Format for :not_equals = fn({lhs, rhs}) =
+  str(lhs::format() " != " rhs::format())
+
+define Format for :define_for = fn({proto_expr, src_expr, expr}) =
+  str("define " proto_expr::format() " for " src_expr::format() " = " expr::format())
+
+define Format for :impl_for = fn({proto_expr, constructor, expr}) =
+  str("impl " proto_expr::format() " for " constructor " = " expr::format())
+
+define Format for :array = size_based(5 :elements)
+
+define Format for :sm_array = fn({elements}) =
+  str("[" elements::map(format)::join(" ") "]")
+
+define Format for :lg_array = fn({elements}) =
+  str("[\n  " elements::map(format)::join(",\n  ") "\n]")
+
+define Format for :bind = fn({lhs, expr}) =
+  str(lhs::format() "::" expr::format())
+
+define Format for :math_op = fn({lhs, op, rhs}) =
+  str(lhs::format() " " op " " rhs::format())
+
+define Format for :fn_call = fn({lhs, args}) =
+  str(lhs::format() "(" args::map(format)::join(" ") ")")
+
 let program_str = "
-let [one, two, three, four, five] = [  0 1 2 3 4 ]::map(_ + 1)
+let [one, two, three, four, five] = [  0 1 2 3 4 4  55 6   ]::map(_ + 1)
 "
 
 lex_and_parse(program_str)
