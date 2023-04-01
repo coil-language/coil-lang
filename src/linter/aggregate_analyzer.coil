@@ -58,13 +58,13 @@ impl Aggregate for Query = fn() = {
   initial: ::map(fn([k, v]) = [k, []])::as_obj()
 }
 
-fn format_program_str(line_num) = 
+fn format_program_str(line_num) =
   ::split("\n")
   ::skip(line_num - 1)
   ::take(5)
   ::until(empty?)
   ::map(_::prepend("\n> "))
-  ::reduce(+, "")
+  ::as_str()
 
 fn check_rule({query, check}, program_str) =
   ::reduce(query[Aggregate]().operator, query[Aggregate]().initial)

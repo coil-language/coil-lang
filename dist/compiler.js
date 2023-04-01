@@ -1134,7 +1134,8 @@ globalThis[Keyword.for("ERange")] = ERange;
 globalThis[Keyword.for("alpha__q")] = alpha__q;
 globalThis[Keyword.for("alpha_numeric__q")] = alpha_numeric__q;
 globalThis[Keyword.for("def_vector")] = def_vector;
-globalThis[Keyword.for("def_record")] = def_record;function CollectionView(collection, idx) {
+globalThis[Keyword.for("def_record")] = def_record;
+globalThis[Keyword.for("def_call")] = def_call;function CollectionView(collection, idx) {
 this.collection = collection;
 this.idx = idx;
 }

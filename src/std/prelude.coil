@@ -911,3 +911,4 @@ define :alpha? for globalThis = alpha?
 define :alpha_numeric? for globalThis = alpha_numeric?
 define :def_vector for globalThis = def_vector
 define :def_record for globalThis = def_record
+define :def_call for globalThis = def_call
