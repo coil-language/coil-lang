@@ -19,6 +19,8 @@ fn format() {
   }
 }
 
+// maybe make this based off the real formatted size
+// of the exprs instead of ast list size.
 fn size_based(max_len, kw) =
   fn(obj) {
     let dispatch = null
@@ -40,8 +42,13 @@ define Format for :bind_this = fn({expr}) = str("::" expr::format())
 define Format for :let = fn({assign_expr, rhs}) =
   str("let " assign_expr::format() " = " rhs::format())
 
-define Format for :array_deconstruction = fn({entries}) =
+define Format for :array_deconstruction = size_based(5 :entries)
+
+define Format for :sm_array_deconstruction = fn({entries}) =
   str("[" entries::map(format)::join(" ") "]")
+
+define Format for :lg_array_deconstruction = fn({entries}) =
+  str("[\n  " entries::map(format)::join(",\n  ") ",\n]")
 
 define Format for :double_equals = fn({lhs, rhs}) =
   str(lhs::format() " == " rhs::format())
@@ -61,7 +68,7 @@ define Format for :sm_array = fn({elements}) =
   str("[" elements::map(format)::join(" ") "]")
 
 define Format for :lg_array = fn({elements}) =
-  str("[\n  " elements::map(format)::join(",\n  ") "\n]")
+  str("[\n  " elements::map(format)::join(",\n  ") ",\n]")
 
 define Format for :bind = fn({lhs, expr}) =
   str(lhs::format() "::" expr::format())
@@ -73,7 +80,7 @@ define Format for :fn_call = fn({lhs, args}) =
   str(lhs::format() "(" args::map(format)::join(" ") ")")
 
 let program_str = "
-let [one, two, three, four, five] = [  0 1 2 3 4 4  55 6   ]::map(_ + 1)
+let [one, two, three, four, five] = [  3 4 4  55 6   ]::map(_ + 1)
 "
 
 lex_and_parse(program_str)
