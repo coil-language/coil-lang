@@ -1,35 +1,57 @@
 import {lex_and_parse} from "./dist/compiler.js"
 
-fn join(sep) = ::reduce(fn(prev, cur) {
+fn join(sep) = ::reduce(fn(prev cur) {
   if prev::empty?() {
     return cur
   } else {
     return prev + sep + cur
   }
-}, "")
+} "")
 
 protocol Format
 
+fn sm_key() = str("sm_" this.toString())::as_keyword()
+fn lg_key() = str("lg_" this.toString())::as_keyword()
+
 @def_call
-fn format() {
+fn format(lvl) {
+  lvl ||= 0  
   try {
-    return ::at(:type)[Format]::call(this)
+    return ::at(:type)[Format]::call(this lvl)
   } catch e {
     ::at(:type)::log(e "Unknown format node")
   }
 }
 
-// maybe make this based off the real formatted size
-// of the exprs instead of ast list size.
-fn size_based(max_len, kw) =
-  fn(obj) {
-    let dispatch = null
-    if obj[kw]::len() > max_len {
-      dispatch = str("lg_" obj[:type].toString())::as_keyword()
+fn map_format(lvl) = ::map(fn(node) = node::format(lvl))
+
+let MAX_SIZE = 20
+fn when_large_list(kw) =
+  fn(node lvl) {
+    let {type} = node
+    let formatted_nodes = node::at(kw)::map_format(lvl)::as_array()
+    node = node::merge({[kw]: formatted_nodes})
+    if formatted_nodes::map(len)::reduce(+ 0) > MAX_SIZE {
+      return type::lg_key()[Format](node lvl + 1)
     } else {
-      dispatch = str("sm_" obj[:type].toString())::as_keyword()
+      return type::sm_key()[Format](node lvl)
     }
-    return dispatch[Format]::call(obj)
+  }
+
+fn when_large(...kws) =
+  fn(node lvl) {
+    let {type} = node
+    let total_size = 0
+    for kw of kws {
+      let formatted_node = node::at(kw)::format(lvl)
+      node = node::merge({[kw]: formatted_node})
+      total_size += formatted_node::len()
+    }
+    if total_size > MAX_SIZE {
+      return type::lg_key()[Format](node lvl + 1)
+    } else {
+      return type::sm_key()[Format](node lvl)
+    }
   }
 
 define Format for :id_assign = :name
@@ -37,53 +59,66 @@ define Format for :id_lookup = :name
 define Format for :num = :value
 define Format for :str = :value
 define Format for :keyword = :value
-define Format for :bind_this = fn({expr}) = str("::" expr::format())
+define Format for :bind_this = fn({expr} lvl) = str("::" expr::format(lvl))
 
-define Format for :let = fn({assign_expr, rhs}) =
-  str("let " assign_expr::format() " = " rhs::format())
+define Format for :let = fn({assign_expr rhs} lvl) =
+  str("let " assign_expr::format(lvl) " = " rhs::format(lvl))
 
-define Format for :array_deconstruction = size_based(5 :entries)
+define Format for :array_deconstruction = when_large_list(:entries)
 
-define Format for :sm_array_deconstruction = fn({entries}) =
-  str("[" entries::map(format)::join(" ") "]")
+define Format for :sm_array_deconstruction = fn({entries} lvl) =
+  str("[" entries::join(" ") "]")
 
-define Format for :lg_array_deconstruction = fn({entries}) =
-  str("[\n  " entries::map(format)::join(",\n  ") ",\n]")
+define Format for :lg_array_deconstruction = fn({entries} lvl) =
+  str(
+    "[\n" ("  " * lvl)
+    entries::join(",\n" + ("  " * lvl))
+    "\n]"
+  )
 
-define Format for :double_equals = fn({lhs, rhs}) =
-  str(lhs::format() " == " rhs::format())
+define Format for :double_equals = fn({lhs rhs} lvl) =
+  str(lhs::format() " == " rhs::format(lvl))
 
-define Format for :not_equals = fn({lhs, rhs}) =
-  str(lhs::format() " != " rhs::format())
+define Format for :not_equals = fn({lhs rhs} lvl) =
+  str(lhs::format(lvl) " != " rhs::format(lvl))
 
-define Format for :define_for = fn({proto_expr, src_expr, expr}) =
-  str("define " proto_expr::format() " for " src_expr::format() " = " expr::format())
+define Format for :define_for = fn({proto_expr src_expr expr} lvl) =
+  str("define " proto_expr::format(lvl) " for " src_expr::format(lvl) " = " expr::format(lvl))
 
-define Format for :impl_for = fn({proto_expr, constructor, expr}) =
-  str("impl " proto_expr::format() " for " constructor " = " expr::format())
+define Format for :impl_for = fn({proto_expr constructor expr} lvl) =
+  str("impl " proto_expr::format(lvl) " for " constructor " = " expr::format(lvl))
 
-define Format for :array = size_based(5 :elements)
+define Format for :array = when_large_list(:elements)
 
-define Format for :sm_array = fn({elements}) =
-  str("[" elements::map(format)::join(" ") "]")
+define Format for :sm_array = fn({elements} lvl) =
+  str("[" elements::join(" ") "]")
 
-define Format for :lg_array = fn({elements}) =
-  str("[\n  " elements::map(format)::join(",\n  ") ",\n]")
+define Format for :lg_array = fn({elements} lvl) =
+  str(
+    "[\n" ("  " * lvl)
+    elements::join(",\n" + ("  " * lvl))
+    ",\n" ("  " * (lvl - 1)) "]"
+  )
 
-define Format for :bind = fn({lhs, expr}) =
-  str(lhs::format() "::" expr::format())
+define Format for :bind = when_large(:lhs :expr)
 
-define Format for :math_op = fn({lhs, op, rhs}) =
-  str(lhs::format() " " op " " rhs::format())
+define Format for :sm_bind = fn({lhs expr} lvl) =
+  str(lhs "::" expr)
 
-define Format for :fn_call = fn({lhs, args}) =
-  str(lhs::format() "(" args::map(format)::join(" ") ")")
+define Format for :lg_bind = fn({lhs expr} lvl) =
+  str(lhs "\n" ("  " * lvl) "::" expr)
+
+define Format for :math_op = fn({lhs op rhs} lvl) =
+  str(lhs::format(lvl) " " op " " rhs::format(lvl))
+
+define Format for :fn_call = fn({lhs args} lvl) =
+  str(lhs::format() "(" args::map_format(lvl)::join(" ") ")")
 
 let program_str = "
-let [one, two, three, four, five] = [  3 4 4  55 6   ]::map(_ + 1)
+let [one two three four five] = [  [3 4 4  55 6 ] [3 4 ]  ]::map(_ + 1)::keep(_ > 0)
 "
 
 lex_and_parse(program_str)
-  ::map(format)
+  ::map_format(0)
   ::as_str()
   ::log()
