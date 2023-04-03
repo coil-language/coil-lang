@@ -5,3 +5,4 @@ test.js
 example.js
 node_modules
 test/dist/**/*.js
+linter.js
