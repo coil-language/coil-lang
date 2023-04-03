@@ -2,7 +2,6 @@
 
 protocol Call
 
-impl Call for Symbol = fn(obj, ...args) = obj[this](...args)
 impl Call for Function = fn(...args) = this(...args)
 impl Call for Set = fn(key) = this.has(key)
 impl Call for Map = fn(key) = this.get(key)
@@ -34,9 +33,8 @@ impl Call for Keyword = fn(collection) {
 
 fn call(...args) = this&.[Call](...args)
 
-// make sets and map callable using bind syntax
+// make sets callable using bind syntax
 impl :bind for Set = fn(val) = ::fn() = this::call(val)
-impl :bind for Map = fn(val) = ::fn() = this::call(val)
 
 let nil? = Object.freeze(#{undefined null})
 
@@ -323,7 +321,13 @@ fn insert_at(idx, val) =
 @def_call
 fn len() = (this[Vector] || this[Record]).len.call(this)
 @def_call
-fn first() = (this[Vector] || this[Record]).first.call(this)
+fn first() {
+  if ::iter?() {
+    return this.next().value
+  } else {
+    return (this[Vector] || this[Record]).first.call(this)
+  }
+}
 @def_call
 fn last() = (this[Vector] || this[Record]).last.call(this)
 @def_call
