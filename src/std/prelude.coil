@@ -206,6 +206,13 @@ fn any?(...fns) = ::iterable_impl().any?.call(this, compose(...fns))
 fn all?(...fns) = ::iterable_impl().all?.call(this, compose(...fns))
 fn reduce(f, start) = ::iterable_impl().reduce.call(this, f::call, start)
 fn split(val, init) = ::iterable_impl().split.call(this, val, init)
+fn join(sep) = ::reduce(fn(prev cur) {
+  if prev::empty?() {
+    return cur
+  } else {
+    return prev + sep + cur
+  }
+} "")
 
 // INTO
 
@@ -216,6 +223,7 @@ impl Into for ObjectLiteral = fn(iterable) = ::merge(iterable)
 impl Into for Map = fn(iterable) = ::merge(iterable)
 impl Into for Set = fn(iterable) = ::concat(iterable)
 impl Into for String = fn(iterable) = this + iterable::reduce(+ "")
+define Into for Object = fn(iterable) = Object.fromEntries(iterable)
 
 fn into(val) = val[Into](this)
 
@@ -563,43 +571,40 @@ fn or(thunk) {
   }
 }
 
-// Printable
 // This api is crufty, I'm not gonna lie.
 
-protocol Printable
+protocol JsLogFriendly
 
+// Why do we even do this for keywords?
 fn _resolve_keyword_str(kw) = kw::replace("__q", "?")::replace("__b", "!")
 
-impl Printable for ObjectLiteral = fn() {
-  let output = new Object()
-  for [k, v] of this {
-    output[_resolve_keyword_str(k)] = v::printable()
-  }
-  return output
-}
+impl JsLogFriendly for ObjectLiteral = fn() =
+  ::map(fn([k, v]) = [_resolve_keyword_str(k) v::js_log_friendly()])
+  ::into(Object)
 
-impl Printable for Map = fn() =
-  ::map(fn ([k, v]) = [k::printable(), v::printable()])::into(~Map{})
+impl JsLogFriendly for Map = fn() =
+  ::map(fn ([k, v]) = [k::js_log_friendly(), v::js_log_friendly()])
+  ::into(~Map{})
 
-impl Printable for Array = fn() = ::map(printable)::into([])
-impl Printable for Set = fn() = str("#{" this::map(printable)::into([]).join(", ") "}")
-impl Printable for Keyword = fn() = ":" + _resolve_keyword_str(this.value)
-impl Printable for Boolean = fn() = this
-impl Printable for String = fn() = this
-impl Printable for Function = fn() = this.name
+impl JsLogFriendly for Array = fn() = ::map(js_log_friendly)::into([])
+impl JsLogFriendly for Set = fn() = str("#{" this::map(js_log_friendly)::join(", ") "}")
+impl JsLogFriendly for Keyword = fn() = ":" + _resolve_keyword_str(this.value)
+impl JsLogFriendly for Boolean = fn() = this
+impl JsLogFriendly for String = fn() = this
+impl JsLogFriendly for Function = fn() = this.name
 
 @def_call
-fn printable() {
-  if this::nil?() || !this[Printable] {
+fn js_log_friendly() {
+  if this::nil?() || !this[JsLogFriendly] {
     return this
   } else {
-    return this[Printable]()
+    return this[JsLogFriendly]()
   }
 }
 
 @def_call
 fn log(...args) {
-  console.log(...args, this::printable())
+  console.log(...args, this::js_log_friendly())
   return this
 }
 
@@ -674,20 +679,6 @@ impl Comparable for Underscore = {
 impl Negate for Underscore = fn() = this.insert(negate)
 impl Equal for Underscore = fn(other) = this.insert(equals?, other)
 
-impl Iterable for Underscore = {
-  fn empty?() = this.insert(empty?)
-  fn first() = this.insert(first)
-  fn take() = this.insert(take)
-  fn skip() = this.insert(skip)
-  fn find(f) = this.insert(find, f)
-  fn reduce(f, start) = this.insert(reduce, f, start)
-  fn map(f) = this.insert(map, f)
-  fn flat_map(f) = this.insert(flat_map, f)
-  fn each(f) = this.insert(each, f)
-  fn keep(f) = this.insert(keep, f)
-  fn all?(f) = this.insert(all? f)
-  fn any?(f) = this.insert(any?, f)
-}
 impl Record for Underscore = {
   fn at(key) = this.insert(at, key)
   fn insert(key, value) = this.insert(insert, key, value)
@@ -717,7 +708,7 @@ impl Exponent for Underscore = fn(other) = this.insert(exponent, other)
 impl Mod for Underscore = fn(other) = this.insert(mod, other)
 
 // this is kind of shaky but its good enough
-impl Printable for Underscore = fn() {
+impl JsLogFriendly for Underscore = fn() {
   let fn_to_op = ~Map{
     "greater_than" => ">"
     "greater_than_eq" => ">="
@@ -733,16 +724,21 @@ impl Printable for Underscore = fn() {
     "and" => "&&"
     "or" => "||"
   }
-  return str("_" this.transforms::skip(1)::map(fn({f, args}) {
-    let fn_name = f::printable()
-    if let op = fn_to_op::call(fn_name) {
-      let [rhs] = args
-      if #{and, or}::call(f) { rhs = rhs() }
-      return str(" " op " " rhs::printable())
-    } else {
-      return str("::" fn_name "(" args::map(printable)::join(", ") ")")
-    }
-  })::reduce(+, ""))
+  return str("_"
+    this.transforms
+      ::skip(1)
+      ::map(fn({f, args}) {
+        let fn_name = f::js_log_friendly()
+        if let op = fn_to_op::call(fn_name) {
+          let [rhs] = args
+          if #{and, or}::call(f) { rhs = rhs() }
+          return str(" " op " " rhs::js_log_friendly())
+        } else {
+          let formatted_args = args::map(js_log_friendly)::join(", ")
+          return str("::" fn_name "(" formatted_args ")")
+        }
+      })
+      ::into(""))
 }
 
 // Ranges
@@ -772,11 +768,11 @@ impl Call for IRangeNoMin = fn(value) = value <= this.end
 impl Call for ERangeNoMax = fn(value) = value >= this.start
 impl Call for ERangeNoMin = fn(value) = value < this.end
 
-impl Printable for IRange = fn() = str(this.start "..=" this.end)
-impl Printable for ERange = fn() = str(this.start ".." this.end)
-impl Printable for IRangeNoMin = fn() = str("..=" this.end)
-impl Printable for ERangeNoMax = fn() = str(this.start "..")
-impl Printable for ERangeNoMin = fn() = str(".." this.end)
+impl JsLogFriendly for IRange = fn() = str(this.start "..=" this.end)
+impl JsLogFriendly for ERange = fn() = str(this.start ".." this.end)
+impl JsLogFriendly for IRangeNoMin = fn() = str("..=" this.end)
+impl JsLogFriendly for ERangeNoMax = fn() = str(this.start "..")
+impl JsLogFriendly for ERangeNoMin = fn() = str(".." this.end)
 
 impl Symbol.iterator for IRange = fn*() {
   let {start: i, end} = this
@@ -895,8 +891,6 @@ define :less_than for globalThis = less_than
 define :less_than_eq for globalThis = less_than_eq
 define :and for globalThis = and
 define :or for globalThis = or
-define :Printable for globalThis = Printable
-define :printable for globalThis = printable
 define :log for globalThis = log
 define :str for globalThis = str
 define :nan? for globalThis = nan?
