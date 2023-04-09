@@ -1,0 +1,51 @@
+protocol Fmt
+
+@def_call
+fn fmt() = this[Fmt]()
+
+fn Color(@css, @string) {}
+
+fn* group_by(l) {
+  let group = []
+  for [elem, i] of this::zip(0..) {
+    if i % l == 0 {
+      yield group
+      group = [elem]
+    } else {
+      group.push(elem)
+    }
+  }
+}
+
+define Vector for Color = fn([color]) = fn(...strings) =
+  new Color(
+    [str("color: " color) "color: unset"]
+    str("%c" ...strings "%c")
+  )
+
+impl Fmt for Keyword = fn() = ~Color[:darkblue](":" this.value)
+impl Fmt for Number = fn() = ~Color[:darkgreen](this)
+impl Fmt for String = fn()= ~Color[:blue]("\"" this "\"")
+
+fn def_vec(Ctor, kw) {
+  define Vector for Ctor = fn(entries) = new Ctor(...entries)
+  impl Fmt for Ctor = fn() {
+    let fmt_keys = this[kw]::map(fmt)::into([])
+    return {
+      string: str("~%c" Ctor.name "%c[" fmt_keys::map(:string)::join(" ") "]")
+      css: ["color: lightgreen" "color:unset" ...fmt_keys::flat_map(:css)]
+    }
+  }
+  return Ctor
+}
+
+@def_vec(:keys)
+fn Keys(...keys) { this.keys = keys }
+
+fn printf() {
+  let {string, css} = this::fmt()
+  console.log(string, ...css)
+  return this
+}
+
+~Keys[:id 10 "weewoo"]::printf()
