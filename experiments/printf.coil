@@ -5,18 +5,6 @@ fn fmt() = this[Fmt]()
 
 fn Color(@css, @string) {}
 
-fn* group_by(l) {
-  let group = []
-  for [elem, i] of this::zip(0..) {
-    if i % l == 0 {
-      yield group
-      group = [elem]
-    } else {
-      group.push(elem)
-    }
-  }
-}
-
 define Vector for Color = fn([color]) = fn(...strings) =
   new Color(
     [str("color: " color) "color: unset"]
