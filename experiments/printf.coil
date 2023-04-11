@@ -3,12 +3,29 @@ protocol Fmt
 @def_call
 fn fmt() = this[Fmt]()
 
-fn Color(@css, @string) {}
+fn Color(@string, @css) {}
+
+fn Colored(@string, @color) {}
+fn color(color) = new Colored(this, color)
+impl Fmt for Colored = fn() = {
+  string: str("%c" this.string "%c"),
+  css: [str("color: " this.color) "color: unset"]
+}
+
+@def_vector
+fn FString(...elems) { this.elems = elems }
+impl Fmt for FString = fn() {
+  let fmt_keys = this.elems::map(fmt)::into([])
+  return {
+    string: str(fmt_keys::map(:string)::join(" "))
+    css: fmt_keys::flat_map(:css)::into([])
+  }
+}
 
 define Vector for Color = fn([color]) = fn(...strings) =
   new Color(
-    [str("color: " color) "color: unset"]
     str("%c" ...strings "%c")
+    [str("color: " color) "color: unset"]
   )
 
 impl Fmt for Keyword = fn() = ~Color[:darkblue](":" this.value)
@@ -37,3 +54,6 @@ fn printf() {
 }
 
 ~Keys[:id 10 "weewoo"]::printf()
+
+~FString[:kw 10 "hey there" 30::color(:red)]
+  ::printf()
