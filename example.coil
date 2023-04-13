@@ -1,1 +1,9 @@
-console.log("hello world")
+
+impl Vector for Keyword = fn(entries) {
+  let str = this.value
+  let [elem_name, class_name] = str.split(".")
+  
+}
+
+~:div.row[:a 10]
+  ::log()

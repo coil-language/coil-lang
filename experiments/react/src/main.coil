@@ -11,42 +11,44 @@ impl ToReactChild for Object = fn = this
 @def_call
 fn to_react_child() = this[ToReactChild]()
 
-// define globally all the element names
-[:p :div :a :span :button]::each(fn(name) {
-  fn elem() {}
-  define Record for elem = fn(attrs) {
-    attrs = attrs::into({})
-    if attrs[:class] {
-      attrs[:className] = attrs[:class]
-      delete(attrs[:class])
-    }
-    return React.createElement(
-      name::as_str(),
-      attrs,
-      attrs::at(:children)
-    )
+fn Elem(@ctor, @attrs, @children) {}
+impl Into for Elem = fn(children) = 
+  new Elem(this.ctor, this.attrs, [...this.children, ...children])
+impl ToReactChild for Elem = fn() {
+  if this.children is Array {  
+    return React.createElement(this.ctor, this.attrs, ...this.children::map(to_react_child))
+  } else {
+    return React.createElement(this.ctor, this.attrs, this.children::to_react_child())
   }
-  define Vector for elem = fn(children) =
-    React.createElement(name::as_str(), null, ...children::map(to_react_child))
-  define name for globalThis = elem
-})
+}
+
+impl Vector for Keyword = fn(children) {
+  let str = this.value
+  let [elem_name, className] = str.split(".")
+  return new Elem(elem_name, {className}, children)
+}
+
+impl Record for Keyword = fn(attrs) {
+  attrs = attrs::into({})  
+  let str = this.value
+  let [elem_name, className] = str.split(".")
+  return new Elem(elem_name, {className, ...attrs}, attrs::at(:children))
+}
 
 fn component(Component) {
-  define Record for Component = fn(attrs) {
+  let ReactComponent = fn(...args) = Component(...args)::to_react_child()
+  define Record for ReactComponent = fn(attrs) {
     attrs = attrs::into({})
-    return React.createElement(Component, attrs, attrs::at(:children))
+    return React.createElement(ReactComponent, attrs, attrs::at(:children))
   }
-  define Vector for Component = fn(children) =
-    React.createElement(Component, null, ...children::map(to_react_child))
-  define Into for Component = fn(iterable) =
-    React.createElement(Component, null, [...iterable::map(to_react_child)])
-  return Component
+  define Vector for ReactComponent = fn(children) =
+    React.createElement(ReactComponent, null, ...children::map(to_react_child))
+  define Into for ReactComponent = fn(iterable) =
+    React.createElement(ReactComponent, null, [...iterable::map(to_react_child)])
+  return ReactComponent
 }
 
 let char_numeric? = ("0"..="9")::into(#{})
-
-@component
-fn Row({children}) = ~div{class: "row", children: children}
 
 let btns = [
   [:AC :flip_sign :percent :div]
@@ -56,10 +58,10 @@ let btns = [
 ]
 
 let op->str = ~Map{
-  AC: "AC"
-  flip_sign: "+/-"
-  percent: "%"
-  div: "/"
+  :AC => "AC"
+  :flip_sign => "+/-"
+  :percent => "%"
+  :div => "/"
   :minus => "-"
   :times => "x"
   :plus => "+"
@@ -67,16 +69,12 @@ let op->str = ~Map{
 
 @component
 fn CalcRow({btns, select}) = btns
-  ::map(fn(field) = ~button{
-    class: "btn"
+  ::map(fn(field) = ~:button.btn{
     key: field
     onClick: #(select(field))
     children: field::pipe(op->str) || field
   })
-  ::into(Row)
-
-@component
-fn Result({children}) = ~div{class: "result", children: children}
+  ::into(~:div.row[])
 
 protocol Select
 fn select() = this[Select]()
@@ -106,8 +104,8 @@ fn App() {
   define Select for :flip_sign = fn{amount.update(_ * -1)}
   define Select for :percent = fn{amount.update(_ / 100)}
 
-  return ~div[
-    ~Result[amount]
+  return ~:div[
+    ~:div.result[amount]
     ...btns::map(fn(btns_row) = ~CalcRow{
       btns: btns_row,
       select: #(&::select())

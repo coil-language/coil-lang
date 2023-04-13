@@ -21,18 +21,8 @@ function js_negate(val) {
   return !truthy(val);
 }
 
-const Truthy = Symbol("Truthy");
-
-Object.prototype[Truthy] = function () {
-  return true;
-};
-
-Boolean.prototype[Truthy] = function () {
-  return this;
-};
-
 function truthy(val) {
-  return val?.[Truthy]?.();
+  return val !== null && val !== undefined && val !== false;
 }
 
 function js_and(a, b) {
@@ -1431,31 +1421,6 @@ CallMap.prototype[Call] = function (value) {
     return val;
   });
 };
-function pre(f, ...schemas) {
-  return function (...args) {
-    if (
-      truthy(
-        all__q.bind(zip.bind(args)(schemas))(function ([val, schema]) {
-          return call.bind(schema)(val);
-        })
-      )
-    ) {
-      return f(...args);
-    } else {
-      raise__b(new Error("pre failed"));
-    }
-  };
-}
-function pre_record(f, obj) {
-  return function (real_obj) {
-    for (let [key, schema] of obj) {
-      if (truthy(negate.call(pipe.bind(real_obj)(key, schema)))) {
-        raise__b(str("[", f.name, "] pre_record failed at :", key));
-      }
-    }
-    return f(real_obj);
-  };
-}
 globalThis[Keyword.for("Call")] = Call;
 globalThis[Keyword.for("call")] = call;
 globalThis[Keyword.for("nil__q")] = nil__q;
@@ -2959,11 +2924,6 @@ function parse_record_syntax(tokens) {
       construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("record_syntax") }),
       ]),
-      construct_vector.call(Chomp, [Keyword.for("tilde")]),
-      construct_vector.call(One, [
-        Keyword.for("id"),
-        Keyword.for("constructor_name"),
-      ]),
       construct_vector.call(Chomp, [Keyword.for("open_b")]),
       construct_vector.call(Until, [
         Keyword.for("close_b"),
@@ -2980,11 +2940,6 @@ function parse_vector_syntax(tokens) {
       construct_vector.call(Init, [
         new ObjectLiteral({ type: Keyword.for("vector_syntax") }),
       ]),
-      construct_vector.call(Chomp, [Keyword.for("tilde")]),
-      construct_vector.call(One, [
-        Keyword.for("id"),
-        Keyword.for("constructor_name"),
-      ]),
       construct_vector.call(Chomp, [Keyword.for("open_sq")]),
       construct_vector.call(Until, [
         Keyword.for("close_sq"),
@@ -2992,6 +2947,27 @@ function parse_vector_syntax(tokens) {
         Keyword.for("entries"),
       ]),
       construct_vector.call(Chomp, [Keyword.for("close_sq")]),
+    ])
+  )(tokens);
+}
+function parse_custom_data_syntax(tokens) {
+  return call.bind(
+    construct_vector.call(Parser, [
+      construct_vector.call(Init, [
+        new ObjectLiteral({ type: Keyword.for("custom_data_literal") }),
+      ]),
+      construct_vector.call(Chomp, [Keyword.for("tilde")]),
+      construct_vector.call(Then, [
+        parse_single_expr,
+        Keyword.for("constructor_expr"),
+      ]),
+      construct_vector.call(Case, [
+        construct_record.call(ParseMap, [
+          [Keyword.for("open_sq"), parse_vector_syntax],
+          [Keyword.for("open_b"), parse_record_syntax],
+        ]),
+        Keyword.for("data"),
+      ]),
     ])
   )(tokens);
 }
@@ -3053,14 +3029,7 @@ let SINGLE_EXPR_PARSE_MAP = construct_record.call(ParseMap, [
   [Keyword.for("fn"), parse_fn],
   [[Keyword.for("tilde"), Keyword.for("open_sq")], parse_default_vector_syntax],
   [[Keyword.for("tilde"), Keyword.for("open_b")], parse_default_record_syntax],
-  [
-    [Keyword.for("tilde"), Keyword.for("id"), Keyword.for("open_b")],
-    parse_record_syntax,
-  ],
-  [
-    [Keyword.for("tilde"), Keyword.for("id"), Keyword.for("open_sq")],
-    parse_vector_syntax,
-  ],
+  [Keyword.for("tilde"), parse_custom_data_syntax],
 ]);
 function parse_single_expr(tokens) {
   return call.bind(SINGLE_EXPR_PARSE_MAP)(tokens);
@@ -3888,27 +3857,42 @@ function eval_default_vector_syntax({ entries }) {
     "])"
   );
 }
-function eval_record_syntax({ constructor_name, entries }) {
-  return str(
-    "construct_record.call(",
-    constructor_name,
-    ", ",
-    "[",
-    map_join.bind(entries)(eval_record_entry, ", "),
-    "]",
-    ")"
-  );
+const EvalNode = Symbol("EvalNode");
+function eval_node(...args) {
+  return at
+    .bind(this)(Keyword.for("type"))
+    [EvalNode](this, ...args);
 }
-function eval_vector_syntax({ constructor_name, entries }) {
+Keyword.for("vector_syntax")[EvalNode] = function (
+  { entries },
+  constructor_expr_js
+) {
   return str(
     "construct_vector.call(",
-    constructor_name,
+    constructor_expr_js,
     ", ",
     "[",
     map_join.bind(entries)(eval_expr, ", "),
     "]",
     ")"
   );
+};
+Keyword.for("record_syntax")[EvalNode] = function (
+  { entries },
+  constructor_expr_js
+) {
+  return str(
+    "construct_record.call(",
+    constructor_expr_js,
+    ", ",
+    "[",
+    map_join.bind(entries)(eval_record_entry, ", "),
+    "]",
+    ")"
+  );
+};
+function eval_custom_data_literal({ constructor_expr, data }) {
+  return eval_node.bind(data)(eval_expr(constructor_expr));
 }
 function eval_inclusive_range({ lhs, rhs }) {
   if (truthy(rhs)) {
@@ -4039,8 +4023,7 @@ function eval_expr(node) {
         [Keyword.for("yield"), eval_yield],
         [Keyword.for("default_record_syntax"), eval_default_record_syntax],
         [Keyword.for("default_vector_syntax"), eval_default_vector_syntax],
-        [Keyword.for("record_syntax"), eval_record_syntax],
-        [Keyword.for("vector_syntax"), eval_vector_syntax],
+        [Keyword.for("custom_data_literal"), eval_custom_data_literal],
         [Keyword.for("paren_expr"), eval_paren_expr],
         [Keyword.for("unapplied_math_op"), eval_unapplied_math_op],
         [Keyword.for("unapplied_and_and"), eval_unapplied_and_and],
