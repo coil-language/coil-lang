@@ -1,7 +1,15 @@
 import React from "react"
 import {useEffect} from "react"
 import ReactDOM from "./react.js"
-import {use_state} from "./react.js"
+import {use_state, Atom} from "./react.js"
+
+protocol ToReactChild
+
+impl ToReactChild for Atom = fn = this.val
+impl ToReactChild for Object = fn = this
+
+@def_call
+fn to_react_child() = this[ToReactChild]()
 
 // define globally all the element names
 [:p :div :a :span :button]::each(fn(name) {
@@ -19,7 +27,7 @@ import {use_state} from "./react.js"
     )
   }
   define Vector for elem = fn(children) =
-    React.createElement(name::as_str(), null, ...children)
+    React.createElement(name::as_str(), null, ...children::map(to_react_child))
   define name for globalThis = elem
 })
 
@@ -29,9 +37,9 @@ fn component(Component) {
     return React.createElement(Component, attrs, attrs::at(:children))
   }
   define Vector for Component = fn(children) =
-    React.createElement(Component, null, children)
+    React.createElement(Component, null, ...children::map(to_react_child))
   define Into for Component = fn(iterable) =
-    React.createElement(Component, null, [...iterable])
+    React.createElement(Component, null, [...iterable::map(to_react_child)])
   return Component
 }
 
@@ -40,7 +48,7 @@ let char_numeric? = ("0"..="9")::into(#{})
 @component
 fn Row({children}) = ~div{class: "row", children: children}
 
-let ops = [
+let btns = [
   [:AC :flip_sign :percent :div]
   [7 8 9 :times]
   [4 5 6 :minus]
@@ -60,7 +68,7 @@ let op_to_str = ~Map{
 }
 
 @component
-fn CalcRow({ops, select}) = ops
+fn CalcRow({btns, select}) = btns
   ::map(fn(field) = ~button{
     class: "btn"
     key: field
@@ -101,9 +109,9 @@ fn App() {
   define Select for :percent = fn{amount.update(_ / 100)}
 
   return ~div[
-    ~Result[amount.val]
-    ...ops::map(fn(ops) = ~CalcRow{
-      ops: ops,
+    ~Result[amount]
+    ...btns::map(fn(btns_row) = ~CalcRow{
+      btns: btns_row,
       select: #(&::select())
     })
   ]
