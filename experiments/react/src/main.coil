@@ -1,0 +1,114 @@
+import React from "react"
+import {useEffect} from "react"
+import ReactDOM from "./react.js"
+import {use_state} from "./react.js"
+
+// define globally all the element names
+[:p :div :a :span :button]::each(fn(name) {
+  fn elem() {}
+  define Record for elem = fn(attrs) {
+    attrs = attrs::into({})
+    if attrs[:class] {
+      attrs[:className] = attrs[:class]
+      delete(attrs[:class])
+    }
+    return React.createElement(
+      name::as_str(),
+      attrs,
+      attrs::at(:children)
+    )
+  }
+  define Vector for elem = fn(children) =
+    React.createElement(name::as_str(), null, ...children)
+  define name for globalThis = elem
+})
+
+fn component(Component) {
+  define Record for Component = fn(attrs) {
+    attrs = attrs::into({})
+    return React.createElement(Component, attrs, attrs::at(:children))
+  }
+  define Vector for Component = fn(children) =
+    React.createElement(Component, null, children)
+  define Into for Component = fn(iterable) =
+    React.createElement(Component, null, [...iterable])
+  return Component
+}
+
+let char_numeric? = ("0"..="9")::into(#{})
+
+@component
+fn Row({children}) = ~div{class: "row", children: children}
+
+let ops = [
+  [:AC :flip_sign :percent :div]
+  [7 8 9 :times]
+  [4 5 6 :minus]
+  [1 2 3 :plus]
+]
+
+// would be really nice to call this 
+// op->str
+let op_to_str = ~Map{
+  AC: "AC"
+  flip_sign: "+/-"
+  percent: "%"
+  div: "/"
+  :minus => "-"
+  :times => "x"
+  :plus => "+"
+}
+
+@component
+fn CalcRow({ops, select}) = ops
+  ::map(fn(field) = ~button{
+    class: "btn"
+    key: field
+    onClick: #(select(field))
+    children: field::pipe(op_to_str) || field
+  })
+  ::into(Row)
+
+@component
+fn Result({children}) = ~div{class: "result", children: children}
+
+protocol Select
+fn select() = this[Select]()
+
+@component
+fn App() {
+  let amount = use_state(10)
+  let op = use_state(null)
+
+  fn num_handler(num) = {
+    fn times() = amount.update(_ * num)
+    fn plus() = amount.update(_ + num)
+    fn minus() = amount.update(_ - num)
+    fn div() = amount.update(_ / num)
+  }[op.val]()
+
+  impl Select for Number = fn{
+    if op.val {
+      num_handler(this)
+    } else {
+      amount.update((_ * 10) + this)
+    }
+    op.set(null)
+  }
+  impl Select for Keyword = fn{op.set(this)}
+  define Select for :AC = fn{amount.set(0)}
+  define Select for :flip_sign = fn{amount.update(_ * -1)}
+  define Select for :percent = fn{amount.update(_ / 100)}
+
+  return ~div[
+    ~Result[amount.val]
+    ...ops::map(fn(ops) = ~CalcRow{
+      ops: ops,
+      select: #(&::select())
+    })
+  ]
+}
+
+ReactDOM
+  .createRoot(document.getElementById("app"))
+  .render(~App{})
