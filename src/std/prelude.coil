@@ -1,4 +1,18 @@
-// CALL PROTOCOL
+// Doc Protocol
+
+protocol Doc
+
+fn doc(f, doc_str) {
+  define Doc for f = doc_str.trim()
+  return f
+}
+
+fn log_doc() {
+  console.log(this[Doc])
+  return this
+}
+
+// Call Protocol
 
 protocol Call
 
@@ -31,6 +45,14 @@ impl Call for Keyword = fn(collection) {
   }
 }
 
+@doc("
+Invokes [[Call]] on 'this'
+
+
+Usage:
+- On Object Literals
+  {a: 10}::call(:a) // 10
+")
 fn call(...args) = this&.[Call](...args)
 
 // make sets callable using bind syntax
@@ -42,6 +64,21 @@ protocol Pipe
 
 impl Pipe for Object = fn(callable) = callable::call(this)
 
+@doc("
+invokes [[Pipe]] protocol
+
+args:
+  ...callables: list of [[Call]] objects
+
+returns:
+  result of invoking 'callables' on this
+
+nil handling:
+  since nil doesn't impl Pipe, we'll call 'f' directly.
+
+note on [[Pipe]]:
+  pipe is protocol based so that it can be used with Underscore.
+")
 fn pipe(...callables) {
   let f = compose(...callables)
   if this::nil?() {
@@ -51,9 +88,35 @@ fn pipe(...callables) {
   }
 }
 
+@doc("
+composes a list of [[Call]] objects into a single function
+
+example:
+  compose(:users 0 :id)({users: [{id: 123}]}) // -> 123 
+")
 fn compose(first_fn, ...fns) = fn(...args) =
   fns::reduce(fn (result, f) = f::call(result), first_fn::call(...args))
 
+@doc("
+decorator to define [[Call]]
+
+takes f, and applies first argument as the 'this' arg.
+
+this is helpful when you are writing functions that rely on 'this'
+and don't have any arguments.
+
+example:
+  fn first() = this[0]
+
+  // I want this to work.. but it doesn't
+  [[1] [2] [3]]::map(first) // Error
+
+  // if I use @def_call we can do this
+  @def_call
+  fn first() = this[0]
+
+  [[1] [2] [3]]::map(first) // [1 2 3]  
+")
 fn def_call(f) {
   define Call for f = fn(first, ...rest) = first::f(...rest)
   return f
@@ -70,13 +133,13 @@ fn iter() {
   }
 }
 
-@def_call
 // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterator_protocol
+@def_call
 fn iter?() = this&.[Symbol.iterator] && ::iter() === this
 
-protocol Iterable
+protocol Iterator
 
-let iterable_collection_impl = {
+let default_iterator_impl = {
   fn* take(n) {
     for [elem i] of this::zip(0..) {
       if i == n { break }
@@ -162,50 +225,38 @@ let iterable_collection_impl = {
     }
     return false
   }
-  fn* split(val, init) {
-    init ||= val::EMPTY()
-    let chunk = init
+  fn* split(f) {
+    let chunk = []
     for elem of this {
-      if elem == val {
+      if f(elem) {
         yield chunk
-        chunk = init
+        chunk = []
       } else {
         chunk = chunk::push(elem)
       }
     }
     yield chunk
   }
-  fn* concat(other) {
-    yield* this
-    yield* other
-  }
-  fn* push(val) {  
-    yield* this
-    yield val
-  }
-  fn* prepend(val) {
-    yield val
-    yield* this
-  }
 }
 
-fn iterable_impl() = this[Iterable] || iterable_collection_impl
+fn iterator_impl() = this[Iterator] || default_iterator_impl
 
-fn skip(n) = ::iterable_impl().skip.call(this, n)
-fn take(n) = ::iterable_impl().take.call(this, n)
-fn drop(n) = ::iterable_impl().drop.call(this, n)
-fn each(f) = ::iterable_impl().each.call(this, f::call)
-fn until(...fns) = ::iterable_impl().until.call(this, compose(...fns))
-fn zip(...iterables) = ::iterable_impl().zip.call(this, ...iterables)
-fn map(...fns) = ::iterable_impl().map.call(this, compose(...fns))
-fn flat_map(...fns) = ::iterable_impl().flat_map.call(this, compose(...fns))
-fn find(...fns) = ::iterable_impl().find.call(this, compose(...fns))
-fn keep(...fns) = ::iterable_impl().keep.call(this, compose(...fns))
+fn skip(n) = ::iterator_impl().skip.call(this, n)
+fn take(n) = ::iterator_impl().take.call(this, n)
+fn drop(n) = ::iterator_impl().drop.call(this, n)
+fn each(f) = ::iterator_impl().each.call(this, f::call)
+fn until(...fns) = ::iterator_impl().until.call(this, compose(...fns))
+fn zip(...iterables) = ::iterator_impl().zip.call(this, ...iterables)
+fn map(...fns) = ::iterator_impl().map.call(this, compose(...fns))
+fn flat_map(...fns) = ::iterator_impl().flat_map.call(this, compose(...fns))
+fn find(...fns) = ::iterator_impl().find.call(this, compose(...fns))
+fn keep(...fns) = ::iterator_impl().keep.call(this, compose(...fns))
 fn reject(...fns) = ::keep(...fns, !_)
-fn any?(...fns) = ::iterable_impl().any?.call(this, compose(...fns))
-fn all?(...fns) = ::iterable_impl().all?.call(this, compose(...fns))
-fn reduce(f, start) = ::iterable_impl().reduce.call(this, f::call, start)
-fn split(val, init) = ::iterable_impl().split.call(this, val, init)
+fn any?(...fns) = ::iterator_impl().any?.call(this, compose(...fns))
+fn all?(...fns) = ::iterator_impl().all?.call(this, compose(...fns))
+fn reduce(f, start) = ::iterator_impl().reduce.call(this, f::call, start)
+fn split(...fns) = ::iterator_impl().split.call(this, compose(...fns))
+
 fn join(sep) = ::reduce(fn(prev cur) {
   if prev::empty?() {
     return cur
@@ -227,41 +278,89 @@ define Into for Object = fn(iterable) = Object.fromEntries(iterable)
 
 fn into(val) = val[Into](this)
 
-// RECORD AND VECTOR PROTOCOLS
+// Collection-like protocols: Collection, Record, Vector, and OrderedSequence
+
+protocol Collection
+
+impl Collection for ObjectLiteral = {
+  fn at(key) = this[key]
+  fn len() = Object.keys(this).length
+  fn empty?() = this.length === 0
+  fn has?(key) = key keyof this
+}
+
+impl Collection for Array = {
+  fn at(idx) = this.at(idx)
+  fn len() = this.length
+  fn empty?() = this.length === 0
+  fn has?(val) = ::any?(_ == val)
+}
+
+impl Collection for Map = {
+  fn at(key) = this.get(key)
+  fn len() = this.size
+  fn empty?() = this.size === 0
+  fn has?(key) = this.has(key)
+}
+
+impl Collection for String = {
+  fn at(idx) = this.at(idx)
+  fn len() = this.length
+  fn empty?() = this.length === 0
+  fn has?(substr) = this.includes(substr)
+}
+
+impl Collection for Set = {
+  fn at(val) = this.has(val) && val
+  fn len() = this.size
+  fn empty?() = this.size === 0
+  fn has?(val) = this.has(val)
+}
+
+@def_call
+fn len() = this[Collection].len.call(this)
+
+fn at(key_or_idx) = this[Collection].at.call(this, key_or_idx)
+
+@def_call
+fn empty?() {
+  if this::nil?() {
+    return true
+  } else {
+    return this[Collection].empty?.call(this)
+  }
+}
+
+@def_call
+fn not_empty?() = !this::empty?()
+
+fn has?(val) = this[Collection].has?.call(this, val)
 
 protocol Record
 
-// using generator here to avoid allocating 2 intermediate entries arrays
-fn* merge_iterator(other) {
-  yield *this
-  yield *other
-}
-
 impl Record for ObjectLiteral = {
-  fn at(key) = this[key]
   fn insert(key, value) = {...this, [key]: value}
-  fn merge(other) = ObjectLiteral.from_entries(this::merge_iterator(other))
+  fn merge(other) = ObjectLiteral.from_entries([...this, ...other])
   fn keys() = Object.keys(this)
   fn values() = Object.values(this)
-  fn has?(key) = key::as_str() keyof this
-  fn len() = this::keys().length
-  fn empty?() = this::len() === 0
 }
 
 impl Record for Map = {
-  fn at(key) = this.get(key)
+  fn insert(key, value) = new Map([...this, [key, value]])
+  fn merge(other) = new Map([...this, ...other])
   fn keys() = this.keys()
   fn values() = this.values()
-  fn merge(other) = new Map([...this, ...other])
-  fn has?(key) = this.has(key)
-  fn len() = this.size
-  fn empty?() = this.size === 0
-  fn first() = this.entries().next().value
 }
 
 fn insert(key, value) = this[Record].insert.call(this, key, value)
+
 fn merge(other) = this[Record].merge.call(this, other)
+
+@def_call
 fn keys() = this[Record].keys.call(this)
+
+@def_call
+fn values() = this[Record].values.call(this)
 
 define Record for Map = fn(entries) = new Map(entries)
 
@@ -273,95 +372,76 @@ protocol Vector
 fn vector?() = this[Vector]::exists?()
 
 impl Vector for Array = {
-  EMPTY: []
-  fn at(idx) = this.at(idx)
   fn push(val) = [...this, val]
-  fn prepend(val) = [val, ...this]
-  fn concat(other) = this::merge_iterator(other)
-  fn has?(val) = this::any?(_ == val)
-  fn update_at(idx, f) {
-    let [before after] = [this::take(idx), this::skip(idx + 1)]
-    return [...before, f(::at(idx)), ...after]
-  }
-  fn insert_at(idx, val) {
-    let [before after] = [this::take(idx), this::skip(idx + 1)]
-    return [...before, val, ...after]
-  }
-  fn replace(old_value, new_value) = ::map(fn(val) {
-    if val == old_value {
-      return new_value
+  fn replace(old_val, new_val) = ::map(fn(val) {
+    if val == old_val {
+      return new_val
     } else {
       return val
     }
   })
-  fn len() = this.length
-  fn empty?() = this.length === 0
-  fn first() = this[0]
-  fn last() = this.at(-1)
+  fn concat(other) = [...this, ...other]
 }
 
 impl Vector for Set = {
-  EMPTY: #{}
   fn push(value) = new Set(this).add(value)
-  fn concat(other) = new Set(this::merge_iterator(other))
-  fn has?(value) = this.has(value)
-  fn replace(old_value, new_value) {
+  fn replace(old_val, new_val) {
     let self = new Set(this)
     self.delete(old_value)
-    return self.add(new_value)
+    self.add(new_val)
+    return self
   }
-  fn len() = this.size
-  fn empty?() = this.size === 0
-  fn first() = this.values().next().value
+  fn concat(other) = new Set([...this, ...other])
 }
 
 impl Vector for String = {
-  EMPTY: ""
   fn push(val) = this + val
-  fn prepend(val) = val + this
+  fn replace(old_substr, new_substr) = this.replaceAll(old_substr, new_substr)
   fn concat(other) = this + other
-  fn has?(val) = this.includes(val)
-  fn replace(old_val, new_val) = this.replace(old_val, new_val)
-  fn len() = this.length
-  fn empty?() = this.length === 0
+}
+
+@doc("")
+fn push(val) = this[Vector].push.call(this, val)
+
+fn replace(old_val, new_val) = this[Vector].replace.call(this, old_val, new_val)
+
+fn concat(other) = this[Vector].concat.call(this, other)
+
+protocol OrderedSequence
+
+impl OrderedSequence for Array = {
+  fn prepend(val) = [val, ...this]
+  fn update_at(idx, f) {
+    let [before after] = [this::take(idx) this::skip(idx + 1)]
+    return [...before, f(::at(idx)), ...after]
+  }
+  fn insert_at(idx, val) {
+    let [before after] = [this::take(idx) this::skip(idx + 1)]
+    return [...before, val, ...after]
+  }
   fn first() = this[0]
   fn last() = this.at(-1)
 }
 
-fn EMPTY() = this[Vector].EMPTY
-fn at(idx_or_key) = (this[Vector] || this[Record]).at.call(this, idx_or_key)
-fn push(val) = (this[Vector] || ::iterable_impl()).push.call(this, val)
-fn prepend(val) = (this[Vector] || ::iterable_impl()).prepend.call(this, val)
-fn concat(other) = (this[Vector] || ::iterable_impl()).concat.call(this, other)
-fn has?(val) = (this[Vector] || this[Record]).has?.call(this, val)
-fn replace(old_value, new_value) =
-  this[Vector].replace.call(this, old_value, new_value)
-fn update_at(idx, callable) =
-  this[Vector].update_at.call(this, idx, callable::call)
-fn insert_at(idx, val) =
-  this[Vector].insert_at.call(this, idx, val)
-@def_call
-fn len() = (this[Vector] || this[Record]).len.call(this)
-@def_call
-fn first() {
-  if ::iter?() {
-    return this.next().value
-  } else {
-    return (this[Vector] || this[Record]).first.call(this)
-  }
+impl OrderedSequence for String = {
+  fn prepend(val) = val + this
+  fn update_at(idx, f) = this.slice(0, idx) + f(this.at(idx)) + this.slice(idx)
+  fn insert_at(idx, val) = this.slice(0, idx) + val + this.slice(idx)
+  fn first() = this[0]
+  fn last() = this.at(-1)
 }
+
+fn prepend(val) = this[OrderedSequence].prepend.call(this, val)
+
+fn update_at(idx, ...fns) = this[OrderedSequence].update_at.call(this, idx, compose(...fns))
+
+fn insert_at(idx, val) = this[OrderedSequence].insert_at.call(this, idx, val)
+
 @def_call
-fn last() = (this[Vector] || this[Record]).last.call(this)
+fn first() = this[OrderedSequence].first.call(this)
+
 @def_call
-fn empty?() {
-  if this::nil?() {
-    return true
-  } else {
-    return (this[Vector] || this[Record]).empty?.call(this)
-  }
-}
-@def_call
-fn not_empty?() = !this::empty?()
+fn last() = this[OrderedSequence].last.call(this)
 
 define Vector for Array = fn(entries) = entries
 
@@ -421,119 +501,125 @@ protocol LessThan
 protocol And
 protocol Or
 
+fn expect_primitive_type!(type_str) {
+  if typeof(this) !== type_str {
+    raise!(str("Expected " type_str))
+  }
+}
+
 impl Negate for Object = fn() = js_negate(this)
 impl And for Object = fn(thunk) = js_and(this, thunk)
 impl Or for Object = fn(thunk) = js_or(this, thunk)
 impl Plus for Set = fn(other_set) = this::concat(other_set)
 impl Plus for Array = fn(arr) = this::concat(arr)
 impl Plus for Number = fn(other) {
-  if typeof(other) === "number" { return js_plus(this, other) }
-  else { raise!("Expected number") }
+  other::expect_primitive_type!("number")
+  return js_plus(this, other)
 }
 impl Minus for Number = fn(other) {
-  if typeof(other) === "number" { return js_minus(this, other) }
-  else { raise!("Expected number") }
+  other::expect_primitive_type!("number")
+  return js_minus(this, other)
 }
 impl Times for Number = fn(other) {
-  if typeof(other) === "number" { return js_times(this, other) }
-  else { raise!("Expected number") }
+  other::expect_primitive_type!("number")
+  return js_times(this, other)
 }
 impl Divide for Number = fn(other) {
-  if typeof(other) === "number" { return js_divide(this, other) }
-  else { raise!("Expected number") }
+  other::expect_primitive_type!("number")
+  return js_divide(this, other)
 }
 impl Exponent for Number = fn(other) {
-  if typeof(other) === "number" { return js_exponent(this, other) }
-  else { raise!(new Error("Expected number")) }
+  other::expect_primitive_type!("number")
+  return js_exponent(this, other)
 }
 impl Mod for Number = fn(other) {
-  if typeof(other) === "number" { return js_mod(this, other) }
-  else { raise!(new Error("Expected number")) }
+  other::expect_primitive_type!("number")
+  return js_mod(this, other)
 }
 impl Plus for BigInt = fn(other) {
-  if typeof(other) === "bigint" { return js_plus(this, other) }
-  else { raise!(new Error("Expected bigint")) }
+  other::expect_primitive_type!("bigint")
+  return js_plus(this, other)
 }
 impl Minus for BigInt = fn(other) {
-  if typeof(other) === "bigint" { return js_minus(this, other) }
-  else { raise!(new Error("Expected bigint")) }
+  other::expect_primitive_type!("bigint")
+  return js_minus(this, other)
 }
 impl Times for BigInt = fn(other) {
-  if typeof(other) === "bigint" { return js_times(this, other) }
-  else { raise!(new Error("Expected bigint")) }
+  other::expect_primitive_type!("bigint")
+  return js_times(this, other)
 }
 impl Divide for BigInt = fn(other) {
-  if typeof(other) === "bigint" { return js_divide(this, other) }
-  else { raise!(new Error("Expected bigint")) }
+  other::expect_primitive_type!("bigint")
+  return js_divide(this, other)
 }
 impl Exponent for BigInt = fn(other) {
-  if typeof(other) === "bigint" { return js_exponent(this, other) }
-  else { raise!(new Error("Expected bigint")) }
+  other::expect_primitive_type!("bigint")
+  return js_exponent(this, other)
 }
 impl Mod for BigInt = fn(other) {
-  if typeof(other) === "bigint" { return js_mod(this, other) }
-  else { raise!(new Error("Expected bigint")) }
+  other::expect_primitive_type!("bigint")
+  return js_mod(this, other)
 }
 impl Comparable for Number = {
   fn greater_than_eq(other) {
-    if typeof(other) === "number" { return js_greater_than_eq(this, other) }
-    else { raise!(new Error("Expected number")) }
+    other::expect_primitive_type!("number")
+    return js_greater_than_eq(this, other)
   }
   fn less_than_eq(other) {
-    if typeof(other) === "number" { return js_less_than_eq(this, other) }
-    else { raise!(new Error("Expected number")) }
+    other::expect_primitive_type!("number")
+    return js_less_than_eq(this, other)
   }
   fn greater_than(other) {
-    if typeof(other) === "number" { return js_greater_than(this, other) }
-    else { raise!(new Error("Expected number")) }
+    other::expect_primitive_type!("number")
+    return js_greater_than(this, other)
   }
   fn less_than(other) {
-    if typeof(other) === "number" { return js_less_than(this, other) }
-    else { raise!(new Error("Expected number")) }
+    other::expect_primitive_type!("number")
+    return js_less_than(this, other)
   }
 }
 impl Comparable for BigInt = {
   fn greater_than_eq(other) {
-    if typeof(other) === "bigint" { return js_greater_than_eq(this, other) }
-    else { raise!(new Error("Expected bigint")) }
+    other::expect_primitive_type!("bigint")
+    return js_greater_than_eq(this, other)
   }
   fn less_than_eq(other) {
-    if typeof(other) === "bigint" { return js_less_than_eq(this, other) }
-    else { raise!(new Error("Expected bigint")) }
+    other::expect_primitive_type!("bigint")
+    return js_less_than_eq(this, other)
   }
   fn greater_than(other) {
-    if typeof(other) === "bigint" { return js_greater_than(this, other) }
-    else { raise!(new Error("Expected bigint")) }
+    other::expect_primitive_type!("bigint")
+    return js_greater_than(this, other)
   }
   fn less_than(other) {
-    if typeof(other) === "bigint" { return js_less_than(this, other) }
-    else { raise!(new Error("Expected bigint")) }
+    other::expect_primitive_type!("bigint")
+    return js_less_than(this, other)
   }
 }
 impl Plus for String = fn(other) {
-  if typeof(other) === "string" { return js_plus(this, other) }
-  else { raise!(new Error("Expected string")) }
+  other::expect_primitive_type!("string")
+  return js_plus(this, other)
 }
 impl Times for String = fn(amount) {
-  if typeof(amount) === "number" { return this.repeat(amount) }
-  else { raise!(new Error("Expected number")) }
+  amount::expect_primitive_type!("number")
+  return this.repeat(amount)
 }
 impl Comparable for String = {
   fn greater_than_eq(other) {
-    if typeof(other) === "string" { return js_greater_than_eq(this, other) }
-    else { raise!(new Error("Expected string")) }
+    other::expect_primitive_type!("string")
+    return js_greater_than_eq(this, other)
   }
   fn less_than_eq(other) {
-    if typeof(other) === "string" { return js_less_than_eq(this, other) }
-    else { raise!(new Error("Expected string")) }
+    other::expect_primitive_type!("string")
+    return js_less_than_eq(this, other)
   }
   fn greater_than(other) {
-    if typeof(other) === "string" { return js_greater_than(this, other) }
-    else { raise!(new Error("Expected string")) }
+    other::expect_primitive_type!("string")
+    return js_greater_than(this, other)
   }
   fn less_than(other) {
-    if typeof(other) === "string" { return js_less_than(this, other) }
-    else { raise!(new Error("Expected string")) }
+    other::expect_primitive_type!("string")
+    return js_less_than(this, other)
   }
 }
 
@@ -587,7 +673,7 @@ impl JsLogFriendly for Map = fn() =
   ::into(~Map{})
 
 impl JsLogFriendly for Array = fn() = ::map(js_log_friendly)::into([])
-impl JsLogFriendly for Set = fn() = str("#{" this::map(js_log_friendly)::join(", ") "}")
+impl JsLogFriendly for Set = fn() = str("#{" this::map(js_log_friendly as_str)::join(", ") "}")
 impl JsLogFriendly for Keyword = fn() = ":" + _resolve_keyword_str(this.value)
 impl JsLogFriendly for Boolean = fn() = this
 impl JsLogFriendly for String = fn() = this
@@ -678,24 +764,29 @@ impl Comparable for Underscore = {
 
 impl Negate for Underscore = fn() = this.insert(negate)
 impl Equal for Underscore = fn(other) = this.insert(equals?, other)
-
-impl Record for Underscore = {
+impl Collection for Underscore = {
   fn at(key) = this.insert(at, key)
-  fn insert(key, value) = this.insert(insert, key, value)
-  fn merge(other) = this.insert(merge, other)
   fn has?(k) = this.insert(has?, k)
   fn len() = this.insert(len)
+  fn empty?() = this.insert(empty?)
+}
+impl Record for Underscore = {
+  fn insert(key, value) = this.insert(insert, key, value)
+  fn merge(other) = this.insert(merge, other)
+  fn keys() = this.insert(keys)
+  fn values() = this.insert(values)
+}
+impl OrderedSequence for Underscore = {
+  fn prepend(value) = this.insert(prepend, value)
+  fn update_at(idx, callable) = this.insert(update_at, idx, callable)
+  fn insert_at(idx, val) = this.insert(insert_at, idx, val)
+  fn first() = this.insert(first)
   fn last() = this.insert(last)
 }
 impl Vector for Underscore = {
-  fn at(key) = this.insert(at, key)
   fn push(value) = this.insert(push, value)
-  fn prepend(value) = this.insert(prepend, value)
-  fn concat(other) = this.insert(concat, other)
   fn replace(old_value, new_value) = this.insert(has?, old_value, new_value)
-  fn len() = this.insert(len)
-  fn has?(k) = this.insert(has?, k)
-  fn last() = this.insert(last)
+  fn concat(other) = this.insert(concat, other)
 }
 impl Pipe for Underscore = fn(f) = this.insert(pipe, f)
 impl And for Underscore = fn(thunk) = this.insert(and, thunk)
@@ -703,7 +794,7 @@ impl Or for Underscore = fn(thunk) = this.insert(or, thunk)
 impl Plus for Underscore = fn(other) = this.insert(plus, other)
 impl Minus for Underscore = fn(other) = this.insert(minus, other)
 impl Times for Underscore = fn(other) = this.insert(times, other)
-impl Divide for Underscore = fn(other) = this.insert(divide, other)
+impl Divide for Underscore = fn(other) = this.insert(divide_by, other)
 impl Exponent for Underscore = fn(other) = this.insert(exponent, other)
 impl Mod for Underscore = fn(other) = this.insert(mod, other)
 
@@ -829,7 +920,7 @@ define :Pipe for globalThis = Pipe
 define :pipe for globalThis = pipe
 define :compose for globalThis = compose
 define :iter for globalThis = iter
-define :Iterable for globalThis = Iterable
+define :Iterator for globalThis = Iterator
 define :skip for globalThis = skip
 define :take for globalThis = take
 define :drop for globalThis = drop

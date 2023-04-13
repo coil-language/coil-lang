@@ -2,12 +2,14 @@ fn CollectionView(@collection, @idx) {}
 
 // Its only partially implemented right now because most use-cases
 // don't require the complete collections api.
-impl Vector for CollectionView = {
-  fn first() = this.collection::at(this.idx)
-  fn last() = this.collection::last()
+impl Collection for CollectionView = {
   fn len() = this.collection::len() - this.idx
   fn empty?() = this::len() == 0
   fn at(idx) = this.collection::at(this.idx + idx)
+}
+impl OrderedSequence for CollectionView = {
+  fn first() = this.collection::at(this.idx)
+  fn last() = this.collection::last()
 }
 impl :skip for CollectionView = fn(n) = new CollectionView(this.collection, this.idx + n)
 
@@ -135,7 +137,7 @@ let lexer = ~Lexer{
   /^\[/ => :open_sq
   /^\]/ => :close_sq
   /^\"([^\\\"]|\\.)*\"/s => :string_lit
-  /^[a-zA-Z_\?\!\$0-9]+/ => :id
+  /^[a-zA-Z_\?\!\$0-9\>\-]+/ => :id
 }
 
 fn ParseError(expected_token_type, actual_token) {
@@ -1185,7 +1187,11 @@ fn resolve_name(name) {
   if name == "with" { return "__coil_with" }
   if name == "case" { return "__coil_case" }
   if name {
-    return name.replaceAll("?", "__q").replaceAll("!", "__b")
+    return name
+      .replaceAll("?", "__q")
+      .replaceAll("!", "__b")
+      .replaceAll(">", "_lt_")
+      .replaceAll("-", "_")
   }
   return name
 }

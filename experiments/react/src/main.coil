@@ -55,9 +55,7 @@ let btns = [
   [1 2 3 :plus]
 ]
 
-// would be really nice to call this 
-// op->str
-let op_to_str = ~Map{
+let op->str = ~Map{
   AC: "AC"
   flip_sign: "+/-"
   percent: "%"
@@ -73,7 +71,7 @@ fn CalcRow({btns, select}) = btns
     class: "btn"
     key: field
     onClick: #(select(field))
-    children: field::pipe(op_to_str) || field
+    children: field::pipe(op->str) || field
   })
   ::into(Row)
 
