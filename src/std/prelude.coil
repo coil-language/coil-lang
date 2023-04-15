@@ -911,9 +911,20 @@ impl Call for CallMap = fn(value) =
   ::find(fn([callable, _]) = callable::call(value))
   ::pipe(fn([_, val]) = val)
 
+protocol Type
+impl Type for Number = :number
+impl Type for Symbol = :symbol
+impl Type for Keyword = :keyword
+impl Type for Array = :array
+impl Type for ObjectLiteral = :object_literal
+impl Type for Map = :map
+fn type() = this[Type]
+
 // GLOBAL EXPORTS
 
 define :Call for globalThis = Call
+define :Type for globalThis = Type
+define :type for globalThis = type
 define :call for globalThis = call
 define :nil? for globalThis = nil?
 define :Pipe for globalThis = Pipe

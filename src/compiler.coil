@@ -664,9 +664,17 @@ let parse_regular_obj_assign_entry = ~Parser[
   ~One[:id :name]
 ]
 
+let parse_string_obj_assign_entry = ~Parser[
+  ~Init[{type: :obj_str_rename_entry}]
+  ~One[:string_lit :old_name]
+  ~Chomp[:colon]
+  ~One[:id :new_name]
+]
+
 let parse_obj_assign_entry = ~ParseMap{
   [:id :colon] => parse_obj_entry_rename
   :id => parse_regular_obj_assign_entry
+  :string_lit => parse_string_obj_assign_entry
   :dot_dot_dot => parse_spread_assign
 }
 
@@ -1265,6 +1273,7 @@ fn eval_obj_deconstruction_entry(node) = node::at(:type)::pipe(~Map{
     ": "
     resolve_name(&::at(:new_name))))
   :spread_assign => eval_spread_assign
+  :obj_str_rename_entry => #(str(&::at(:old_name) ": " resolve_name(&::at(:new_name))))
 })::call(node)
 
 fn eval_object_deconstruction_names({entries}) =
@@ -1617,16 +1626,8 @@ fn get_deconstructed_array_entry_name(node) =
     ::at(node::at(:type))
     ::pipe(node)
 
-fn eval_import_path(path) {
-  if path.split(".")::len() == 1 && !path.includes(":") && !path.includes("@") {
-    return str(path ".js")
-  } else {
-    return path
-  }
-}
-
 fn eval_import({assign_expr, path}) =
-  str("import " eval_assign_expr(assign_expr) " from \"" eval_import_path(path.value.slice(1, -1)) "\"")
+  str("import " eval_assign_expr(assign_expr) " from \"" path.value.slice(1, -1) "\"")
 
 fn eval_export({statement}) =
   str("export " eval_statement(statement))

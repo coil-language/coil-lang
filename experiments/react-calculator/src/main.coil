@@ -1,0 +1,73 @@
+import {component} from "./react.coil"
+import ReactDOM from "./react.js"
+import {use_state} from "./react.js"
+
+fn MapOrImpl(@f, @map) {}
+fn MapOr(f) = new MapOrImpl(f, null)
+impl Record for MapOrImpl = fn(entries) =
+  new MapOrImpl(this.f, new Map(entries))
+impl Call for MapOrImpl = fn(val) =
+  this.map.get(val) || this.f::call(val)
+
+let char_numeric? = ("0"..="9")::into(#{})
+
+let btns = [
+  [:AC :flip_sign :percent :divide_by]
+  [7 8 9 :times]
+  [4 5 6 :minus]
+  [1 2 3 :plus]
+]
+
+let op->f = ~Map{
+  :divide_by => /
+  :minus => -
+  :times => *
+  :plus => +
+}
+
+let op->str = ~(MapOr(_)){
+  :AC => "AC"
+  :flip_sign => "+/-"
+  :percent => "%"
+  :divide_by => "/"
+  :minus => "-"
+  :times => "x"
+  :plus => "+"
+}
+
+protocol Select
+fn select() = this[Select]()
+
+@component
+fn App() {
+  let amount = use_state(10)
+  let op = use_state(null)
+  impl Select for Number = fn {
+    if op.val {
+      let math_fn = op.val::pipe(op->f)
+      amount.update(#(&::math_fn(this)))
+    } else {
+      amount.update((_ * 10) + this)
+    }
+    op.set(null)
+  }
+  impl Select for Keyword = fn = op.set(this)
+  define Select for :AC = fn = amount.set(0)
+  define Select for :flip_sign = fn = amount.update(_ * -1)
+  define Select for :percent = fn = amount.update(_ / 100)
+
+  return ~:div[
+    ~:div.result[amount]
+    ...btns::map(fn(row) = row
+      ::map(fn(field) = ~:button.btn{
+        key: field
+        onClick: field::select
+        children: field::pipe(op->str)
+      })
+      ::into(~:div.row[]))
+  ]
+}
+
+ReactDOM
+  .createRoot(document.getElementById("app"))
+  .render(~App{})

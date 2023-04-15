@@ -1004,7 +1004,18 @@ CallMap.prototype[Call] = function (value) {
 return pipe.bind(find.bind(this)(function ([callable, _]) {
 return call.bind(callable)(value);}))(function ([_, val]) {
 return val;});};
+const Type = Symbol("Type");
+Number.prototype[Type] = Keyword.for("number");
+Symbol.prototype[Type] = Keyword.for("symbol");
+Keyword.prototype[Type] = Keyword.for("keyword");
+Array.prototype[Type] = Keyword.for("array");
+ObjectLiteral.prototype[Type] = Keyword.for("object_literal");
+Map.prototype[Type] = Keyword.for("map");
+function type() {
+return this[Type];}
 globalThis[Keyword.for("Call")] = Call;
+globalThis[Keyword.for("Type")] = Type;
+globalThis[Keyword.for("type")] = type;
 globalThis[Keyword.for("call")] = call;
 globalThis[Keyword.for("nil__q")] = nil__q;
 globalThis[Keyword.for("Pipe")] = Pipe;
@@ -1470,7 +1481,8 @@ let parse_assign_array_entry = construct_record.call(ParseMap, [[Keyword.for("id
 let parse_assign_array = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("array_deconstruction")})]), construct_vector.call(Chomp, [Keyword.for("open_sq")]), construct_vector.call(Until, [Keyword.for("close_sq"), parse_assign_array_entry, Keyword.for("entries")]), construct_vector.call(Chomp, [Keyword.for("close_sq")])]);
 let parse_obj_entry_rename = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("obj_entry_rename")})]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("old_name")]), construct_vector.call(Chomp, [Keyword.for("colon")]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("new_name")])]);
 let parse_regular_obj_assign_entry = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("obj_reg_entry")})]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")])]);
-let parse_obj_assign_entry = construct_record.call(ParseMap, [[[Keyword.for("id"), Keyword.for("colon")], parse_obj_entry_rename], [Keyword.for("id"), parse_regular_obj_assign_entry], [Keyword.for("dot_dot_dot"), parse_spread_assign]]);
+let parse_string_obj_assign_entry = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("obj_str_rename_entry")})]), construct_vector.call(One, [Keyword.for("string_lit"), Keyword.for("old_name")]), construct_vector.call(Chomp, [Keyword.for("colon")]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("new_name")])]);
+let parse_obj_assign_entry = construct_record.call(ParseMap, [[[Keyword.for("id"), Keyword.for("colon")], parse_obj_entry_rename], [Keyword.for("id"), parse_regular_obj_assign_entry], [Keyword.for("string_lit"), parse_string_obj_assign_entry], [Keyword.for("dot_dot_dot"), parse_spread_assign]]);
 let parse_assign_obj = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("object_deconstruction")})]), construct_vector.call(Chomp, [Keyword.for("open_b")]), construct_vector.call(Until, [Keyword.for("close_b"), parse_obj_assign_entry, Keyword.for("entries")]), construct_vector.call(Chomp, [Keyword.for("close_b")])]);
 let parse_this_assign = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({type: Keyword.for("this_assign")})]), construct_vector.call(Chomp, [Keyword.for("at")]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")])]);
 let parse_assign_expr = construct_record.call(ParseMap, [[Keyword.for("id"), parse_assign_id], [Keyword.for("open_sq"), parse_assign_array], [Keyword.for("open_b"), parse_assign_obj], [Keyword.for("dot_dot_dot"), parse_spread_assign], [Keyword.for("at"), parse_this_assign]]);
@@ -1654,7 +1666,7 @@ return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.
 function eval_array_deconstruction_names({entries}) {
 return str("[", map_join.bind(entries)(eval_array_deconstruction_entry, ", "), "]");}
 function eval_obj_deconstruction_entry(node) {
-return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("obj_reg_entry"), (...__args) => resolve_name(at.bind(__args[0])(Keyword.for("name")))], [Keyword.for("obj_entry_rename"), (...__args) => str(resolve_name(at.bind(__args[0])(Keyword.for("old_name"))), ": ", resolve_name(at.bind(__args[0])(Keyword.for("new_name"))))], [Keyword.for("spread_assign"), eval_spread_assign]])))(node);}
+return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("obj_reg_entry"), (...__args) => resolve_name(at.bind(__args[0])(Keyword.for("name")))], [Keyword.for("obj_entry_rename"), (...__args) => str(resolve_name(at.bind(__args[0])(Keyword.for("old_name"))), ": ", resolve_name(at.bind(__args[0])(Keyword.for("new_name"))))], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("obj_str_rename_entry"), (...__args) => str(at.bind(__args[0])(Keyword.for("old_name")), ": ", resolve_name(at.bind(__args[0])(Keyword.for("new_name"))))]])))(node);}
 function eval_object_deconstruction_names({entries}) {
 return str("{", map_join.bind(entries)(eval_obj_deconstruction_entry, ", "), "}");}
 function eval_this_assign({name}) {
@@ -1849,14 +1861,8 @@ function get_deconstructed_obj_entry_name(node) {
 return pipe.bind(at.bind(construct_record.call(Map, [[Keyword.for("obj_reg_entry"), Keyword.for("name")], [Keyword.for("obj_entry_rename"), Keyword.for("old_name")]]))(at.bind(node)(Keyword.for("type"))))(node);}
 function get_deconstructed_array_entry_name(node) {
 return pipe.bind(at.bind(construct_record.call(Map, [[Keyword.for("id_assign"), Keyword.for("name")]]))(at.bind(node)(Keyword.for("type"))))(node);}
-function eval_import_path(path) {
-if (truthy(and.call(equals__q.call(len.bind(path.split("."))(), (1)), () => and.call(negate.call(path.includes(":")), () => negate.call(path.includes("@")))))) {
-return str(path, ".js");
-} else {
-return path;
-};}
 function eval_import({assign_expr, path}) {
-return str("import ", eval_assign_expr(assign_expr), " from \"", eval_import_path(path.value.slice((1), (-1))), "\"");}
+return str("import ", eval_assign_expr(assign_expr), " from \"", path.value.slice((1), (-1)), "\"");}
 function eval_export({statement}) {
 return str("export ", eval_statement(statement));}
 function eval_export_default({expr}) {
