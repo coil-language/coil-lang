@@ -237,6 +237,14 @@ let default_iterator_impl = {
     }
     yield chunk
   }
+  fn* compact() {
+    for elem of this {
+      if elem::nil?() {
+        continue
+      }
+      yield elem
+    }
+  }
 }
 
 fn iterator_impl() = this[Iterator] || default_iterator_impl
@@ -256,6 +264,7 @@ fn any?(...fns) = ::iterator_impl().any?.call(this, compose(...fns))
 fn all?(...fns) = ::iterator_impl().all?.call(this, compose(...fns))
 fn reduce(f, start) = ::iterator_impl().reduce.call(this, f::call, start)
 fn split(...fns) = ::iterator_impl().split.call(this, compose(...fns))
+fn compact() = ::iterator_impl().compact.call(this)
 
 fn join(sep) = ::reduce(fn(prev cur) {
   if prev::empty?() {

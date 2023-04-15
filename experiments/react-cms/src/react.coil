@@ -1,28 +1,19 @@
 import React from "react"
 import {Atom} from "./react.js"
 
+impl Pipe for Atom = fn(...fns) = compose(...fns)(this.val)
+
 protocol ToReactChild
-export protocol Css
 impl ToReactChild for Atom = fn = this.val
 impl ToReactChild for Object = fn = this
 
 @def_call
 fn to_react_child() = this[ToReactChild]()
 
-fn insert_rule(attrs) {
-  let sheet = document.styleSheets[0]
-  let style = this[Css](attrs)
-  sheet.removeRule(str("." this))
-  sheet.insertRule(str("." this " {" style "}"))
-}
-
 export fn Elem(@ctor, @attrs, @children) {}
 impl Into for Elem = fn(children) = 
   new Elem(this.ctor, this.attrs, [...this.children, ...children])
 impl ToReactChild for Elem = fn() {
-  this.attrs::at(:className)&.split(" ")::pipe(_ || [])
-    ::map(as_keyword)
-    ::each(::fn (kw) = kw[Css] && kw::insert_rule(this.attrs))
   if this.children is Array {  
     return React.createElement(this.ctor, this.attrs, ...this.children::map(to_react_child))
   } else {
@@ -37,13 +28,36 @@ impl Vector for Keyword = fn(children) {
 }
 
 impl Record for Keyword = fn(attrs) {
+  attrs = attrs::map(fn([key, val]) {
+    // TODO: make this protocol based if we keep it.
+    if key::as_str().startsWith("data-") && val is Atom {
+      return [key, val.val]
+    } else {
+      return [key, val]
+    }
+  })  
   attrs = attrs::into({})  
   let str = this.value
   let [elem_name, className] = str.split(".")
   return new Elem(elem_name, {className, ...attrs}, attrs::at(:children))
 }
 
-export fn component(Component) {
+protocol ComponentOption
+
+export fn Css(@rules) {}
+define Vector for Css = fn(rules) = new Css(rules)
+
+impl ComponentOption for Css = fn() {
+  let sheet = document.styleSheets[0]
+  for rule of this.rules {
+    sheet.insertRule(rule)
+  }
+}
+
+export fn component(Component, ...opts) {
+  for opt of opts {
+    opt[ComponentOption]()
+  }
   let ReactComponent = fn(...args) = Component(...args)::to_react_child()
   define Record for ReactComponent = fn(attrs) {
     attrs = attrs::into({})

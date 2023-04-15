@@ -1,32 +1,26 @@
 import {component} from "./react.coil"
 import ReactDOM from "./react.js"
-import {use_state} from "./react.js"
+import {use_state, Atom} from "./react.js"
 import {Elem, Css} from "./react.coil"
 
-fn insert_rule(style) {
-  let sheet = document.styleSheets[0]
-  sheet.insertRule(str("." this " {" style "}"))
-}
-
-fn when(bool) {
-  if bool {
-    return this
-  }
-}
-
-define Css for :toggle = fn({"data-active": active}) = str(
-  "color: blue;"::when(active)
-  "color: red;"::when(!active)
-)
-
-@component
+@component(~Css[
+  ".toggle[data-active=true] {
+    color: red;
+  }"
+  ".toggle[data-active=false] {
+    color: blue;
+  }"
+])
 fn App() {
   let active = use_state(false)
-  return ~:div.toggle{
-    "data-active" => active.val
+  return ~:button.toggle{
+    "data-active" => active
     onClick: #(active.update(!_))
-    children: "hey"  
-  }  
+    children: active::pipe(~Map{
+      true => "turn off"
+      false => "turn on"
+    })
+  }
 }
 
 ReactDOM
