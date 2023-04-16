@@ -1,5 +1,6 @@
 import React from "react"
 import {Atom} from "./react.js"
+export * from "./react.js"
 
 impl Pipe for Atom = fn(...fns) = compose(...fns)(this.val)
 

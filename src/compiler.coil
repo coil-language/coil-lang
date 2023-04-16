@@ -99,6 +99,7 @@ let lexer = ~Lexer{
   /^await\b/ => :await
   /^new\b/ => :new
   /^keyof\b/ => :keyof
+  /^as\b/ => :as
   /^\=\>/ => :arrow
   /^\@/ => :at
   /^\&\&/ => :and_and
@@ -581,9 +582,11 @@ let parse_str = ~Parser[
   ~One[:string_lit :value]
 ]
 
+let valid_ids_in_all_contexts = #{:id :from :as}
+
 let parse_id = ~Parser[
   ~Init[{type: :id_lookup}]
-  ~Either[#{:id :import :from} :name]
+  ~Either[valid_ids_in_all_contexts::push(:import) :name]
 ]
 
 fn parse_reg_obj_entry(tokens) = ~Parser[
@@ -595,7 +598,7 @@ fn parse_reg_obj_entry(tokens) = ~Parser[
 
 let parse_obj_shorthand_entry = ~Parser[
   ~Init[{type: :obj_shorthand_entry}]
-  ~One[:id :id]
+  ~Either[valid_ids_in_all_contexts :id]
 ]
 
 fn parse_dynamic_obj_entry(tokens) = ~Parser[
@@ -632,12 +635,12 @@ fn parse_obj(tokens) = ~Parser[
 let parse_spread_assign = ~Parser[
   ~Init[{type: :spread_assign}]
   ~Chomp[:dot_dot_dot]
-  ~One[:id :name]
+  ~Either[valid_ids_in_all_contexts :name]
 ]
 
 let parse_assign_id = ~Parser[
   ~Init[{type: :id_assign}]
-  ~One[:id :name]
+  ~Either[valid_ids_in_all_contexts :name]
 ]
 
 let parse_assign_array_entry = ~ParseMap{
@@ -654,21 +657,21 @@ let parse_assign_array = ~Parser[
 
 let parse_obj_entry_rename = ~Parser[
   ~Init[{type: :obj_entry_rename}]
-  ~One[:id :old_name]
+  ~Either[valid_ids_in_all_contexts :old_name]
   ~Chomp[:colon]
-  ~One[:id :new_name]
+  ~Either[valid_ids_in_all_contexts :new_name]
 ]
 
 let parse_regular_obj_assign_entry = ~Parser[
   ~Init[{type: :obj_reg_entry}]
-  ~One[:id :name]
+  ~Either[valid_ids_in_all_contexts :name]
 ]
 
 let parse_string_obj_assign_entry = ~Parser[
   ~Init[{type: :obj_str_rename_entry}]
   ~One[:string_lit :old_name]
   ~Chomp[:colon]
-  ~One[:id :new_name]
+  ~Either[valid_ids_in_all_contexts :new_name]
 ]
 
 let parse_obj_assign_entry = ~ParseMap{
@@ -688,7 +691,7 @@ let parse_assign_obj = ~Parser[
 let parse_this_assign = ~Parser[
   ~Init[{type: :this_assign}]
   ~Chomp[:at]
-  ~One[:id :name]
+  ~Either[valid_ids_in_all_contexts :name]
 ]
 
 let parse_assign_expr = ~ParseMap{
@@ -1120,10 +1123,23 @@ let parse_impl_object = ~Parser[
   ~Then[parse_expr :expr]
 ]
 
+let parse_assign_all_as = ~Parser[
+  ~Init[{type: :assign_all_as}]
+  ~Chomp[:times :as]
+  ~One[:id :name]
+]
+
+fn parse_import_assign_expr(tokens) = ~Parser[
+  ~Case[~ParseMap{
+    [:times :as] => parse_assign_all_as
+    _ => parse_assign_expr
+  }]
+]::call(tokens)
+
 fn parse_import(tokens) = ~Parser[
   ~Init[{type: :import}]
   ~Chomp[:import]
-  ~Then[parse_assign_expr :assign_expr]
+  ~Until[:from parse_import_assign_expr :assign_exprs]
   ~Chomp[:from]
   ~Then[parse_str :path]
 ]::call(tokens)
@@ -1133,6 +1149,12 @@ fn parse_export(tokens) = ~Parser[
   ~Chomp[:export]
   ~Then[parse_statement :statement]
 ]::call(tokens)
+
+let parse_export_all = ~Parser[
+  ~Init[{type: :export_all}]
+  ~Chomp[:export :times :from]
+  ~One[:string_lit :path]
+]
 
 fn parse_export_default(tokens) = ~Parser[
   ~Init[{type: :export_default}]
@@ -1160,6 +1182,7 @@ fn parse_statement(tokens) = ~ParseMap{
   :loop => parse_loop
   :import => parse_import
   [:export :default] => parse_export_default
+  [:export :times] => parse_export_all
   :export => parse_export
   [:impl :id :eq] => parse_impl_object
   :impl => parse_impl_for
@@ -1281,12 +1304,16 @@ fn eval_object_deconstruction_names({entries}) =
 
 fn eval_this_assign({name}) = name
 
+fn eval_assign_all_as({name}) =
+  str("* as " name)
+
 fn eval_assign_expr(node) = node::at(:type)::pipe(~Map{
   :id_assign => eval_id_assign_name
   :spread_assign => eval_spread_assign
   :array_deconstruction => eval_array_deconstruction_names
   :object_deconstruction => eval_object_deconstruction_names
   :this_assign => eval_this_assign
+  :assign_all_as => eval_assign_all_as
 })::call(node)
 
 fn eval_while_let_loop({assign_expr test_expr body}) = str(
@@ -1626,14 +1653,19 @@ fn get_deconstructed_array_entry_name(node) =
     ::at(node::at(:type))
     ::pipe(node)
 
-fn eval_import({assign_expr, path}) =
-  str("import " eval_assign_expr(assign_expr) " from \"" path.value.slice(1, -1) "\"")
+fn eval_import({assign_exprs, path}) =
+  str("import "
+    assign_exprs::map_join(eval_assign_expr, ", ")
+    " from \"" path.value.slice(1, -1) "\"")
 
 fn eval_export({statement}) =
   str("export " eval_statement(statement))
 
 fn eval_export_default({expr}) =
   str("export default " eval_expr(expr))
+
+fn eval_export_all({path}) =
+  str("export * from " path)
 
 fn eval_label({label_name, statement}) =
   str(label_name ": " eval_statement(statement))
@@ -1645,6 +1677,7 @@ fn eval_statement(node) = node::at(:type)::pipe(~Map{
   :import => eval_import
   :export => eval_export
   :export_default => eval_export_default
+  :export_all => eval_export_all
   :let => eval_let
   :if_let => eval_if_let
   :return => eval_return
@@ -1672,7 +1705,7 @@ export fn lex_and_parse(string) = lexer::call(string)
   ::pipe(fn(tokens) = new CollectionView(tokens, 0))
   ::pipe(parse)
 
-fn compile(string) = lexer::call(string)
+export fn compile(string) = lexer::call(string)
   ::pipe(fn(tokens) = new CollectionView(tokens, 0))
   ::pipe(parse)
   ::pipe(eval_ast)

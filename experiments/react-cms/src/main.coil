@@ -1,14 +1,12 @@
-import {component} from "./react.coil"
-import ReactDOM from "./react.js"
-import {use_state, Atom} from "./react.js"
-import {Elem, Css} from "./react.coil"
+import * as ReactDOM from "react-dom/client";
+import {component, Css, use_state} from "./react.coil"
 
 @component(~Css[
   ".toggle[data-active=true] {
     color: red;
   }"
   ".toggle[data-active=false] {
-    color: blue;
+    color: green;
   }"
 ])
 fn App() {

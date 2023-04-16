@@ -418,6 +418,14 @@ let default_iterator_impl = new ObjectLiteral({
     }
     yield chunk;
   },
+  *compact() {
+    for (let elem of this) {
+      if (truthy(nil__q.bind(elem)())) {
+        continue;
+      }
+      yield elem;
+    }
+  },
 });
 function iterator_impl() {
   return or.call(this[Iterator], () => default_iterator_impl);
@@ -484,6 +492,9 @@ function split(...fns) {
   return iterator_impl
     .bind(this)()
     .split.call(this, compose(...fns));
+}
+function compact() {
+  return iterator_impl.bind(this)().compact.call(this);
 }
 function join(sep) {
   return reduce.bind(this)(function (prev, cur) {
@@ -1643,6 +1654,7 @@ let lexer = construct_record.call(Lexer, [
   [/^await\b/, Keyword.for("await")],
   [/^new\b/, Keyword.for("new")],
   [/^keyof\b/, Keyword.for("keyof")],
+  [/^as\b/, Keyword.for("as")],
   [/^\=\>/, Keyword.for("arrow")],
   [/^\@/, Keyword.for("at")],
   [/^\&\&/, Keyword.for("and_and")],
@@ -2445,12 +2457,17 @@ let parse_str = construct_vector.call(Parser, [
   ]),
   construct_vector.call(One, [Keyword.for("string_lit"), Keyword.for("value")]),
 ]);
+let valid_ids_in_all_contexts = new Set([
+  Keyword.for("id"),
+  Keyword.for("from"),
+  Keyword.for("as"),
+]);
 let parse_id = construct_vector.call(Parser, [
   construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("id_lookup") }),
   ]),
   construct_vector.call(Either, [
-    new Set([Keyword.for("id"), Keyword.for("import"), Keyword.for("from")]),
+    push.bind(valid_ids_in_all_contexts)(Keyword.for("import")),
     Keyword.for("name"),
   ]),
 ]);
@@ -2473,7 +2490,7 @@ let parse_obj_shorthand_entry = construct_vector.call(Parser, [
   construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("obj_shorthand_entry") }),
   ]),
-  construct_vector.call(One, [Keyword.for("id"), Keyword.for("id")]),
+  construct_vector.call(Either, [valid_ids_in_all_contexts, Keyword.for("id")]),
 ]);
 function parse_dynamic_obj_entry(tokens) {
   return call.bind(
@@ -2536,13 +2553,19 @@ let parse_spread_assign = construct_vector.call(Parser, [
     new ObjectLiteral({ type: Keyword.for("spread_assign") }),
   ]),
   construct_vector.call(Chomp, [Keyword.for("dot_dot_dot")]),
-  construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")]),
+  construct_vector.call(Either, [
+    valid_ids_in_all_contexts,
+    Keyword.for("name"),
+  ]),
 ]);
 let parse_assign_id = construct_vector.call(Parser, [
   construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("id_assign") }),
   ]),
-  construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")]),
+  construct_vector.call(Either, [
+    valid_ids_in_all_contexts,
+    Keyword.for("name"),
+  ]),
 ]);
 let parse_assign_array_entry = construct_record.call(ParseMap, [
   [Keyword.for("id"), parse_assign_id],
@@ -2564,15 +2587,24 @@ let parse_obj_entry_rename = construct_vector.call(Parser, [
   construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("obj_entry_rename") }),
   ]),
-  construct_vector.call(One, [Keyword.for("id"), Keyword.for("old_name")]),
+  construct_vector.call(Either, [
+    valid_ids_in_all_contexts,
+    Keyword.for("old_name"),
+  ]),
   construct_vector.call(Chomp, [Keyword.for("colon")]),
-  construct_vector.call(One, [Keyword.for("id"), Keyword.for("new_name")]),
+  construct_vector.call(Either, [
+    valid_ids_in_all_contexts,
+    Keyword.for("new_name"),
+  ]),
 ]);
 let parse_regular_obj_assign_entry = construct_vector.call(Parser, [
   construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("obj_reg_entry") }),
   ]),
-  construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")]),
+  construct_vector.call(Either, [
+    valid_ids_in_all_contexts,
+    Keyword.for("name"),
+  ]),
 ]);
 let parse_string_obj_assign_entry = construct_vector.call(Parser, [
   construct_vector.call(Init, [
@@ -2583,7 +2615,10 @@ let parse_string_obj_assign_entry = construct_vector.call(Parser, [
     Keyword.for("old_name"),
   ]),
   construct_vector.call(Chomp, [Keyword.for("colon")]),
-  construct_vector.call(One, [Keyword.for("id"), Keyword.for("new_name")]),
+  construct_vector.call(Either, [
+    valid_ids_in_all_contexts,
+    Keyword.for("new_name"),
+  ]),
 ]);
 let parse_obj_assign_entry = construct_record.call(ParseMap, [
   [[Keyword.for("id"), Keyword.for("colon")], parse_obj_entry_rename],
@@ -2608,7 +2643,10 @@ let parse_this_assign = construct_vector.call(Parser, [
     new ObjectLiteral({ type: Keyword.for("this_assign") }),
   ]),
   construct_vector.call(Chomp, [Keyword.for("at")]),
-  construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")]),
+  construct_vector.call(Either, [
+    valid_ids_in_all_contexts,
+    Keyword.for("name"),
+  ]),
 ]);
 let parse_assign_expr = construct_record.call(ParseMap, [
   [Keyword.for("id"), parse_assign_id],
@@ -3351,6 +3389,25 @@ let parse_impl_object = construct_vector.call(Parser, [
   construct_vector.call(Chomp, [Keyword.for("eq")]),
   construct_vector.call(Then, [parse_expr, Keyword.for("expr")]),
 ]);
+let parse_assign_all_as = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
+    new ObjectLiteral({ type: Keyword.for("assign_all_as") }),
+  ]),
+  construct_vector.call(Chomp, [Keyword.for("times"), Keyword.for("as")]),
+  construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")]),
+]);
+function parse_import_assign_expr(tokens) {
+  return call.bind(
+    construct_vector.call(Parser, [
+      construct_vector.call(Case, [
+        construct_record.call(ParseMap, [
+          [[Keyword.for("times"), Keyword.for("as")], parse_assign_all_as],
+          [_, parse_assign_expr],
+        ]),
+      ]),
+    ])
+  )(tokens);
+}
 function parse_import(tokens) {
   return call.bind(
     construct_vector.call(Parser, [
@@ -3358,9 +3415,10 @@ function parse_import(tokens) {
         new ObjectLiteral({ type: Keyword.for("import") }),
       ]),
       construct_vector.call(Chomp, [Keyword.for("import")]),
-      construct_vector.call(Then, [
-        parse_assign_expr,
-        Keyword.for("assign_expr"),
+      construct_vector.call(Until, [
+        Keyword.for("from"),
+        parse_import_assign_expr,
+        Keyword.for("assign_exprs"),
       ]),
       construct_vector.call(Chomp, [Keyword.for("from")]),
       construct_vector.call(Then, [parse_str, Keyword.for("path")]),
@@ -3378,6 +3436,17 @@ function parse_export(tokens) {
     ])
   )(tokens);
 }
+let parse_export_all = construct_vector.call(Parser, [
+  construct_vector.call(Init, [
+    new ObjectLiteral({ type: Keyword.for("export_all") }),
+  ]),
+  construct_vector.call(Chomp, [
+    Keyword.for("export"),
+    Keyword.for("times"),
+    Keyword.for("from"),
+  ]),
+  construct_vector.call(One, [Keyword.for("string_lit"), Keyword.for("path")]),
+]);
 function parse_export_default(tokens) {
   return call.bind(
     construct_vector.call(Parser, [
@@ -3422,6 +3491,7 @@ function parse_statement(tokens) {
       [Keyword.for("loop"), parse_loop],
       [Keyword.for("import"), parse_import],
       [[Keyword.for("export"), Keyword.for("default")], parse_export_default],
+      [[Keyword.for("export"), Keyword.for("times")], parse_export_all],
       [Keyword.for("export"), parse_export],
       [
         [Keyword.for("impl"), Keyword.for("id"), Keyword.for("eq")],
@@ -3616,6 +3686,9 @@ function eval_object_deconstruction_names({ entries }) {
 function eval_this_assign({ name }) {
   return name;
 }
+function eval_assign_all_as({ name }) {
+  return str("* as ", name);
+}
 function eval_assign_expr(node) {
   return call.bind(
     pipe.bind(at.bind(node)(Keyword.for("type")))(
@@ -3628,6 +3701,7 @@ function eval_assign_expr(node) {
           eval_object_deconstruction_names,
         ],
         [Keyword.for("this_assign"), eval_this_assign],
+        [Keyword.for("assign_all_as"), eval_assign_all_as],
       ])
     )
   )(node);
@@ -4170,10 +4244,10 @@ function get_deconstructed_array_entry_name(node) {
     )(at.bind(node)(Keyword.for("type")))
   )(node);
 }
-function eval_import({ assign_expr, path }) {
+function eval_import({ assign_exprs, path }) {
   return str(
     "import ",
-    eval_assign_expr(assign_expr),
+    map_join.bind(assign_exprs)(eval_assign_expr, ", "),
     ' from "',
     path.value.slice(1, -1),
     '"'
@@ -4184,6 +4258,9 @@ function eval_export({ statement }) {
 }
 function eval_export_default({ expr }) {
   return str("export default ", eval_expr(expr));
+}
+function eval_export_all({ path }) {
+  return str("export * from ", path);
 }
 function eval_label({ label_name, statement }) {
   return str(label_name, ": ", eval_statement(statement));
@@ -4199,6 +4276,7 @@ function eval_statement(node) {
           [Keyword.for("import"), eval_import],
           [Keyword.for("export"), eval_export],
           [Keyword.for("export_default"), eval_export_default],
+          [Keyword.for("export_all"), eval_export_all],
           [Keyword.for("let"), eval_let],
           [Keyword.for("if_let"), eval_if_let],
           [Keyword.for("return"), eval_return],
