@@ -372,6 +372,7 @@ fn keys() = this[Record].keys.call(this)
 fn values() = this[Record].values.call(this)
 
 define Record for Map = fn(entries) = new Map(entries)
+define Record for Object = Object.fromEntries
 
 fn record?() = this[Record]::exists?()
 fn construct_record(entries) = this[Record](entries)
