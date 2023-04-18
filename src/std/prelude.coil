@@ -250,8 +250,9 @@ let default_iterator_impl = {
     for elem of this {
       if elem::nil?() {
         continue
+      } else {
+        yield elem
       }
-      yield elem
     }
   }
 }
@@ -296,14 +297,12 @@ define Into for Object = fn(iterable) = Object.fromEntries(iterable)
 
 fn into(val) = val[Into](this)
 
-// Collection-like protocols: Collection, Record, Vector, and OrderedSequence
-
 protocol Collection
 
 impl Collection for ObjectLiteral = {
   fn at(key) = this[key]
   fn len() = Object.keys(this).length
-  fn empty?() = this.length === 0
+  fn empty?() = this::len() === 0
   fn has?(key) = key keyof this
 }
 
@@ -341,13 +340,7 @@ fn len() = this[Collection].len.call(this)
 fn at(key_or_idx) = this[Collection].at.call(this, key_or_idx)
 
 @def_call
-fn empty?() {
-  if this::nil?() {
-    return true
-  } else {
-    return this[Collection].empty?.call(this)
-  }
-}
+fn empty?() = this&.[Collection].empty?.call(this) ?? true
 
 @def_call
 fn not_empty?() = !this::empty?()

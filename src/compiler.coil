@@ -103,6 +103,7 @@ let lexer = ~Lexer{
   /^\@/ => :at
   /^\&\&/ => :and_and
   /^\|\|/ => :or_or
+  /^\?\?/ => :nullish
   /^\=\=\=/ => :triple_eq
   /^\!\=\=/ => :triple_not_eq
   /^\=\=/ => :double_eq
@@ -392,6 +393,12 @@ fn parse_or_or(tokens lhs) = ~Parser[
   ~Then[parse_expr :rhs]
 ]::call(tokens)
 
+fn parse_nullish(tokens lhs) = ~Parser[
+  ~Init[{type: :nullish, lhs}]
+  ~Chomp[:nullish]
+  ~Then[parse_expr :rhs]
+]::call(tokens)
+
 fn parse_keyof(tokens lhs) = ~Parser[
   ~Init[{type: :keyof, lhs}]
   ~Chomp[:keyof]
@@ -411,6 +418,7 @@ fn parse_third_expr_step(tokens, lhs) = ~ParseMap{
   :not_eq => parse_not_eq
   :and_and => parse_and_and
   :or_or => parse_or_or
+  :nullish => parse_nullish
   :keyof => parse_keyof
   comparison_ops => parse_comparison_op
 }::call(tokens, lhs)
@@ -1413,6 +1421,7 @@ fn eval_and_and({lhs rhs}) =
   str("and.call(" eval_expr(lhs) ", () => " eval_expr(rhs) ")")
 fn eval_or_or({lhs rhs}) =
   str("or.call(" eval_expr(lhs) ", () => " eval_expr(rhs) ")")
+fn eval_nullish({lhs, rhs}) = str(eval_expr(lhs) " ?? " eval_expr(rhs))
 fn eval_snd_assign({lhs rhs}) =
   str(eval_expr(lhs) " = " eval_expr(rhs))
 fn eval_await({expr}) = str("await " eval_expr(expr))
@@ -1558,6 +1567,7 @@ fn eval_expr(node) = node::at(:type)::pipe(~Map{
   :is => eval_is
   :and_and => eval_and_and
   :or_or => eval_or_or
+  :nullish => eval_nullish
   :snd_assign => eval_snd_assign
   :await => eval_await
   :yield => eval_yield
