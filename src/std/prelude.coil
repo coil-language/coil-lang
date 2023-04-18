@@ -136,27 +136,39 @@ protocol Iterator
 let default_iterator_impl = {
   fn* take(n) {
     for [elem i] of this::zip(0..) {
-      if i == n { break }
-      yield elem
+      if i == n {
+        break
+      } else {
+        yield elem
+      }
     }
   }
   fn* drop(n) {
     let size = this::len()
     for [elem i] of this::zip(0..) {
-      if (size - i) > n { break }
-      yield elem
+      if (size - i) > n {
+        break
+      } else {
+        yield elem
+      }
     }
   }
   fn* until(f) {
     for elem of this {
-      if f(elem) { break }
-      yield elem
+      if f(elem) {
+        break
+      } else {
+        yield elem
+      }
     }
   }
   fn* skip(n) {
     for [elem i] of this::zip(0..) {
-      if i < n { continue }
-      yield elem
+      if i < n {
+        continue
+      } else {
+        yield elem
+      }
     }
   }
   fn find(f) {
@@ -170,8 +182,11 @@ let default_iterator_impl = {
     let generators = [this, ...collections]::map(iter)::into([])
     loop {
       let gen_states = generators::map(#(&.next()))::into([])
-      if gen_states::any?(:done) { break }
-      yield gen_states::map(:value)::into([])
+      if gen_states::any?(:done) {
+        break
+      } else {
+        yield gen_states::map(:value)::into([])
+      }
     }
   }
   fn reduce(f, start) {

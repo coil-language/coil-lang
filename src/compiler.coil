@@ -74,7 +74,6 @@ let lexer = ~Lexer{
   /^\~/ => :tilde
   /^if\b/ => :if
   /^is\b/ => :is
-  /^unless\b/ => :unless
   /^else\b/ => :else
   /^return\b/ => :return
   /^import\b/ => :import
@@ -988,13 +987,6 @@ fn parse_if(tokens) = ~Parser[
   ~Optional[:else parse_if_branch :fail]
 ]::call(tokens)
 
-fn parse_unless(tokens) = ~Parser[
-  ~Init[{type: :unless}]
-  ~Chomp[:unless]
-  ~Then[parse_expr :expr]
-  block(:body)
-]::call(tokens)
-
 let parse_let = ~Parser[
   ~Init[{type: :let}]
   ~Chomp[:let]
@@ -1172,7 +1164,6 @@ fn parse_label(tokens) = ~Parser[
 fn parse_statement(tokens) = ~ParseMap{
   :let => parse_let
   :for => parse_for_loop
-  :unless => parse_unless
   :define => parse_define
   :try => parse_try
   :protocol => parse_protocol
@@ -1256,11 +1247,6 @@ fn eval_if({expr pass fail}) = str(
   "if (truthy(" eval_expr(expr) ")) {\n"
     eval_ast(pass) "\n"
   "}" eval_if_branch(fail))
-
-fn eval_unless({expr body}) = str(
-  "if (negate.call(" eval_expr(expr) ")) {\n"
-    eval_ast(body) "\n"
-  "}")
 
 fn eval_str({value}) {
   value = value.slice(1, -1)    
@@ -1673,7 +1659,6 @@ fn eval_label({label_name, statement}) =
 fn eval_statement(node) = node::at(:type)::pipe(~Map{
   :label => eval_label  
   :if => eval_if
-  :unless => eval_unless
   :import => eval_import
   :export => eval_export
   :export_default => eval_export_default
