@@ -853,6 +853,38 @@ fn def_vector(Constructor) {
   return Constructor
 }
 
+@doc("
+Defines a basic record type for a given constructor.
+
+Important! make sure your constructor has its entries stored at this.entries.
+
+Example:
+  @def_record
+  fn ArrayMap(@entries) {}
+
+  let name->role = ~ArrayMap{
+    \"marcelle rusu\" => \"coil language designer\"
+  }
+
+  // note that in this most minimal use, def_record isn't super useful.
+  // let's take a look at something more practical
+
+  @def_record
+  fn CallMap(@entries) {}
+
+  impl Call for CallMap = fn(val) =
+    ::find(fn([key]) = key::call(val))
+    ::pipe(1)
+
+  let score->letter_grade = ~CallMap{
+    ..50 => :F
+    50..60 => :D
+    60..70 => :C
+    70..80 => :B
+    80.. => :A
+  }
+  score->letter_grade::call(60) // :C
+")
 fn def_record(Constructor) {
   define Record for Constructor = fn(entries) = new Constructor(entries)
   impl Symbol.iterator for Constructor = fn() = this.entries::iter()

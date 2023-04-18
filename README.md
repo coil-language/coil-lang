@@ -3,7 +3,7 @@
 Coil is a delightfully small yet powerful language.
 
 ```
-let score_to_letter_grade = ~CallMap{
+let score->letter_grade = ~CallMap{
   ..50 => :F
   50..60 => :D
   60..70 => :C
@@ -13,7 +13,7 @@ let score_to_letter_grade = ~CallMap{
 
 let top_students =
   [{name: "marcelle", score: 53} {name: "jill", score: 80} {name: "john", score: 74}]
-    ::keep(:score score_to_letter_grade #{:A :B})
+    ::keep(:score score->letter_grade #{:A :B})
     ::map(:name)
     ::into(#{}) // #{"jill" "john"}
 ```
