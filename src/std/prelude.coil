@@ -129,7 +129,7 @@ fn iter() = this&.[Symbol.iterator]() || []::iter()
 
 // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterator_protocol
 @def_call
-fn iter?() = this&.[Symbol.iterator] && ::iter() === this
+fn iter?() = ::iter() === this
 
 protocol Iterator
 
@@ -137,16 +137,6 @@ let default_iterator_impl = {
   fn* take(n) {
     for [elem i] of this::zip(0..) {
       if i == n {
-        break
-      } else {
-        yield elem
-      }
-    }
-  }
-  fn* drop(n) {
-    let size = this::len()
-    for [elem i] of this::zip(0..) {
-      if (size - i) > n {
         break
       } else {
         yield elem
@@ -261,7 +251,6 @@ fn iterator_impl() = this&.[Iterator] || default_iterator_impl
 
 fn skip(n) = ::iterator_impl().skip.call(this::iter(), n)
 fn take(n) = ::iterator_impl().take.call(this::iter(), n)
-fn drop(n) = ::iterator_impl().drop.call(this::iter(), n)
 fn each(f) = ::iterator_impl().each.call(this::iter(), f::call)
 fn until(...fns) = ::iterator_impl().until.call(this::iter(), compose(...fns))
 fn zip(...iterables) = ::iterator_impl().zip.call(this::iter(), ...iterables)
@@ -923,8 +912,6 @@ impl Call for CallMap = fn(value) =
 // GLOBAL EXPORTS
 
 define :Call for globalThis = Call
-define :Type for globalThis = Type
-define :type for globalThis = type
 define :call for globalThis = call
 define :nil? for globalThis = nil?
 define :Pipe for globalThis = Pipe
@@ -934,7 +921,6 @@ define :iter for globalThis = iter
 define :Iterator for globalThis = Iterator
 define :skip for globalThis = skip
 define :take for globalThis = take
-define :drop for globalThis = drop
 define :each for globalThis = each
 define :until for globalThis = until
 define :zip for globalThis = zip
