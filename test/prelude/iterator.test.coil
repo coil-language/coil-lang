@@ -1,0 +1,89 @@
+// TODO: `import { assertEquals }` is broken
+import * as asserts from "https://deno.land/std@0.179.0/testing/asserts.ts";
+
+let assert_equals = asserts.assertEquals
+
+Deno.test("[1 2 3] map" fn {
+  let plus_one = [1 2 3]::map(_ + 1)::into([])
+  assert_equals(plus_one, [2 3 4])
+})
+
+Deno.test("[1 2 3] flat_map" fn {
+  let itself = [1 2 3]::iter()::flat_map(#([&]))::into([])
+  assert_equals(itself, [1 2 3])
+})
+
+Deno.test("[1 2 3] any?" fn {
+  let has_two? = [1 2 3]::iter()::any?(_ == 2)
+  assert_equals(has_two?, true)
+})
+
+Deno.test("[1 2 3] all?" fn {
+  let less_than_4? = [1 2 3]::iter()::all?(_ < 4)
+  assert_equals(less_than_4?, true)
+})
+
+Deno.test("[1 2 3] find first < 4" fn {
+  let one = [1 2 3]::iter()::find(_ < 4)
+  assert_equals(one, 1)
+})
+
+Deno.test("[] empty?" fn {
+  assert_equals([]::empty?(), true)
+})
+
+Deno.test("[1] empty?" fn {
+  assert_equals([1]::empty?(), false)
+})
+
+Deno.test("[]::push(1)" fn {
+  assert_equals([]::push(1), [1])
+})
+
+Deno.test("#{}::push(1)" fn {
+  assert_equals(#{}::push(1), #{1})
+})
+
+Deno.test("\"\"::push(\"a\")" fn {
+  assert_equals(""::push("a"), "a")
+})
+
+Deno.test("[1 2 3]::concat([2 3 4])" fn {
+  assert_equals([1 2 3]::concat([2 3 4]), [1 2 3 2 3 4])
+})
+
+Deno.test("#{1 2 3}::concat(#{2 3 4})" fn {
+  assert_equals(#{1 2 3}::concat(#{2 3 4}), #{1 2 3 2 3 4})
+})
+
+Deno.test("#{1 2 3}::concat([2 3 4])" fn {
+  assert_equals(#{1 2 3}::concat([2 3 4]), #{1 2 3 2 3 4})
+})
+
+Deno.test("{a: 2}::merge({a: 3})" fn {
+  assert_equals({a: 2}::merge({a: 3}), {a: 3})
+})
+
+Deno.test("{a: 2}::merge({b: 3})" fn {
+  assert_equals({a: 2}::merge({b: 3}), {a: 2, b: 3})
+})
+
+Deno.test("{a: 2}::merge(~Map{b: 3})" fn {
+  assert_equals({a: 2}::merge(~Map{b: 3}), {a: 2, b: 3})
+})
+
+Deno.test("{a: 2}::merge(~Map{a: 3})" fn {
+  assert_equals({a: 2}::merge(~Map{a: 3}), {a: 3})
+})
+
+Deno.test("~Map{a: 2}::merge(~Map{a: 3})" fn {
+  assert_equals(~Map{a: 2}::merge(~Map{a: 3}), ~Map{a: 3})
+})
+
+Deno.test("~Map{a: 2}::merge({a: 3})" fn {  
+  assert_equals(~Map{a: 2}::merge({a: 3}), ~Map{a: 3})
+})
+
+Deno.test("~Map{a: 2}::merge(~Map{b: 3})" fn {
+  assert_equals(~Map{a: 2}::merge(~Map{b: 3}), ~Map{a: 2, b: 3})
+})

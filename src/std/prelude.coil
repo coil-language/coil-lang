@@ -354,9 +354,18 @@ impl Record for ObjectLiteral = {
   fn values() = Object.values(this)
 }
 
+// this is kind of gross :(
+fn map_friendly() {
+  if this is ObjectLiteral {
+    return this::map(fn([k, v]) = [k::as_keyword() v])
+  } else {
+    return this
+  }
+}
+
 impl Record for Map = {
   fn insert(key, value) = new Map([...this, [key, value]])
-  fn merge(other) = new Map([...this, ...other])
+  fn merge(other) = new Map([...this, ...other::map_friendly()])
   fn keys() = this.keys()
   fn values() = this.values()
 }
