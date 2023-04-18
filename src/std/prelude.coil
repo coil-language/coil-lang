@@ -696,13 +696,7 @@ impl JsLogFriendly for String = fn() = this
 impl JsLogFriendly for Function = fn() = this
 
 @def_call
-fn js_log_friendly() {
-  if this::nil?() || !this[JsLogFriendly] {
-    return this
-  } else {
-    return this[JsLogFriendly]()
-  }
-}
+fn js_log_friendly() = this&.[JsLogFriendly]()
 
 @def_call
 fn log(...args) {
