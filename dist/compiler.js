@@ -768,11 +768,8 @@ return thunk();
 return this[Or](thunk);
 };}
 const JsLogFriendly = Symbol("JsLogFriendly");
-function _resolve_keyword_str(kw) {
-return replace.bind(replace.bind(kw)("__q", "?"))("__b", "!");}
 ObjectLiteral.prototype[JsLogFriendly] = function () {
-return into.bind(map.bind(this)(function ([k, v]) {
-return [_resolve_keyword_str(k), js_log_friendly.bind(v)()];}))(Object);};
+return into.bind(this)(Object);};
 Map.prototype[JsLogFriendly] = function () {
 return into.bind(map.bind(this)(function ([k, v]) {
 return [js_log_friendly.bind(k)(), js_log_friendly.bind(v)()];}))(construct_record.call(Map, []));};
@@ -781,13 +778,13 @@ return into.bind(map.bind(this)(js_log_friendly))([]);};
 Set.prototype[JsLogFriendly] = function () {
 return str("#{", join.bind(map.bind(this)(js_log_friendly, as_str))(", "), "}");};
 Keyword.prototype[JsLogFriendly] = function () {
-return plus.call(":",_resolve_keyword_str(this['value']));};
+return str(":", this['value']);};
 Boolean.prototype[JsLogFriendly] = function () {
 return this;};
 String.prototype[JsLogFriendly] = function () {
 return this;};
 Function.prototype[JsLogFriendly] = function () {
-return this['name'];};
+return this;};
 let js_log_friendly = def_call(function js_log_friendly() {
 if (truthy(or.call(nil__q.bind(this)(), () => negate.call(this[JsLogFriendly])))) {
 return this;
@@ -1708,8 +1705,8 @@ let math_op_to_method = construct_record.call(Map, [[">", "greater_than"], ["<",
 function eval_math_op({'lhs': lhs, 'op': op, 'rhs': rhs}) {
 return str(call.bind(math_op_to_method)(op), ".call(", eval_expr(lhs), ",", eval_expr(rhs), ")");}
 function eval_this_assignments(args) {
-return reduce.bind(map.bind(keep.bind(iter.bind(args)())((...__args) => equals__q.call(at.bind(__args[0])(Keyword.for("type")), Keyword.for("this_assign"))))(function ({'name': name}) {
-return str("this.", name, " = ", name, ";\n");}))(plus, "");}
+return into.bind(map.bind(keep.bind(args)((...__args) => equals__q.call(at.bind(__args[0])(Keyword.for("type")), Keyword.for("this_assign"))))(function ({'name': name}) {
+return str("this.", name, " = ", name, ";\n");}))("");}
 function eval_fn({'is_async?': is_async__q, 'generator?': generator__q, 'name': name, 'args': args, 'body': body}) {
 return str((and.call(is_async__q, () => "async ")), "function ", (and.call(generator__q, () => "*")), resolve_name(name), "(", map_join.bind(args)(eval_assign_expr, ", "), ") {\n", eval_this_assignments(args), eval_ast(body), "}");}
 function eval_set({'elements': elements}) {
