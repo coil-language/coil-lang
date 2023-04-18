@@ -671,12 +671,7 @@ fn or(thunk) {
 
 protocol JsLogFriendly
 
-// Why do we even do this for keywords?
-fn _resolve_keyword_str(kw) = kw::replace("__q", "?")::replace("__b", "!")
-
-impl JsLogFriendly for ObjectLiteral = fn() =
-  ::map(fn([k, v]) = [_resolve_keyword_str(k) v::js_log_friendly()])
-  ::into(Object)
+impl JsLogFriendly for ObjectLiteral = fn() = ::into(Object)
 
 impl JsLogFriendly for Map = fn() =
   ::map(fn ([k, v]) = [k::js_log_friendly(), v::js_log_friendly()])
@@ -684,10 +679,10 @@ impl JsLogFriendly for Map = fn() =
 
 impl JsLogFriendly for Array = fn() = ::map(js_log_friendly)::into([])
 impl JsLogFriendly for Set = fn() = str("#{" this::map(js_log_friendly as_str)::join(", ") "}")
-impl JsLogFriendly for Keyword = fn() = ":" + _resolve_keyword_str(this.value)
+impl JsLogFriendly for Keyword = fn() = str(":" this.value)
 impl JsLogFriendly for Boolean = fn() = this
 impl JsLogFriendly for String = fn() = this
-impl JsLogFriendly for Function = fn() = this.name
+impl JsLogFriendly for Function = fn() = this
 
 @def_call
 fn js_log_friendly() {

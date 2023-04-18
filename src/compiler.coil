@@ -1272,7 +1272,7 @@ fn eval_str({value}) {
 }
 
 fn eval_property_lookup({lhs property}) =
-  str(eval_expr(lhs) "." resolve_name(property))
+  str(eval_expr(lhs) "['" property "']")
 
 fn eval_fn_call({lhs args}) =
   str(eval_expr(lhs) "(" args::map_join(eval_expr, ", ") ")")
@@ -1289,12 +1289,13 @@ fn eval_array_deconstruction_entry(node) = node::at(:type)::pipe(~Map{
 fn eval_array_deconstruction_names({entries}) =
   str("[" entries::map_join(eval_array_deconstruction_entry ", ") "]")
 
+fn eval_obj_reg_entry({name}) = str("'" name "': " resolve_name(name))
+
+fn eval_obj_entry_rename({old_name, new_name}) = str("'" old_name "': " resolve_name(new_name))
+
 fn eval_obj_deconstruction_entry(node) = node::at(:type)::pipe(~Map{
-  :obj_reg_entry => #(resolve_name(&::at(:name)))
-  :obj_entry_rename => #(str(
-    resolve_name(&::at(:old_name))
-    ": "
-    resolve_name(&::at(:new_name))))
+  :obj_reg_entry => eval_obj_reg_entry
+  :obj_entry_rename => eval_obj_entry_rename
   :spread_assign => eval_spread_assign
   :obj_str_rename_entry => #(str(&::at(:old_name) ": " resolve_name(&::at(:new_name))))
 })::call(node)
@@ -1380,9 +1381,9 @@ fn eval_bind({lhs expr}) =
   str(eval_expr(expr) ".bind(" eval_expr(lhs) ")")
 
 fn eval_reg_obj_entry({key, value}) =
-  str(resolve_name(key) ": " eval_expr(value))
+  str("'" key "': " eval_expr(value))
 
-fn eval_obj_shorthand_entry({id}) = resolve_name(id)
+fn eval_obj_shorthand_entry({id}) = str("'" id "':" resolve_name(id))
 
 fn eval_dynamic_obj_entry({key_expr value}) =
   str("[" eval_expr(key_expr)"]: " eval_expr(value))
@@ -1390,7 +1391,7 @@ fn eval_dynamic_obj_entry({key_expr value}) =
 fn eval_obj_fn({name generator? is_async? args body}) =
   str((is_async? && "async ")
       (generator? && "*")
-      resolve_name(name) "(" args::map_join(eval_assign_expr ", ") ") {\n"
+      "['" name "'](" args::map_join(eval_assign_expr ", ") ") {\n"
       eval_ast(body) "\n}")
 
 fn eval_obj_entry(node) = node::at(:type)::pipe(~Map{
@@ -1437,7 +1438,7 @@ fn eval_unapplied_math_op({op}) = math_op_to_method::call(op)
 fn eval_unapplied_and_and() = "and"
 fn eval_unapplied_or_or() = "or"
 
-fn eval_keyword({value}) = str("Keyword.for(\"" resolve_name(value).slice(1) "\")")
+fn eval_keyword({value}) = str("Keyword.for(\"" value.slice(1) "\")")
 
 fn eval_regular_record_entry({key_expr value_expr}) =
   str("[" eval_expr(key_expr) ", " eval_expr(value_expr) "]")
