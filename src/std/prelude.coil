@@ -451,20 +451,32 @@ fn impl_equal(Ctor, ...keys) {
 impl Equal for Object = fn(other) = this === other
 
 impl Equal for Set = fn(other) {
-  if !(other is Set) { return false }
-  if other.size !== this.size { return false }
-  return ::all?(fn(val) = other.has(val))
+  if !(other is Set) {
+    return false
+  } else if other.size !== this.size {
+    return false
+  } else {
+    return ::all?(fn(val) = other.has(val))
+  }
 }
 impl Equal for Array = fn(other) {
-  if !(other is Array) { return false }
-  if other.length !== this.length { return false }
-  return ::zip(other)::all?(fn([a, b]) = a == b)
+  if !(other is Array) {
+    return false
+  } else if other.length !== this.length {
+    return false
+  } else {
+    return ::zip(other)::all?(fn([a, b]) = a == b)
+  }
 }
 
 fn record_equals?(other) {
-  if this.constructor !== other.constructor { return false }
-  if this::len() != other::len() { return false }
-  return this::all?(fn([key, value]) = other::at(key) == value)
+  if this.constructor !== other.constructor {
+    return false
+  } else if this::len() != other::len() {
+    return false
+  } else {
+    return this::all?(fn([key, value]) = other::at(key) == value)
+  }
 }
 impl Equal for Map = record_equals?
 impl Equal for ObjectLiteral = record_equals?
@@ -851,7 +863,10 @@ fn def_record(Constructor) {
 let char_alpha? = ("a"..="z")::into(#{}) + ("A"..="Z")::into(#{})
 let char_numeric? = ("0"..="9")::into(#{})
 let char_alpha_numeric? = char_alpha? + char_numeric?
+
+@doc("all characters in string are in a-z or A-Z")
 fn alpha?() = this::all?(char_alpha?)
+@doc("all characters in string are in a-z or A-Z or 0-9")
 fn alpha_numeric?() = this::all?(char_alpha_numeric?)
 
 @def_record
