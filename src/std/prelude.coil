@@ -732,7 +732,6 @@ fn exists?() = !this::nil?()
 
 // Underscore
 
-// I'm starting to think this is not as useful as it once was
 fn Underscore(@transforms) {}
 
 protocol UnderscoreInterpreter
@@ -920,15 +919,6 @@ fn CallMap(@entries) {}
 impl Call for CallMap = fn(value) =
   ::find(fn([callable, _]) = callable::call(value))
   ::pipe(fn([_, val]) = val)
-
-protocol Type
-impl Type for Number = :number
-impl Type for Symbol = :symbol
-impl Type for Keyword = :keyword
-impl Type for Array = :array
-impl Type for ObjectLiteral = :object_literal
-impl Type for Map = :map
-fn type() = this[Type]
 
 // GLOBAL EXPORTS
 
