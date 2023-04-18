@@ -1358,11 +1358,10 @@ fn eval_math_op({lhs op rhs}) = str(
     eval_expr(lhs) "," eval_expr(rhs)
   ")")
 
-fn eval_this_assignments(args) =
-  args::iter()
-    ::keep(#(&::at(:type) == :this_assign))
-    ::map(fn({name}) = str("this." name " = " name ";\n"))
-    ::reduce(+, "")
+fn eval_this_assignments(args) = args
+  ::keep(#(&::at(:type) == :this_assign))
+  ::map(fn({name}) = str("this." name " = " name ";\n"))
+  ::into("")
 
 fn eval_fn({is_async? generator? name args body}) = str(
   (is_async? && "async ")
