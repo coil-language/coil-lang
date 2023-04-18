@@ -247,24 +247,24 @@ let default_iterator_impl = {
   }
 }
 
-fn iterator_impl() = this[Iterator] || default_iterator_impl
+fn iterator_impl() = this&.[Iterator] || default_iterator_impl
 
-fn skip(n) = ::iterator_impl().skip.call(this, n)
-fn take(n) = ::iterator_impl().take.call(this, n)
-fn drop(n) = ::iterator_impl().drop.call(this, n)
-fn each(f) = ::iterator_impl().each.call(this, f::call)
-fn until(...fns) = ::iterator_impl().until.call(this, compose(...fns))
-fn zip(...iterables) = ::iterator_impl().zip.call(this, ...iterables)
-fn map(...fns) = ::iterator_impl().map.call(this, compose(...fns))
-fn flat_map(...fns) = ::iterator_impl().flat_map.call(this, compose(...fns))
-fn find(...fns) = ::iterator_impl().find.call(this, compose(...fns))
-fn keep(...fns) = ::iterator_impl().keep.call(this, compose(...fns))
+fn skip(n) = ::iterator_impl().skip.call(this::iter(), n)
+fn take(n) = ::iterator_impl().take.call(this::iter(), n)
+fn drop(n) = ::iterator_impl().drop.call(this::iter(), n)
+fn each(f) = ::iterator_impl().each.call(this::iter(), f::call)
+fn until(...fns) = ::iterator_impl().until.call(this::iter(), compose(...fns))
+fn zip(...iterables) = ::iterator_impl().zip.call(this::iter(), ...iterables)
+fn map(...fns) = ::iterator_impl().map.call(this::iter(), compose(...fns))
+fn flat_map(...fns) = ::iterator_impl().flat_map.call(this::iter(), compose(...fns))
+fn find(...fns) = ::iterator_impl().find.call(this::iter(), compose(...fns))
+fn keep(...fns) = ::iterator_impl().keep.call(this::iter(), compose(...fns))
 fn reject(...fns) = ::keep(...fns, !_)
-fn any?(...fns) = ::iterator_impl().any?.call(this, compose(...fns))
-fn all?(...fns) = ::iterator_impl().all?.call(this, compose(...fns))
-fn reduce(f, start) = ::iterator_impl().reduce.call(this, f::call, start)
-fn split(...fns) = ::iterator_impl().split.call(this, compose(...fns))
-fn compact() = ::iterator_impl().compact.call(this)
+fn any?(...fns) = ::iterator_impl().any?.call(this::iter(), compose(...fns))
+fn all?(...fns) = ::iterator_impl().all?.call(this::iter(), compose(...fns))
+fn reduce(f, start) = ::iterator_impl().reduce.call(this::iter(), f::call, start)
+fn split(...fns) = ::iterator_impl().split.call(this::iter(), compose(...fns))
+fn compact() = ::iterator_impl().compact.call(this::iter())
 
 fn join(sep) = ::reduce(fn(prev cur) {
   if prev::empty?() {

@@ -324,7 +324,7 @@ impl ParseInstruction for Parser = fn(result) {
 fn ParseMap(@entries) {}
 
 impl Record for ParseMap = {
-  fn keys() = this.entries::iter()::map(first)::into(#{})
+  fn keys() = this.entries::map(first)::into(#{})
 }
 
 impl Call for ParseMap = fn(tokens, ...args) {
@@ -337,7 +337,7 @@ impl Call for ParseMap = fn(tokens, ...args) {
     if pattern is Set && pattern::call(tokens::first()::at(:type)) {
       return parser::call(tokens, ...args)
     }
-    if pattern is Array && pattern::iter()::zip(tokens)::all?(fn([p, token]) {
+    if pattern is Array && pattern::zip(tokens)::all?(fn([p, token]) {
       let type = token::at(:type)
       if p is Keyword { return p == type }
       if p is Set { return p::has?(type) }
@@ -1214,7 +1214,7 @@ fn parse(tokens) {
 // START OF EVAL
 
 fn map_join(f, separator) =
-  this::iter()::map(f)::reduce(fn(acc, cur) {
+  this::map(f)::reduce(fn(acc, cur) {
     if acc::empty?() { return cur }
     else { return acc + separator + cur }
   }, "")

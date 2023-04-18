@@ -354,39 +354,39 @@ yield elem
 };
 }});
 function iterator_impl() {
-return or.call(this[Iterator], () => default_iterator_impl);}
+return or.call(this?.[Iterator], () => default_iterator_impl);}
 function skip(n) {
-return iterator_impl.bind(this)()['skip']['call'](this, n);}
+return iterator_impl.bind(this)()['skip']['call'](iter.bind(this)(), n);}
 function take(n) {
-return iterator_impl.bind(this)()['take']['call'](this, n);}
+return iterator_impl.bind(this)()['take']['call'](iter.bind(this)(), n);}
 function drop(n) {
-return iterator_impl.bind(this)()['drop']['call'](this, n);}
+return iterator_impl.bind(this)()['drop']['call'](iter.bind(this)(), n);}
 function each(f) {
-return iterator_impl.bind(this)()['each']['call'](this, call.bind(f));}
+return iterator_impl.bind(this)()['each']['call'](iter.bind(this)(), call.bind(f));}
 function until(...fns) {
-return iterator_impl.bind(this)()['until']['call'](this, compose(...fns));}
+return iterator_impl.bind(this)()['until']['call'](iter.bind(this)(), compose(...fns));}
 function zip(...iterables) {
-return iterator_impl.bind(this)()['zip']['call'](this, ...iterables);}
+return iterator_impl.bind(this)()['zip']['call'](iter.bind(this)(), ...iterables);}
 function map(...fns) {
-return iterator_impl.bind(this)()['map']['call'](this, compose(...fns));}
+return iterator_impl.bind(this)()['map']['call'](iter.bind(this)(), compose(...fns));}
 function flat_map(...fns) {
-return iterator_impl.bind(this)()['flat_map']['call'](this, compose(...fns));}
+return iterator_impl.bind(this)()['flat_map']['call'](iter.bind(this)(), compose(...fns));}
 function find(...fns) {
-return iterator_impl.bind(this)()['find']['call'](this, compose(...fns));}
+return iterator_impl.bind(this)()['find']['call'](iter.bind(this)(), compose(...fns));}
 function keep(...fns) {
-return iterator_impl.bind(this)()['keep']['call'](this, compose(...fns));}
+return iterator_impl.bind(this)()['keep']['call'](iter.bind(this)(), compose(...fns));}
 function reject(...fns) {
 return keep.bind(this)(...fns, negate.call(_));}
 function any__q(...fns) {
-return iterator_impl.bind(this)()['any?']['call'](this, compose(...fns));}
+return iterator_impl.bind(this)()['any?']['call'](iter.bind(this)(), compose(...fns));}
 function all__q(...fns) {
-return iterator_impl.bind(this)()['all?']['call'](this, compose(...fns));}
+return iterator_impl.bind(this)()['all?']['call'](iter.bind(this)(), compose(...fns));}
 function reduce(f, start) {
-return iterator_impl.bind(this)()['reduce']['call'](this, call.bind(f), start);}
+return iterator_impl.bind(this)()['reduce']['call'](iter.bind(this)(), call.bind(f), start);}
 function split(...fns) {
-return iterator_impl.bind(this)()['split']['call'](this, compose(...fns));}
+return iterator_impl.bind(this)()['split']['call'](iter.bind(this)(), compose(...fns));}
 function compact() {
-return iterator_impl.bind(this)()['compact']['call'](this);}
+return iterator_impl.bind(this)()['compact']['call'](iter.bind(this)());}
 function join(sep) {
 return reduce.bind(this)(function (prev, cur) {
 if (truthy(empty__q.bind(prev)())) {
@@ -1358,7 +1358,7 @@ let ParseMap = def_record(function ParseMap(entries) {
 this.entries = entries;
 });
 ParseMap.prototype[Record] = new ObjectLiteral({['keys']() {
-return into.bind(map.bind(iter.bind(this['entries'])())(first))(new Set([]));
+return into.bind(map.bind(this['entries'])(first))(new Set([]));
 }});
 ParseMap.prototype[Call] = function (tokens, ...args) {
 if (truthy(empty__q.bind(tokens)())) {
@@ -1371,7 +1371,7 @@ return call.bind(parser)(tokens, ...args);
 if (truthy(and.call(pattern instanceof Set, () => call.bind(pattern)(at.bind(first.bind(tokens)())(Keyword.for("type")))))) {
 return call.bind(parser)(tokens, ...args);
 };
-if (truthy(and.call(pattern instanceof Array, () => all__q.bind(zip.bind(iter.bind(pattern)())(tokens))(function ([p, token]) {
+if (truthy(and.call(pattern instanceof Array, () => all__q.bind(zip.bind(pattern)(tokens))(function ([p, token]) {
 let type = at.bind(token)(Keyword.for("type"));
 if (truthy(p instanceof Keyword)) {
 return equals__q.call(p, type);
@@ -1625,7 +1625,7 @@ __coil_while_let_temp = call.bind(parse_statement)(tokens);
 };
 return ast;}
 function map_join(f, separator) {
-return reduce.bind(map.bind(iter.bind(this)())(f))(function (acc, cur) {
+return reduce.bind(map.bind(this)(f))(function (acc, cur) {
 if (truthy(empty__q.bind(acc)())) {
 return cur;
 } else {
