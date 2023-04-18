@@ -81,11 +81,7 @@ note on [[Pipe]]:
 ")
 fn pipe(...callables) {
   let f = compose(...callables)
-  if this::nil?() {
-    return f(this)
-  } else {
-    return this[Pipe](f)
-  }
+  return this&.[Pipe](f) ?? f(this)
 }
 
 @doc("
@@ -326,13 +322,13 @@ impl Collection for Set = {
 @def_call
 fn len() = this[Collection].len.call(this)
 
-fn at(key_or_idx) = this[Collection].at.call(this, key_or_idx)
-
 @def_call
 fn empty?() = this&.[Collection].empty?.call(this) ?? true
 
 @def_call
 fn not_empty?() = !this::empty?()
+
+fn at(key_or_idx) = this[Collection].at.call(this, key_or_idx)
 
 fn has?(val) = this[Collection].has?.call(this, val)
 
@@ -345,31 +341,19 @@ impl Record for ObjectLiteral = {
   fn values() = Object.values(this)
 }
 
-// this is kind of gross :(
-fn map_friendly() {
-  if this is ObjectLiteral {
-    return this::map(fn([k, v]) = [k::as_keyword() v])
-  } else {
-    return this
-  }
-}
-
 impl Record for Map = {
   fn insert(key, value) = new Map([...this, [key, value]])
-  fn merge(other) = new Map([...this, ...other::map_friendly()])
+  fn merge(other) = new Map([...this, ...other])
   fn keys() = this.keys()
   fn values() = this.values()
 }
 
-fn insert(key, value) = this[Record].insert.call(this, key, value)
-
-fn merge(other) = this[Record].merge.call(this, other)
-
 @def_call
 fn keys() = this[Record].keys.call(this)
-
 @def_call
 fn values() = this[Record].values.call(this)
+fn insert(key, value) = this[Record].insert.call(this, key, value)
+fn merge(other) = this[Record].merge.call(this, other)
 
 define Record for Map = fn(entries) = new Map(entries)
 define Record for Object = Object.fromEntries
@@ -410,11 +394,8 @@ impl Vector for String = {
   fn concat(other) = this + other
 }
 
-@doc("")
 fn push(val) = this[Vector].push.call(this, val)
-
 fn replace(old_val, new_val) = this[Vector].replace.call(this, old_val, new_val)
-
 fn concat(other) = this[Vector].concat.call(this, other)
 
 protocol OrderedSequence
@@ -489,13 +470,7 @@ impl Equal for Map = record_equals?
 impl Equal for ObjectLiteral = record_equals?
 
 @def_call
-fn equals?(other) {
-  if this::nil?() {
-    return this === other
-  } else {
-    return this[Equal](other)
-  }
-}
+fn equals?(other) = this&.[Equal](other) ?? this === other
 
 // OPERATORS
 
@@ -636,13 +611,7 @@ impl Comparable for String = {
 @def_call
 fn plus(other) = this[Plus](other)
 @def_call
-fn negate() {
-  if this::nil?() {
-    return true
-  } else {
-    return this[Negate]()
-  }
-}
+fn negate() = this&.[Negate]() ?? true
 fn minus(other) = this[Minus](other)
 fn times(other) = this[Times](other)
 fn divide_by(other) = this[Divide](other)
@@ -652,20 +621,8 @@ fn greater_than(other) = this[Comparable].greater_than.call(this, other)
 fn greater_than_eq(other) = this[Comparable].greater_than_eq.call(this, other)
 fn less_than(other) = this[Comparable].less_than.call(this, other)
 fn less_than_eq(other) = this[Comparable].less_than_eq.call(this, other)
-fn and(thunk) {
-  if this::nil?() {
-    return this
-  } else {
-    return this[And](thunk)
-  }
-}
-fn or(thunk) {
-  if this::nil?() {
-    return thunk()
-  } else {
-    return this[Or](thunk)
-  }
-}
+fn and(thunk) = this&.[And](thunk)
+fn or(thunk) = this&.[Or](thunk) ?? thunk()
 
 // This api is crufty, I'm not gonna lie.
 
@@ -709,13 +666,7 @@ fn as_keyword() = Keyword["for"](this.toString())
 @def_call
 fn as_num() = Number(this)
 @def_call
-fn as_str() {
-  if this::nil?() {
-    return ""
-  } else {
-    return this.toString()
-  }
-}
+fn as_str() = this&.toString() ?? ""
 @def_call
 fn exists?() = !this::nil?()
 
