@@ -783,6 +783,20 @@ fn construct_vector(entries) = this[Vector](entries)
 
 protocol Equal
 
+@doc("
+implement [[Equal]] for a generic constructor by
+specifying the keys to measure equality by
+
+Examples:
+  fn Dog(@name, @age) {}
+
+  new Dog(\"joey\" 1) == new Dog(\"joey\" 1) // false
+
+  @impl_equal(:name :age)
+  fn Dog(@name @age) {}
+
+  new Dog(\"joey\" 1) == new Dog(\"joey\" 1) // true
+")
 fn impl_equal(Ctor, ...keys) {
   impl Equal for Ctor = fn(other) =
     other is Ctor && keys::all?(::fn(key) = this[key] == other[key])
@@ -800,6 +814,7 @@ impl Equal for Set = fn(other) {
     return ::all?(fn(val) = other.has(val))
   }
 }
+
 impl Equal for Array = fn(other) {
   if !(other is Array) {
     return false
@@ -810,6 +825,7 @@ impl Equal for Array = fn(other) {
   }
 }
 
+@doc("determine if 2 records of any kind are equal")
 fn record_equals?(other) {
   if this.constructor !== other.constructor {
     return false
@@ -819,10 +835,19 @@ fn record_equals?(other) {
     return this::all?(fn([key, value]) = other::at(key) == value)
   }
 }
+
 impl Equal for Map = record_equals?
+
 impl Equal for ObjectLiteral = record_equals?
 
-@def_call
+@compose_decorators(def_call, #(doc(& "
+[[Equal]] invocation
+
+Examples:
+  1::equals?(1) // true
+  // is the same as
+  1 == 1 // true
+")))
 fn equals?(other) = this&.[Equal](other) ?? this === other
 
 // OPERATORS
@@ -839,6 +864,7 @@ protocol LessThan
 protocol And
 protocol Or
 
+@doc("raise! if 'this' isn't a 'type_str'")
 fn expect_primitive_type!(type_str) {
   if typeof(this) !== type_str {
     raise!(str("Expected " type_str))
@@ -961,24 +987,111 @@ impl Comparable for String = {
   }
 }
 
-@def_call
+@compose_decorators(def_call #(doc(& "
+[[Plus]] method for '+' infix operator
+
+Examples:
+  1::plus(2) == 1 + 2
+")))
 fn plus(other) = this[Plus](other)
-@def_call
+
+@compose_decorators(def_call #(doc(& "
+[[Negate]] method for '!' prefix operator
+
+Examples:
+  !true == true::negate()
+")))
 fn negate() = this&.[Negate]() ?? true
+
+@doc("
+[[Minus]] method for '-' infix operator
+
+Examples:
+  1::minus(2) == 1 - 2
+")
 fn minus(other) = this[Minus](other)
+
+@doc("
+[[Times]] method for '*' infix operator
+
+Examples:
+  2::times(3) == 2 * 3
+")
 fn times(other) = this[Times](other)
+
+@doc("
+[[Divide]] method for '/' infix operator
+
+Examples:
+  2::divide_by(3) == 2 / 3
+")
 fn divide_by(other) = this[Divide](other)
+
+@doc("
+[[Exponent]] method for '**' infix operator
+
+Examples:
+  2::exponent(3) == 2 ** 3
+")
 fn exponent(other) = this[Exponent](other)
+
+@doc("
+[[Mod]] method for '%' infix operator
+
+Examples:
+  11::mod(2) == 11 % 2
+")
 fn mod(other) = this[Mod](other)
+
+@doc("
+[[Comparable]].greater_than method for '>' infix operator
+
+Examples:
+  2::greater_than(1) == 2 > 1
+")
 fn greater_than(other) = this[Comparable].greater_than.call(this, other)
+
+@doc("
+[[Comparable]].greater_than_eq method for '>=' infix operator
+
+Examples:
+  2::greater_than_eq(2) == 2 >= 2
+")
 fn greater_than_eq(other) = this[Comparable].greater_than_eq.call(this, other)
+
+@doc("
+[[Comparable]].less_than method for '<' infix operator
+
+Examples:
+  2::less_than(3) == 2 < 3
+")
 fn less_than(other) = this[Comparable].less_than.call(this, other)
+
+@doc("
+[[Comparable]].less_than_eq method for '<=' infix operator
+
+Examples:
+  2::less_than_eq(2) == 2 <= 3
+")
 fn less_than_eq(other) = this[Comparable].less_than_eq.call(this, other)
+
+@doc("
+[[And]] method for '&&' infix operator
+
+Examples:
+  true::and(fn = :val) == true && :val
+")
 fn and(thunk) = this&.[And](thunk)
+
+@doc("
+[[Or]] method for '||' infix operator
+
+Examples:
+  false::or(fn = :val) == false || :val
+")
 fn or(thunk) = this&.[Or](thunk) ?? thunk()
 
 // This api is crufty, I'm not gonna lie.
-
 protocol JsLogFriendly
 
 impl JsLogFriendly for ObjectLiteral = fn() = ::into(Object)
