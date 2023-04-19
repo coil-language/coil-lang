@@ -723,20 +723,60 @@ impl OrderedSequence for String = {
   fn last() = this.at(-1)
 }
 
+@doc("
+inserts element at beginning of collection
+
+Examples:
+  [1 2 3]::prepend(0) // [0 1 2 3]
+")
 fn prepend(val) = this[OrderedSequence].prepend.call(this, val)
 
+@doc("
+updates element at given index
+
+Examples:
+  [1 2 3]::update_at(1 as_keyword) // [1 :2 3]
+")
 fn update_at(idx, ...fns) = this[OrderedSequence].update_at.call(this, idx, compose(...fns))
 
+@doc("
+inserts element at given index
+
+Examples:
+  [1 2 4]::insert_at(1 3) // [1 2 3 4]
+")
 fn insert_at(idx, val) = this[OrderedSequence].insert_at.call(this, idx, val)
 
-@def_call
+@compose_decorators(def_call, #(doc(& "
+gets first element of collection
+
+Examples:
+  [1 2 3]::first() // 1
+")))
 fn first() = this[OrderedSequence].first.call(this)
 
-@def_call
+@compose_decorators(def_call, #(doc(& "
+gets last element of collection
+
+Examples:
+  [1 2 3]::last() // 3
+")))
 fn last() = this[OrderedSequence].last.call(this)
 
 define Vector for Array = fn(entries) = entries
 
+@doc("
+constructs vector based off entries
+
+this is used for custom vector syntax
+
+Examples:
+  import { List } from \"immutable\"
+
+  List::constructor_vector([1 2 3 4])
+    ==
+  ~List[1 2 3 4]
+")
 fn construct_vector(entries) = this[Vector](entries)
 
 // EQUAL PROTOCOl
