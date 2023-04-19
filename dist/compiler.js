@@ -141,8 +141,16 @@ function doc(f, doc_str) {
 f[Doc] = doc_str['trim']();
 return f;}
 function log_doc() {
+if (truthy(this['name'])) {
+console['log'](str("# ", this['name']))
+};
 console['log'](this[Doc])
 return this;}
+function compose_decorators(F, ...decorators) {
+for  (let decorator of decorators) {
+F = call.bind(decorator)(F)
+};
+return F;}
 const Call = Symbol("Call");
 Function.prototype[Call] = function (...args) {
 return this(...args);};
@@ -192,7 +200,11 @@ Object.prototype[Pipe] = function (callable) {
 return call.bind(callable)(this);};
 let pipe = doc(function pipe(...callables) {
 let f = compose(...callables);
-return this?.[Pipe](f) ?? f(this);}, `
+if (truthy(nil__q.bind(this)())) {
+return f(this);
+} else {
+return this?.[Pipe](f);
+};}, `
 invokes [[Pipe]] protocol
 
 args:
@@ -205,7 +217,7 @@ nil handling:
   since nil doesn't impl Pipe, we'll call 'f' directly.
 
 note on [[Pipe]]:
-  pipe is protocol based so that it can be used with Underscore.
+  pipe is protocol based so that it can be used with Underscore among other objects.
 `);
 let compose = doc(function compose(first_fn, ...fns) {
 return function (...args) {
@@ -239,10 +251,18 @@ example:
 
   [[1] [2] [3]]::map(first) // [1 2 3]  
 `);
-let iter = def_call(function iter() {
-return or.call(this?.[Symbol['iterator']](), () => iter.bind([])());});
-let iter__q = def_call(function iter__q() {
-return iter.bind(this)() === this;});
+let iter = compose_decorators(function iter() {
+return this?.[Symbol['iterator']]() ?? iter.bind([])();}, def_call, (...__args) => doc(__args[0], `
+Returns an iterator of 'this'.
+
+In the case 'this' is nil, you will get an empty array iterator.
+`));
+let iter__q = compose_decorators(function iter__q() {
+return iter.bind(this)() === this;}, def_call, (...__args) => doc(__args[0], `
+Determines if 'this' is a valid Symbol.iterator
+
+See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterator_protocol for more
+`));
 const Iterator = Symbol("Iterator");
 let default_iterator_impl = new ObjectLiteral({*['take'](n) {
 for  (let [elem, i] of zip.bind(this)(new ERangeNoMax((0)))) {
@@ -344,43 +364,147 @@ yield elem
 }});
 function iterator_impl() {
 return or.call(this?.[Iterator], () => default_iterator_impl);}
-function skip(n) {
-return iterator_impl.bind(this)()['skip']['call'](iter.bind(this)(), n);}
-function take(n) {
-return iterator_impl.bind(this)()['take']['call'](iter.bind(this)(), n);}
-function each(f) {
-return iterator_impl.bind(this)()['each']['call'](iter.bind(this)(), call.bind(f));}
-function until(...fns) {
-return iterator_impl.bind(this)()['until']['call'](iter.bind(this)(), compose(...fns));}
-function zip(...iterables) {
-return iterator_impl.bind(this)()['zip']['call'](iter.bind(this)(), ...iterables);}
-function map(...fns) {
-return iterator_impl.bind(this)()['map']['call'](iter.bind(this)(), compose(...fns));}
-function flat_map(...fns) {
-return iterator_impl.bind(this)()['flat_map']['call'](iter.bind(this)(), compose(...fns));}
-function find(...fns) {
-return iterator_impl.bind(this)()['find']['call'](iter.bind(this)(), compose(...fns));}
-function keep(...fns) {
-return iterator_impl.bind(this)()['keep']['call'](iter.bind(this)(), compose(...fns));}
-function reject(...fns) {
-return keep.bind(this)(...fns, negate.call(_));}
-function any__q(...fns) {
-return iterator_impl.bind(this)()['any?']['call'](iter.bind(this)(), compose(...fns));}
-function all__q(...fns) {
-return iterator_impl.bind(this)()['all?']['call'](iter.bind(this)(), compose(...fns));}
-function reduce(f, start) {
-return iterator_impl.bind(this)()['reduce']['call'](iter.bind(this)(), call.bind(f), start);}
-function split(...fns) {
-return iterator_impl.bind(this)()['split']['call'](iter.bind(this)(), compose(...fns));}
-function compact() {
-return iterator_impl.bind(this)()['compact']['call'](iter.bind(this)());}
-function join(sep) {
+let skip = doc(function skip(n) {
+return iterator_impl.bind(this)()['skip']['call'](iter.bind(this)(), n);}, `
+lazily skips 'n' elements for an iterator
+
+Examples:
+  [1 2 3 4 5]::skip(1)::into([]) // -> [2 3 4 5]
+  [1 2 3]::skip(20)::into([]) // -> []
+`);
+let take = doc(function take(n) {
+return iterator_impl.bind(this)()['take']['call'](iter.bind(this)(), n);}, `
+lazily takes 'n' elements for an iterator
+
+Examples:
+  [1 2 3 4]::take(2)::into([]) // -> [1 2]
+  [1 2 3]::take(200)::into([]) // -> [1 2 3]
+`);
+let each = doc(function each(...fns) {
+return iterator_impl.bind(this)()['each']['call'](iter.bind(this)(), compose(...fns));}, `
+eagerly consumes an iterator by calling 'f' on each elem
+
+Examples:
+  [{name: \"bob\"} {name: \"jill\"}]
+    ::each(:name log) // prints 'bob' and 'jill'
+`);
+let until = doc(function until(...fns) {
+return iterator_impl.bind(this)()['until']['call'](iter.bind(this)(), compose(...fns));}, `
+lazily defines an end point for an iterator
+
+Examples:
+  [1 2 3 4 5 6 7]
+    ::until(_ > 3)
+    ::into([]) // [1 2 3]
+`);
+let zip = doc(function zip(...iterables) {
+return iterator_impl.bind(this)()['zip']['call'](iter.bind(this)(), ...iterables);}, `
+lazily zips together a number of iterators
+
+Examples:
+  [:axe :hammer :pickaxe]
+    ::zip([3 1 4])
+    ::into(~Map{})
+  // -> ~Map{axe: 3, hammer: 1, pickaxe: 4}
+`);
+let map = doc(function map(...fns) {
+return iterator_impl.bind(this)()['map']['call'](iter.bind(this)(), compose(...fns));}, `
+lazily maps functions over an iterator
+
+Examples:
+  [{name: \"marcelle\"}, {name: \"jack\"}]
+    ::map(:name len)
+    ::into([]) // [8 4]
+`);
+let flat_map = doc(function flat_map(...fns) {
+return iterator_impl.bind(this)()['flat_map']['call'](iter.bind(this)(), compose(...fns));}, `
+lazily flat maps functions over an iterator
+
+Examples:
+  [[1 5] [6 10]]
+    ::flat_map(fn([start, end]) = (start..=end)::into([]))
+    ::into([]) // [1 2 3 4 5 6 7 8 9 10]
+`);
+let find = doc(function find(...fns) {
+return iterator_impl.bind(this)()['find']['call'](iter.bind(this)(), compose(...fns));}, `
+eagerly finds a value in an iterator
+
+Examples:
+  [1 2 3 4 5]
+    ::find(#{4 5}) // 4
+`);
+let keep = doc(function keep(...fns) {
+return iterator_impl.bind(this)()['keep']['call'](iter.bind(this)(), compose(...fns));}, `
+lazily keeps values based off a condition
+
+Examples:
+  [{admin: true, name: \"bob\"} {admin: false, name: \"jill\"}]
+    ::keep(:admin)
+    ::into([]) // [{admin: true, name: \"bob\"}]
+`);
+let reject = doc(function reject(...fns) {
+return keep.bind(this)(...fns, negate.call(_));}, `
+lazily rejects values based of a condition
+
+Examples:
+  [{admin: true, name: \"bob\"} {admin: false, name: \"jill\"}]
+    ::reject(:admin)
+    ::into([]) // [{admin: false, name: \"jill\"}]
+`);
+let any__q = doc(function any__q(...fns) {
+return iterator_impl.bind(this)()['any?']['call'](iter.bind(this)(), compose(...fns));}, `
+eagerly finds out if an element matches the condition
+
+Examples:
+  [1 2 3 4 5]::any?(#{3}) // true
+`);
+let all__q = doc(function all__q(...fns) {
+return iterator_impl.bind(this)()['all?']['call'](iter.bind(this)(), compose(...fns));}, `
+eagerly finds out all elements matches the condition
+
+Examples:
+  [1 2 3 4 5]::all?(_ > 0) // true
+`);
+let reduce = doc(function reduce(f, start) {
+return iterator_impl.bind(this)()['reduce']['call'](iter.bind(this)(), call.bind(f), start);}, `
+eagerly reduces an iterator
+
+Examples:
+  [1 2 3 4 5]::reduce(+ 0) // 15
+`);
+let split = doc(function split(...fns) {
+return iterator_impl.bind(this)()['split']['call'](iter.bind(this)(), compose(...fns));}, `
+lazily splits an iterator
+
+Examples:
+  \"hey there buddy\"
+    ::split(#{`, `})
+    ::take(2)
+    ::into([]) // [\"hey\" \"there\"]
+`);
+let compact = doc(function compact() {
+return iterator_impl.bind(this)()['compact']['call'](iter.bind(this)());}, `
+lazily compacts an iterator
+
+Examples:
+  [{status: :great} {status: :broken} {}]
+    ::map(:status)
+    ::compact()
+    ::into([]) // [:great :broken]
+`);
+let join = doc(function join(sep) {
 return reduce.bind(this)(function (prev, cur) {
 if (truthy(empty__q.bind(prev)())) {
 return cur;
 } else {
 return plus.call(prev,plus.call(sep,cur));
-};}, "");}
+};}, "");}, `
+eagerly joins an iterator
+
+Examples:
+  [\"hey\" \"there\"]
+    ::join(\" \") // \"hey there\"
+`);
 const Into = Symbol("Into");
 Array.prototype[Into] = function (iterable) {
 return [...this, ...iterable];};
@@ -394,8 +518,17 @@ String.prototype[Into] = function (iterable) {
 return plus.call(this,reduce.bind(iterable)(plus, ""));};
 Object[Into] = function (iterable) {
 return Object['fromEntries'](iterable);};
-function into(val) {
-return val[Into](this);}
+let into = doc(function into(output) {
+return output[Into](this);}, `
+converts 'this' iterator into 'output', prepending existing values in 'output'
+
+Examples:
+  [1 2 3 4]
+    ::into(#{}) // #{1 2 3 4}
+
+  [[:score 10] [:grade :bad]]
+    ::into({}) // {score: 20, grade: :bad}
+`);
 const Collection = Symbol("Collection");
 ObjectLiteral.prototype[Collection] = new ObjectLiteral({['at'](key) {
 return this[key];
@@ -442,16 +575,59 @@ return this['size'] === (0);
 }, ['has?'](val) {
 return this['has'](val);
 }});
-let len = def_call(function len() {
-return this[Collection]['len']['call'](this);});
-let empty__q = def_call(function empty__q() {
-return this?.[Collection]['empty?']['call'](this) ?? true;});
-let not_empty__q = def_call(function not_empty__q() {
-return negate.call(empty__q.bind(this)());});
-function at(key_or_idx) {
-return this[Collection]['at']['call'](this, key_or_idx);}
-function has__q(val) {
-return this[Collection]['has?']['call'](this, val);}
+let len = compose_decorators(function len() {
+return this[Collection]['len']['call'](this);}, def_call, (...__args) => doc(__args[0], `
+gets length of a collection
+
+Examples:
+  [1 2 3]::len() // 3
+  #{1 2 3}::len() // 3
+  {a: 10}::len() // 1
+  ~Map{a: :a, b: :b}::len() // 2
+`));
+let empty__q = compose_decorators(function empty__q() {
+return this?.[Collection]['empty?']['call'](this) ?? true;}, def_call, (...__args) => doc(__args[0], `
+determines if a collection is empty
+
+Examples:
+  []::empty?() // true
+  #{1}::empty?() // false
+  null::empty?() // true
+  `, `::empty?() // true
+`));
+let not_empty__q = compose_decorators(function not_empty__q() {
+return negate.call(empty__q.bind(this)());}, def_call, (...__args) => doc(__args[0], `
+determines if a collection is not empty
+
+Examples:
+  [1]::not_empty?() // true
+  `, `::not_empty?() // false
+  null::not_empty?() // false
+`));
+let at = doc(function at(key_or_idx) {
+return this[Collection]['at']['call'](this, key_or_idx);}, `
+extracts value from collection based on a key or index
+
+Examples:
+  [1 3 4]::at(2) // 4
+  // set::at works as an identity function if the value is in the set
+  #{4 3 1}::at(4) // 4
+  // keywords coerce to strings for objects
+  {a: 10}::at(:a) // 10
+  {a: 10}::at(\"a\") // 10
+  ~Map{a: 10}::at(:a) // 10
+  // strings can not lookup keywords in maps
+  ~Map{a: 10}::at(\"a\") // undefined
+`);
+let has__q = doc(function has__q(val) {
+return this[Collection]['has?']['call'](this, val);}, `
+determines if a collection has a value
+
+Examples:
+  [1 2 3 4]::has?(3) // true
+  #{1 2 3}::has?(2) // true
+  {a: 10}::has?(:a) // true
+`);
 const Record = Symbol("Record");
 ObjectLiteral.prototype[Record] = new ObjectLiteral({['insert'](key, value) {
 return new ObjectLiteral({...this, [key]: value});
@@ -471,24 +647,80 @@ return this['keys']();
 }, ['values']() {
 return this['values']();
 }});
-let keys = def_call(function keys() {
-return this[Record]['keys']['call'](this);});
-let values = def_call(function values() {
-return this[Record]['values']['call'](this);});
-function insert(key, value) {
-return this[Record]['insert']['call'](this, key, value);}
-function merge(other) {
-return this[Record]['merge']['call'](this, other);}
+let keys = compose_decorators(function keys() {
+return this[Record]['keys']['call'](this);}, def_call, (...__args) => doc(__args[0], `
+Get keys of a record as an iterator OR a collection
+
+Example:
+  {a: 10}::keys() // [\"a\"]
+  ~Map{a: 10}::keys()::into(#{}) // #{:a}
+`));
+let values = compose_decorators(function values() {
+return this[Record]['values']['call'](this);}, def_call, (...__args) => doc(__args[0], `
+Get values of a record as an iterator OR a collection
+
+Example:
+  {a: 10}::values() // [10]
+  ~Map{a: 10}::values()::into(#{}) // #{10}
+`));
+let insert = doc(function insert(key, value) {
+return this[Record]['insert']['call'](this, key, value);}, `
+Insert key & value into a record
+
+Example:
+  {a: 10}::insert(:b 20) // {a: 10, b: 20}
+  ~Map{a: 10}::insert(:b 20) // ~Map{a: 10, b: 20}
+`);
+let merge = doc(function merge(other) {
+return this[Record]['merge']['call'](this, other);}, `
+Merge 2 records together
+
+Note that since all object literal keys are strings, merging a
+richer record that can hold keywords may have unexpected consequences
+
+Do not merge a rich record type with a non rich record unless you are ok
+with lossy conversions.
+
+Example:
+  {a: 10}::merge({b: 20}) {a: 10 b: 20}
+  {a: 10}::merge({a: 20})
+  ~Map{a: 10}::merge(~Map{a: 20}) // ~Map{a: 20}
+  // here's the unexpected result
+  ~Map{a: 10}::merge({a: 20}) // ~Map{a: 10, \"a\" => 20}
+`);
 Map[Record] = function (entries) {
 return new Map(entries);};
 Object[Record] = Object['fromEntries'];
-function record__q() {
-return exists__q.bind(this[Record])();}
-function construct_record(entries) {
-return this[Record](entries);}
+let record__q = doc(function record__q() {
+return exists__q.bind(this[Record])();}, `
+Determines if 'this' is a record
+
+Examples:
+  {}::record?() // true
+  ~Map{}::record?() // true
+  #{}::record?() // false
+`);
+let construct_record = doc(function construct_record(entries) {
+return this[Record](entries);}, `
+Constructs a record based off an entries array
+
+This is used for record syntax
+
+Examples:
+  Map::construct_record([[:a 20]])
+    ==
+  ~Map{a: 20}
+`);
 const Vector = Symbol("Vector");
-function vector__q() {
-return exists__q.bind(this[Vector])();}
+let vector__q = doc(function vector__q() {
+return exists__q.bind(this[Vector])();}, `
+Determines if 'this' conforms to the vector protocol
+
+Examples:
+  []::vector?() // true
+  #{}::vector?() // true
+  {}::vector?() // false
+`);
 Array.prototype[Vector] = new ObjectLiteral({['push'](val) {
 return [...this, val];
 }, ['replace'](old_val, new_val) {
@@ -518,12 +750,33 @@ return this['replaceAll'](old_substr, new_substr);
 }, ['concat'](other) {
 return plus.call(this,other);
 }});
-function push(val) {
-return this[Vector]['push']['call'](this, val);}
-function replace(old_val, new_val) {
-return this[Vector]['replace']['call'](this, old_val, new_val);}
-function concat(other) {
-return this[Vector]['concat']['call'](this, other);}
+let push = doc(function push(val) {
+return this[Vector]['push']['call'](this, val);}, `
+push a value onto a vector
+
+Examples:
+  [1 2]::push(3) // [1 2 3]
+  // order is not guaranteed for sets
+  #{1 2}::push(3) // #{3 1 2}
+`);
+let replace = doc(function replace(old_val, new_val) {
+return this[Vector]['replace']['call'](this, old_val, new_val);}, `
+replace a value in a vector
+
+Examples:
+  [1 2 3]::replace(2 3) // [1 3 3]
+  #{1 2 3}::replace(2 3) // #{1 3}
+`);
+let concat = doc(function concat(other) {
+return this[Vector]['concat']['call'](this, other);}, `
+concat two vectors
+
+Examples:
+  [1 2]::concat([3 4]) // [1 2 3 4]
+  [1 2]::concat(#{3 4}) // [1 2 4 3] - set order unknowable
+  #{1 2}::concat([3 4]) // #{1 2 3 4}
+  #{1 2}::concat(#{2 3}) // #{1 2 3}
+`);
 const OrderedSequence = Symbol("OrderedSequence");
 Array.prototype[OrderedSequence] = new ObjectLiteral({['prepend'](val) {
 return [val, ...this];
@@ -549,59 +802,115 @@ return this[(0)];
 }, ['last']() {
 return this['at']((-1));
 }});
-function prepend(val) {
-return this[OrderedSequence]['prepend']['call'](this, val);}
-function update_at(idx, ...fns) {
-return this[OrderedSequence]['update_at']['call'](this, idx, compose(...fns));}
-function insert_at(idx, val) {
-return this[OrderedSequence]['insert_at']['call'](this, idx, val);}
-let first = def_call(function first() {
-return this[OrderedSequence]['first']['call'](this);});
-let last = def_call(function last() {
-return this[OrderedSequence]['last']['call'](this);});
+let prepend = doc(function prepend(val) {
+return this[OrderedSequence]['prepend']['call'](this, val);}, `
+inserts element at beginning of collection
+
+Examples:
+  [1 2 3]::prepend(0) // [0 1 2 3]
+`);
+let update_at = doc(function update_at(idx, ...fns) {
+return this[OrderedSequence]['update_at']['call'](this, idx, compose(...fns));}, `
+updates element at given index
+
+Examples:
+  [1 2 3]::update_at(1 as_keyword) // [1 :2 3]
+`);
+let insert_at = doc(function insert_at(idx, val) {
+return this[OrderedSequence]['insert_at']['call'](this, idx, val);}, `
+inserts element at given index
+
+Examples:
+  [1 2 4]::insert_at(1 3) // [1 2 3 4]
+`);
+let first = compose_decorators(function first() {
+return this[OrderedSequence]['first']['call'](this);}, def_call, (...__args) => doc(__args[0], `
+gets first element of collection
+
+Examples:
+  [1 2 3]::first() // 1
+`));
+let last = compose_decorators(function last() {
+return this[OrderedSequence]['last']['call'](this);}, def_call, (...__args) => doc(__args[0], `
+gets last element of collection
+
+Examples:
+  [1 2 3]::last() // 3
+`));
 Array[Vector] = function (entries) {
 return entries;};
-function construct_vector(entries) {
-return this[Vector](entries);}
+let construct_vector = doc(function construct_vector(entries) {
+return this[Vector](entries);}, `
+constructs vector based off entries
+
+this is used for custom vector syntax
+
+Examples:
+  import { List } from \"immutable\"
+
+  List::constructor_vector([1 2 3 4])
+    ==
+  ~List[1 2 3 4]
+`);
 const Equal = Symbol("Equal");
-function impl_equal(Ctor, ...keys) {
+let impl_equal = doc(function impl_equal(Ctor, ...keys) {
 Ctor.prototype[Equal] = function (other) {
 return and.call(other instanceof Ctor, () => all__q.bind(keys)(function (key) {
 return equals__q.call(this[key], other[key]);}.bind(this)));};
-return Ctor;}
+return Ctor;}, `
+implement [[Equal]] for a generic constructor by
+specifying the keys to measure equality by
+
+Examples:
+  fn Dog(@name, @age) {}
+
+  new Dog(\"joey\" 1) == new Dog(\"joey\" 1) // false
+
+  @impl_equal(:name :age)
+  fn Dog(@name @age) {}
+
+  new Dog(\"joey\" 1) == new Dog(\"joey\" 1) // true
+`);
 Object.prototype[Equal] = function (other) {
 return this === other;};
 Set.prototype[Equal] = function (other) {
 if (truthy(negate.call((other instanceof Set)))) {
 return false;
-};
-if (truthy(other['size'] !== this['size'])) {
+} else if (other['size'] !== this['size']) {
 return false;
-};
+} else {
 return all__q.bind(this)(function (val) {
-return other['has'](val);});};
+return other['has'](val);});
+};};
 Array.prototype[Equal] = function (other) {
 if (truthy(negate.call((other instanceof Array)))) {
 return false;
-};
-if (truthy(other['length'] !== this['length'])) {
+} else if (other['length'] !== this['length']) {
 return false;
-};
+} else {
 return all__q.bind(zip.bind(this)(other))(function ([a, b]) {
-return equals__q.call(a, b);});};
-function record_equals__q(other) {
+return equals__q.call(a, b);});
+};};
+let record_equals__q = doc(function record_equals__q(other) {
 if (truthy(this['constructor'] !== other['constructor'])) {
 return false;
-};
-if (truthy(negate.call(equals__q.call(len.bind(this)(), len.bind(other)())))) {
+} else if (negate.call(equals__q.call(len.bind(this)(), len.bind(other)()))) {
 return false;
-};
+} else {
 return all__q.bind(this)(function ([key, value]) {
-return equals__q.call(at.bind(other)(key), value);});}
+return equals__q.call(at.bind(other)(key), value);});
+};}, "determine if 2 records of any kind are equal");
 Map.prototype[Equal] = record_equals__q;
 ObjectLiteral.prototype[Equal] = record_equals__q;
-let equals__q = def_call(function equals__q(other) {
-return this?.[Equal](other) ?? this === other;});
+let equals__q = compose_decorators(function equals__q(other) {
+return this?.[Equal](other) ?? this === other;}, def_call, (...__args) => doc(__args[0], `
+[[Equal]] invocation
+
+Examples:
+  1::equals?(1) // true
+  // is the same as
+  1 == 1 // true
+`));
 const Plus = Symbol("Plus");
 const Negate = Symbol("Negate");
 const Minus = Symbol("Minus");
@@ -613,10 +922,10 @@ const Comparable = Symbol("Comparable");
 const LessThan = Symbol("LessThan");
 const And = Symbol("And");
 const Or = Symbol("Or");
-function expect_primitive_type__b(type_str) {
+let expect_primitive_type__b = doc(function expect_primitive_type__b(type_str) {
 if (truthy(typeof(this) !== type_str)) {
 raise__b(str("Expected ", type_str))
-};}
+};}, "raise! if 'this' isn't a 'type_str'");
 Object.prototype[Negate] = function () {
 return js_negate(this);};
 Object.prototype[And] = function (thunk) {
@@ -708,32 +1017,97 @@ return js_greater_than(this, other);
 expect_primitive_type__b.bind(other)("string")
 return js_less_than(this, other);
 }});
-let plus = def_call(function plus(other) {
-return this[Plus](other);});
-let negate = def_call(function negate() {
-return this?.[Negate]() ?? true;});
-function minus(other) {
-return this[Minus](other);}
-function times(other) {
-return this[Times](other);}
-function divide_by(other) {
-return this[Divide](other);}
-function exponent(other) {
-return this[Exponent](other);}
-function mod(other) {
-return this[Mod](other);}
-function greater_than(other) {
-return this[Comparable]['greater_than']['call'](this, other);}
-function greater_than_eq(other) {
-return this[Comparable]['greater_than_eq']['call'](this, other);}
-function less_than(other) {
-return this[Comparable]['less_than']['call'](this, other);}
-function less_than_eq(other) {
-return this[Comparable]['less_than_eq']['call'](this, other);}
-function and(thunk) {
-return this?.[And](thunk);}
-function or(thunk) {
-return this?.[Or](thunk) ?? thunk();}
+let plus = compose_decorators(function plus(other) {
+return this[Plus](other);}, def_call, (...__args) => doc(__args[0], `
+[[Plus]] method for '+' infix operator
+
+Examples:
+  1::plus(2) == 1 + 2
+`));
+let negate = compose_decorators(function negate() {
+return this?.[Negate]() ?? true;}, def_call, (...__args) => doc(__args[0], `
+[[Negate]] method for '!' prefix operator
+
+Examples:
+  !true == true::negate()
+`));
+let minus = doc(function minus(other) {
+return this[Minus](other);}, `
+[[Minus]] method for '-' infix operator
+
+Examples:
+  1::minus(2) == 1 - 2
+`);
+let times = doc(function times(other) {
+return this[Times](other);}, `
+[[Times]] method for '*' infix operator
+
+Examples:
+  2::times(3) == 2 * 3
+`);
+let divide_by = doc(function divide_by(other) {
+return this[Divide](other);}, `
+[[Divide]] method for '/' infix operator
+
+Examples:
+  2::divide_by(3) == 2 / 3
+`);
+let exponent = doc(function exponent(other) {
+return this[Exponent](other);}, `
+[[Exponent]] method for '**' infix operator
+
+Examples:
+  2::exponent(3) == 2 ** 3
+`);
+let mod = doc(function mod(other) {
+return this[Mod](other);}, `
+[[Mod]] method for '%' infix operator
+
+Examples:
+  11::mod(2) == 11 % 2
+`);
+let greater_than = doc(function greater_than(other) {
+return this[Comparable]['greater_than']['call'](this, other);}, `
+[[Comparable]].greater_than method for '>' infix operator
+
+Examples:
+  2::greater_than(1) == 2 > 1
+`);
+let greater_than_eq = doc(function greater_than_eq(other) {
+return this[Comparable]['greater_than_eq']['call'](this, other);}, `
+[[Comparable]].greater_than_eq method for '>=' infix operator
+
+Examples:
+  2::greater_than_eq(2) == 2 >= 2
+`);
+let less_than = doc(function less_than(other) {
+return this[Comparable]['less_than']['call'](this, other);}, `
+[[Comparable]].less_than method for '<' infix operator
+
+Examples:
+  2::less_than(3) == 2 < 3
+`);
+let less_than_eq = doc(function less_than_eq(other) {
+return this[Comparable]['less_than_eq']['call'](this, other);}, `
+[[Comparable]].less_than_eq method for '<=' infix operator
+
+Examples:
+  2::less_than_eq(2) == 2 <= 3
+`);
+let and = doc(function and(thunk) {
+return this?.[And](thunk);}, `
+[[And]] method for '&&' infix operator
+
+Examples:
+  true::and(fn = :val) == true && :val
+`);
+let or = doc(function or(thunk) {
+return this?.[Or](thunk) ?? thunk();}, `
+[[Or]] method for '||' infix operator
+
+Examples:
+  false::or(fn = :val) == false || :val
+`);
 const JsLogFriendly = Symbol("JsLogFriendly");
 ObjectLiteral.prototype[JsLogFriendly] = function () {
 return into.bind(this)(Object);};
@@ -755,7 +1129,7 @@ return this;};
 let js_log_friendly = def_call(function js_log_friendly() {
 return this?.[JsLogFriendly]();});
 let log = def_call(function log(...args) {
-console['log'](...args, js_log_friendly.bind(this)())
+console['log'](...args, this)
 return this;});
 function str(...args) {
 return args['join']("");}
@@ -775,9 +1149,13 @@ let as_str = def_call(function as_str() {
 return this?.toString() ?? "";});
 let exists__q = def_call(function exists__q() {
 return negate.call(nil__q.bind(this)());});
-function Underscore(transforms) {
+const NumberLiteral = Symbol("NumberLiteral");
+Keyword.for("number_literal/n")[NumberLiteral] = BigInt;
+let Underscore = doc(function Underscore(transforms) {
 this.transforms = transforms;
-}
+}, `
+
+`);
 const UnderscoreInterpreter = Symbol("UnderscoreInterpreter");
 let _ = new Underscore([new ObjectLiteral({'f': function id() {
 return this;}, 'args': []})]);
@@ -950,19 +1328,50 @@ function def_vector(Constructor) {
 Constructor[Vector] = function (args) {
 return new Constructor(...args);};
 return Constructor;}
-function def_record(Constructor) {
+let def_record = doc(function def_record(Constructor) {
 Constructor[Record] = function (entries) {
 return new Constructor(entries);};
 Constructor.prototype[Symbol['iterator']] = function () {
 return iter.bind(this['entries'])();};
-return Constructor;}
+return Constructor;}, `
+Defines a basic record type for a given constructor.
+
+Important! make sure your constructor has its entries stored at this.entries.
+
+Example:
+  @def_record
+  fn ArrayMap(@entries) {}
+
+  let name->role = ~ArrayMap{
+    \"marcelle rusu\" => \"coil language designer\"
+  }
+
+  // note that in this most minimal use, def_record isn't super useful.
+  // let's take a look at something more practical
+
+  @def_record
+  fn CallMap(@entries) {}
+
+  impl Call for CallMap = fn(val) =
+    ::find(fn([key]) = key::call(val))
+    ::pipe(1)
+
+  let score->letter_grade = ~CallMap{
+    ..50 => :F
+    50..60 => :D
+    60..70 => :C
+    70..80 => :B
+    80.. => :A
+  }
+  score->letter_grade::call(60) // :C
+`);
 let char_alpha__q = plus.call(into.bind((new IRange("a", "z")))(new Set([])),into.bind((new IRange("A", "Z")))(new Set([])));
 let char_numeric__q = into.bind((new IRange("0", "9")))(new Set([]));
 let char_alpha_numeric__q = plus.call(char_alpha__q,char_numeric__q);
-function alpha__q() {
-return all__q.bind(this)(char_alpha__q);}
-function alpha_numeric__q() {
-return all__q.bind(this)(char_alpha_numeric__q);}
+let alpha__q = doc(function alpha__q() {
+return all__q.bind(this)(char_alpha__q);}, "all characters in string are in a-z or A-Z");
+let alpha_numeric__q = doc(function alpha_numeric__q() {
+return all__q.bind(this)(char_alpha_numeric__q);}, "all characters in string are in a-z or A-Z or 0-9");
 let CallMap = def_record(function CallMap(entries) {
 this.entries = entries;
 });
