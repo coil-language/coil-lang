@@ -8,6 +8,9 @@ fn doc(f, doc_str) {
 }
 
 fn log_doc() {
+  if this.name {
+    console.log(str("# " this.name))
+  }  
   console.log(this[Doc])
   return this
 }
