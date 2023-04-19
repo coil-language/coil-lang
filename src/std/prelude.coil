@@ -15,6 +15,13 @@ fn log_doc() {
   return this
 }
 
+fn compose_decorators(F, ...decorators) {
+  for decorator of decorators {
+    F = decorator::call(F)
+  }
+  return F
+}
+
 // Call Protocol
 
 protocol Call
@@ -80,11 +87,15 @@ nil handling:
   since nil doesn't impl Pipe, we'll call 'f' directly.
 
 note on [[Pipe]]:
-  pipe is protocol based so that it can be used with Underscore.
+  pipe is protocol based so that it can be used with Underscore among other objects.
 ")
 fn pipe(...callables) {
   let f = compose(...callables)
-  return this&.[Pipe](f) ?? f(this)
+  if ::nil?() {
+    return f(this)
+  } else {
+    return this&.[Pipe](f)
+  }
 }
 
 @doc("
@@ -123,11 +134,18 @@ fn def_call(f) {
 
 // Iterable Protocol
 
-@def_call
-fn iter() = this&.[Symbol.iterator]() || []::iter()
+@compose_decorators(def_call, #(doc(&, "
+Returns an iterator of 'this'.
 
-// See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterator_protocol
-@def_call
+In the case 'this' is nil, you will get an empty array iterator.
+")))
+fn iter() = this&.[Symbol.iterator]() ?? []::iter()
+
+@compose_decorators(def_call, #(doc(&, "
+Determines if 'this' is a valid Symbol.iterator
+
+See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterator_protocol for more
+")))
 fn iter?() = ::iter() === this
 
 protocol Iterator
@@ -248,22 +266,156 @@ let default_iterator_impl = {
 
 fn iterator_impl() = this&.[Iterator] || default_iterator_impl
 
+@doc("
+lazily skips 'n' elements for an iterator
+
+Examples:
+  [1 2 3 4 5]::skip(1)::into([]) // -> [2 3 4 5]
+  [1 2 3]::skip(20)::into([]) // -> []
+")
 fn skip(n) = ::iterator_impl().skip.call(this::iter(), n)
+
+@doc("
+lazily takes 'n' elements for an iterator
+
+Examples:
+  [1 2 3 4]::take(2)::into([]) // -> [1 2]
+  [1 2 3]::take(200)::into([]) // -> [1 2 3]
+")
 fn take(n) = ::iterator_impl().take.call(this::iter(), n)
-fn each(f) = ::iterator_impl().each.call(this::iter(), f::call)
+
+@doc("
+eagerly consumes an iterator by calling 'f' on each elem
+
+Examples:
+  [{name: \"bob\"} {name: \"jill\"}]
+    ::each(:name log) // prints 'bob' and 'jill'
+")
+fn each(...fns) = ::iterator_impl().each.call(this::iter(), compose(...fns))
+
+@doc("
+lazily defines an end point for an iterator
+
+Examples:
+  [1 2 3 4 5 6 7]
+    ::until(_ > 3)
+    ::into([]) // [1 2 3]
+")
 fn until(...fns) = ::iterator_impl().until.call(this::iter(), compose(...fns))
+
+@doc("
+lazily zips together a number of iterators
+
+Examples:
+  [:axe :hammer :pickaxe]
+    ::zip([3 1 4])
+    ::into(~Map{})
+  // -> ~Map{axe: 3, hammer: 1, pickaxe: 4}
+")
 fn zip(...iterables) = ::iterator_impl().zip.call(this::iter(), ...iterables)
+
+@doc("
+lazily maps functions over an iterator
+
+Examples:
+  [{name: \"marcelle\"}, {name: \"jack\"}]
+    ::map(:name len)
+    ::into([]) // [8 4]
+")
 fn map(...fns) = ::iterator_impl().map.call(this::iter(), compose(...fns))
+
+@doc("
+lazily flat maps functions over an iterator
+
+Examples:
+  [[1 5] [6 10]]
+    ::flat_map(fn([start, end]) = (start..=end)::into([]))
+    ::into([]) // [1 2 3 4 5 6 7 8 9 10]
+")
 fn flat_map(...fns) = ::iterator_impl().flat_map.call(this::iter(), compose(...fns))
+
+@doc("
+eagerly finds a value in an iterator
+
+Examples:
+  [1 2 3 4 5]
+    ::find(#{4 5}) // 4
+")
 fn find(...fns) = ::iterator_impl().find.call(this::iter(), compose(...fns))
+
+@doc("
+lazily keeps values based off a condition
+
+Examples:
+  [{admin: true, name: \"bob\"} {admin: false, name: \"jill\"}]
+    ::keep(:admin)
+    ::into([]) // [{admin: true, name: \"bob\"}]
+")
 fn keep(...fns) = ::iterator_impl().keep.call(this::iter(), compose(...fns))
+
+@doc("
+lazily rejects values based of a condition
+
+Examples:
+  [{admin: true, name: \"bob\"} {admin: false, name: \"jill\"}]
+    ::reject(:admin)
+    ::into([]) // [{admin: false, name: \"jill\"}]
+")
 fn reject(...fns) = ::keep(...fns, !_)
+
+@doc("
+eagerly finds out if an element matches the condition
+
+Examples:
+  [1 2 3 4 5]::any?(#{3}) // true
+")
 fn any?(...fns) = ::iterator_impl().any?.call(this::iter(), compose(...fns))
+
+@doc("
+eagerly finds out all elements matches the condition
+
+Examples:
+  [1 2 3 4 5]::all?(_ > 0) // true
+")
 fn all?(...fns) = ::iterator_impl().all?.call(this::iter(), compose(...fns))
+
+@doc("
+eagerly reduces an iterator
+
+Examples:
+  [1 2 3 4 5]::reduce(+ 0) // 15
+")
 fn reduce(f, start) = ::iterator_impl().reduce.call(this::iter(), f::call, start)
+
+@doc("
+lazily splits an iterator
+
+Examples:
+  \"hey there buddy\"
+    ::split(#{" "})
+    ::take(2)
+    ::into([]) // [\"hey\" \"there\"]
+")
 fn split(...fns) = ::iterator_impl().split.call(this::iter(), compose(...fns))
+
+@doc("
+lazily compacts an iterator
+
+Examples:
+  [{status: :great} {status: :broken} {}]
+    ::map(:status)
+    ::compact()
+    ::into([]) // [:great :broken]
+")
 fn compact() = ::iterator_impl().compact.call(this::iter())
 
+@doc("
+eagerly joins an iterator
+
+Examples:
+  [\"hey\" \"there\"]
+    ::join(\" \") // \"hey there\"
+")
 fn join(sep) = ::reduce(fn(prev cur) {
   if prev::empty?() {
     return cur
@@ -283,7 +435,7 @@ impl Into for Set = fn(iterable) = ::concat(iterable)
 impl Into for String = fn(iterable) = this + iterable::reduce(+ "")
 define Into for Object = fn(iterable) = Object.fromEntries(iterable)
 
-fn into(val) = val[Into](this)
+fn into(output) = output[Into](this)
 
 protocol Collection
 
