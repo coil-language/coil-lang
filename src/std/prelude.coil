@@ -558,17 +558,74 @@ impl Record for Map = {
   fn values() = this.values()
 }
 
-@def_call
+@compose_decorators(def_call, #(doc(& "
+Get keys of a record as an iterator OR a collection
+
+Example:
+  {a: 10}::keys() // [\"a\"]
+  ~Map{a: 10}::keys()::into(#{}) // #{:a}
+")))
 fn keys() = this[Record].keys.call(this)
-@def_call
+
+@compose_decorators(def_call #(doc(& "
+Get values of a record as an iterator OR a collection
+
+Example:
+  {a: 10}::values() // [10]
+  ~Map{a: 10}::values()::into(#{}) // #{10}
+")))
 fn values() = this[Record].values.call(this)
+
+@doc("
+Insert key & value into a record
+
+Example:
+  {a: 10}::insert(:b 20) // {a: 10, b: 20}
+  ~Map{a: 10}::insert(:b 20) // ~Map{a: 10, b: 20}
+")
 fn insert(key, value) = this[Record].insert.call(this, key, value)
+
+@doc("
+Merge 2 records together
+
+Note that since all object literal keys are strings, merging a
+richer record that can hold keywords may have unexpected consequences
+
+Do not merge a rich record type with a non rich record unless you are ok
+with lossy conversions.
+
+Example:
+  {a: 10}::merge({b: 20}) {a: 10 b: 20}
+  {a: 10}::merge({a: 20})
+  ~Map{a: 10}::merge(~Map{a: 20}) // ~Map{a: 20}
+  // here's the unexpected result
+  ~Map{a: 10}::merge({a: 20}) // ~Map{a: 10, \"a\" => 20}
+")
 fn merge(other) = this[Record].merge.call(this, other)
 
 define Record for Map = fn(entries) = new Map(entries)
 define Record for Object = Object.fromEntries
 
+@doc("
+Determines if 'this' is a record
+
+Examples:
+  {}::record?() // true
+  ~Map{}::record?() // true
+  #{}::record?() // false
+")
 fn record?() = this[Record]::exists?()
+
+@doc("
+Constructs a record based off an entries array
+
+This is used for record syntax
+
+Example:
+  Map::construct_record([[:a 20]])
+    ==
+  ~Map{a: 20}
+")
 fn construct_record(entries) = this[Record](entries)
 
 protocol Vector
@@ -868,7 +925,7 @@ fn js_log_friendly() = this&.[JsLogFriendly]()
 
 @def_call
 fn log(...args) {
-  console.log(...args, this::js_log_friendly())
+  console.log(...args, this)
   return this
 }
 
