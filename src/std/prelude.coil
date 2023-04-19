@@ -1,3 +1,15 @@
+protocol CustomNumberLiteral
+
+define CustomNumberLiteral for :custom_number_literal/n = BigInt
+
+define CustomNumberLiteral for :custom_number_literal/i = fn(num) {
+  if Number.isInteger(num) {
+    return num
+  } else {
+    raise!(new TypeError(str("Expected Integer got " num)))
+  }
+}
+
 // Doc Protocol
 
 protocol Doc

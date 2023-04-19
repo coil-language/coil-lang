@@ -115,7 +115,7 @@ let lexer = ~Lexer{
   /^\}/ => :close_b
   /^\(/ => :open_p
   /^\)/ => :close_p
-  /^[\-\+]?\d+n/ => :big_int
+  /^[\-\+]?(\d*\.)?\d+[a-zA-Z]+/ => :custom_number_literal
   /^[\-\+]?(\d*\.)?\d+/ => :num
   /^\.\.\./ => :dot_dot_dot
   /^\.\./ => :dot_dot
@@ -739,9 +739,9 @@ let parse_num = ~Parser[
   ~One[:num :value]
 ]
 
-let parse_big_int = ~Parser[
-  ~Init[{type: :big_int}]
-  ~One[:big_int :value]
+let parse_custom_number_literal = ~Parser[
+  ~Init[{type: :custom_number_literal}]
+  ~One[:custom_number_literal :value]
 ]
 
 fn parse_array(tokens) = ~Parser[
@@ -934,7 +934,7 @@ let SINGLE_EXPR_PARSE_MAP = ~ParseMap{
   :id => parse_id
   :at => parse_decorator
   :num => parse_num
-  :big_int => parse_big_int
+  :custom_number_literal => parse_custom_number_literal
   :open_sq => parse_array
   :dot_dot_dot => parse_spread
   :double_colon => parse_bind_this
@@ -1402,7 +1402,11 @@ fn eval_obj_lit({entries}) =
 fn eval_bind_this({expr}) = str(eval_expr(expr) ".bind(this)")
 fn eval_id_lookup({name}) = resolve_name(name)
 fn eval_num({value}) = str("(" value ")")
-fn eval_big_int({value}) = value
+fn eval_custom_number_literal({value}) {
+  let [num] = value.split(/[a-zA-Z]+/)
+  let modifier = value.slice(num.length)
+  return str("Keyword.for(\"custom_number_literal/" modifier "\")[CustomNumberLiteral](" num ")")
+}
 fn eval_double_equals({lhs rhs}) = str(
   resolve_name("equals?") ".call(" eval_expr(lhs) ", " eval_expr(rhs) ")")
 fn eval_not_equals(node) = str("negate.call(" eval_double_equals(node) ")")
@@ -1547,7 +1551,7 @@ fn eval_expr(node) = node::at(:type)::pipe(~Map{
   :id_lookup => eval_id_lookup
   :fn_call => eval_fn_call
   :num => eval_num
-  :big_int => eval_big_int
+  :custom_number_literal => eval_custom_number_literal
   :array => eval_array
   :math_op => eval_math_op
   :double_equals => eval_double_equals
