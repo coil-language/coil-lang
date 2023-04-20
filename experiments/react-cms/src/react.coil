@@ -1,6 +1,7 @@
 import React from "react"
-import {Atom} from "./react.js"
+import * as react_js from "./react.js"
 export * from "./react.js"
+let Atom = react_js.Atom
 
 impl Pipe for Atom = fn(...fns) = compose(...fns)(this.val)
 

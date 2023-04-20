@@ -931,7 +931,7 @@ let SINGLE_EXPR_PARSE_MAP = ~ParseMap{
   :open_p => parse_paren_expr
   :yield => parse_yield
   :await => parse_await
-  :id => parse_id
+  valid_ids_in_all_contexts::push(:import) => parse_id
   :at => parse_decorator
   :num => parse_num
   :custom_number_literal => parse_custom_number_literal
@@ -1265,8 +1265,16 @@ fn eval_str({value}) {
   }
 }
 
-fn eval_property_lookup({lhs property}) =
-  str(eval_expr(lhs) "['" property "']")
+let RESERVED_IDS = #{"import"}
+
+fn eval_property_lookup({lhs property}) {
+  let lhs_js = eval_expr(lhs)
+  if RESERVED_IDS::has?(lhs_js) {
+    return str(lhs_js "." property)
+  } else {
+    return str(lhs_js "['" property "']")
+  }
+}
 
 fn eval_fn_call({lhs args}) =
   str(eval_expr(lhs) "(" args::map_join(eval_expr, ", ") ")")

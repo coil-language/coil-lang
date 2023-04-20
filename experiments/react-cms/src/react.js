@@ -8,11 +8,11 @@ export class Atom {
     this.val = state;
     this.setState = setState;
   }
-  update(f) {
-    return this.setState(call.bind(f));
+  ["update!"](f) {
+    this.setState(call.bind(f));
   }
-  set(val) {
-    return this.setState(val);
+  ["set!"](val) {
+    this.setState(val);
   }
 }
 

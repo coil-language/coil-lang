@@ -1,0 +1,11 @@
+import * as ReactTestingLibrary from "@testing-library/react"
+
+export default fn test(f, vitest, name) {
+  if !test.after_each {
+    test.after_each = true
+    vitest.afterEach(ReactTestingLibrary.cleanup)
+  }  
+  if let {it} = vitest {
+    it(name ?? f.name, #(f(vitest)))
+  }
+} 

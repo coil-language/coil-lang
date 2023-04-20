@@ -6,10 +6,16 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest"
   },
   "devDependencies": {
-    "vite": "^4.3.0-beta.2"
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/user-event": "^14.4.3",
+    "global-jsdom": "^8.8.0",
+    "jsdom": "^21.1.1",
+    "vite": "^4.3.0-beta.2",
+    "vitest": "^0.30.1"
   },
   "dependencies": {
     "react": "^18.2.0",

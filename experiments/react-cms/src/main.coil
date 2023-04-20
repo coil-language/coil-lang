@@ -1,26 +1,50 @@
-import * as ReactDOM from "react-dom/client";
-import {component, Css, use_state} from "./react.coil"
+import test from "./coil_test.coil"
+import * as React from "./react.coil"
+import user from "@testing-library/user-event"
+import * as ReactTestingLibrary from "@testing-library/react"
 
-@component(~Css[
-  ".toggle[data-active=true] {
-    color: red;
-  }"
-  ".toggle[data-active=false] {
-    color: green;
-  }"
-])
-fn App() {
-  let active = use_state(false)
-  return ~:button.toggle{
-    "data-active" => active
-    onClick: #(active.update(!_))
-    children: active::pipe(~Map{
-      true => "turn off"
-      false => "turn on"
-    })
-  }
+let {render, screen, cleanup} = ReactTestingLibrary
+let {component, use_state} = React
+
+@component
+fn SimpleCounter({initial_value}) {
+  let value = use_state(initial_value)
+
+  fn clear = value.set!(0)
+  fn decrement = value.update!(_ - 1)
+  fn increment = value.update!(_ + 1)
+
+  return ~:div[
+    ~:button{onClick: clear, children: "Clear"}
+    ~:button{onClick: decrement, children: "-1"}
+    ~:span["Value: " value]
+    ~:button{onClick: increment, children: "+1"}
+  ]
 }
 
-ReactDOM
-  .createRoot(document.getElementById("app"))
-  .render(~App{})
+@test(import.meta.vitest)
+fn should_display_initial_value {
+  render(~SimpleCounter{initial_value: 2})
+  screen.getByText("Value: 2")
+}
+
+@test(import.meta.vitest)
+async fn should_display_0 {
+  render(~SimpleCounter{initial_value: 2})
+  await user.click(screen.getByText("Clear"))
+  screen.getByText("Value: 0")
+}
+
+@test(import.meta.vitest)
+async fn should_inc_by_1 {
+  render(~SimpleCounter{initial_value: 0})
+  await user.click(screen.getByText("+1"))
+  screen.getByText("Value: 1")
+}
+
+@test(import.meta.vitest)
+async fn should_dec_by_1 {
+  render(~SimpleCounter{initial_value: 0})
+  await user.click(screen.getByText("-1"))
+  screen.getByText("Value: -1")
+}
