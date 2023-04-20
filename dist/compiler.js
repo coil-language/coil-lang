@@ -138,12 +138,6 @@ globalThis["ObjectLiteral"] = ObjectLiteral;
 globalThis["truthy"] = truthy;
 const CustomNumberLiteral = Symbol("CustomNumberLiteral");
 Keyword.for("custom_number_literal/n")[CustomNumberLiteral] = BigInt;
-Keyword.for("custom_number_literal/i")[CustomNumberLiteral] = function (num) {
-if (truthy(Number['isInteger'](num))) {
-return num;
-} else {
-raise__b(new TypeError(str("Expected Integer got ", num)))
-};};
 const Doc = Symbol("Doc");
 function doc(f, doc_str) {
 f[Doc] = doc_str['trim']();

@@ -1257,7 +1257,7 @@ fn eval_if({expr pass fail}) = str(
   "}" eval_if_branch(fail))
 
 fn eval_str({value}) {
-  value = value.slice(1, -1)    
+  value = value.slice(1, -1)
   if value.includes("\n") {
     return str("`" value "`")
   } else {
