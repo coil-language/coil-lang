@@ -18,73 +18,161 @@ let top_students =
     ::into(#{}) // #{"jill" "john"}
 ```
 
-# Key Principles
+# Motivations
 
-## Bind operator
+## JavaScript the Good Parts [part 2]
 
-The bind operator is a very simple syntactic sugar for `Function.prototype.bind`.
+JavaScript has a really powerful system called prototypes. We, the JavaScript community has shunned them (for good reason), due to things like SmooshGate, but the terrain has changed and we have to re-examine what we've lost.
 
-```
-a::b == b.bind(a)
-a::b(10) == b.bind(a)(10)
-```
+### prototypes
 
-This has 2 big implications:
+- Symbols solve the pre-existing issues with prototypes because they are unique (good-bye SmooshGate)
 
-1 - functions are automatically chainable without being tied to an explicit object model.
-2 - this provides a very sane subset of partial application.
+### dynamic 'this' binding
 
-These two notions together provide a very powerful building block (built into javascript!) that we can use to express large operations.
+- Class/Class-like constructs are highly discouraged in Coil, so you almost never run into situations with multiple scopes of 'this'.
 
-## Protocols
+- Bind operator introduces a new way to chain functions untied to an object model.
 
-Protocols provide a sane, simple & powerful way to do polymorphism.
+## Rich Data Literals
 
-```
-// definition
-protocol Greet
+Coil introduces a vast set of simple data literals, lets explore them.
 
-// impls
-impl Greet for Person = fn() = str("Hi there, I'm " this.name)
+### Better Object Literals
 
-impl Greet for Dog = fn() = "Woof"
+Object Literal notation are instances of a new constructor `ObjectLiteral`.
 
-// protocol function
-fn greet() = this[Greet]()
-
-// usage
-new Dog()::greet() // Woof
-new Person("Marcelle")::greet() // Hi there, I'm marcelle
-```
-
-If this looks somewhat familiar to you JavaScript folks, its because its just prototypes with symbols.
-
-Working with prototypes in JavaScript has been increasingly considered "bad practice", but Symbols due to their uniqueness property bring ease-of-mind back to extending prototypes.
-
-Coil has taken a different syntax to reorient & provide a sane set of best practices when dealing with prototypes.
-
-## Data's Primary Function
-
-In coil there's a notion that every piece of data has a primary function.
-
-Records map from keys to values, arrays from indices to entries, sets let you know if a value exists within it..
-
-To do that, there is a protocol called "Call", it exposes 1 function "call"
+`ObjectLiteral` acts like a regular JavaScript Object literal but because it has its own constructor means that we can implement protocols for it without messing with the prototype of every object in the world.
 
 ```
-{name: "Marcelle"}::call(:name) // "Marcelle"
-[:one :two :three]::call(0) // :one
-#{:A :B :C}::call(:A) // :A
+{name: "hello"}.constructor === ObjectLiteral
+
+// letting us implement the Record protocol to use keys
+{name: "hello"}::keys() // ["name"]
 ```
 
-This protocol can be extended, here is the complete implementation of CallMap that was used in the first example.
+### Multiline strings
+
+All strings in Coil are multiline, no switching between 2 types of strings.
+
+### Keywords
+
+Keywords are interned primitives used to lookup a key in a record. You should use them in place of strings wherever possible.
 
 ```
-@def_record
-fn CallMap(@entries) {}
-impl Call for CallMap = fn(value) =
-  ::find(fn([callable, _]) = callable::call(value))
-  ::pipe(fn([_, val]) = val)
+:my/keyword === :my/keyword // true
 ```
 
-When you combine this with the custom record & vector syntax, you get very expressive & clear code. "Here's what the data looks like, and this is what does."
+### Custom Vector Syntax
+
+Coil allows you to extend the "vector" syntax to any type like the following
+
+```
+fn MyCustomList(@items) {}
+define Vector for MyCustomList = fn(entries) = new MyCustomList(entries)
+
+~MyCustomList[1 2 3] // MyCustomList { items: [1 2 3] }
+```
+
+Let's say due to performance concerns you want to move to immutable-js, but your entire codebase works on `Array`.
+
+In JavaScript the only choice you have is to suck it up and rewrite everything.
+
+In Coil all you have to do is implement the `Vector` protocols for immutable.
+
+Let's take a look
+
+```
+import { List } from "immutable"
+
+// define the syntax constructor
+define Vector for List = List
+// impl protocol methods
+impl Vector for List = {
+  fn push(item) = this.push(item)
+  // .. others
+}
+
+let my_list = ~List[1 2 3]
+let my_array = [1 2 3]
+
+my_list = my_list::push(10)
+my_array = my_array::push(10)
+```
+
+### Custom Record Syntax
+
+Similarly there is a custom record syntax.
+
+```
+~Map{a: 10} == ~Map{:a => 10}
+```
+
+As seen above with `~CallMap{}`, the syntax lends itself well to defining nontrivial mappings.
+
+## Integrated
+
+Coil deeply integrates with existing JavaScript ecosystems in order to wrap them in better coil based idioms.
+
+So while this is possible:
+
+```
+import * as React from "react"
+
+fn HelloWorld = React.createElement("h1" null "Hello World")
+```
+
+There is a tiny coil wrapper to enable the following:
+
+```
+import {component} from "@coil-lang/react"
+
+@component
+fn HelloWorld = ~:h1["Hello World"]
+```
+
+## Fixing the bad parts of JavaScript
+
+People have many different opinions on what is wrong with JavaScript, to me its actually a small set of things.
+
+### Real Equality
+
+We've reclaimed the `==` operator to mean real equality that can be overwritten for any constructor. While maintaining `===` to mean what it means in JavaScript
+
+```
+a == b
+// is the same as
+a::equals?(b)
+// is the same as
+a[Equals](b)
+
+[1 2 {a: :b}] == [1 2 {a: :b}] // true
+```
+
+### Truthiness
+
+While truthiness in JavaScript is a cute trick at first, it quickly becomes painful because its far too broad to be relied upon.
+
+There is however contrary to popular belief a sane way to do truthiness if we take inspiration from clojure.
+
+- the only falsy values in Coil are `null`, `undefined` and `false`
+- everything else is truthy
+
+This means no weird checking for `0` or having to look up how it works every time.
+
+### Good-bye WatMan
+
+You've likely seen the infamous 'wat' talk.
+
+The reason WatMan exists is because JavaScript does implicit type conversion on math operators.
+
+```
+// javascript
+1 + "2" // "12"
+[] + {} // "[object Object]"
+// coil
+1 + "2" // throws TypeError
+[] + {} // throws TypeError
+```
+
+This is because these operators in coil are functions, similar to `==`.
