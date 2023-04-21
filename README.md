@@ -36,7 +36,7 @@ JavaScript has a really powerful system called prototypes. We, the JavaScript co
 
 ## Rich Data Literals
 
-Coil introduces a vast set of simple data literals, lets explore them.
+Coil introduces a set of powerful data literals, lets explore them.
 
 ### Better Object Literals
 
