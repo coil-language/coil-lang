@@ -791,10 +791,15 @@ fn parse_new(tokens) = ~Parser[
 fn parse_num_raw(tokens) =
   parse_num::call(tokens)::pipe(fn([expr, tokens]) = [expr::at(:value)::as_num(), tokens])
 
+let parse_adjacent_num_raw = ~Parser[
+  ~AbortIf[not_adjacent?]
+  ~Then[parse_num_raw]
+]
+
 let parse_anon_arg_id = ~Parser[
   ~Init[{type: :anon_arg_id}]
   ~Chomp[:single_and]
-  ~Optional[:num parse_num_raw :arg_num]
+  ~Optional[:num parse_adjacent_num_raw :arg_num]
 ]
 
 let parse_unapplied_and_and = ~Parser[

@@ -1,2 +1,1 @@
-let a = 20i
-console.log(a)
+#(call(&0))

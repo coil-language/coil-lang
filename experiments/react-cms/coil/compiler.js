@@ -3421,6 +3421,10 @@ function parse_num_raw(tokens) {
     return [as_num.bind(at.bind(expr)(Keyword.for("value")))(), tokens];
   });
 }
+let parse_adjacent_num_raw = construct_vector.call(Parser, [
+  construct_vector.call(AbortIf, [not_adjacent__q]),
+  construct_vector.call(Then, [parse_num_raw]),
+]);
 let parse_anon_arg_id = construct_vector.call(Parser, [
   construct_vector.call(Init, [
     new ObjectLiteral({ type: Keyword.for("anon_arg_id") }),
@@ -3428,7 +3432,7 @@ let parse_anon_arg_id = construct_vector.call(Parser, [
   construct_vector.call(Chomp, [Keyword.for("single_and")]),
   construct_vector.call(Optional, [
     Keyword.for("num"),
-    parse_num_raw,
+    parse_adjacent_num_raw,
     Keyword.for("arg_num"),
   ]),
 ]);
