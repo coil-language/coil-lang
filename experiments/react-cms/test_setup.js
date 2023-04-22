@@ -1,1 +1,1 @@
-import "./coil/prelude";
+import "@coil-lang/compiler/dist/prelude";
