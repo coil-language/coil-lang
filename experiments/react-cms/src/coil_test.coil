@@ -1,6 +1,7 @@
 import * as ReactTestingLibrary from "@testing-library/react"
 
 export default fn test(f, vitest, name) {
+  if !vitest { return }
   if !test.after_each {
     test.after_each = true
     vitest.afterEach(ReactTestingLibrary.cleanup)

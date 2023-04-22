@@ -1,15 +1,15 @@
 {
   "name": "@coil-lang/compiler",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Compiler for the coil programming language",
-  "main": "index.js",
+  "main": "dist/compiler.mjs",
   "directories": {
     "test": "test"
   },
   "scripts": {
     "test": "bash coil_test",
     "rebuild": "bash rebuild_compiler",
-    "compile": "deno run --allow-read --allow-write ./dist/compiler.js $1 $2",
+    "compile": "deno run --allow-read --allow-write ./dist/compiler.mjs $1 $2",
     "eval": "npm run compile $1 $2 && deno run $2"
   },
   "repository": {
