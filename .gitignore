@@ -4,5 +4,5 @@ q1.ts
 test.js
 example.js
 node_modules
-test/dist/**/*.js
+**/test/dist/**/*.js
 linter.js

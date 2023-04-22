@@ -1,0 +1,25 @@
+{
+  "name": "@coil-lang/compiler",
+  "version": "0.0.1",
+  "description": "Compiler for the coil programming language",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "bash coil_test",
+    "rebuild": "bash rebuild_compiler",
+    "compile": "deno run --allow-read --allow-write ./dist/compiler.js $1 $2",
+    "eval": "npm run compile $1 $2 && deno run $2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marcellerusu/coil-lang.git"
+  },
+  "author": "Marcelle Rusu",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/marcellerusu/coil-lang/issues"
+  },
+  "homepage": "https://github.com/marcellerusu/coil-lang#readme"
+}
