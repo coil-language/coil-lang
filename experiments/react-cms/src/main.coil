@@ -6,8 +6,6 @@ import * as ReactTestingLibrary from "@testing-library/react"
 let {render, screen} = ReactTestingLibrary
 let {component, use_state} = React
 
-console.log("hey")
-
 @component
 fn SimpleCounter({initial_value}) {
   let value = use_state(initial_value)
