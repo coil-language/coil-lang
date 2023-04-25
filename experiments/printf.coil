@@ -14,10 +14,10 @@ impl Fmt for Colored = fn() = {
 
 @def_vector
 fn FString(...elems) { this.elems = elems }
-impl Fmt for FString = fn() {
+impl Fmt for FString = fn () {
   let fmt_keys = this.elems::map(fmt)::into([])
   return {
-    string: str(fmt_keys::map(:string)::join(" "))
+    string: str(fmt_keys::map(:string)::join(""))
     css: fmt_keys::flat_map(:css)::into([])
   }
 }
@@ -53,7 +53,45 @@ fn printf() {
   return this
 }
 
-~Keys[:id 10 "weewoo"]::printf()
+// ~Keys[:id 10 "weewoo"]::printf()
 
-~FString[:kw 10 "hey there" 30::color(:red)]
+// ~FString[:kw 10 "hey there" 30::color(:red)]
+//   ::printf()
+
+fn Raw(@str) {}
+fn raw() = new Raw(this)
+impl Fmt for Raw = fn () = {string: this.str, css: []}
+
+
+fn def_fmt(Ctor) {
+  impl Fmt for Ctor = fn () =
+    ~FString[
+      Ctor.name::color(:darkred)
+      "("::raw()
+      ...new ObjectLiteral(this)
+        ::into([])
+        ::zip(0..)
+        ::map(::fn ([k_v, idx]) {
+          let [key val] = k_v
+          let comma_or_empty_str = ", "::raw()
+          if idx == Object.keys(this)::len() - 1 {
+            comma_or_empty_str = ""::raw()
+          }
+          return ~FString[
+            key::color(:darkblue)
+            ": "::raw()
+            val
+            comma_or_empty_str
+          ]
+        })
+        
+      ")"::raw()
+    ]::fmt()
+  return Ctor
+}
+
+@def_fmt
+fn One(@kw @as) {}
+
+new One("hey" 1)
   ::printf()
