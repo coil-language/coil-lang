@@ -66,11 +66,11 @@ fn def_fmt(Ctor) {
       "("::raw()
       ...new ObjectLiteral(this)
         ::zip(0..)
-        ::map(::fn ([[property_key val] idx]) = ~FString[
+        ::map(fn ([[property_key val] idx]) = ~FString[
           property_key::color(:darkblue)
           ": "::raw()
           val
-          (idx < size - 1)::pipe({true: ", " false: ""} raw)
+          idx::pipe(~CallMap{0..(size - 1) => ", " _ => ""} raw)
         ])
       ")"::raw()
     ]::fmt()
