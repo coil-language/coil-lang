@@ -871,7 +871,7 @@ protocol Or
 @doc("raise! if 'this' isn't a 'type_str'")
 fn expect_primitive_type!(type_str) {
   if typeof(this) !== type_str {
-    raise!(str("Expected " type_str))
+    raise!(new Error(str("Expected " type_str)))
   }
 }
 

@@ -650,10 +650,11 @@ let parse_assign_id = ~Parser[
   ~Either[valid_ids_in_all_contexts :name]
 ]
 
-let parse_assign_array_entry = ~ParseMap{
+fn parse_assign_array_entry(tokens) = ~ParseMap{
   :id => parse_assign_id
+  :open_sq => parse_assign_array
   :dot_dot_dot => parse_spread_assign
-}
+}::call(tokens)
 
 let parse_assign_array = ~Parser[
   ~Init[{type: :array_deconstruction}]
@@ -1291,6 +1292,7 @@ fn eval_spread_assign({name}) = str("..." resolve_name(name))
 fn eval_array_deconstruction_entry(node) = node::at(:type)::pipe(~Map{
   :id_assign => eval_id_assign_name
   :spread_assign => eval_spread_assign
+  :array_deconstruction => eval_array_deconstruction_names
 })::call(node)
 
 fn eval_array_deconstruction_names({entries}) =

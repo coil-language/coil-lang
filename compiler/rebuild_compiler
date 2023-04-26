@@ -1,3 +1,3 @@
 #!sh
-deno run --allow-read --allow-write ./dist/compiler.js ./src/compiler.coil ./dist/compiler_.js
+deno run --allow-read --allow-write ./dist/compiler.mjs ./src/compiler.coil ./dist/compiler_.js
 mv ./dist/compiler_.js ./dist/compiler.mjs

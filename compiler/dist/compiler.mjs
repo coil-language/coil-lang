@@ -1464,7 +1464,9 @@ globalThis[Keyword.for("alpha?")] = alpha__q;
 globalThis[Keyword.for("alpha_numeric?")] = alpha_numeric__q;
 globalThis[Keyword.for("def_vector")] = def_vector;
 globalThis[Keyword.for("def_record")] = def_record;
-globalThis[Keyword.for("def_call")] = def_call;function CollectionView(collection, idx) {
+globalThis[Keyword.for("def_call")] = def_call;
+globalThis[Keyword.for("into")] = into;
+globalThis[Keyword.for("Into")] = Into;function CollectionView(collection, idx) {
 this.collection = collection;
 this.idx = idx;
 }
@@ -1841,7 +1843,8 @@ function parse_obj(tokens) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("obj_lit")})]), construct_vector.call(Chomp, [Keyword.for("open_b")]), construct_vector.call(Until, [Keyword.for("close_b"), parse_obj_entry, Keyword.for("entries")]), construct_vector.call(Chomp, [Keyword.for("close_b")])]))(tokens);}
 let parse_spread_assign = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("spread_assign")})]), construct_vector.call(Chomp, [Keyword.for("dot_dot_dot")]), construct_vector.call(Either, [valid_ids_in_all_contexts, Keyword.for("name")])]);
 let parse_assign_id = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("id_assign")})]), construct_vector.call(Either, [valid_ids_in_all_contexts, Keyword.for("name")])]);
-let parse_assign_array_entry = construct_record.call(ParseMap, [[Keyword.for("id"), parse_assign_id], [Keyword.for("dot_dot_dot"), parse_spread_assign]]);
+function parse_assign_array_entry(tokens) {
+return call.bind(construct_record.call(ParseMap, [[Keyword.for("id"), parse_assign_id], [Keyword.for("open_sq"), parse_assign_array], [Keyword.for("dot_dot_dot"), parse_spread_assign]]))(tokens);}
 let parse_assign_array = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("array_deconstruction")})]), construct_vector.call(Chomp, [Keyword.for("open_sq")]), construct_vector.call(Until, [Keyword.for("close_sq"), parse_assign_array_entry, Keyword.for("entries")]), construct_vector.call(Chomp, [Keyword.for("close_sq")])]);
 let parse_obj_entry_rename = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("obj_entry_rename")})]), construct_vector.call(Either, [valid_ids_in_all_contexts, Keyword.for("old_name")]), construct_vector.call(Chomp, [Keyword.for("colon")]), construct_vector.call(Either, [valid_ids_in_all_contexts, Keyword.for("new_name")])]);
 let parse_regular_obj_assign_entry = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("obj_reg_entry")})]), construct_vector.call(Either, [valid_ids_in_all_contexts, Keyword.for("name")])]);
@@ -2033,7 +2036,7 @@ return resolve_name(name);}
 function eval_spread_assign({'name': name}) {
 return str("...", resolve_name(name));}
 function eval_array_deconstruction_entry(node) {
-return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("id_assign"), eval_id_assign_name], [Keyword.for("spread_assign"), eval_spread_assign]])))(node);}
+return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("id_assign"), eval_id_assign_name], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("array_deconstruction"), eval_array_deconstruction_names]])))(node);}
 function eval_array_deconstruction_names({'entries': entries}) {
 return str("[", map_join.bind(entries)(eval_array_deconstruction_entry, ", "), "]");}
 function eval_obj_reg_entry({'name': name}) {
