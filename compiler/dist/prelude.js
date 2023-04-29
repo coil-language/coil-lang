@@ -926,7 +926,7 @@ const And = Symbol("And");
 const Or = Symbol("Or");
 let expect_primitive_type__b = doc(function expect_primitive_type__b(type_str) {
 if (truthy(typeof(this) !== type_str)) {
-raise__b(str("Expected ", type_str))
+raise__b(new Error(str("Expected ", type_str)))
 };}, "raise! if 'this' isn't a 'type_str'");
 Object.prototype[Negate] = function () {
 return js_negate(this);};
@@ -1460,6 +1460,9 @@ globalThis[Keyword.for("Inc")] = Inc;
 globalThis[Keyword.for("inc")] = inc;
 globalThis[Keyword.for("IRange")] = IRange;
 globalThis[Keyword.for("ERange")] = ERange;
+globalThis[Keyword.for("ERangeNoMax")] = ERangeNoMax;
+globalThis[Keyword.for("ERangeNoMin")] = ERangeNoMin;
+globalThis[Keyword.for("IRangeNoMin")] = IRangeNoMin;
 globalThis[Keyword.for("alpha?")] = alpha__q;
 globalThis[Keyword.for("alpha_numeric?")] = alpha_numeric__q;
 globalThis[Keyword.for("def_vector")] = def_vector;
