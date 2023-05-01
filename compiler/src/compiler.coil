@@ -571,6 +571,18 @@ fn parse_call_expr(tokens) = ~Parser[
   ~Chomp[:close_p]
 ]::call(tokens)
 
+fn parse_decorator_expr(tokens) = ~ParseMap{
+  :id => parse_expr
+}::call(tokens)
+
+fn parse_multi_decorator(tokens) = ~Parser[
+  ~Init[{type: :multi_decorator}]
+  ~Chomp[:at :open_sq]
+  ~Until[:close_sq parse_decorator_expr :decorators]
+  ~Chomp[:close_sq]
+  ~Then[parse_fn :fn_def]
+]::call(tokens)
+
 fn parse_decorator(tokens) = ~Parser[
   ~Init[{type: :decorator}]
   ~Chomp[:at]
@@ -937,8 +949,6 @@ let SINGLE_EXPR_PARSE_MAP = ~ParseMap{
   :open_p => parse_paren_expr
   :yield => parse_yield
   :await => parse_await
-  valid_ids_in_all_contexts::push(:import) => parse_id
-  :at => parse_decorator
   :num => parse_num
   :custom_number_literal => parse_custom_number_literal
   :open_sq => parse_array
@@ -951,7 +961,9 @@ let SINGLE_EXPR_PARSE_MAP = ~ParseMap{
   :and_and => parse_unapplied_and_and
   :or_or => parse_unapplied_or_or
   :dot_dot => parse_prefix_exclusive_range
-  all_math_ops => parse_unapplied_math_op
+  valid_ids_in_all_contexts::push(:import) => parse_id
+  [:at :open_sq] => parse_multi_decorator
+  :at => parse_decorator
   [:hash :open_p] => parse_shorthand_anon_fn
   [:hash :open_b] => parse_set
   [:async :fn] => parse_fn
@@ -959,6 +971,7 @@ let SINGLE_EXPR_PARSE_MAP = ~ParseMap{
   [:tilde :open_sq] => parse_default_vector_syntax
   [:tilde :open_b] => parse_default_record_syntax
   :tilde => parse_custom_data_syntax
+  all_math_ops => parse_unapplied_math_op
 }
 
 fn parse_single_expr(tokens) = SINGLE_EXPR_PARSE_MAP::call(tokens)
@@ -1225,8 +1238,6 @@ fn map_join(f, separator) =
   }, "")
 
 fn resolve_name(name) {
-  if name == "with" { return "__coil_with" }
-  if name == "case" { return "__coil_case" }
   if name {
     return name
       .replaceAll("?", "__q")
@@ -1509,8 +1520,29 @@ fn eval_shorthand_anon_fn({expr}) =
 fn eval_anon_arg_id({arg_num}) =
   str("__args[" (arg_num || 1) - 1 "]")
 
+fn eval_multi_decorator({decorators fn_def}) {
+  let fn_name = fn_def::pipe(:name resolve_name)
+  let decorator_fn_js = decorators
+    ::map(fn (node) {
+      if node::pipe(:type #{:id_lookup}) {
+        return node::pipe(:name resolve_name)
+      } else {
+        let {lhs args} = node
+        return str("F => "
+          eval_expr(lhs)
+          "(F"
+          args::len()::pipe(~Map{0 => ""} _ || ", ")
+          args::map_join(eval_expr ", ") ")")
+      }
+    })
+    ::join(", ")
+    ::pipe(fn(decorators) = str("compose(" decorators ")"))
+
+  return str("let " fn_name " = " decorator_fn_js "(" eval_expr(fn_def) ")")
+}
+
 fn eval_decorator({name: decorator_name, fn_def args}) {
-  let fn_name = fn_def::at(:name)::pipe(resolve_name)
+  let fn_name = fn_def::pipe(:name resolve_name)
   let fn_def_js = eval_fn(fn_def)
   if args::empty?() {
     return str("let " fn_name " = " decorator_name "(" fn_def_js ");")
@@ -1557,6 +1589,7 @@ fn eval_expr(node) = node::at(:type)::pipe(~Map{
   :str => eval_str
   :regex_lit => eval_regex_lit
   :decorator => eval_decorator
+  :multi_decorator => eval_multi_decorator
   :keyword => eval_keyword
   :and_dot => eval_and_dot
   :prefix_exclusive_range => eval_prefix_exclusive_range
