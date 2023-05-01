@@ -20,10 +20,12 @@ ObjectLiteral.prototype[Symbol.iterator] = function* () {
 function js_negate(val) {
   return !truthy(val);
 }
+globalThis.js_negate = js_negate;
 
 function truthy(val) {
   return val !== null && val !== undefined && val !== false;
 }
+globalThis.truthy = truthy;
 
 function js_and(a, b) {
   if (!truthy(a)) {
@@ -32,10 +34,7 @@ function js_and(a, b) {
     return b();
   }
 }
-
-function js_object_delete(object, key) {
-  delete object[key];
-}
+globalThis.js_and = js_and;
 
 function js_or(a, b) {
   if (truthy(a)) {
@@ -44,48 +43,60 @@ function js_or(a, b) {
     return b();
   }
 }
+globalThis.js_or = js_or;
 
 function js_plus(a, b) {
   return a + b;
 }
+globalThis.js_plus = js_plus;
 
 function js_minus(a, b) {
   return a - b;
 }
+globalThis.js_minus = js_minus;
 
 function js_divide(a, b) {
   return a / b;
 }
+globalThis.js_divide = js_divide;
 
 function js_times(a, b) {
   return a * b;
 }
+globalThis.js_times = js_times;
 
 function js_exponent(a, b) {
   return a ** b;
 }
+globalThis.js_exponent = js_exponent;
 
 function js_greater_than(a, b) {
   return a > b;
 }
+globalThis.js_greater_than = js_greater_than;
 
 function js_less_than(a, b) {
   return a < b;
 }
+globalThis.js_less_than = js_less_than;
 
 function js_greater_than_eq(a, b) {
   return a >= b;
 }
+globalThis.js_greater_than_eq = js_greater_than_eq;
 
 function js_less_than_eq(a, b) {
   return a <= b;
 }
+globalThis.js_less_than_eq = js_less_than_eq;
 
 function js_mod(a, b) {
   return a % b;
 }
+globalThis.js_mod = js_mod;
 
 class AssertionError extends Error {}
+globalThis.AssertionError = AssertionError;
 
 function assert__b(cond, line, column, code_str, msg = "") {
   if (!cond) {
@@ -94,6 +105,7 @@ function assert__b(cond, line, column, code_str, msg = "") {
     );
   }
 }
+globalThis.assert__b = assert__b;
 
 function Keyword(value) {
   this.value = value;
@@ -118,21 +130,12 @@ Keyword.prototype.toString = function () {
   return this.value;
 };
 
-function js_num_hash(num) {
-  return num;
-}
-
-function js_str_hash(str) {
-  let hash = 7n;
-  for (let char of str) hash = hash * 31n + BigInt(char.charCodeAt());
-  return hash;
-}
-
 function raise__b(err) {
   console.log(err);
   throw err;
 }
 
+globalThis["raise__b"] = raise__b;
 globalThis["Keyword"] = Keyword;
 globalThis["ObjectLiteral"] = ObjectLiteral;
 globalThis["truthy"] = truthy;
