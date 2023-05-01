@@ -9,12 +9,14 @@ fn def_global(f) {
 }
 
 protocol CustomNumberLiteral
+globalThis[:CustomNumberLiteral] = CustomNumberLiteral
 
 define CustomNumberLiteral for :custom_number_literal/n = BigInt
 
 // Doc Protocol
 
 protocol Doc
+globalThis[:Doc] = Doc
 
 @def_global
 fn doc(f, doc_str) {
@@ -31,9 +33,8 @@ fn log_doc() {
   return this
 }
 
-// Call Protocol
-
 protocol Call
+globalThis[:Call] = Call
 
 // can't use decorators, ::call, or ::reduce since its being depended on everywhere
 fn compose(first_fn, ...fns) = fn(...args) {
@@ -97,6 +98,7 @@ impl :bind for Set = fn(val) = ::fn() = this::call(val)
 let nil? = Object.freeze(#{undefined null})
 
 protocol Pipe
+globalThis[:Pipe] = Pipe
 
 impl Pipe for Object = fn(callable) = callable::call(this)
 
@@ -166,6 +168,7 @@ See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_
 fn iter?() = ::iter() === this
 
 protocol Iterator
+globalThis[:Iterator] = Iterator
 
 let default_iterator_impl = {
   fn* take(n) {
@@ -444,6 +447,7 @@ fn join(sep) = ::reduce(fn(prev cur) {
 // INTO
 
 protocol Into
+globalThis[:Into] = Into
 
 impl Into for Array = fn(iterable) = [...this, ...iterable]
 impl Into for ObjectLiteral = fn(iterable) = ::merge(iterable)
@@ -465,6 +469,7 @@ Examples:
 fn into(output) = output[Into](this)
 
 protocol Collection
+globalThis[:Collection] = Collection
 
 impl Collection for ObjectLiteral = {
   fn at(key) = this[key]
@@ -560,6 +565,7 @@ Examples:
 fn has?(val) = this[Collection].has?.call(this, val)
 
 protocol Record
+globalThis[:Record] = Record
 
 impl Record for ObjectLiteral = {
   fn insert(key, value) = {...this, [key]: value}
@@ -646,6 +652,7 @@ Examples:
 fn construct_record(entries) = this[Record](entries)
 
 protocol Vector
+globalThis[:Vector] = Vector
 
 @[def_global doc("
 Determines if 'this' conforms to the vector protocol
@@ -717,6 +724,7 @@ Examples:
 fn concat(other) = this[Vector].concat.call(this, other)
 
 protocol OrderedSequence
+globalThis[:OrderedSequence] = OrderedSequence
 
 impl OrderedSequence for Array = {
   fn prepend(val) = [val, ...this]
@@ -799,6 +807,7 @@ fn construct_vector(entries) = this[Vector](entries)
 // EQUAL PROTOCOl
 
 protocol Equal
+globalThis[:Equal] = Equal
 
 @[def_global doc("
 implement [[Equal]] for a generic constructor by
@@ -870,16 +879,27 @@ fn equals?(other) = this&.[Equal](other) ?? this === other
 // OPERATORS
 
 protocol Plus
+globalThis[:Plus] = Plus
 protocol Negate
+globalThis[:Negate] = Negate
 protocol Minus
+globalThis[:Minus] = Minus
 protocol Times
+globalThis[:Times] = Times
 protocol Divide
+globalThis[:Divide] = Divide
 protocol Exponent
+globalThis[:Exponent] = Exponent
 protocol Mod
+globalThis[:Mod] = Mod
 protocol Comparable
+globalThis[:Comparable] = Comparable
 protocol LessThan
+globalThis[:LessThan] = LessThan
 protocol And
+globalThis[:And] = And
 protocol Or
+globalThis[:Or] = Or
 
 @doc("raise! if 'this' isn't a 'type_str'")
 fn expect_primitive_type!(type_str) {
@@ -1110,6 +1130,7 @@ fn or(thunk) = this&.[Or](thunk) ?? thunk()
 
 // This api is crufty, I'm not gonna lie.
 protocol JsLogFriendly
+globalThis[:JsLogFriendly] = JsLogFriendly
 
 impl JsLogFriendly for ObjectLiteral = fn() = ::into(Object)
 
@@ -1160,6 +1181,7 @@ fn exists?() = !this::nil?()
 fn Underscore(@transforms) {}
 
 protocol UnderscoreInterpreter
+globalThis[:UnderscoreInterpreter] = UnderscoreInterpreter
 
 let _ = new Underscore([{f: fn id() = this, args: []}])
 globalThis[:_] = _
@@ -1270,6 +1292,7 @@ impl JsLogFriendly for Underscore = fn() {
 // Ranges
 
 protocol Inc
+globalThis[:Inc] = Inc
 
 impl Inc for Number = fn() = this + 1
 impl Inc for BigInt = fn() = this + 1n

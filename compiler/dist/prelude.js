@@ -141,8 +141,10 @@ let resolved_name = f['name']['replaceAll']("?", "__q")['replaceAll']("!", "__b"
 globalThis[resolved_name] = f
 return f;}
 const CustomNumberLiteral = Symbol("CustomNumberLiteral");
+globalThis[Keyword.for("CustomNumberLiteral")] = CustomNumberLiteral
 Keyword.for("custom_number_literal/n")[CustomNumberLiteral] = BigInt;
 const Doc = Symbol("Doc");
+globalThis[Keyword.for("Doc")] = Doc
 let doc = def_global(function doc(f, doc_str) {
 f[Doc] = doc_str['trim']();
 return f;});
@@ -153,6 +155,7 @@ console['log'](str("# ", this['name']))
 console['log'](this[Doc])
 return this;});
 const Call = Symbol("Call");
+globalThis[Keyword.for("Call")] = Call
 function compose(first_fn, ...fns) {
 return function (...args) {
 let result = first_fn?.[Call](...args);
@@ -211,6 +214,7 @@ return function () {
 return call.bind(this)(val);}.bind(this);};
 let nil__q = Object['freeze'](new Set([undefined, null]));
 const Pipe = Symbol("Pipe");
+globalThis[Keyword.for("Pipe")] = Pipe
 Object.prototype[Pipe] = function (callable) {
 return call.bind(callable)(this);};
 let pipe = compose(def_global, F => doc(F, `
@@ -270,6 +274,7 @@ See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_
 `))(function iter__q() {
 return iter.bind(this)() === this;})
 const Iterator = Symbol("Iterator");
+globalThis[Keyword.for("Iterator")] = Iterator
 let default_iterator_impl = new ObjectLiteral({*['take'](n) {
 for  (let [elem, i] of zip.bind(this)(new ERangeNoMax((0)))) {
 if (truthy(equals__q.call(i, n))) {
@@ -512,6 +517,7 @@ return cur;
 return plus.call(prev,plus.call(sep,cur));
 };}, "");})
 const Into = Symbol("Into");
+globalThis[Keyword.for("Into")] = Into
 Array.prototype[Into] = function (iterable) {
 return [...this, ...iterable];};
 ObjectLiteral.prototype[Into] = function (iterable) {
@@ -536,6 +542,7 @@ Examples:
 `))(function into(output) {
 return output[Into](this);})
 const Collection = Symbol("Collection");
+globalThis[Keyword.for("Collection")] = Collection
 ObjectLiteral.prototype[Collection] = new ObjectLiteral({['at'](key) {
 return this[key];
 }, ['len']() {
@@ -635,6 +642,7 @@ Examples:
 `))(function has__q(val) {
 return this[Collection]['has?']['call'](this, val);})
 const Record = Symbol("Record");
+globalThis[Keyword.for("Record")] = Record
 ObjectLiteral.prototype[Record] = new ObjectLiteral({['insert'](key, value) {
 return new ObjectLiteral({...this, [key]: value});
 }, ['merge'](other) {
@@ -718,6 +726,7 @@ Examples:
 `))(function construct_record(entries) {
 return this[Record](entries);})
 const Vector = Symbol("Vector");
+globalThis[Keyword.for("Vector")] = Vector
 let vector__q = compose(def_global, F => doc(F, `
 Determines if 'this' conforms to the vector protocol
 
@@ -784,6 +793,7 @@ Examples:
 `))(function concat(other) {
 return this[Vector]['concat']['call'](this, other);})
 const OrderedSequence = Symbol("OrderedSequence");
+globalThis[Keyword.for("OrderedSequence")] = OrderedSequence
 Array.prototype[OrderedSequence] = new ObjectLiteral({['prepend'](val) {
 return [val, ...this];
 }, ['update_at'](idx, f) {
@@ -859,6 +869,7 @@ Examples:
 `))(function construct_vector(entries) {
 return this[Vector](entries);})
 const Equal = Symbol("Equal");
+globalThis[Keyword.for("Equal")] = Equal
 let impl_equal = compose(def_global, F => doc(F, `
 implement [[Equal]] for a generic constructor by
 specifying the keys to measure equality by
@@ -918,16 +929,27 @@ Examples:
 `))(function equals__q(other) {
 return this?.[Equal](other) ?? this === other;})
 const Plus = Symbol("Plus");
+globalThis[Keyword.for("Plus")] = Plus
 const Negate = Symbol("Negate");
+globalThis[Keyword.for("Negate")] = Negate
 const Minus = Symbol("Minus");
+globalThis[Keyword.for("Minus")] = Minus
 const Times = Symbol("Times");
+globalThis[Keyword.for("Times")] = Times
 const Divide = Symbol("Divide");
+globalThis[Keyword.for("Divide")] = Divide
 const Exponent = Symbol("Exponent");
+globalThis[Keyword.for("Exponent")] = Exponent
 const Mod = Symbol("Mod");
+globalThis[Keyword.for("Mod")] = Mod
 const Comparable = Symbol("Comparable");
+globalThis[Keyword.for("Comparable")] = Comparable
 const LessThan = Symbol("LessThan");
+globalThis[Keyword.for("LessThan")] = LessThan
 const And = Symbol("And");
+globalThis[Keyword.for("And")] = And
 const Or = Symbol("Or");
+globalThis[Keyword.for("Or")] = Or
 let expect_primitive_type__b = doc(function expect_primitive_type__b(type_str) {
 if (truthy(typeof(this) !== type_str)) {
 raise__b(new Error(str("Expected ", type_str)))
@@ -1115,6 +1137,7 @@ Examples:
 `))(function or(thunk) {
 return this?.[Or](thunk) ?? thunk();})
 const JsLogFriendly = Symbol("JsLogFriendly");
+globalThis[Keyword.for("JsLogFriendly")] = JsLogFriendly
 ObjectLiteral.prototype[JsLogFriendly] = function () {
 return into.bind(this)(Object);};
 Map.prototype[JsLogFriendly] = function () {
@@ -1159,6 +1182,7 @@ let Underscore = def_global(function Underscore(transforms) {
 this.transforms = transforms;
 });
 const UnderscoreInterpreter = Symbol("UnderscoreInterpreter");
+globalThis[Keyword.for("UnderscoreInterpreter")] = UnderscoreInterpreter
 let _ = new Underscore([new ObjectLiteral({'f': function id() {
 return this;}, 'args': []})]);
 globalThis[Keyword.for("_")] = _
@@ -1264,6 +1288,7 @@ let formatted_args = join.bind(map.bind(args)(js_log_friendly))(", ");
 return str("::", fn_name, "(", formatted_args, ")");
 };}))(""));};
 const Inc = Symbol("Inc");
+globalThis[Keyword.for("Inc")] = Inc
 Number.prototype[Inc] = function () {
 return plus.call(this,(1));};
 BigInt.prototype[Inc] = function () {
