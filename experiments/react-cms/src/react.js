@@ -7,6 +7,8 @@ export class Atom {
   constructor(state, setState) {
     this.val = state;
     this.setState = setState;
+    this["update!"] = this["update!"].bind(this);
+    this["set!"] = this["set!"].bind(this);
   }
   ["update!"](...fns) {
     this.setState(compose(...fns));

@@ -10,7 +10,7 @@
     "test": "vitest"
   },
   "devDependencies": {
-    "@coil-lang/compiler": "0.0.4",
+    "@coil-lang/compiler": "0.0.9",
     "@testing-library/react": "^14.0.0",
     "@testing-library/user-event": "^14.4.3",
     "global-jsdom": "^8.8.0",
@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "react": "^18.2.0",
+    "@coil-lang/react": "0.0.4",
     "react-dom": "^18.2.0"
   }
 }

@@ -1,57 +1,15 @@
-import test from "./coil_test.coil"
 import * as React from "./react.coil"
-import user from "@testing-library/user-event"
-import * as ReactTestingLibrary from "@testing-library/react"
+import * as ReactDOM from "react-dom/client"
+let {component, use_state, View, view} = React
 
-let {render, screen} = ReactTestingLibrary
-let {component, use_state} = React
+impl View for Number = fn({val set!}) = 
+  ~:input{onChange: compose(:target :value as_num set!)
+          type: "number"
+          value: val}::view()
 
 @component
-fn SimpleCounter({initial_value}) {
-  let value = use_state(initial_value)
+fn SimpleCounter = ~:div[use_state(0) "hey"]
 
-  fn clear = value.set!(0)
-  fn decrement = value.update!(_ - 1 #(Math.max(& 0)))
-  fn increment = value.update!(_ + 1)
-
-  return ~:div[
-    ~:button{onClick: clear, children: "Clear"}
-    ~:button{onClick: decrement, children: "-1"}
-    ~:span["Value: " value]
-    ~:button{onClick: increment, children: "+1"}
-  ]
-}
-
-@test(import.meta.vitest)
-fn should_display_initial_value {
-  render(~SimpleCounter{initial_value: 2})
-  screen.getByText("Value: 2")
-}
-
-@test(import.meta.vitest)
-async fn should_display_0 {
-  render(~SimpleCounter{initial_value: 2})
-  await user.click(screen.getByText("Clear"))
-  screen.getByText("Value: 0")
-}
-
-@test(import.meta.vitest)
-async fn should_inc_by_1 {
-  render(~SimpleCounter{initial_value: 0})
-  await user.click(screen.getByText("+1"))
-  screen.getByText("Value: 1")
-}
-
-@test(import.meta.vitest)
-async fn should_dec_by_1 {
-  render(~SimpleCounter{initial_value: 1})
-  await user.click(screen.getByText("-1"))
-  screen.getByText("Value: 0")
-}
-
-@test(import.meta.vitest)
-async fn should_not_be_able_to_dec_below_0 {
-  render(~SimpleCounter{initial_value: 0})
-  await user.click(screen.getByText("-1"))
-  screen.getByText("Value: 0")
-}
+ReactDOM
+  .createRoot(document.getElementById("app"))
+  .render(~SimpleCounter{})

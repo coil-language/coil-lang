@@ -5,21 +5,21 @@ let Atom = react_js.Atom
 
 impl Pipe for Atom = fn(...fns) = compose(...fns)(this.val)
 
-protocol ToReactChild
-impl ToReactChild for Atom = fn = this.val
-impl ToReactChild for Object = fn = this
+export protocol View
+impl View for Atom = fn = this.val::view(this)
+impl View for Object = fn = this
 
-@def_call
-fn to_react_child() = this[ToReactChild]()
+export fn view(...args) = this&.[View](...args)
+view = def_call(view)
 
 export fn Elem(@ctor, @attrs, @children) {}
 impl Into for Elem = fn(children) = 
   new Elem(this.ctor, this.attrs, [...this.children, ...children])
-impl ToReactChild for Elem = fn() {
+impl View for Elem = fn() {
   if this.children is Array {  
-    return React.createElement(this.ctor, this.attrs, ...this.children::map(to_react_child))
+    return React.createElement(this.ctor, this.attrs, ...this.children::map(view))
   } else {
-    return React.createElement(this.ctor, this.attrs, this.children::to_react_child())
+    return React.createElement(this.ctor, this.attrs, this.children::view())
   }
 }
 
@@ -60,14 +60,14 @@ export fn component(Component, ...opts) {
   for opt of opts {
     opt[ComponentOption]()
   }
-  let ReactComponent = fn(...args) = Component(...args)::to_react_child()
+  let ReactComponent = fn(...args) = Component(...args)::view()
   define Record for ReactComponent = fn(attrs) {
     attrs = attrs::into({})
     return React.createElement(ReactComponent, attrs, attrs::at(:children))
   }
   define Vector for ReactComponent = fn(children) =
-    React.createElement(ReactComponent, null, ...children::map(to_react_child))
+    React.createElement(ReactComponent, null, ...children::map(view))
   define Into for ReactComponent = fn(iterable) =
-    React.createElement(ReactComponent, null, [...iterable::map(to_react_child)])
+    React.createElement(ReactComponent, null, [...iterable::map(view)])
   return ReactComponent
 }
