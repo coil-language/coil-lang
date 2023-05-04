@@ -1,0 +1,153 @@
+str[:kw] = fn (...args) = fn (obj) {
+  let out = ""  
+  for o of args {
+    if o is Keyword {
+      out += obj[o]
+    } else {
+      out += o
+    }
+  }
+  return out
+}
+
+protocol Tokenize
+
+impl Tokenize for String = fn (program_str) {
+  if program_str.slice(skip).startsWith(this) {
+    return {value: this, rest: program_str.slice(this.length)}
+  }
+}
+
+impl Tokenize for RegExp = fn (program_str) {
+  if let result = program_str.match(this) {
+    return {value: result[0], rest: program_str.slice(result[0].length)}
+  }
+}
+
+fn tokenize(program_str) {
+  let skip = 0
+  if let [str] = program_str.match(/^\s+/) {
+    skip = str.length
+  }
+  return this[Tokenize](program_str.slice(skip))
+}
+
+protocol ParseInstruction
+
+@def_vector
+fn Chomp(...tokens) { this.tokens = tokens }
+impl ParseInstruction for Chomp = fn ([program_str, result]) {
+  for token of this.tokens {
+    if let {rest} = token::tokenize(program_str) {
+      program_str = rest
+    } else {
+      raise!(new Error(str("failed to parse tokens " token)))
+    }
+  }
+  return [program_str result]
+}
+
+@def_vector
+fn Store(@token @kw) {}
+impl ParseInstruction for Store = fn ([program_str, result]) {
+  if let {rest, value} = this.token::tokenize(program_str) {
+    return [rest result::insert(this.kw value)]
+  } else {
+    raise!(new Error(str("failed to parse " this.token this.kw)))
+  }
+}
+
+@def_vector
+fn Then(@compiler @kw) {}
+impl ParseInstruction for Then = fn ([program_str, result]) {
+  if let [rest, expr] = this.compiler.parser::call(program_str) {
+    return [rest result::insert(this.kw expr::pipe(this.compiler.emit_fn))]
+  } else {
+    raise!(new Error(str("failed to parse " this.token this.kw)))
+  }
+}
+
+@def_vector
+fn Until(@token @parser @kw) {}
+impl ParseInstruction for Until = fn ([program_str result]) {
+  let results = []
+  let expr = null
+  while !this.token::tokenize(program_str) {
+    [program_str expr] = this.parser::call(program_str)
+    results.push(expr)
+  }
+  return [program_str result::insert(this.kw results)]
+}
+
+@def_record
+fn ParseMap(@entries) {}
+impl ParseInstruction for ParseMap = fn ([program_str result]) {
+  for [token parser] of this.entries {
+    if token::tokenize(program_str) {
+      return parser::call([program_str result])
+    }
+  }
+  raise!(new Error(str("No case matched!")))
+}
+
+@def_vector
+fn Parser(...instructions) { this.instructions = instructions }
+impl Call for Parser = fn (program_str) =
+  this.instructions::reduce(
+    fn (result, instruction) = instruction[ParseInstruction](result),
+    [program_str {}]
+  )
+
+@def_vector
+fn Either(...compilers) { this.compilers }
+impl Call for Either = fn (result) =
+
+fn Compiler(@parser @emit_fn) {}
+fn emitting(emit_fn) = new Compiler(this emit_fn)
+
+protocol Emit
+impl Emit for String = fn = this
+impl Emit for Compiler = fn(ast) = ast
+  ::map(fn ([k v]) = [k v[Emit]()])
+  ::into({})
+  ::pipe(this.emit_fn)
+
+impl Call for Compiler = fn (str) = this.parser::call(str)
+  ::pipe(1)
+  ::map(fn ([k v]) = [k v[Emit]()])
+  ::into({})
+  ::pipe(this.emit_fn)
+
+let T_NUM = /^\d+/
+let T_ID = /^\w+/
+
+let parse_num = ~Parser[~Store[T_NUM :num]]::emitting(:num)
+let parse_id = ~Parser[~Store[T_ID :name]]::emitting(:name)
+
+let parse_expr = ~ParseMap{
+  T_NUM => parse_num
+  T_ID => parse_id
+}
+
+fn parse_if(result) = ~Parser[
+  ~Chomp["if"]
+  ~Then[parse_expr :test]
+  ~Chomp["{"]
+  ~Until["}" parse_statement :body]
+  ~Chomp["}"]
+]::emitting(str.kw("if (" :test ") {" :body "}"))::call(result)
+
+let parse_let = ~Parser[
+  ~Chomp["let"]
+  ~Store[T_ID :name]
+  ~Chomp["="]
+  ~Then[parse_expr :expr]
+]::emitting(str.kw("let " :name " = " :expr))
+
+let parse_statement = ~Either[parse_let parse_if]
+
+let main = "let a = 1"
+
+parse_let
+  ::call(main)
+  ::log()
