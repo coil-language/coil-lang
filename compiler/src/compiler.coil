@@ -530,7 +530,7 @@ fn parse_object_dynamic_access(tokens lhs) = ~Parser[
   ~AbortIf[not_adjacent?]
   ~Init[{type: :dynamic_access, lhs}]
   ~Chomp[:open_sq]
-  ~Then[parse_expr :expr]
+  ~Until[:close_sq parse_expr :exprs]
   ~Chomp[:close_sq]
 ]::call(tokens)
 
@@ -1437,8 +1437,8 @@ fn eval_double_equals({lhs rhs}) = str(
   resolve_name("equals?") ".call(" eval_expr(lhs) ", " eval_expr(rhs) ")")
 fn eval_not_equals(node) = str("negate.call(" eval_double_equals(node) ")")
 fn eval_not({expr}) = str("negate.call(" eval_expr(expr) ")")
-fn eval_dynamic_access({lhs expr}) =
-  str(eval_expr(lhs) "[" eval_expr(expr) "]")
+fn eval_dynamic_access({lhs exprs}) =
+  str(eval_expr(lhs) "['[]'](" exprs::map_join(eval_expr ", ") ")")
 fn eval_new({constructor_name, args}) =
   str("new " constructor_name "(" args::map_join(eval_expr ", ") ")")
 fn eval_triple_equals({lhs rhs}) =

@@ -17,6 +17,19 @@ ObjectLiteral.prototype[Symbol.iterator] = function* () {
   }
 };
 
+function js_set_property(obj, keys, expr) {
+  for (let key of keys.slice(0, -1)) {
+    obj = obj[key];
+  }
+  obj[keys.at(-1)] = expr;
+  return obj;
+}
+
+function js_dynamic_object_lookup(obj, key) {
+  return obj[key];
+}
+globalThis.js_dynamic_object_lookup = js_dynamic_object_lookup;
+
 function js_negate(val) {
   return !truthy(val);
 }

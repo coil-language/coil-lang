@@ -1,3 +1,7 @@
+impl "[]" for Object = fn(key) = js_dynamic_object_lookup(this, key)
+define "[]" for globalThis = fn(key) = js_dynamic_object_lookup(this, key)
+impl "[]=" for Object = fn(keys, expr) = js_set_property(this, keys, expr)
+
 fn def_global(f) {
   let resolved_name = f.name
     .replaceAll("?", "__q")
