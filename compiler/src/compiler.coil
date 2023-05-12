@@ -1437,8 +1437,10 @@ fn eval_double_equals({lhs rhs}) = str(
   resolve_name("equals?") ".call(" eval_expr(lhs) ", " eval_expr(rhs) ")")
 fn eval_not_equals(node) = str("negate.call(" eval_double_equals(node) ")")
 fn eval_not({expr}) = str("negate.call(" eval_expr(expr) ")")
-fn eval_dynamic_access({lhs exprs}) =
-  str(eval_expr(lhs) "['[]'](" exprs::map_join(eval_expr ", ") ")")
+fn eval_dynamic_access({lhs exprs}) {
+  return str("(__dyn_access_temp = " eval_expr(lhs) ", "
+  "['[]'].call(__dyn_access_temp, " exprs::map_join(eval_expr ", ") ")")
+}
 fn eval_new({constructor_name, args}) =
   str("new " constructor_name "(" args::map_join(eval_expr ", ") ")")
 fn eval_triple_equals({lhs rhs}) =
@@ -1452,8 +1454,17 @@ fn eval_and_and({lhs rhs}) =
 fn eval_or_or({lhs rhs}) =
   str("or.call(" eval_expr(lhs) ", () => " eval_expr(rhs) ")")
 fn eval_nullish({lhs, rhs}) = str(eval_expr(lhs) " ?? " eval_expr(rhs))
-fn eval_snd_assign({lhs rhs}) =
-  str(eval_expr(lhs) " = " eval_expr(rhs))
+fn eval_dynamic_access_assign({lhs, rhs}) {
+  let {lhs: obj, exprs} = lhs
+  let obj_js = eval_expr(obj)
+  return str(obj_js "['[]='].call(" obj_js ", [" exprs::map_join(eval_expr ", ") "], " eval_expr(rhs) ")")
+}
+fn eval_general_snd_assign({lhs, rhs}) = str(eval_expr(lhs) " = " eval_expr(rhs))
+fn eval_snd_assign(node) = node::pipe(:lhs :type ~Map{
+  :dynamic_access => eval_dynamic_access_assign
+  :id_lookup => eval_general_snd_assign
+  :property_lookup => eval_general_snd_assign
+})::call(node)
 fn eval_await({expr}) = str("await " eval_expr(expr))
 fn eval_yield({star? expr}) =
   str("yield" (star? && "*") " " eval_expr(expr))
