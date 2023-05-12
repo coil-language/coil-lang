@@ -526,7 +526,15 @@ fn parse_fn_call(tokens lhs) = ~Parser[
   ~Chomp[:close_p]
 ]::call(tokens)
 
-fn parse_object_dynamic_access(tokens lhs) = ~Parser[
+fn parse_record_lookup(tokens lhs) = ~Parser[
+  ~AbortIf[not_adjacent?]
+  ~Init[{type: :record_lookup, lhs}]
+  ~Chomp[:open_b]
+  ~Until[:close_b parse_record_entry :entries]
+  ~Chomp[:close_b]
+]::call(tokens lhs)
+
+fn parse_dynamic_access(tokens lhs) = ~Parser[
   ~AbortIf[not_adjacent?]
   ~Init[{type: :dynamic_access, lhs}]
   ~Chomp[:open_sq]
@@ -547,7 +555,8 @@ fn parse_snd_expr_step(tokens, lhs) = ~ParseMap{
   :dot => parse_dot
   :open_p => parse_fn_call
   :double_colon => parse_infix_bind
-  :open_sq => parse_object_dynamic_access
+  :open_sq => parse_dynamic_access
+  :open_b => parse_record_lookup
   :is => parse_is
   :eq => parse_snd_assign
   [:single_and :dot] => parse_and_dot
@@ -1441,6 +1450,11 @@ fn eval_dynamic_access({lhs exprs}) {
   let lhs_js = eval_expr(lhs)
   return str(lhs_js "['[]'].call(" lhs_js ", " exprs::map_join(eval_expr ", ") ")")
 }
+fn eval_record_lookup({lhs entries}) {
+  let lhs_js = eval_expr(lhs)
+  let entries_js = entries::map_join(eval_record_entry ", ")
+  return str(lhs_js "['{}'].call(" lhs_js ", [" entries_js "])")
+}
 fn eval_new({constructor_name, args}) =
   str("new " constructor_name "(" args::map_join(eval_expr ", ") ")")
 fn eval_triple_equals({lhs rhs}) =
@@ -1623,6 +1637,7 @@ fn eval_expr(node) = node::at(:type)::pipe(~Map{
   :obj_lit => eval_obj_lit
   :bind_this => eval_bind_this
   :dynamic_access => eval_dynamic_access
+  :record_lookup => eval_record_lookup
   :new => eval_new
   :triple_equals => eval_triple_equals
   :triple_not_equals => eval_triple_not_equals

@@ -635,6 +635,9 @@ Example:
 ")]
 fn merge(other) = this[Record].merge.call(this, other)
 
+define "{}" for Map = fn (entries) = new Map(entries)
+define "{}" for Object = Object.fromEntries
+// phase these out
 define Record for Map = fn(entries) = new Map(entries)
 define Record for Object = Object.fromEntries
 
@@ -643,7 +646,7 @@ Determines if 'this' is a record
 
 Examples:
   {}::record?() // true
-  ~Map{}::record?() // true
+  Map{}::record?() // true
   #{}::record?() // false
 ")]
 fn record?() = this[Record]::exists?()
@@ -797,7 +800,7 @@ Examples:
 ")]
 fn last() = this[OrderedSequence].last.call(this)
 
-define Vector for Array = fn(entries) = entries
+define "[]" for Array = fn (...entries) = entries
 
 @[def_global doc("
 constructs vector based off entries

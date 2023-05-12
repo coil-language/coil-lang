@@ -18,11 +18,12 @@ ObjectLiteral.prototype[Symbol.iterator] = function* () {
 };
 
 function js_set_property(obj, keys, expr) {
+  let original_obj = obj;
   for (let key of keys.slice(0, -1)) {
     obj = obj[key];
   }
   obj[keys.at(-1)] = expr;
-  return obj;
+  return original_obj;
 }
 globalThis.js_set_property = js_set_property;
 
