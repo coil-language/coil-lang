@@ -1438,8 +1438,8 @@ fn eval_double_equals({lhs rhs}) = str(
 fn eval_not_equals(node) = str("negate.call(" eval_double_equals(node) ")")
 fn eval_not({expr}) = str("negate.call(" eval_expr(expr) ")")
 fn eval_dynamic_access({lhs exprs}) {
-  return str("(__dyn_access_temp = " eval_expr(lhs) ", "
-  "['[]'].call(__dyn_access_temp, " exprs::map_join(eval_expr ", ") ")")
+  let lhs_js = eval_expr(lhs)
+  return str(lhs_js "['[]'].call(" lhs_js ", " exprs::map_join(eval_expr ", ") ")")
 }
 fn eval_new({constructor_name, args}) =
   str("new " constructor_name "(" args::map_join(eval_expr ", ") ")")
