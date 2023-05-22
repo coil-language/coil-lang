@@ -1,3 +1,12 @@
+impl "[]" for Object = fn(...keys) {
+  let o = this
+  for key of keys {
+    o = js_dynamic_object_lookup(o, key)
+  }
+  return o
+}
+impl "[]=" for Object = fn(keys, expr) = js_set_property(this, keys, expr)
+
 fn def_global(f) {
   let resolved_name = f.name
     .replaceAll("?", "__q")
@@ -626,6 +635,9 @@ Example:
 ")]
 fn merge(other) = this[Record].merge.call(this, other)
 
+define "{}" for Map = fn (entries) = new Map(entries)
+define "{}" for Object = Object.fromEntries
+// phase these out
 define Record for Map = fn(entries) = new Map(entries)
 define Record for Object = Object.fromEntries
 
@@ -634,7 +646,7 @@ Determines if 'this' is a record
 
 Examples:
   {}::record?() // true
-  ~Map{}::record?() // true
+  Map{}::record?() // true
   #{}::record?() // false
 ")]
 fn record?() = this[Record]::exists?()
@@ -788,7 +800,7 @@ Examples:
 ")]
 fn last() = this[OrderedSequence].last.call(this)
 
-define Vector for Array = fn(entries) = entries
+define "[]" for Array = fn (...entries) = entries
 
 @[def_global doc("
 constructs vector based off entries
@@ -1206,7 +1218,7 @@ impl UnderscoreInterpreter for Object = fn(underscore) {
 
 impl Call for Underscore = fn(data, ...args) {
   if data::nil?() {
-    return Object.prototype[UnderscoreInterpreter].call(data, this, ...args)
+    return js_lookup_property_key(Object, UnderscoreInterpreter).call(data, this, ...args)
   } else {
     return data[UnderscoreInterpreter](this, ...args)
   }

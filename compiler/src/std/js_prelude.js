@@ -17,6 +17,31 @@ ObjectLiteral.prototype[Symbol.iterator] = function* () {
   }
 };
 
+function js_set_property(obj, keys, expr) {
+  let original_obj = obj;
+  for (let key of keys.slice(0, -1)) {
+    obj = obj[key];
+  }
+  obj[keys.at(-1)] = expr;
+  return original_obj;
+}
+globalThis.js_set_property = js_set_property;
+
+function js_lookup_property_key(obj, key) {
+  return obj.prototype[key];
+}
+globalThis.js_lookup_property_key = js_lookup_property_key;
+
+function js_dynamic_object_lookup(obj, key) {
+  let result = obj[key];
+  if (typeof result === "function") {
+    return result.bind(obj);
+  } else {
+    return result;
+  }
+}
+globalThis.js_dynamic_object_lookup = js_dynamic_object_lookup;
+
 function js_negate(val) {
   return !truthy(val);
 }
