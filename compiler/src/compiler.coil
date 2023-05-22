@@ -58,7 +58,7 @@ impl Call for Lexer = fn(str) {
         break
       }
     }
-    if !found { raise!(new Error("Not token matched.")) }
+    if !found { raise!(new Error("No token matched.")) }
   }
 
   return tokens
