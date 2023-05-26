@@ -542,7 +542,7 @@ Examples:
   null::empty?() // true
   ""::empty?() // true
 ")]
-fn empty?() = this&.[Collection].empty?.call(this) ?? true
+fn empty?() = js_nullish(this&.[Collection].empty?.call(this) #(true))
 
 @[def_call def_global doc("
 determines if a collection is not empty
@@ -893,7 +893,7 @@ Examples:
   // is the same as
   1 == 1 // true
 ")]
-fn equals?(other) = this&.[Equal](other) ?? this === other
+fn equals?(other) = js_or(this&.[Equal](other) #(this === other))
 
 // OPERATORS
 
@@ -1059,7 +1059,7 @@ fn plus(other) = this[Plus](other)
 Examples:
   !true == true::negate()
 ")]
-fn negate() = this&.[Negate]() ?? true
+fn negate() = js_nullish(this&.[Negate]() #(true))
 
 @[def_global doc("
 [[Minus]] method for '-' infix operator
@@ -1147,7 +1147,7 @@ fn and(thunk) = this&.[And](thunk)
 Examples:
   false::or(fn = :val) == false || :val
 ")]
-fn or(thunk) = this&.[Or](thunk) ?? thunk()
+fn or(thunk) = js_or(this&.[Or](thunk) thunk)
 
 // This api is crufty, I'm not gonna lie.
 protocol JsLogFriendly
@@ -1192,7 +1192,7 @@ fn as_keyword() = Keyword["for"](this.toString())
 @[def_global def_call]
 fn as_num() = Number(this)
 @[def_global def_call]
-fn as_str() = this&.toString() ?? ""
+fn as_str() = js_or(this&.toString() #(""))
 @[def_global def_call]
 fn exists?() = !this::nil?()
 
