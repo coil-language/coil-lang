@@ -1,3 +1,5 @@
+console.log("Compiling")
+
 fn CollectionView(@collection, @idx) {}
 
 // Its only partially implemented right now because most use-cases
@@ -834,6 +836,11 @@ let parse_unapplied_or_or = ~Parser[
   ~Chomp[:or_or]
 ]
 
+let parse_unapplied_nullish = ~Parser[
+  ~Init[{type: :unapplied_nullish}]
+  ~Chomp[:nullish]
+]
+
 fn parse_shorthand_anon_fn(tokens) = ~Parser[
   ~Init[{type: :shorthand_anon_fn}]
   ~Chomp[:hash :open_p]
@@ -969,6 +976,7 @@ let SINGLE_EXPR_PARSE_MAP = ~ParseMap{
   :open_b => parse_obj
   :and_and => parse_unapplied_and_and
   :or_or => parse_unapplied_or_or
+  :nullish => parse_unapplied_nullish
   :dot_dot => parse_prefix_exclusive_range
   valid_ids_in_all_contexts::push(:import) => parse_id
   [:at :open_sq] => parse_multi_decorator
@@ -1467,7 +1475,8 @@ fn eval_and_and({lhs rhs}) =
   str("and.call(" eval_expr(lhs) ", () => " eval_expr(rhs) ")")
 fn eval_or_or({lhs rhs}) =
   str("or.call(" eval_expr(lhs) ", () => " eval_expr(rhs) ")")
-fn eval_nullish({lhs, rhs}) = str(eval_expr(lhs) " ?? " eval_expr(rhs))
+fn eval_nullish({lhs, rhs}) = 
+  str("nullish.call(" eval_expr(lhs) ", () => " eval_expr(rhs) ")")
 fn eval_dynamic_access_assign({lhs, rhs}) {
   let {lhs: obj, exprs} = lhs
   let obj_js = eval_expr(obj)
@@ -1486,6 +1495,7 @@ fn eval_paren_expr({expr}) = str("(" eval_expr(expr) ")")
 fn eval_unapplied_math_op({op}) = math_op_to_method::call(op)
 fn eval_unapplied_and_and() = "and"
 fn eval_unapplied_or_or() = "or"
+fn eval_unapplied_nullish() = "nullish"
 
 fn eval_keyword({value}) = str("Keyword.for(\"" value.slice(1) "\")")
 
@@ -1656,6 +1666,7 @@ fn eval_expr(node) = node::at(:type)::pipe(~Map{
   :unapplied_math_op => eval_unapplied_math_op
   :unapplied_and_and => eval_unapplied_and_and
   :unapplied_or_or => eval_unapplied_or_or
+  :unapplied_nullish => eval_unapplied_nullish
   :shorthand_anon_fn => eval_shorthand_anon_fn
   :inclusive_range => eval_inclusive_range
   :exclusive_range => eval_exclusive_range
