@@ -17,6 +17,31 @@ ObjectLiteral.prototype[Symbol.iterator] = function* () {
   }
 };
 
+function js_set_property(obj, keys, expr) {
+  let original_obj = obj;
+  for (let key of keys.slice(0, -1)) {
+    obj = obj[key];
+  }
+  obj[keys.at(-1)] = expr;
+  return original_obj;
+}
+globalThis.js_set_property = js_set_property;
+
+function js_lookup_property_key(obj, key) {
+  return obj.prototype[key];
+}
+globalThis.js_lookup_property_key = js_lookup_property_key;
+
+function js_dynamic_object_lookup(obj, key) {
+  let result = obj[key];
+  if (typeof result === "function") {
+    return result.bind(obj);
+  } else {
+    return result;
+  }
+}
+globalThis.js_dynamic_object_lookup = js_dynamic_object_lookup;
+
 function js_negate(val) {
   return !truthy(val);
 }
@@ -139,15 +164,23 @@ globalThis["raise__b"] = raise__b;
 globalThis["Keyword"] = Keyword;
 globalThis["ObjectLiteral"] = ObjectLiteral;
 globalThis["truthy"] = truthy;
+Object.prototype["[]"] = function (...keys) {
+let o = this;
+for  (let key of keys) {
+o = js_dynamic_object_lookup(o, key)
+};
+return o;};
+Object.prototype["[]="] = function (keys, expr) {
+return js_set_property(this, keys, expr);};
 function def_global(f) {
 let resolved_name = f['name']['replaceAll']("?", "__q")['replaceAll']("!", "__b")['replaceAll'](">", "_lt_")['replaceAll']("-", "_");
-globalThis[resolved_name] = f
+globalThis['[]='].call(globalThis, [resolved_name], f)
 return f;}
 const CustomNumberLiteral = Symbol("CustomNumberLiteral");
-globalThis[Keyword.for("CustomNumberLiteral")] = CustomNumberLiteral
+globalThis['[]='].call(globalThis, [Keyword.for("CustomNumberLiteral")], CustomNumberLiteral)
 Keyword.for("custom_number_literal/n")[CustomNumberLiteral] = BigInt;
 const Doc = Symbol("Doc");
-globalThis[Keyword.for("Doc")] = Doc
+globalThis['[]='].call(globalThis, [Keyword.for("Doc")], Doc)
 let doc = def_global(function doc(f, doc_str) {
 f[Doc] = doc_str['trim']();
 return f;});
@@ -155,10 +188,10 @@ let log_doc = def_global(function log_doc() {
 if (truthy(this['name'])) {
 console['log'](str("# ", this['name']))
 };
-console['log'](this[Doc])
+console['log'](this['[]'].call(this, Doc))
 return this;});
 const Call = Symbol("Call");
-globalThis[Keyword.for("Call")] = Call
+globalThis['[]='].call(globalThis, [Keyword.for("Call")], Call)
 function compose(first_fn, ...fns) {
 return function (...args) {
 let result = first_fn?.[Call](...args);
@@ -180,7 +213,7 @@ return this['has'](key);};
 Map.prototype[Call] = function (key) {
 return this['get'](key);};
 ObjectLiteral.prototype[Call] = function (key) {
-return this[key];};
+return this['[]'].call(this, key);};
 Array.prototype[Call] = function (index) {
 return this['at'](index);};
 String.prototype[Call] = function (collection) {
@@ -191,7 +224,7 @@ return call.bind(collection)(this);
 };};
 Number.prototype[Call] = function (collection) {
 if (truthy(collection instanceof Keyword)) {
-return this[collection];
+return this['[]'].call(this, collection);
 } else {
 return call.bind(collection)(this);
 };};
@@ -201,7 +234,7 @@ raise__b(new TypeError(plus.call("Can't 'call' a keyword with",as_str.bind(colle
 } else if (Call in collection) {
 return call.bind(collection)(this);
 } else {
-return collection[this];
+return collection['[]'].call(collection, this);
 };};
 let call = compose(def_global, F => doc(F, `
 Invokes [[Call]] on 'this'
@@ -217,7 +250,7 @@ return function () {
 return call.bind(this)(val);}.bind(this);};
 let nil__q = Object['freeze'](new Set([undefined, null]));
 const Pipe = Symbol("Pipe");
-globalThis[Keyword.for("Pipe")] = Pipe
+globalThis['[]='].call(globalThis, [Keyword.for("Pipe")], Pipe)
 Object.prototype[Pipe] = function (callable) {
 return call.bind(callable)(this);};
 let pipe = compose(def_global, F => doc(F, `
@@ -277,7 +310,7 @@ See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_
 `))(function iter__q() {
 return iter.bind(this)() === this;})
 const Iterator = Symbol("Iterator");
-globalThis[Keyword.for("Iterator")] = Iterator
+globalThis['[]='].call(globalThis, [Keyword.for("Iterator")], Iterator)
 let default_iterator_impl = new ObjectLiteral({*['take'](n) {
 for  (let [elem, i] of zip.bind(this)(new ERangeNoMax((0)))) {
 if (truthy(equals__q.call(i, n))) {
@@ -520,7 +553,7 @@ return cur;
 return plus.call(prev,plus.call(sep,cur));
 };}, "");})
 const Into = Symbol("Into");
-globalThis[Keyword.for("Into")] = Into
+globalThis['[]='].call(globalThis, [Keyword.for("Into")], Into)
 Array.prototype[Into] = function (iterable) {
 return [...this, ...iterable];};
 ObjectLiteral.prototype[Into] = function (iterable) {
@@ -543,11 +576,11 @@ Examples:
   [[:score 10] [:grade :bad]]
     ::into({}) // {score: 20, grade: :bad}
 `))(function into(output) {
-return output[Into](this);})
+return output['[]'].call(output, Into)(this);})
 const Collection = Symbol("Collection");
-globalThis[Keyword.for("Collection")] = Collection
+globalThis['[]='].call(globalThis, [Keyword.for("Collection")], Collection)
 ObjectLiteral.prototype[Collection] = new ObjectLiteral({['at'](key) {
-return this[key];
+return this['[]'].call(this, key);
 }, ['len']() {
 return Object['keys'](this)['length'];
 }, ['empty?']() {
@@ -600,7 +633,7 @@ Examples:
   {a: 10}::len() // 1
   ~Map{a: :a, b: :b}::len() // 2
 `))(function len() {
-return this[Collection]['len']['call'](this);})
+return this['[]'].call(this, Collection)['len']['call'](this);})
 let empty__q = compose(def_call, def_global, F => doc(F, `
 determines if a collection is empty
 
@@ -634,7 +667,7 @@ Examples:
   // strings can not lookup keywords in maps
   ~Map{a: 10}::at(\"a\") // undefined
 `))(function at(key_or_idx) {
-return this[Collection]['at']['call'](this, key_or_idx);})
+return this['[]'].call(this, Collection)['at']['call'](this, key_or_idx);})
 let has__q = compose(def_global, F => doc(F, `
 determines if a collection has a value
 
@@ -643,9 +676,9 @@ Examples:
   #{1 2 3}::has?(2) // true
   {a: 10}::has?(:a) // true
 `))(function has__q(val) {
-return this[Collection]['has?']['call'](this, val);})
+return this['[]'].call(this, Collection)['has?']['call'](this, val);})
 const Record = Symbol("Record");
-globalThis[Keyword.for("Record")] = Record
+globalThis['[]='].call(globalThis, [Keyword.for("Record")], Record)
 ObjectLiteral.prototype[Record] = new ObjectLiteral({['insert'](key, value) {
 return new ObjectLiteral({...this, [key]: value});
 }, ['merge'](other) {
@@ -671,7 +704,7 @@ Example:
   {a: 10}::keys() // [\"a\"]
   ~Map{a: 10}::keys()::into(#{}) // #{:a}
 `))(function keys() {
-return this[Record]['keys']['call'](this);})
+return this['[]'].call(this, Record)['keys']['call'](this);})
 let values = compose(def_call, def_global, F => doc(F, `
 Get values of a record as an iterator OR a collection
 
@@ -679,7 +712,7 @@ Example:
   {a: 10}::values() // [10]
   ~Map{a: 10}::values()::into(#{}) // #{10}
 `))(function values() {
-return this[Record]['values']['call'](this);})
+return this['[]'].call(this, Record)['values']['call'](this);})
 let insert = compose(def_global, F => doc(F, `
 Insert key & value into a record
 
@@ -687,7 +720,7 @@ Example:
   {a: 10}::insert(:b 20) // {a: 10, b: 20}
   ~Map{a: 10}::insert(:b 20) // ~Map{a: 10, b: 20}
 `))(function insert(key, value) {
-return this[Record]['insert']['call'](this, key, value);})
+return this['[]'].call(this, Record)['insert']['call'](this, key, value);})
 let merge = compose(def_global, F => doc(F, `
 Merge 2 records together
 
@@ -704,7 +737,10 @@ Example:
   // here's the unexpected result
   ~Map{a: 10}::merge({a: 20}) // ~Map{a: 10, \"a\" => 20}
 `))(function merge(other) {
-return this[Record]['merge']['call'](this, other);})
+return this['[]'].call(this, Record)['merge']['call'](this, other);})
+Map["{}"] = function (entries) {
+return new Map(entries);};
+Object["{}"] = Object['fromEntries'];
 Map[Record] = function (entries) {
 return new Map(entries);};
 Object[Record] = Object['fromEntries'];
@@ -713,10 +749,10 @@ Determines if 'this' is a record
 
 Examples:
   {}::record?() // true
-  ~Map{}::record?() // true
+  Map{}::record?() // true
   #{}::record?() // false
 `))(function record__q() {
-return exists__q.bind(this[Record])();})
+return exists__q.bind(this['[]'].call(this, Record))();})
 let construct_record = compose(def_global, F => doc(F, `
 Constructs a record based off an entries array
 
@@ -727,9 +763,9 @@ Examples:
     ==
   ~Map{a: 20}
 `))(function construct_record(entries) {
-return this[Record](entries);})
+return this['[]'].call(this, Record)(entries);})
 const Vector = Symbol("Vector");
-globalThis[Keyword.for("Vector")] = Vector
+globalThis['[]='].call(globalThis, [Keyword.for("Vector")], Vector)
 let vector__q = compose(def_global, F => doc(F, `
 Determines if 'this' conforms to the vector protocol
 
@@ -738,7 +774,7 @@ Examples:
   #{}::vector?() // true
   {}::vector?() // false
 `))(function vector__q() {
-return exists__q.bind(this[Vector])();})
+return exists__q.bind(this['[]'].call(this, Vector))();})
 Array.prototype[Vector] = new ObjectLiteral({['push'](val) {
 return [...this, val];
 }, ['replace'](old_val, new_val) {
@@ -776,7 +812,7 @@ Examples:
   // order is not guaranteed for sets
   #{1 2}::push(3) // #{3 1 2}
 `))(function push(val) {
-return this[Vector]['push']['call'](this, val);})
+return this['[]'].call(this, Vector)['push']['call'](this, val);})
 let replace = compose(def_global, F => doc(F, `
 replace a value in a vector
 
@@ -784,7 +820,7 @@ Examples:
   [1 2 3]::replace(2 3) // [1 3 3]
   #{1 2 3}::replace(2 3) // #{1 3}
 `))(function replace(old_val, new_val) {
-return this[Vector]['replace']['call'](this, old_val, new_val);})
+return this['[]'].call(this, Vector)['replace']['call'](this, old_val, new_val);})
 let concat = compose(def_global, F => doc(F, `
 concat two vectors
 
@@ -794,9 +830,9 @@ Examples:
   #{1 2}::concat([3 4]) // #{1 2 3 4}
   #{1 2}::concat(#{2 3}) // #{1 2 3}
 `))(function concat(other) {
-return this[Vector]['concat']['call'](this, other);})
+return this['[]'].call(this, Vector)['concat']['call'](this, other);})
 const OrderedSequence = Symbol("OrderedSequence");
-globalThis[Keyword.for("OrderedSequence")] = OrderedSequence
+globalThis['[]='].call(globalThis, [Keyword.for("OrderedSequence")], OrderedSequence)
 Array.prototype[OrderedSequence] = new ObjectLiteral({['prepend'](val) {
 return [val, ...this];
 }, ['update_at'](idx, f) {
@@ -806,7 +842,7 @@ return [...before, f(at.bind(this)(idx)), ...after];
 let [before, after] = [take.bind(this)(idx), skip.bind(this)(plus.call(idx,(1)))];
 return [...before, val, ...after];
 }, ['first']() {
-return this[(0)];
+return this['[]'].call(this, (0));
 }, ['last']() {
 return this['at']((-1));
 }});
@@ -817,7 +853,7 @@ return plus.call(this['slice']((0), idx),plus.call(f(this['at'](idx)),this['slic
 }, ['insert_at'](idx, val) {
 return plus.call(this['slice']((0), idx),plus.call(val,this['slice'](idx)));
 }, ['first']() {
-return this[(0)];
+return this['[]'].call(this, (0));
 }, ['last']() {
 return this['at']((-1));
 }});
@@ -827,36 +863,36 @@ inserts element at beginning of collection
 Examples:
   [1 2 3]::prepend(0) // [0 1 2 3]
 `))(function prepend(val) {
-return this[OrderedSequence]['prepend']['call'](this, val);})
+return this['[]'].call(this, OrderedSequence)['prepend']['call'](this, val);})
 let update_at = compose(def_global, F => doc(F, `
 updates element at given index
 
 Examples:
   [1 2 3]::update_at(1 as_keyword) // [1 :2 3]
 `))(function update_at(idx, ...fns) {
-return this[OrderedSequence]['update_at']['call'](this, idx, compose(...fns));})
+return this['[]'].call(this, OrderedSequence)['update_at']['call'](this, idx, compose(...fns));})
 let insert_at = compose(def_global, F => doc(F, `
 inserts element at given index
 
 Examples:
   [1 2 4]::insert_at(1 3) // [1 2 3 4]
 `))(function insert_at(idx, val) {
-return this[OrderedSequence]['insert_at']['call'](this, idx, val);})
+return this['[]'].call(this, OrderedSequence)['insert_at']['call'](this, idx, val);})
 let first = compose(def_call, def_global, F => doc(F, `
 gets first element of collection
 
 Examples:
   [1 2 3]::first() // 1
 `))(function first() {
-return this[OrderedSequence]['first']['call'](this);})
+return this['[]'].call(this, OrderedSequence)['first']['call'](this);})
 let last = compose(def_call, def_global, F => doc(F, `
 gets last element of collection
 
 Examples:
   [1 2 3]::last() // 3
 `))(function last() {
-return this[OrderedSequence]['last']['call'](this);})
-Array[Vector] = function (entries) {
+return this['[]'].call(this, OrderedSequence)['last']['call'](this);})
+Array["[]"] = function (...entries) {
 return entries;};
 let construct_vector = compose(def_global, F => doc(F, `
 constructs vector based off entries
@@ -870,9 +906,9 @@ Examples:
     ==
   ~List[1 2 3 4]
 `))(function construct_vector(entries) {
-return this[Vector](entries);})
+return this['[]'].call(this, Vector)(entries);})
 const Equal = Symbol("Equal");
-globalThis[Keyword.for("Equal")] = Equal
+globalThis['[]='].call(globalThis, [Keyword.for("Equal")], Equal)
 let impl_equal = compose(def_global, F => doc(F, `
 implement [[Equal]] for a generic constructor by
 specifying the keys to measure equality by
@@ -889,7 +925,7 @@ Examples:
 `))(function impl_equal(Ctor, ...keys) {
 Ctor.prototype[Equal] = function (other) {
 return and.call(other instanceof Ctor, () => all__q.bind(keys)(function (key) {
-return equals__q.call(this[key], other[key]);}.bind(this)));};
+return equals__q.call(this['[]'].call(this, key), other['[]'].call(other, key));}.bind(this)));};
 return Ctor;})
 Object.prototype[Equal] = function (other) {
 return this === other;};
@@ -932,27 +968,27 @@ Examples:
 `))(function equals__q(other) {
 return this?.[Equal](other) ?? this === other;})
 const Plus = Symbol("Plus");
-globalThis[Keyword.for("Plus")] = Plus
+globalThis['[]='].call(globalThis, [Keyword.for("Plus")], Plus)
 const Negate = Symbol("Negate");
-globalThis[Keyword.for("Negate")] = Negate
+globalThis['[]='].call(globalThis, [Keyword.for("Negate")], Negate)
 const Minus = Symbol("Minus");
-globalThis[Keyword.for("Minus")] = Minus
+globalThis['[]='].call(globalThis, [Keyword.for("Minus")], Minus)
 const Times = Symbol("Times");
-globalThis[Keyword.for("Times")] = Times
+globalThis['[]='].call(globalThis, [Keyword.for("Times")], Times)
 const Divide = Symbol("Divide");
-globalThis[Keyword.for("Divide")] = Divide
+globalThis['[]='].call(globalThis, [Keyword.for("Divide")], Divide)
 const Exponent = Symbol("Exponent");
-globalThis[Keyword.for("Exponent")] = Exponent
+globalThis['[]='].call(globalThis, [Keyword.for("Exponent")], Exponent)
 const Mod = Symbol("Mod");
-globalThis[Keyword.for("Mod")] = Mod
+globalThis['[]='].call(globalThis, [Keyword.for("Mod")], Mod)
 const Comparable = Symbol("Comparable");
-globalThis[Keyword.for("Comparable")] = Comparable
+globalThis['[]='].call(globalThis, [Keyword.for("Comparable")], Comparable)
 const LessThan = Symbol("LessThan");
-globalThis[Keyword.for("LessThan")] = LessThan
+globalThis['[]='].call(globalThis, [Keyword.for("LessThan")], LessThan)
 const And = Symbol("And");
-globalThis[Keyword.for("And")] = And
+globalThis['[]='].call(globalThis, [Keyword.for("And")], And)
 const Or = Symbol("Or");
-globalThis[Keyword.for("Or")] = Or
+globalThis['[]='].call(globalThis, [Keyword.for("Or")], Or)
 let expect_primitive_type__b = doc(function expect_primitive_type__b(type_str) {
 if (truthy(typeof(this) !== type_str)) {
 raise__b(new Error(str("Expected ", type_str)))
@@ -1054,7 +1090,7 @@ let plus = compose(def_call, def_global, F => doc(F, `
 Examples:
   1::plus(2) == 1 + 2
 `))(function plus(other) {
-return this[Plus](other);})
+return this['[]'].call(this, Plus)(other);})
 let negate = compose(def_call, def_global, F => doc(F, `
 [[Negate]] method for '!' prefix operator
 
@@ -1068,63 +1104,63 @@ let minus = compose(def_global, F => doc(F, `
 Examples:
   1::minus(2) == 1 - 2
 `))(function minus(other) {
-return this[Minus](other);})
+return this['[]'].call(this, Minus)(other);})
 let times = compose(def_global, F => doc(F, `
 [[Times]] method for '*' infix operator
 
 Examples:
   2::times(3) == 2 * 3
 `))(function times(other) {
-return this[Times](other);})
+return this['[]'].call(this, Times)(other);})
 let divide_by = compose(def_global, F => doc(F, `
 [[Divide]] method for '/' infix operator
 
 Examples:
   2::divide_by(3) == 2 / 3
 `))(function divide_by(other) {
-return this[Divide](other);})
+return this['[]'].call(this, Divide)(other);})
 let exponent = compose(def_global, F => doc(F, `
 [[Exponent]] method for '**' infix operator
 
 Examples:
   2::exponent(3) == 2 ** 3
 `))(function exponent(other) {
-return this[Exponent](other);})
+return this['[]'].call(this, Exponent)(other);})
 let mod = compose(def_global, F => doc(F, `
 [[Mod]] method for '%' infix operator
 
 Examples:
   11::mod(2) == 11 % 2
 `))(function mod(other) {
-return this[Mod](other);})
+return this['[]'].call(this, Mod)(other);})
 let greater_than = compose(def_global, F => doc(F, `
 [[Comparable]].greater_than method for '>' infix operator
 
 Examples:
   2::greater_than(1) == 2 > 1
 `))(function greater_than(other) {
-return this[Comparable]['greater_than']['call'](this, other);})
+return this['[]'].call(this, Comparable)['greater_than']['call'](this, other);})
 let greater_than_eq = compose(def_global, F => doc(F, `
 [[Comparable]].greater_than_eq method for '>=' infix operator
 
 Examples:
   2::greater_than_eq(2) == 2 >= 2
 `))(function greater_than_eq(other) {
-return this[Comparable]['greater_than_eq']['call'](this, other);})
+return this['[]'].call(this, Comparable)['greater_than_eq']['call'](this, other);})
 let less_than = compose(def_global, F => doc(F, `
 [[Comparable]].less_than method for '<' infix operator
 
 Examples:
   2::less_than(3) == 2 < 3
 `))(function less_than(other) {
-return this[Comparable]['less_than']['call'](this, other);})
+return this['[]'].call(this, Comparable)['less_than']['call'](this, other);})
 let less_than_eq = compose(def_global, F => doc(F, `
 [[Comparable]].less_than_eq method for '<=' infix operator
 
 Examples:
   2::less_than_eq(2) == 2 <= 3
 `))(function less_than_eq(other) {
-return this[Comparable]['less_than_eq']['call'](this, other);})
+return this['[]'].call(this, Comparable)['less_than_eq']['call'](this, other);})
 let and = compose(def_global, F => doc(F, `
 [[And]] method for '&&' infix operator
 
@@ -1140,7 +1176,7 @@ Examples:
 `))(function or(thunk) {
 return this?.[Or](thunk) ?? thunk();})
 const JsLogFriendly = Symbol("JsLogFriendly");
-globalThis[Keyword.for("JsLogFriendly")] = JsLogFriendly
+globalThis['[]='].call(globalThis, [Keyword.for("JsLogFriendly")], JsLogFriendly)
 ObjectLiteral.prototype[JsLogFriendly] = function () {
 return into.bind(this)(Object);};
 Map.prototype[JsLogFriendly] = function () {
@@ -1174,7 +1210,7 @@ return equals__q.call(typeof(this), "bigint");})
 let str__q = compose(def_global, def_call)(function str__q() {
 return equals__q.call(typeof(this), "string");})
 let as_keyword = compose(def_global, def_call)(function as_keyword() {
-return Keyword["for"](this['toString']());})
+return Keyword['[]'].call(Keyword, "for")(this['toString']());})
 let as_num = compose(def_global, def_call)(function as_num() {
 return Number(this);})
 let as_str = compose(def_global, def_call)(function as_str() {
@@ -1185,10 +1221,10 @@ let Underscore = def_global(function Underscore(transforms) {
 this.transforms = transforms;
 });
 const UnderscoreInterpreter = Symbol("UnderscoreInterpreter");
-globalThis[Keyword.for("UnderscoreInterpreter")] = UnderscoreInterpreter
+globalThis['[]='].call(globalThis, [Keyword.for("UnderscoreInterpreter")], UnderscoreInterpreter)
 let _ = new Underscore([new ObjectLiteral({'f': function id() {
 return this;}, 'args': []})]);
-globalThis[Keyword.for("_")] = _
+globalThis['[]='].call(globalThis, [Keyword.for("_")], _)
 Underscore.prototype[Keyword.for("insert")] = function (f, ...args) {
 return new Underscore(push.bind(this['transforms'])(new ObjectLiteral({'f':f, 'args':args})));};
 Object.prototype[UnderscoreInterpreter] = function (underscore) {
@@ -1203,9 +1239,9 @@ result = call.bind(result)(initial_value)
 return result;};
 Underscore.prototype[Call] = function (data, ...args) {
 if (truthy(nil__q.bind(data)())) {
-return Object['prototype'][UnderscoreInterpreter]['call'](data, this, ...args);
+return js_lookup_property_key(Object, UnderscoreInterpreter)['call'](data, this, ...args);
 } else {
-return data[UnderscoreInterpreter](this, ...args);
+return data['[]'].call(data, UnderscoreInterpreter)(this, ...args);
 };};
 Underscore.prototype[Comparable] = new ObjectLiteral({['less_than'](val) {
 return this['insert'](less_than, val);
@@ -1291,7 +1327,7 @@ let formatted_args = join.bind(map.bind(args)(js_log_friendly))(", ");
 return str("::", fn_name, "(", formatted_args, ")");
 };}))(""));};
 const Inc = Symbol("Inc");
-globalThis[Keyword.for("Inc")] = Inc
+globalThis['[]='].call(globalThis, [Keyword.for("Inc")], Inc)
 Number.prototype[Inc] = function () {
 return plus.call(this,(1));};
 BigInt.prototype[Inc] = function () {
@@ -1299,7 +1335,7 @@ return plus.call(this,Keyword.for("custom_number_literal/n")[CustomNumberLiteral
 String.prototype[Inc] = function () {
 return String['fromCharCode'](plus.call(this['charCodeAt']((0)),(1)));};
 let inc = compose(def_call, def_global)(function inc() {
-return this[Inc]();})
+return this['[]'].call(this, Inc)();})
 let IRange = compose(def_global, F => impl_equal(F, Keyword.for("start"), Keyword.for("end")))(function IRange(start, end) {
 this.start = start;
 this.end = end;
@@ -1399,9 +1435,9 @@ return Constructor;})
 let char_alpha__q = plus.call(into.bind((new IRange("a", "z")))(new Set([])),into.bind((new IRange("A", "Z")))(new Set([])));
 let char_numeric__q = into.bind((new IRange("0", "9")))(new Set([]));
 let char_alpha_numeric__q = plus.call(char_alpha__q,char_numeric__q);
-globalThis[Keyword.for("char_alpha__q")] = char_alpha__q
-globalThis[Keyword.for("char_numeric__q")] = char_numeric__q
-globalThis[Keyword.for("char_alpha_numeric__q")] = char_alpha_numeric__q
+globalThis['[]='].call(globalThis, [Keyword.for("char_alpha__q")], char_alpha__q)
+globalThis['[]='].call(globalThis, [Keyword.for("char_numeric__q")], char_numeric__q)
+globalThis['[]='].call(globalThis, [Keyword.for("char_alpha_numeric__q")], char_alpha_numeric__q)
 let alpha__q = compose(def_global, F => doc(F, "all characters in string are in a-z or A-Z"))(function alpha__q() {
 return all__q.bind(this)(char_alpha__q);})
 let alpha_numeric__q = compose(def_global, F => doc(F, "all characters in string are in a-z or A-Z or 0-9"))(function alpha_numeric__q() {
