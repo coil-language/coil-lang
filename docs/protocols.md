@@ -58,7 +58,7 @@ protocol TypeInfo
 {}[TypeInfo] // undefined
 ```
 
-This means that protocols are safe, and "smooth-gate" proof.
+This means that protocols are safe, and ["smooshgate"](https://developer.chrome.com/blog/smooshgate/) proof.
 
 This doesn't mean that if you export a protocol, someone can't overwrite it. It does however mean that you can make those choices on which protocols are extendable or not.
 
