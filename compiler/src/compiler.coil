@@ -19,8 +19,6 @@ impl Symbol.iterator for CollectionView = fn*() {
   }
 }
 
-impl JsLogFriendly for CollectionView = fn() = this.collection.skip(this.idx)
-
 @def_record
 fn Lexer(@entries) {}
 
@@ -177,7 +175,6 @@ fn line_and_col({line, col}) = {line, col}
 fn Init(@expr) {}
 impl ParseInstruction for Init = fn([_expr, tokens]) =
   [{...this.expr, pos: line_and_col(tokens::first())} tokens]
-impl JsLogFriendly for Init = fn() = str("Init(" this.expr::js_log_friendly() ")")
 
 @def_vector
 fn One(@kw, @as) {}
@@ -185,7 +182,6 @@ impl ParseInstruction for One = fn([expr tokens]) {
   let {value, type} = tokens::expect_token!(this.kw)::first()
   return [expr::merge({[this.as]: value}) tokens.skip(1)]
 }
-impl JsLogFriendly for One = fn() = str("One(kw: " this.kw ", as: " this.as ")")
 
 @def_vector
 fn Optional(@set_or_kw, @parse_fn, @as) {}
@@ -209,7 +205,6 @@ impl ParseInstruction for Optional = fn([expr tokens]) {
     return [expr tokens]
   }
 }
-impl JsLogFriendly for Optional = fn() = str("Optional(kw: " this.kw ", as: " this.as ")")
 
 impl ParseInstruction for Function = fn([_expr tokens]) = this(tokens)
 
@@ -225,7 +220,6 @@ impl ParseInstruction for Chomp = fn([expr tokens]) {
   }
   return [expr, tokens.skip(i)]
 }
-impl JsLogFriendly for Chomp = fn() = str("Chomp(" this.kws ")")
 
 @def_vector
 fn Then(@parser, @kw) {}
@@ -239,12 +233,10 @@ impl ParseInstruction for Then = fn([expr tokens]) {
     return [new_expr new_tokens]
   }
 }
-impl JsLogFriendly for Then = fn() = str("Then(" this.parser.name ", as:" this.kw ")")
 
 @def_vector
 fn FMap(@f) {}
 impl ParseInstruction for FMap = fn([expr tokens]) = [this.f::call(expr) tokens]
-impl JsLogFriendly for FMap = fn() = str("Fmap(" this.f.name ")")
 
 @def_vector
 fn Until(@end_kw, @parser, @kw) {}
@@ -262,7 +254,6 @@ impl ParseInstruction for Until = fn([expr tokens]) {
     return [exprs, tokens]
   }
 }
-impl JsLogFriendly for Until = fn() = str("Until(end: " this.end_kw::js_log_friendly() ", f: " this.parser.name ", as: " this.kw::js_log_friendly() ")")
 
 @def_vector
 fn Case(@parse_map, @kw) {}
@@ -278,7 +269,6 @@ impl ParseInstruction for Case = fn([expr tokens]) {
     raise!(new Error("Case Parse Failed"))
   }
 }
-impl JsLogFriendly for Case = fn() = "Case(" + this.parse_map::js_log_friendly() + ", as: " + this.kw::js_log_friendly() + ")"
 
 @def_vector
 fn Either(@set, @kw) {}
@@ -287,7 +277,6 @@ impl ParseInstruction for Either = fn([expr tokens]) {
   let [new_expr, rest] = [tokens::first(), tokens.skip(1)]
   return [expr::merge({[this.kw]: new_expr::at(:value)}), rest]
 }
-impl JsLogFriendly for Either = fn() = "Either(" + this.set::js_log_friendly() + ", as: " + this.kw::js_log_friendly() + ")"
 
 fn parse_step(result) {
   if !(ParseInstruction keyof this) {
@@ -298,13 +287,12 @@ fn parse_step(result) {
 
 @def_vector
 fn Parser(...instructions) { this.instructions = instructions }
-impl JsLogFriendly for Parser = fn() = "~Parser[" + this.instructions::js_log_friendly().join(", ") + "]"
+
 impl Call for Parser = fn(tokens) =
   this::parse_step([null tokens])
 
 @def_vector
 fn AbortIf(@cond_fn) {}
-impl JsLogFriendly for AbortIf = fn() = "~AbortIf[" + _resolve_keyword_str(this.cond_fn.name) + "]"
 
 impl ParseInstruction for Parser = fn(result) {
   for instruction of this.instructions {
