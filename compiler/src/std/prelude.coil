@@ -3,6 +3,13 @@ impl Meta for Object = {
   ["[]"]: fn (...keys) = keys::reduce(js_dynamic_object_lookup this)
   ["[]="]: fn (keys, expr) = js_set_property(this, keys, expr)
 }
+impl Meta for Function = {
+  ["[]"]: fn (...args) = Reflect.construct(this args)
+  ["{}"]: fn (entries) = Reflect.construct(this [entries])
+}
+define Meta for Set = {
+  ["[]"]: fn (...elems) = new Set(elems)
+}
 
 fn def_global(f) {
   let resolved_name = f.name
@@ -103,7 +110,7 @@ fn call(...args) = this&.[Call](...args)
 // make sets callable using bind syntax
 impl :bind for Set = fn(val) = ::fn() = this::call(val)
 
-let nil? = Object.freeze(#{undefined null})
+let nil? = Object.freeze(Set[undefined null])
 
 protocol Pipe
 globalThis.Pipe = Pipe
@@ -367,7 +374,7 @@ eagerly finds a value in an iterator
 
 Examples:
   [1 2 3 4 5]
-    ::find(#{4 5}) // 4
+    ::find(Set[4 5]) // 4
 ")]
 fn find(...fns) = ::iterator_impl().find.call(this::iter(), compose(...fns))
 
@@ -395,7 +402,7 @@ fn reject(...fns) = ::keep(...fns, !_)
 eagerly finds out if an element matches the condition
 
 Examples:
-  [1 2 3 4 5]::any?(#{3}) // true
+  [1 2 3 4 5]::any?(Set[3]) // true
 ")]
 fn any?(...fns) = ::iterator_impl().any?.call(this::iter(), compose(...fns))
 
@@ -420,7 +427,7 @@ lazily splits an iterator
 
 Examples:
   \"hey there buddy\"
-    ::split(#{" "})
+    ::split(Set[" "])
     ::take(2)
     ::into([]) // [\"hey\" \"there\"]
 ")]
@@ -469,7 +476,7 @@ converts 'this' iterator into 'output', prepending existing values in 'output'
 
 Examples:
   [1 2 3 4]
-    ::into(#{}) // #{1 2 3 4}
+    ::into(Set[]) // Set[1 2 3 4]
 
   [[:score 10] [:grade :bad]]
     ::into({}) // {score: 20, grade: :bad}
@@ -519,7 +526,7 @@ gets length of a collection
 
 Examples:
   [1 2 3]::len() // 3
-  #{1 2 3}::len() // 3
+  Set[1 2 3]::len() // 3
   {a: 10}::len() // 1
   ~Map{a: :a, b: :b}::len() // 2
 ")]
@@ -530,7 +537,7 @@ determines if a collection is empty
 
 Examples:
   []::empty?() // true
-  #{1}::empty?() // false
+  Set[1]::empty?() // false
   null::empty?() // true
   ""::empty?() // true
 ")]
@@ -552,7 +559,7 @@ extracts value from collection based on a key or index
 Examples:
   [1 3 4]::at(2) // 4
   // set::at works as an identity function if the value is in the set
-  #{4 3 1}::at(4) // 4
+  Set[4 3 1]::at(4) // 4
   // keywords coerce to strings for objects
   {a: 10}::at(:a) // 10
   {a: 10}::at(\"a\") // 10
@@ -567,7 +574,7 @@ determines if a collection has a value
 
 Examples:
   [1 2 3 4]::has?(3) // true
-  #{1 2 3}::has?(2) // true
+  Set[1 2 3]::has?(2) // true
   {a: 10}::has?(:a) // true
 ")]
 fn has?(val) = this.[Collection].has?.call(this, val)
@@ -594,7 +601,7 @@ Get keys of a record as an iterator OR a collection
 
 Example:
   {a: 10}::keys() // [\"a\"]
-  ~Map{a: 10}::keys()::into(#{}) // #{:a}
+  Map{a: 10}::keys()::into(Set[]) // Set[:a]
 ")]
 fn keys() = this.[Record].keys.call(this)
 
@@ -603,7 +610,7 @@ Get values of a record as an iterator OR a collection
 
 Example:
   {a: 10}::values() // [10]
-  ~Map{a: 10}::values()::into(#{}) // #{10}
+  ~Map{a: 10}::values()::into(Set[]) // Set[10]
 ")]
 fn values() = this.[Record].values.call(this)
 
@@ -646,7 +653,7 @@ Determines if 'this' is a record
 Examples:
   {}::record?() // true
   Map{}::record?() // true
-  #{}::record?() // false
+  Set[]::record?() // false
 ")]
 fn record?() = this.[Record]::exists?()
 
@@ -662,6 +669,7 @@ Examples:
 ")]
 fn construct_record(entries) = this.[Record](entries)
 
+// TODO: this should be called Sequence or something
 protocol Vector
 globalThis.Vector = Vector
 
@@ -670,7 +678,7 @@ Determines if 'this' conforms to the vector protocol
 
 Examples:
   []::vector?() // true
-  #{}::vector?() // true
+  Set[]::vector?() // true
   {}::vector?() // false
 ")]
 fn vector?() = this.[Vector]::exists?()
@@ -710,7 +718,7 @@ push a value onto a vector
 Examples:
   [1 2]::push(3) // [1 2 3]
   // order is not guaranteed for sets
-  #{1 2}::push(3) // #{3 1 2}
+  Set[1 2]::push(3) // Set[3 1 2]
 ")]
 fn push(val) = this.[Vector].push.call(this, val)
 
@@ -719,7 +727,7 @@ replace a value in a vector
 
 Examples:
   [1 2 3]::replace(2 3) // [1 3 3]
-  #{1 2 3}::replace(2 3) // #{1 3}
+  Set[1 2 3]::replace(2 3) // Set[1 3]
 ")]
 fn replace(old_val, new_val) = this.[Vector].replace.call(this, old_val, new_val)
 
@@ -728,9 +736,9 @@ concat two vectors
 
 Examples:
   [1 2]::concat([3 4]) // [1 2 3 4]
-  [1 2]::concat(#{3 4}) // [1 2 4 3] - set order unknowable
-  #{1 2}::concat([3 4]) // #{1 2 3 4}
-  #{1 2}::concat(#{2 3}) // #{1 2 3}
+  [1 2]::concat(Set[3 4]) // [1 2 4 3] - set order unknowable
+  Set[1 2]::concat([3 4]) // Set[1 2 3 4]
+  Set[1 2]::concat(Set[2 3]) // Set[1 2 3]
 ")]
 fn concat(other) = this.[Vector].concat.call(this, other)
 
@@ -798,8 +806,6 @@ Examples:
   [1 2 3]::last() // 3
 ")]
 fn last() = this.[OrderedSequence].last.call(this)
-
-define "[]" for Array = fn (...entries) = entries
 
 @[def_global doc("
 constructs vector based off entries
@@ -1354,8 +1360,8 @@ fn def_record(Constructor) {
 }
 
 // string helpers
-let char_alpha? = ("a"..="z")::into(#{}) + ("A"..="Z")::into(#{})
-let char_numeric? = ("0"..="9")::into(#{})
+let char_alpha? = ("a"..="z")::into(Set[]) + ("A"..="Z")::into(Set[])
+let char_numeric? = ("0"..="9")::into(Set[])
 let char_alpha_numeric? = char_alpha? + char_numeric?
 globalThis.char_alpha__q = char_alpha?
 globalThis.char_numeric__q = char_numeric?

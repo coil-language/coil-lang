@@ -40,8 +40,8 @@ Deno.test("[]::push(1)" fn {
   assert_equals([]::push(1), [1])
 })
 
-Deno.test("#{}::push(1)" fn {
-  assert_equals(#{}::push(1), #{1})
+Deno.test("Set[]::push(1)" fn {
+  assert_equals(Set[]::push(1), Set[1])
 })
 
 Deno.test("\"\"::push(\"a\")" fn {
@@ -52,12 +52,12 @@ Deno.test("[1 2 3]::concat([2 3 4])" fn {
   assert_equals([1 2 3]::concat([2 3 4]), [1 2 3 2 3 4])
 })
 
-Deno.test("#{1 2 3}::concat(#{2 3 4})" fn {
-  assert_equals(#{1 2 3}::concat(#{2 3 4}), #{1 2 3 2 3 4})
+Deno.test("Set[1 2 3]::concat(Set[2 3 4])" fn {
+  assert_equals(Set[1 2 3]::concat(Set[2 3 4]), Set[1 2 3 2 3 4])
 })
 
-Deno.test("#{1 2 3}::concat([2 3 4])" fn {
-  assert_equals(#{1 2 3}::concat([2 3 4]), #{1 2 3 2 3 4})
+Deno.test("Set[1 2 3]::concat([2 3 4])" fn {
+  assert_equals(Set[1 2 3]::concat([2 3 4]), Set[1 2 3 2 3 4])
 })
 
 Deno.test("{a: 2}::merge({a: 3})" fn {
@@ -81,7 +81,7 @@ Deno.test("~Map{a: 2}::merge(~Map{a: 3})" fn {
 })
 
 Deno.test("~Map{a: 2}::merge({a: 3})" fn {  
-  assert_equals(~Map{a: 2}::merge({a: 3}), ~Map{a: 3})
+  assert_equals(~Map{a: 2}::merge({a: 3}), ~Map{a: 3, "a" => 3})
 })
 
 Deno.test("~Map{a: 2}::merge(~Map{b: 3})" fn {

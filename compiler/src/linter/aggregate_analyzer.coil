@@ -96,7 +96,7 @@ fn check({deprecated_fns, fn_calls}) = fn_calls
   ::map(fn(fn_node) = {
     node: fn_node,
     message: deprecated_fns
-      ::find(:fn_def :name #{fn_node::pipe(:lhs :name)})
+      ::find(:fn_def :name Set[fn_node::pipe(:lhs :name)])
       ::pipe(:args first :value)
   })
 

@@ -1,5 +1,0 @@
-+[Callable] = {
-  fn call(a, b) = a + b
-}
-
-console.log([1, 2, 3]::reduce(+, 0))

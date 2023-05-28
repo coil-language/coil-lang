@@ -39,5 +39,5 @@ define Sample for :first_name = fn() {
 
 ~Fake{name: :first_name
       age: 0..100
-      grade: #{:A :B :C :D :F}}
+      grade: Set[:A :B :C :D :F]}
   ::sample_stream()::take(5)::as_array()::log()

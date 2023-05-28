@@ -312,7 +312,7 @@ impl ParseInstruction for Parser = fn(result) {
 fn ParseMap(@entries) {}
 
 impl Record for ParseMap = {
-  fn keys() = this.entries::map(first)::into(#{})
+  fn keys() = this.entries::map(first)::into(Set[])
 }
 
 impl Call for ParseMap = fn(tokens, ...args) {
@@ -341,8 +341,8 @@ impl Call for ParseMap = fn(tokens, ...args) {
 
 // COIL PARSER START
 
-let math_ops = #{:mod :plus :minus :times :pow :div}
-let comparison_ops = #{:lt :gt :lt_eq :gt_eq}
+let math_ops = Set[:mod :plus :minus :times :pow :div]
+let comparison_ops = Set[:lt :gt :lt_eq :gt_eq]
 let all_math_ops = math_ops::concat(comparison_ops)
 
 fn parse_double_eq(tokens lhs) = ~Parser[
@@ -446,7 +446,7 @@ fn parse_and_dot(tokens, lhs) = ~Parser[
 fn parse_dot(tokens, lhs) = ~Parser[
   ~Init[{type: :property_lookup, lhs}]
   ~Chomp[:dot]
-  ~Either[#{:id :from} :property]
+  ~Either[Set[:id :from] :property]
 ]::call(tokens)
 
 fn parse_infix_bind(tokens lhs) = ~Parser[
@@ -606,7 +606,7 @@ let parse_str = ~Parser[
   ~One[:string_lit :value]
 ]
 
-let valid_ids_in_all_contexts = #{:id :from :as}
+let valid_ids_in_all_contexts = Set[:id :from :as]
 
 let parse_id = ~Parser[
   ~Init[{type: :id_lookup}]
@@ -615,7 +615,7 @@ let parse_id = ~Parser[
 
 fn parse_reg_obj_entry(tokens) = ~Parser[
   ~Init[{type: :reg_obj_entry}]
-  ~Either[#{:id :num} :key]
+  ~Either[Set[:id :num] :key]
   ~Chomp[:colon]
   ~Then[parse_expr :value]
 ]::call(tokens)
@@ -1287,7 +1287,7 @@ fn eval_str({value}) {
   }
 }
 
-let RESERVED_IDS = #{"import"}
+let RESERVED_IDS = Set["import"]
 
 fn eval_property_lookup({lhs property}) {
   let lhs_js = eval_expr(lhs)
@@ -1545,7 +1545,7 @@ fn eval_multi_decorator({decorators fn_def}) {
   let fn_name = fn_def::pipe(:name resolve_name)
   let decorator_fn_js = decorators
     ::map(fn (node) {
-      if node::pipe(:type #{:id_lookup}) {
+      if node::pipe(:type Set[:id_lookup]) {
         return node::pipe(:name resolve_name)
       } else {
         let {lhs args} = node

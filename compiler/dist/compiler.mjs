@@ -168,6 +168,13 @@ const Meta = Symbol("Meta");
 Object.prototype[Meta] = new ObjectLiteral({["[]"]: function (...keys) {
 return reduce.bind(keys)(js_dynamic_object_lookup, this);}, ["[]="]: function (keys, expr) {
 return js_set_property(this, keys, expr);}});
+Function.prototype[Meta] = new ObjectLiteral({["[]"]: function (...args) {
+return Reflect['construct'](this, args);}, ["{}"]: function (entries) {
+return Reflect['construct'](this, [entries]);}});
+Set[Meta] = new ObjectLiteral({["[]"]: function (...elems) {
+return new Set(elems);}});
+Array[Meta] = new ObjectLiteral({["[]"]: function (...elems) {
+return elems;}});
 function def_global(f) {
 let resolved_name = f['name']['replaceAll']("?", "__q")['replaceAll']("!", "__b")['replaceAll'](">", "_lt_")['replaceAll']("-", "_");
 globalThis[resolved_name] = f
@@ -244,7 +251,7 @@ return this?.[Call](...args);})
 Set.prototype[Keyword.for("bind")] = function (val) {
 return function () {
 return call.bind(this)(val);}.bind(this);};
-let nil__q = Object['freeze'](new Set([undefined, null]));
+let nil__q = Object['freeze'](Set[Meta]['[]'].call(Set, undefined, null));
 const Pipe = Symbol("Pipe");
 globalThis['Pipe'] = Pipe
 Object.prototype[Pipe] = function (callable) {
@@ -473,7 +480,7 @@ eagerly finds a value in an iterator
 
 Examples:
   [1 2 3 4 5]
-    ::find(#{4 5}) // 4
+    ::find(Set[4 5]) // 4
 `))(function find(...fns) {
 return iterator_impl.bind(this)()['find']['call'](iter.bind(this)(), compose(...fns));})
 let keep = compose(def_global, F => doc(F, `
@@ -498,7 +505,7 @@ let any__q = compose(def_global, F => doc(F, `
 eagerly finds out if an element matches the condition
 
 Examples:
-  [1 2 3 4 5]::any?(#{3}) // true
+  [1 2 3 4 5]::any?(Set[3]) // true
 `))(function any__q(...fns) {
 return iterator_impl.bind(this)()['any?']['call'](iter.bind(this)(), compose(...fns));})
 let all__q = compose(def_global, F => doc(F, `
@@ -520,7 +527,7 @@ lazily splits an iterator
 
 Examples:
   \"hey there buddy\"
-    ::split(#{`, `})
+    ::split(Set[`, `])
     ::take(2)
     ::into([]) // [\"hey\" \"there\"]
 `))(function split(...fns) {
@@ -567,7 +574,7 @@ converts 'this' iterator into 'output', prepending existing values in 'output'
 
 Examples:
   [1 2 3 4]
-    ::into(#{}) // #{1 2 3 4}
+    ::into(Set[]) // Set[1 2 3 4]
 
   [[:score 10] [:grade :bad]]
     ::into({}) // {score: 20, grade: :bad}
@@ -625,7 +632,7 @@ gets length of a collection
 
 Examples:
   [1 2 3]::len() // 3
-  #{1 2 3}::len() // 3
+  Set[1 2 3]::len() // 3
   {a: 10}::len() // 1
   ~Map{a: :a, b: :b}::len() // 2
 `))(function len() {
@@ -635,7 +642,7 @@ determines if a collection is empty
 
 Examples:
   []::empty?() // true
-  #{1}::empty?() // false
+  Set[1]::empty?() // false
   null::empty?() // true
   `, `::empty?() // true
 `))(function empty__q() {
@@ -655,7 +662,7 @@ extracts value from collection based on a key or index
 Examples:
   [1 3 4]::at(2) // 4
   // set::at works as an identity function if the value is in the set
-  #{4 3 1}::at(4) // 4
+  Set[4 3 1]::at(4) // 4
   // keywords coerce to strings for objects
   {a: 10}::at(:a) // 10
   {a: 10}::at(\"a\") // 10
@@ -669,7 +676,7 @@ determines if a collection has a value
 
 Examples:
   [1 2 3 4]::has?(3) // true
-  #{1 2 3}::has?(2) // true
+  Set[1 2 3]::has?(2) // true
   {a: 10}::has?(:a) // true
 `))(function has__q(val) {
 return this[Collection]['has?']['call'](this, val);})
@@ -698,7 +705,7 @@ Get keys of a record as an iterator OR a collection
 
 Example:
   {a: 10}::keys() // [\"a\"]
-  ~Map{a: 10}::keys()::into(#{}) // #{:a}
+  Map{a: 10}::keys()::into(Set[]) // Set[:a]
 `))(function keys() {
 return this[Record]['keys']['call'](this);})
 let values = compose(def_call, def_global, F => doc(F, `
@@ -706,7 +713,7 @@ Get values of a record as an iterator OR a collection
 
 Example:
   {a: 10}::values() // [10]
-  ~Map{a: 10}::values()::into(#{}) // #{10}
+  ~Map{a: 10}::values()::into(Set[]) // Set[10]
 `))(function values() {
 return this[Record]['values']['call'](this);})
 let insert = compose(def_global, F => doc(F, `
@@ -746,7 +753,7 @@ Determines if 'this' is a record
 Examples:
   {}::record?() // true
   Map{}::record?() // true
-  #{}::record?() // false
+  Set[]::record?() // false
 `))(function record__q() {
 return exists__q.bind(this[Record])();})
 let construct_record = compose(def_global, F => doc(F, `
@@ -767,7 +774,7 @@ Determines if 'this' conforms to the vector protocol
 
 Examples:
   []::vector?() // true
-  #{}::vector?() // true
+  Set[]::vector?() // true
   {}::vector?() // false
 `))(function vector__q() {
 return exists__q.bind(this[Vector])();})
@@ -806,7 +813,7 @@ push a value onto a vector
 Examples:
   [1 2]::push(3) // [1 2 3]
   // order is not guaranteed for sets
-  #{1 2}::push(3) // #{3 1 2}
+  Set[1 2]::push(3) // Set[3 1 2]
 `))(function push(val) {
 return this[Vector]['push']['call'](this, val);})
 let replace = compose(def_global, F => doc(F, `
@@ -814,7 +821,7 @@ replace a value in a vector
 
 Examples:
   [1 2 3]::replace(2 3) // [1 3 3]
-  #{1 2 3}::replace(2 3) // #{1 3}
+  Set[1 2 3]::replace(2 3) // Set[1 3]
 `))(function replace(old_val, new_val) {
 return this[Vector]['replace']['call'](this, old_val, new_val);})
 let concat = compose(def_global, F => doc(F, `
@@ -822,9 +829,9 @@ concat two vectors
 
 Examples:
   [1 2]::concat([3 4]) // [1 2 3 4]
-  [1 2]::concat(#{3 4}) // [1 2 4 3] - set order unknowable
-  #{1 2}::concat([3 4]) // #{1 2 3 4}
-  #{1 2}::concat(#{2 3}) // #{1 2 3}
+  [1 2]::concat(Set[3 4]) // [1 2 4 3] - set order unknowable
+  Set[1 2]::concat([3 4]) // Set[1 2 3 4]
+  Set[1 2]::concat(Set[2 3]) // Set[1 2 3]
 `))(function concat(other) {
 return this[Vector]['concat']['call'](this, other);})
 const OrderedSequence = Symbol("OrderedSequence");
@@ -888,8 +895,6 @@ Examples:
   [1 2 3]::last() // 3
 `))(function last() {
 return this[OrderedSequence]['last']['call'](this);})
-Array["[]"] = function (...entries) {
-return entries;};
 let construct_vector = compose(def_global, F => doc(F, `
 constructs vector based off entries
 
@@ -1381,8 +1386,8 @@ return new Constructor(entries);};
 Constructor.prototype[Symbol['iterator']] = function () {
 return iter.bind(this['entries'])();};
 return Constructor;})
-let char_alpha__q = plus.call(into.bind((new IRange("a", "z")))(new Set([])),into.bind((new IRange("A", "Z")))(new Set([])));
-let char_numeric__q = into.bind((new IRange("0", "9")))(new Set([]));
+let char_alpha__q = plus.call(into.bind((new IRange("a", "z")))(Set[Meta]['[]'].call(Set, )),into.bind((new IRange("A", "Z")))(Set[Meta]['[]'].call(Set, )));
+let char_numeric__q = into.bind((new IRange("0", "9")))(Set[Meta]['[]'].call(Set, ));
 let char_alpha_numeric__q = plus.call(char_alpha__q,char_numeric__q);
 globalThis['char_alpha__q'] = char_alpha__q
 globalThis['char_numeric__q'] = char_numeric__q
@@ -1621,7 +1626,7 @@ let ParseMap = def_record(function ParseMap(entries) {
 this.entries = entries;
 });
 ParseMap.prototype[Record] = new ObjectLiteral({['keys']() {
-return into.bind(map.bind(this['entries'])(first))(new Set([]));
+return into.bind(map.bind(this['entries'])(first))(Set[Meta]['[]'].call(Set, ));
 }});
 ParseMap.prototype[Call] = function (tokens, ...args) {
 if (truthy(empty__q.bind(tokens)())) {
@@ -1649,8 +1654,8 @@ if (truthy(and.call(pattern instanceof Keyword, () => equals__q.call(pattern, at
 return call.bind(parser)(tokens, ...args);
 };
 };};
-let math_ops = new Set([Keyword.for("mod"), Keyword.for("plus"), Keyword.for("minus"), Keyword.for("times"), Keyword.for("pow"), Keyword.for("div")]);
-let comparison_ops = new Set([Keyword.for("lt"), Keyword.for("gt"), Keyword.for("lt_eq"), Keyword.for("gt_eq")]);
+let math_ops = Set[Meta]['[]'].call(Set, Keyword.for("mod"), Keyword.for("plus"), Keyword.for("minus"), Keyword.for("times"), Keyword.for("pow"), Keyword.for("div"));
+let comparison_ops = Set[Meta]['[]'].call(Set, Keyword.for("lt"), Keyword.for("gt"), Keyword.for("lt_eq"), Keyword.for("gt_eq"));
 let all_math_ops = concat.bind(math_ops)(comparison_ops);
 function parse_double_eq(tokens, lhs) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("double_equals"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("double_eq")]), construct_vector.call(Then, [parse_1_2_expr, Keyword.for("rhs")])]))(tokens);}
@@ -1688,7 +1693,7 @@ return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new
 function parse_and_dot(tokens, lhs) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("and_dot"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("single_and"), Keyword.for("dot")]), construct_vector.call(Case, [construct_record.call(ParseMap, [[Keyword.for("id"), parse_id], [Keyword.for("open_sq"), parse_partial_obj_dyn_access], [Keyword.for("open_p"), parse_partial_fn_call]]), Keyword.for("rhs")])]))(tokens);}
 function parse_dot(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("property_lookup"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("dot")]), construct_vector.call(Either, [new Set([Keyword.for("id"), Keyword.for("from")]), Keyword.for("property")])]))(tokens);}
+return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("property_lookup"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("dot")]), construct_vector.call(Either, [Set[Meta]['[]'].call(Set, Keyword.for("id"), Keyword.for("from")), Keyword.for("property")])]))(tokens);}
 function parse_infix_bind(tokens, lhs) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("bind"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("double_colon")]), construct_vector.call(Case, [construct_record.call(ParseMap, [[Keyword.for("id"), parse_id], [Keyword.for("fn"), parse_fn], [[Keyword.for("tilde"), Keyword.for("id"), Keyword.for("open_b")], parse_record_syntax], [all_math_ops, parse_unapplied_math_op], [Keyword.for("open_p"), parse_paren_expr]]), Keyword.for("expr")])]))(tokens);}
 function parse_is(tokens, lhs) {
@@ -1743,10 +1748,10 @@ function parse_decorator(tokens) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("decorator")})]), construct_vector.call(Chomp, [Keyword.for("at")]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")]), construct_vector.call(Optional, [Keyword.for("open_p"), parse_call_expr, Keyword.for("args")]), construct_vector.call(Then, [parse_fn, Keyword.for("fn_def")])]))(tokens);}
 let parse_regex = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("regex_lit")})]), construct_vector.call(One, [Keyword.for("regex_lit"), Keyword.for("value")])]);
 let parse_str = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("str")})]), construct_vector.call(One, [Keyword.for("string_lit"), Keyword.for("value")])]);
-let valid_ids_in_all_contexts = new Set([Keyword.for("id"), Keyword.for("from"), Keyword.for("as")]);
+let valid_ids_in_all_contexts = Set[Meta]['[]'].call(Set, Keyword.for("id"), Keyword.for("from"), Keyword.for("as"));
 let parse_id = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("id_lookup")})]), construct_vector.call(Either, [push.bind(valid_ids_in_all_contexts)(Keyword.for("import")), Keyword.for("name")])]);
 function parse_reg_obj_entry(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("reg_obj_entry")})]), construct_vector.call(Either, [new Set([Keyword.for("id"), Keyword.for("num")]), Keyword.for("key")]), construct_vector.call(Chomp, [Keyword.for("colon")]), construct_vector.call(Then, [parse_expr, Keyword.for("value")])]))(tokens);}
+return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("reg_obj_entry")})]), construct_vector.call(Either, [Set[Meta]['[]'].call(Set, Keyword.for("id"), Keyword.for("num")), Keyword.for("key")]), construct_vector.call(Chomp, [Keyword.for("colon")]), construct_vector.call(Then, [parse_expr, Keyword.for("value")])]))(tokens);}
 let parse_obj_shorthand_entry = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("obj_shorthand_entry")})]), construct_vector.call(Either, [valid_ids_in_all_contexts, Keyword.for("id")])]);
 function parse_dynamic_obj_entry(tokens) {
 return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("dynamic_obj_entry")})]), construct_vector.call(Chomp, [Keyword.for("open_sq")]), construct_vector.call(Then, [parse_expr, Keyword.for("key_expr")]), construct_vector.call(Chomp, [Keyword.for("close_sq"), Keyword.for("colon")]), construct_vector.call(Then, [parse_expr, Keyword.for("value")])]))(tokens);}
@@ -1930,7 +1935,7 @@ return str("`", value, "`");
 } else {
 return str("\"", value, "\"");
 };}
-let RESERVED_IDS = new Set(["import"]);
+let RESERVED_IDS = Set[Meta]['[]'].call(Set, "import");
 function eval_property_lookup({'lhs': lhs, 'property': property}) {
 let lhs_js = eval_expr(lhs);
 if (truthy(has__q.bind(RESERVED_IDS)(lhs_js))) {
@@ -2093,7 +2098,7 @@ return str("__args[", minus.call((or.call(arg_num, () => (1))),(1)), "]");}
 function eval_multi_decorator({'decorators': decorators, 'fn_def': fn_def}) {
 let fn_name = pipe.bind(fn_def)(Keyword.for("name"), resolve_name);
 let decorator_fn_js = pipe.bind(join.bind(map.bind(decorators)(function (node) {
-if (truthy(pipe.bind(node)(Keyword.for("type"), new Set([Keyword.for("id_lookup")])))) {
+if (truthy(pipe.bind(node)(Keyword.for("type"), Set[Meta]['[]'].call(Set, Keyword.for("id_lookup"))))) {
 return pipe.bind(node)(Keyword.for("name"), resolve_name);
 } else {
 let {'lhs': lhs, 'args': args} = node;
