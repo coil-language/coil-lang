@@ -19,7 +19,6 @@ impl Symbol.iterator for CollectionView = fn*() {
   }
 }
 
-@def_record
 fn Lexer(@entries) {}
 
 fn pass() {}
@@ -62,7 +61,7 @@ impl Call for Lexer = fn(str) {
   return tokens
 }
 
-let lexer = ~Lexer{
+let lexer = Lexer{
   /^\n/ => newline
   /^\s+/ => pass
   /^\/\/.*/ => pass
