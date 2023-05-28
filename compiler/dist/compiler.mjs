@@ -177,10 +177,10 @@ let resolved_name = f['name']['replaceAll']("?", "__q")['replaceAll']("!", "__b"
 globalThis['[]='].call(globalThis, [resolved_name], f)
 return f;}
 const CustomNumberLiteral = Symbol("CustomNumberLiteral");
-globalThis['CustomNumberLiteral'] = CustomNumberLiteral
+globalThis['[]='].call(globalThis, [Keyword.for("CustomNumberLiteral")], CustomNumberLiteral)
 Keyword.for("custom_number_literal/n")[CustomNumberLiteral] = BigInt;
 const Doc = Symbol("Doc");
-globalThis['Doc'] = Doc
+globalThis['[]='].call(globalThis, [Keyword.for("Doc")], Doc)
 let doc = def_global(function doc(f, doc_str) {
 f[Doc] = doc_str['trim']();
 return f;});
@@ -191,7 +191,7 @@ console['log'](str("# ", this['name']))
 console['log'](this['[]'].call(this, Doc))
 return this;});
 const Call = Symbol("Call");
-globalThis['Call'] = Call
+globalThis['[]='].call(globalThis, [Keyword.for("Call")], Call)
 function compose(first_fn, ...fns) {
 return function (...args) {
 let result = first_fn?.[Call](...args);
@@ -250,7 +250,7 @@ return function () {
 return call.bind(this)(val);}.bind(this);};
 let nil__q = Object['freeze'](new Set([undefined, null]));
 const Pipe = Symbol("Pipe");
-globalThis['Pipe'] = Pipe
+globalThis['[]='].call(globalThis, [Keyword.for("Pipe")], Pipe)
 Object.prototype[Pipe] = function (callable) {
 return call.bind(callable)(this);};
 let pipe = compose(def_global, F => doc(F, `
@@ -310,7 +310,7 @@ See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_
 `))(function iter__q() {
 return iter.bind(this)() === this;})
 const Iterator = Symbol("Iterator");
-globalThis['Iterator'] = Iterator
+globalThis['[]='].call(globalThis, [Keyword.for("Iterator")], Iterator)
 let default_iterator_impl = new ObjectLiteral({*['take'](n) {
 for  (let [elem, i] of zip.bind(this)(new ERangeNoMax((0)))) {
 if (truthy(equals__q.call(i, n))) {
@@ -553,7 +553,7 @@ return cur;
 return plus.call(prev,plus.call(sep,cur));
 };}, "");})
 const Into = Symbol("Into");
-globalThis['Into'] = Into
+globalThis['[]='].call(globalThis, [Keyword.for("Into")], Into)
 Array.prototype[Into] = function (iterable) {
 return [...this, ...iterable];};
 ObjectLiteral.prototype[Into] = function (iterable) {
@@ -578,7 +578,7 @@ Examples:
 `))(function into(output) {
 return output['[]'].call(output, Into)(this);})
 const Collection = Symbol("Collection");
-globalThis['Collection'] = Collection
+globalThis['[]='].call(globalThis, [Keyword.for("Collection")], Collection)
 ObjectLiteral.prototype[Collection] = new ObjectLiteral({['at'](key) {
 return this['[]'].call(this, key);
 }, ['len']() {
@@ -678,7 +678,7 @@ Examples:
 `))(function has__q(val) {
 return this['[]'].call(this, Collection)['has?']['call'](this, val);})
 const Record = Symbol("Record");
-globalThis['Record'] = Record
+globalThis['[]='].call(globalThis, [Keyword.for("Record")], Record)
 ObjectLiteral.prototype[Record] = new ObjectLiteral({['insert'](key, value) {
 return new ObjectLiteral({...this, [key]: value});
 }, ['merge'](other) {
@@ -738,6 +738,9 @@ Example:
   ~Map{a: 10}::merge({a: 20}) // ~Map{a: 10, \"a\" => 20}
 `))(function merge(other) {
 return this['[]'].call(this, Record)['merge']['call'](this, other);})
+Map["{}"] = function (entries) {
+return new Map(entries);};
+Object["{}"] = Object['fromEntries'];
 Map[Record] = function (entries) {
 return new Map(entries);};
 Object[Record] = Object['fromEntries'];
@@ -746,7 +749,7 @@ Determines if 'this' is a record
 
 Examples:
   {}::record?() // true
-  ~Map{}::record?() // true
+  Map{}::record?() // true
   #{}::record?() // false
 `))(function record__q() {
 return exists__q.bind(this['[]'].call(this, Record))();})
@@ -762,7 +765,7 @@ Examples:
 `))(function construct_record(entries) {
 return this['[]'].call(this, Record)(entries);})
 const Vector = Symbol("Vector");
-globalThis['Vector'] = Vector
+globalThis['[]='].call(globalThis, [Keyword.for("Vector")], Vector)
 let vector__q = compose(def_global, F => doc(F, `
 Determines if 'this' conforms to the vector protocol
 
@@ -829,7 +832,7 @@ Examples:
 `))(function concat(other) {
 return this['[]'].call(this, Vector)['concat']['call'](this, other);})
 const OrderedSequence = Symbol("OrderedSequence");
-globalThis['OrderedSequence'] = OrderedSequence
+globalThis['[]='].call(globalThis, [Keyword.for("OrderedSequence")], OrderedSequence)
 Array.prototype[OrderedSequence] = new ObjectLiteral({['prepend'](val) {
 return [val, ...this];
 }, ['update_at'](idx, f) {
@@ -905,7 +908,7 @@ Examples:
 `))(function construct_vector(entries) {
 return this['[]'].call(this, Vector)(entries);})
 const Equal = Symbol("Equal");
-globalThis['Equal'] = Equal
+globalThis['[]='].call(globalThis, [Keyword.for("Equal")], Equal)
 let impl_equal = compose(def_global, F => doc(F, `
 implement [[Equal]] for a generic constructor by
 specifying the keys to measure equality by
@@ -965,27 +968,27 @@ Examples:
 `))(function equals__q(other) {
 return this?.[Equal](other) ?? this === other;})
 const Plus = Symbol("Plus");
-globalThis['Plus'] = Plus
+globalThis['[]='].call(globalThis, [Keyword.for("Plus")], Plus)
 const Negate = Symbol("Negate");
-globalThis['Negate'] = Negate
+globalThis['[]='].call(globalThis, [Keyword.for("Negate")], Negate)
 const Minus = Symbol("Minus");
-globalThis['Minus'] = Minus
+globalThis['[]='].call(globalThis, [Keyword.for("Minus")], Minus)
 const Times = Symbol("Times");
-globalThis['Times'] = Times
+globalThis['[]='].call(globalThis, [Keyword.for("Times")], Times)
 const Divide = Symbol("Divide");
-globalThis['Divide'] = Divide
+globalThis['[]='].call(globalThis, [Keyword.for("Divide")], Divide)
 const Exponent = Symbol("Exponent");
-globalThis['Exponent'] = Exponent
+globalThis['[]='].call(globalThis, [Keyword.for("Exponent")], Exponent)
 const Mod = Symbol("Mod");
-globalThis['Mod'] = Mod
+globalThis['[]='].call(globalThis, [Keyword.for("Mod")], Mod)
 const Comparable = Symbol("Comparable");
-globalThis['Comparable'] = Comparable
+globalThis['[]='].call(globalThis, [Keyword.for("Comparable")], Comparable)
 const LessThan = Symbol("LessThan");
-globalThis['LessThan'] = LessThan
+globalThis['[]='].call(globalThis, [Keyword.for("LessThan")], LessThan)
 const And = Symbol("And");
-globalThis['And'] = And
+globalThis['[]='].call(globalThis, [Keyword.for("And")], And)
 const Or = Symbol("Or");
-globalThis['Or'] = Or
+globalThis['[]='].call(globalThis, [Keyword.for("Or")], Or)
 let expect_primitive_type__b = doc(function expect_primitive_type__b(type_str) {
 if (truthy(typeof(this) !== type_str)) {
 raise__b(new Error(str("Expected ", type_str)))
@@ -1173,7 +1176,7 @@ Examples:
 `))(function or(thunk) {
 return this?.[Or](thunk) ?? thunk();})
 const JsLogFriendly = Symbol("JsLogFriendly");
-globalThis['JsLogFriendly'] = JsLogFriendly
+globalThis['[]='].call(globalThis, [Keyword.for("JsLogFriendly")], JsLogFriendly)
 ObjectLiteral.prototype[JsLogFriendly] = function () {
 return into.bind(this)(Object);};
 Map.prototype[JsLogFriendly] = function () {
@@ -1218,10 +1221,10 @@ let Underscore = def_global(function Underscore(transforms) {
 this.transforms = transforms;
 });
 const UnderscoreInterpreter = Symbol("UnderscoreInterpreter");
-globalThis['UnderscoreInterpreter'] = UnderscoreInterpreter
+globalThis['[]='].call(globalThis, [Keyword.for("UnderscoreInterpreter")], UnderscoreInterpreter)
 let _ = new Underscore([new ObjectLiteral({'f': function id() {
 return this;}, 'args': []})]);
-globalThis['_'] = _
+globalThis['[]='].call(globalThis, [Keyword.for("_")], _)
 Underscore.prototype[Keyword.for("insert")] = function (f, ...args) {
 return new Underscore(push.bind(this['transforms'])(new ObjectLiteral({'f':f, 'args':args})));};
 Object.prototype[UnderscoreInterpreter] = function (underscore) {
@@ -1324,7 +1327,7 @@ let formatted_args = join.bind(map.bind(args)(js_log_friendly))(", ");
 return str("::", fn_name, "(", formatted_args, ")");
 };}))(""));};
 const Inc = Symbol("Inc");
-globalThis['Inc'] = Inc
+globalThis['[]='].call(globalThis, [Keyword.for("Inc")], Inc)
 Number.prototype[Inc] = function () {
 return plus.call(this,(1));};
 BigInt.prototype[Inc] = function () {
@@ -1432,9 +1435,9 @@ return Constructor;})
 let char_alpha__q = plus.call(into.bind((new IRange("a", "z")))(new Set([])),into.bind((new IRange("A", "Z")))(new Set([])));
 let char_numeric__q = into.bind((new IRange("0", "9")))(new Set([]));
 let char_alpha_numeric__q = plus.call(char_alpha__q,char_numeric__q);
-globalThis['char_alpha__q'] = char_alpha__q
-globalThis['char_numeric__q'] = char_numeric__q
-globalThis['char_alpha_numeric__q'] = char_alpha_numeric__q
+globalThis['[]='].call(globalThis, [Keyword.for("char_alpha__q")], char_alpha__q)
+globalThis['[]='].call(globalThis, [Keyword.for("char_numeric__q")], char_numeric__q)
+globalThis['[]='].call(globalThis, [Keyword.for("char_alpha_numeric__q")], char_alpha_numeric__q)
 let alpha__q = compose(def_global, F => doc(F, "all characters in string are in a-z or A-Z"))(function alpha__q() {
 return all__q.bind(this)(char_alpha__q);})
 let alpha_numeric__q = compose(def_global, F => doc(F, "all characters in string are in a-z or A-Z or 0-9"))(function alpha_numeric__q() {
@@ -1510,7 +1513,7 @@ break;
 };
 };
 if (truthy(negate.call(found))) {
-raise__b(new Error("Not token matched."))
+raise__b(new Error("No token matched."))
 };
 };
 return tokens;};
@@ -2031,7 +2034,7 @@ return name;}
 function eval_assign_all_as({'name': name}) {
 return str("* as ", name);}
 function eval_assign_expr(node) {
-return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("id_assign"), eval_id_assign_name], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("array_deconstruction"), eval_array_deconstruction_names], [Keyword.for("object_deconstruction"), eval_object_deconstruction_names], [Keyword.for("this_assign"), eval_this_assign], [Keyword.for("assign_all_as"), eval_assign_all_as]])))(node);}
+return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("id_assign"), eval_id_assign_name], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("array_deconstruction"), eval_array_deconstruction_names], [Keyword.for("object_deconstruction"), eval_object_deconstruction_names], [Keyword.for("this_assign"), eval_this_assign]])))(node);}
 function eval_while_let_loop({'assign_expr': assign_expr, 'test_expr': test_expr, 'body': body}) {
 return str("let __coil_while_let_temp = ", eval_expr(test_expr), ";\n", "while (__coil_while_let_temp) {\n", "let ", eval_assign_expr(assign_expr), " = __coil_while_let_temp;\n", eval_ast(body), "\n", "__coil_while_let_temp = ", eval_expr(test_expr), ";\n", "}");}
 function eval_if_let({'assign_expr': assign_expr, 'expr': expr, 'pass': pass, 'fail': fail}) {
@@ -2246,8 +2249,15 @@ function get_deconstructed_obj_entry_name(node) {
 return pipe.bind(at.bind(construct_record.call(Map, [[Keyword.for("obj_reg_entry"), Keyword.for("name")], [Keyword.for("obj_entry_rename"), Keyword.for("old_name")]]))(at.bind(node)(Keyword.for("type"))))(node);}
 function get_deconstructed_array_entry_name(node) {
 return pipe.bind(at.bind(construct_record.call(Map, [[Keyword.for("id_assign"), Keyword.for("name")]]))(at.bind(node)(Keyword.for("type"))))(node);}
+function eval_import_deconstruction_entry(node) {
+return call.bind(pipe.bind(node)(Keyword.for("type"), construct_record.call(Map, [[Keyword.for("obj_reg_entry"), pipe.bind(_)(Keyword.for("name"), resolve_name)], [Keyword.for("obj_entry_rename"), function ({'old_name': old_name, 'new_name': new_name}) {
+return str(resolve_name(old_name), " as ", resolve_name(new_name));}]])))(node);}
+function eval_import_deconstruction_expr({'entries': entries}) {
+return str("{", map_join.bind(entries)(eval_import_deconstruction_entry, ", "), "}");}
+function eval_import_assign_exprs(node) {
+return call.bind(pipe.bind(node)(Keyword.for("type"), construct_record.call(Map, [[Keyword.for("id_assign"), eval_id_assign_name], [Keyword.for("object_deconstruction"), eval_import_deconstruction_expr], [Keyword.for("assign_all_as"), eval_assign_all_as]])))(node);}
 function eval_import({'assign_exprs': assign_exprs, 'path': path}) {
-return str("import ", map_join.bind(assign_exprs)(eval_assign_expr, ", "), " from \"", path['value']['slice']((1), (-1)), "\"");}
+return str("import ", map_join.bind(assign_exprs)(eval_import_assign_exprs, ", "), " from \"", path['value']['slice']((1), (-1)), "\"");}
 function eval_export({'statement': statement}) {
 return str("export ", eval_statement(statement));}
 function eval_export_default({'expr': expr}) {
@@ -2263,8 +2273,8 @@ return compose(f, plus.call(_,";"));
 } else {
 return eval_expr;
 };}))(node);}
-function eval_ast(ast) {
-return map_join.bind(ast)(eval_statement, "\n");}
+export function eval_ast(ast) {
+return map_join.bind(ast)(eval_statement, "\n");};
 export function lex_and_parse(string) {
 return pipe.bind(pipe.bind(call.bind(lexer)(string))(function (tokens) {
 return new CollectionView(tokens, (0));}))(parse);};

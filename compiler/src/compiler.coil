@@ -1343,7 +1343,6 @@ fn eval_assign_expr(node) = node::at(:type)::pipe(~Map{
   :array_deconstruction => eval_array_deconstruction_names
   :object_deconstruction => eval_object_deconstruction_names
   :this_assign => eval_this_assign
-  :assign_all_as => eval_assign_all_as
 })::call(node)
 
 fn eval_while_let_loop({assign_expr test_expr body}) = str(
@@ -1727,9 +1726,24 @@ fn get_deconstructed_array_entry_name(node) =
     ::at(node::at(:type))
     ::pipe(node)
 
+fn eval_import_deconstruction_entry(node) = node::pipe(:type ~Map{
+  :obj_reg_entry => _::pipe(:name resolve_name)
+  :obj_entry_rename => fn ({old_name new_name}) =
+    str(resolve_name(old_name) " as " resolve_name(new_name))
+})::call(node)
+
+fn eval_import_deconstruction_expr({entries}) =
+  str("{" entries::map_join(eval_import_deconstruction_entry ", ") "}")
+
+fn eval_import_assign_exprs(node) = node::pipe(:type ~Map{
+  :id_assign => eval_id_assign_name
+  :object_deconstruction => eval_import_deconstruction_expr
+  :assign_all_as => eval_assign_all_as
+})::call(node)
+
 fn eval_import({assign_exprs, path}) =
   str("import "
-    assign_exprs::map_join(eval_assign_expr, ", ")
+    assign_exprs::map_join(eval_import_assign_exprs, ", ")
     " from \"" path.value.slice(1, -1) "\"")
 
 fn eval_export({statement}) =
@@ -1772,7 +1786,7 @@ fn eval_statement(node) = node::at(:type)::pipe(~Map{
     else { return eval_expr }
   })::call(node)
 
-fn eval_ast(ast) = ast::map_join(eval_statement "\n")
+export fn eval_ast(ast) = ast::map_join(eval_statement "\n")
 
 export fn lex_and_parse(string) = lexer::call(string)
   ::pipe(fn(tokens) = new CollectionView(tokens, 0))
