@@ -641,8 +641,6 @@ Example:
 ")]
 fn merge(other) = this.[Record].merge.call(this, other)
 
-define "{}" for Map = fn (entries) = new Map(entries)
-define "{}" for Object = Object.fromEntries
 // phase these out
 define Record for Map = fn(entries) = new Map(entries)
 define Record for Object = Object.fromEntries
