@@ -204,7 +204,6 @@ impl ParseInstruction for Optional = fn([expr tokens]) {
 
 impl ParseInstruction for Function = fn([_expr tokens]) = this(tokens)
 
-@def_vector
 fn Chomp(...kws) { this.kws = kws }
 impl ParseInstruction for Chomp = fn([expr tokens]) {
   // this.kws::zip(tokens)::all!(fn([a b]) = a == b)
@@ -343,49 +342,49 @@ let all_math_ops = math_ops::concat(comparison_ops)
 
 fn parse_double_eq(tokens lhs) = ~Parser[
   Init[{type: :double_equals, lhs}]
-  ~Chomp[:double_eq]
+  Chomp[:double_eq]
   ~Then[parse_1_2_expr :rhs]
 ]::call(tokens)
 
 fn parse_not_eq(tokens lhs) = ~Parser[
   Init[{type: :not_equals, lhs}]
-  ~Chomp[:not_eq]
+  Chomp[:not_eq]
   ~Then[parse_1_2_expr :rhs]
 ]::call(tokens)
 
 fn parse_triple_eq(tokens lhs) = ~Parser[
   Init[{type: :triple_equals, lhs}]
-  ~Chomp[:triple_eq]
+  Chomp[:triple_eq]
   ~Then[parse_1_2_expr :rhs]
 ]::call(tokens)
 
 fn parse_triple_not_eq(tokens lhs) = ~Parser[
   Init[{type: :triple_not_equals, lhs}]
-  ~Chomp[:triple_not_eq]
+  Chomp[:triple_not_eq]
   ~Then[parse_1_2_expr :rhs]
 ]::call(tokens)
 
 fn parse_and_and(tokens lhs) = ~Parser[
   Init[{type: :and_and, lhs}]
-  ~Chomp[:and_and]
+  Chomp[:and_and]
   ~Then[parse_expr :rhs]
 ]::call(tokens)
 
 fn parse_or_or(tokens lhs) = ~Parser[
   Init[{type: :or_or, lhs}]
-  ~Chomp[:or_or]
+  Chomp[:or_or]
   ~Then[parse_expr :rhs]
 ]::call(tokens)
 
 fn parse_nullish(tokens lhs) = ~Parser[
   Init[{type: :nullish, lhs}]
-  ~Chomp[:nullish]
+  Chomp[:nullish]
   ~Then[parse_expr :rhs]
 ]::call(tokens)
 
 fn parse_keyof(tokens lhs) = ~Parser[
   Init[{type: :keyof, lhs}]
-  ~Chomp[:keyof]
+  Chomp[:keyof]
   ~Then[parse_expr :rhs]
 ]::call(tokens)
 
@@ -417,21 +416,21 @@ fn parse_third_expr([lhs tokens]) {
 
 fn parse_partial_obj_dyn_access(tokens) = ~Parser[
   Init[{type: :partial_obj_dyn_access}]
-  ~Chomp[:open_sq]
+  Chomp[:open_sq]
   ~Then[parse_expr :expr]
-  ~Chomp[:close_sq]
+  Chomp[:close_sq]
 ]::call(tokens)
 
 fn parse_partial_fn_call(tokens) = ~Parser[
   Init[{type: :partial_fn_call}]
-  ~Chomp[:open_p]
+  Chomp[:open_p]
   ~Until[:close_p parse_expr :args]
-  ~Chomp[:close_p]
+  Chomp[:close_p]
 ]::call(tokens)
 
 fn parse_and_dot(tokens, lhs) = ~Parser[  
   Init[{type: :and_dot, lhs}]
-  ~Chomp[:single_and :dot]
+  Chomp[:single_and :dot]
   ~Case[~ParseMap{
     :id => parse_id,
     :open_sq => parse_partial_obj_dyn_access
@@ -441,13 +440,13 @@ fn parse_and_dot(tokens, lhs) = ~Parser[
 
 fn parse_dot(tokens, lhs) = ~Parser[
   Init[{type: :property_lookup, lhs}]
-  ~Chomp[:dot]
+  Chomp[:dot]
   ~Either[Set[:id :from] :property]
 ]::call(tokens)
 
 fn parse_infix_bind(tokens lhs) = ~Parser[
   Init[{type: :bind, lhs}]
-  ~Chomp[:double_colon]
+  Chomp[:double_colon]
   ~Case[~ParseMap{
     :id => parse_id
     :fn => parse_fn
@@ -459,13 +458,13 @@ fn parse_infix_bind(tokens lhs) = ~Parser[
 
 fn parse_is(tokens, lhs) = ~Parser[
   Init[{type: :is, lhs}]
-  ~Chomp[:is]
+  Chomp[:is]
   ~Then[parse_1_2_expr, :rhs]
 ]::call(tokens)
 
 fn parse_snd_assign(tokens, lhs) = ~Parser[
   Init[{type: :snd_assign, lhs}]
-  ~Chomp[:eq]
+  Chomp[:eq]
   ~Then[parse_expr :rhs]
 ]::call(tokens)
 
@@ -491,39 +490,39 @@ fn parse_adjacent_1_2_expr(tokens) = ~Parser[
 fn parse_inclusive_range(tokens lhs) = ~Parser[
   ~AbortIf[not_adjacent?]
   Init[{type: :inclusive_range, lhs}]
-  ~Chomp[:dot_dot :eq]
+  Chomp[:dot_dot :eq]
   Optional[SINGLE_EXPR_PARSE_MAP::keys() parse_adjacent_1_2_expr :rhs]
 ]::call(tokens)
 
 fn parse_exclusive_range(tokens lhs) = ~Parser[
   ~AbortIf[not_adjacent?]
   Init[{type: :exclusive_range, lhs}]
-  ~Chomp[:dot_dot]
+  Chomp[:dot_dot]
   Optional[SINGLE_EXPR_PARSE_MAP::keys() parse_adjacent_1_2_expr :rhs]
 ]::call(tokens)
 
 fn parse_fn_call(tokens lhs) = ~Parser[
   ~AbortIf[not_adjacent?]
   Init[{type: :fn_call, lhs}]
-  ~Chomp[:open_p]
+  Chomp[:open_p]
   ~Until[:close_p parse_expr :args]
-  ~Chomp[:close_p]
+  Chomp[:close_p]
 ]::call(tokens)
 
 fn parse_record_lookup(tokens lhs) = ~Parser[
   ~AbortIf[not_adjacent?]
   Init[{type: :record_lookup, lhs}]
-  ~Chomp[:open_b]
+  Chomp[:open_b]
   ~Until[:close_b parse_record_entry :entries]
-  ~Chomp[:close_b]
+  Chomp[:close_b]
 ]::call(tokens lhs)
 
 fn parse_dynamic_access(tokens lhs) = ~Parser[
   ~AbortIf[not_adjacent?]
   Init[{type: :dynamic_access, lhs}]
-  ~Chomp[:open_sq]
+  Chomp[:open_sq]
   ~Until[:close_sq parse_expr :exprs]
-  ~Chomp[:close_sq]
+  Chomp[:close_sq]
 ]::call(tokens)
 
 let assignable_ops = math_ops::concat([:or_or, :and_and])
@@ -531,15 +530,15 @@ let assignable_ops = math_ops::concat([:or_or, :and_and])
 fn parse_op_eq(tokens lhs) = ~Parser[
   Init[{type: :op_eq, lhs}]  
   ~Either[assignable_ops :op]
-  ~Chomp[:eq]
+  Chomp[:eq]
   ~Then[parse_expr :rhs]
 ]::call(tokens)
 
 fn parse_raw_dynamic_access(tokens lhs) = ~Parser[
   Init[{type: :raw_dynamic_access, lhs}]
-  ~Chomp[:dot :open_sq]
+  Chomp[:dot :open_sq]
   ~Then[parse_expr :expr]
-  ~Chomp[:close_sq]
+  Chomp[:close_sq]
 ]::call(tokens)
 
 fn parse_snd_expr_step(tokens, lhs) = ~ParseMap{
@@ -567,9 +566,9 @@ fn parse_snd_expr([lhs tokens]) {
 }
 
 fn parse_call_expr(tokens) = ~Parser[
-  ~Chomp[:open_p]
+  Chomp[:open_p]
   ~Until[:close_p parse_expr]
-  ~Chomp[:close_p]
+  Chomp[:close_p]
 ]::call(tokens)
 
 fn parse_decorator_expr(tokens) = ~ParseMap{
@@ -578,15 +577,15 @@ fn parse_decorator_expr(tokens) = ~ParseMap{
 
 fn parse_multi_decorator(tokens) = ~Parser[
   Init[{type: :multi_decorator}]
-  ~Chomp[:at :open_sq]
+  Chomp[:at :open_sq]
   ~Until[:close_sq parse_decorator_expr :decorators]
-  ~Chomp[:close_sq]
+  Chomp[:close_sq]
   ~Then[parse_fn :fn_def]
 ]::call(tokens)
 
 fn parse_decorator(tokens) = ~Parser[
   Init[{type: :decorator}]
-  ~Chomp[:at]
+  Chomp[:at]
   One[:id :name]
   Optional[:open_p parse_call_expr :args]
   ~Then[parse_fn :fn_def]
@@ -612,7 +611,7 @@ let parse_id = ~Parser[
 fn parse_reg_obj_entry(tokens) = ~Parser[
   Init[{type: :reg_obj_entry}]
   ~Either[Set[:id :num] :key]
-  ~Chomp[:colon]
+  Chomp[:colon]
   ~Then[parse_expr :value]
 ]::call(tokens)
 
@@ -623,15 +622,15 @@ let parse_obj_shorthand_entry = ~Parser[
 
 fn parse_dynamic_obj_entry(tokens) = ~Parser[
   Init[{type: :dynamic_obj_entry}]
-  ~Chomp[:open_sq]
+  Chomp[:open_sq]
   ~Then[parse_expr :key_expr]
-  ~Chomp[:close_sq :colon]
+  Chomp[:close_sq :colon]
   ~Then[parse_expr :value]
 ]::call(tokens)
 
 fn parse_spread_obj_entry(tokens) = ~Parser[
   Init[{type: :spread_obj_entry}]
-  ~Chomp[:dot_dot_dot]
+  Chomp[:dot_dot_dot]
   ~Then[parse_expr :expr]
 ]::call(tokens)
 
@@ -647,14 +646,14 @@ fn parse_obj_entry(tokens) = ~ParseMap{
 
 fn parse_obj(tokens) = ~Parser[
   Init[{type: :obj_lit}]
-  ~Chomp[:open_b]
+  Chomp[:open_b]
   ~Until[:close_b parse_obj_entry :entries]
-  ~Chomp[:close_b]
+  Chomp[:close_b]
 ]::call(tokens)
 
 let parse_spread_assign = ~Parser[
   Init[{type: :spread_assign}]
-  ~Chomp[:dot_dot_dot]
+  Chomp[:dot_dot_dot]
   ~Either[valid_ids_in_all_contexts :name]
 ]
 
@@ -671,15 +670,15 @@ fn parse_assign_array_entry(tokens) = ~ParseMap{
 
 let parse_assign_array = ~Parser[
   Init[{type: :array_deconstruction}]
-  ~Chomp[:open_sq]
+  Chomp[:open_sq]
   ~Until[:close_sq parse_assign_array_entry :entries]
-  ~Chomp[:close_sq]
+  Chomp[:close_sq]
 ]
 
 let parse_obj_entry_rename = ~Parser[
   Init[{type: :obj_entry_rename}]
   ~Either[valid_ids_in_all_contexts :old_name]
-  ~Chomp[:colon]
+  Chomp[:colon]
   ~Either[valid_ids_in_all_contexts :new_name]
 ]
 
@@ -691,7 +690,7 @@ let parse_regular_obj_assign_entry = ~Parser[
 let parse_string_obj_assign_entry = ~Parser[
   Init[{type: :obj_str_rename_entry}]
   One[:string_lit :old_name]
-  ~Chomp[:colon]
+  Chomp[:colon]
   ~Either[valid_ids_in_all_contexts :new_name]
 ]
 
@@ -704,14 +703,14 @@ let parse_obj_assign_entry = ~ParseMap{
 
 let parse_assign_obj = ~Parser[
   Init[{type: :object_deconstruction}]
-  ~Chomp[:open_b]
+  Chomp[:open_b]
   ~Until[:close_b parse_obj_assign_entry :entries]
-  ~Chomp[:close_b]
+  Chomp[:close_b]
 ]
 
 let parse_this_assign = ~Parser[
   Init[{type: :this_assign}]
-  ~Chomp[:at]
+  Chomp[:at]
   ~Either[valid_ids_in_all_contexts :name]
 ]
 
@@ -730,21 +729,21 @@ let parse_keyword = ~Parser[
 
 fn parse_paren_expr(tokens) = ~Parser[
   Init[{type: :paren_expr}]
-  ~Chomp[:open_p]
+  Chomp[:open_p]
   ~Then[parse_expr :expr]
-  ~Chomp[:close_p]
+  Chomp[:close_p]
 ]::call(tokens)
 
 fn parse_yield(tokens) = ~Parser[
   Init[{type: :yield}]
-  ~Chomp[:yield]
+  Chomp[:yield]
   Optional[:times parse_gen_modifier :star?]
   ~Then[parse_expr :expr]
 ]::call(tokens)
 
 fn parse_await(tokens) = ~Parser[
   Init[{type: :await}]
-  ~Chomp[:await]
+  Chomp[:await]
   ~Then[parse_expr :expr]
 ]::call(tokens)
 
@@ -760,14 +759,14 @@ let parse_custom_number_literal = ~Parser[
 
 fn parse_array(tokens) = ~Parser[
   Init[{type: :array}]
-  ~Chomp[:open_sq]
+  Chomp[:open_sq]
   ~Until[:close_sq parse_expr :elements]
-  ~Chomp[:close_sq]
+  Chomp[:close_sq]
 ]::call(tokens)
 
 fn parse_spread(tokens) = ~Parser[
   Init[{type: :spread}]
-  ~Chomp[:dot_dot_dot]
+  Chomp[:dot_dot_dot]
   ~Then[parse_expr :expr]
 ]::call(tokens)
 
@@ -778,7 +777,7 @@ let parse_unapplied_math_op = ~Parser[
 
 fn parse_bind_this(tokens) = ~Parser[
   Init[{type: :bind_this}]
-  ~Chomp[:double_colon]
+  Chomp[:double_colon]
   ~Case[~ParseMap{
     :id => parse_id
     :fn => parse_fn
@@ -789,17 +788,17 @@ fn parse_bind_this(tokens) = ~Parser[
 
 fn parse_not(tokens) = ~Parser[
   Init[{type: :not}]
-  ~Chomp[:bang]
+  Chomp[:bang]
   ~Then[parse_1_2_expr :expr]
 ]::call(tokens)
 
 fn parse_new(tokens) = ~Parser[
   Init[{type: :new}]
-  ~Chomp[:new]
+  Chomp[:new]
   One[:id :constructor_name]
-  ~Chomp[:open_p]
+  Chomp[:open_p]
   ~Until[:close_p parse_expr :args]
-  ~Chomp[:close_p]
+  Chomp[:close_p]
 ]::call(tokens)
 
 fn parse_num_raw(tokens) =
@@ -812,48 +811,48 @@ let parse_adjacent_num_raw = ~Parser[
 
 let parse_anon_arg_id = ~Parser[
   Init[{type: :anon_arg_id}]
-  ~Chomp[:single_and]
+  Chomp[:single_and]
   Optional[:num parse_adjacent_num_raw :arg_num]
 ]
 
 let parse_unapplied_and_and = ~Parser[
   Init[{type: :unapplied_and_and}]
-  ~Chomp[:and_and]
+  Chomp[:and_and]
 ]
 
 let parse_unapplied_or_or = ~Parser[
   Init[{type: :unapplied_or_or}]
-  ~Chomp[:or_or]
+  Chomp[:or_or]
 ]
 
 fn parse_shorthand_anon_fn(tokens) = ~Parser[
   Init[{type: :shorthand_anon_fn}]
-  ~Chomp[:hash :open_p]
+  Chomp[:hash :open_p]
   ~Then[parse_expr :expr]
-  ~Chomp[:close_p]
+  Chomp[:close_p]
 ]::call(tokens)
 
 let parse_async_modifier = ~Parser[
   Init[true]
-  ~Chomp[:async]
+  Chomp[:async]
 ]
 
 let parse_gen_modifier = ~Parser[
   Init[true]
-  ~Chomp[:times]
+  Chomp[:times]
 ]
 
 fn parse_fn_expr_body(tokens) = ~Parser[
   Init[{type: :return}]
-  ~Chomp[:eq]
+  Chomp[:eq]
   ~Then[parse_expr :expr]
   ~FMap[fn(node) = [node]]
 ]::call(tokens)
 
 fn parse_args_def(tokens) = ~Parser[
-  ~Chomp[:open_p]
+  Chomp[:open_p]
   ~Until[:close_p parse_assign_expr]
-  ~Chomp[:close_p]
+  Chomp[:close_p]
 ]::call(tokens)
 
 fn parse_fn_name(tokens) = parse_id::call(tokens)::pipe(fn([expr, tokens]) = [expr::at(:name) tokens])
@@ -861,7 +860,7 @@ fn parse_fn_name(tokens) = parse_id::call(tokens)::pipe(fn([expr, tokens]) = [ex
 fn parse_fn(tokens) = ~Parser[
   Init[{type: :fn}]
   Optional[:async parse_async_modifier :is_async?]
-  ~Chomp[:fn]
+  Chomp[:fn]
   Optional[:times parse_gen_modifier :generator?]
   Optional[:id parse_fn_name :name]
   Optional[:open_p parse_args_def :args]
@@ -874,14 +873,14 @@ fn parse_fn(tokens) = ~Parser[
 fn parse_keyword_record_entry(tokens) = ~Parser[
   Init[{type: :keyword_record_entry}]
   One[:id :name]
-  ~Chomp[:colon]
+  Chomp[:colon]
   ~Then[parse_expr :expr]
 ]::call(tokens)
 
 fn parse_regular_record_entry(tokens) = ~Parser[
   Init[{type: :regular_record_entry}]
   ~Then[parse_expr :key_expr]
-  ~Chomp[:arrow]
+  Chomp[:arrow]
   ~Then[parse_expr :value_expr]
 ]::call(tokens)
 
@@ -892,21 +891,21 @@ fn parse_record_entry(tokens) = ~ParseMap{
 
 fn parse_record_syntax(tokens) = ~Parser[
   Init[{type: :record_syntax}]
-  ~Chomp[:open_b]
+  Chomp[:open_b]
   ~Until[:close_b parse_record_entry :entries]
-  ~Chomp[:close_b]
+  Chomp[:close_b]
 ]::call(tokens)
 
 fn parse_vector_syntax(tokens) = ~Parser[
   Init[{type: :vector_syntax}]
-  ~Chomp[:open_sq]
+  Chomp[:open_sq]
   ~Until[:close_sq parse_expr :entries]
-  ~Chomp[:close_sq]
+  Chomp[:close_sq]
 ]::call(tokens)
 
 fn parse_custom_data_syntax(tokens) = ~Parser[
   Init[{type: :custom_data_literal}]
-  ~Chomp[:tilde]
+  Chomp[:tilde]
   ~Then[parse_single_expr :constructor_expr]
   ~Case[~ParseMap{
     :open_sq => parse_vector_syntax
@@ -916,14 +915,14 @@ fn parse_custom_data_syntax(tokens) = ~Parser[
 
 fn parse_set(tokens) = ~Parser[
   Init[{type: :set}]
-  ~Chomp[:hash :open_b]
+  Chomp[:hash :open_b]
   ~Until[:close_b parse_expr :elements]
-  ~Chomp[:close_b]
+  Chomp[:close_b]
 ]::call(tokens)
 
 fn parse_prefix_exclusive_range(tokens) = ~Parser[
   Init[{type: :prefix_exclusive_range}]
-  ~Chomp[:dot_dot]
+  Chomp[:dot_dot]
   ~Then[parse_1_2_expr :expr]
 ]::call(tokens)
 
@@ -970,13 +969,13 @@ fn parse_expr(tokens) =
 
 fn parse_else_branch(tokens) = ~Parser[
   Init[{type: :else}]  
-  ~Chomp[:else]
+  Chomp[:else]
   block(:body)
 ]::call(tokens)
 
 fn parse_else_if_branch(tokens) = ~Parser[
   Init[{type: :else_if}]  
-  ~Chomp[:else :if]
+  Chomp[:else :if]
   ~Then[parse_expr :expr]
   block(:pass)
   Optional[:else parse_if_branch :fail]
@@ -991,7 +990,7 @@ fn parse_if_branch(tokens) = ~Parser[
 
 fn parse_if(tokens) = ~Parser[
   Init[{type: :if}]
-  ~Chomp[:if]
+  Chomp[:if]
   ~Then[parse_expr :expr]
   block(:pass)
   Optional[:else parse_if_branch :fail]
@@ -999,119 +998,119 @@ fn parse_if(tokens) = ~Parser[
 
 let parse_let = ~Parser[
   Init[{type: :let}]
-  ~Chomp[:let]
+  Chomp[:let]
   ~Then[parse_assign_expr :assign_expr]
-  ~Chomp[:eq]
+  Chomp[:eq]
   ~Then[parse_expr :rhs]
 ]
 
 fn parse_if_let(tokens) = ~Parser[
   Init[{type: :if_let}]
-  ~Chomp[:if :let]
+  Chomp[:if :let]
   ~Then[parse_assign_expr :assign_expr]
-  ~Chomp[:eq]
+  Chomp[:eq]
   ~Then[parse_expr :expr]
-  ~Chomp[:open_b]
+  Chomp[:open_b]
   ~Until[:close_b parse_statement :pass]
-  ~Chomp[:close_b]
+  Chomp[:close_b]
   Optional[:else parse_else_branch :fail]
 ]::call(tokens)
 
 let parse_impl_for = ~Parser[
   Init[{type: :impl_for}]
-  ~Chomp[:impl]
+  Chomp[:impl]
   ~Then[parse_expr :proto_expr]
-  ~Chomp[:for]
+  Chomp[:for]
   One[:id :constructor]
-  ~Chomp[:eq]
+  Chomp[:eq]
   ~Then[parse_expr :expr]
 ]
 
 let parse_define = ~Parser[
   Init[{type: :define_for}]
-  ~Chomp[:define]
+  Chomp[:define]
   ~Then[parse_expr :proto_expr]
-  ~Chomp[:for]
+  Chomp[:for]
   ~Then[parse_single_expr :src_expr]
-  ~Chomp[:eq]
+  Chomp[:eq]
   ~Then[parse_expr :expr]
 ]
 
 let parse_protocol = ~Parser[
   Init[{type: :protocol_def}]
-  ~Chomp[:protocol]
+  Chomp[:protocol]
   One[:id :name]
 ]
 
 let parse_return = ~Parser[
   Init[{type: :return}]
-  ~Chomp[:return]
+  Chomp[:return]
   Optional[SINGLE_EXPR_PARSE_MAP::keys() parse_expr :expr]
 ]
 
 let parse_await_modifier = ~Parser[
   Init[true]
-  ~Chomp[:await]
+  Chomp[:await]
 ]
 
 fn parse_for_loop(tokens) = ~Parser[
   Init[{type: :for_loop}]
-  ~Chomp[:for]
+  Chomp[:for]
   Optional[:await parse_await_modifier :is_await?]
   ~Then[parse_assign_expr :assign_expr]
-  ~Chomp[:of]
+  Chomp[:of]
   ~Then[parse_expr :iterable_expr]
   block(:body)
 ]::call(tokens)
 
 fn parse_loop(tokens) = ~Parser[
   Init[{type: :loop}]
-  ~Chomp[:loop]
+  Chomp[:loop]
   block(:body)
 ]::call(tokens)
 
 fn parse_while_loop(tokens) = ~Parser[
   Init[{type: :while_loop}]
-  ~Chomp[:while]
+  Chomp[:while]
   ~Then[parse_expr :test_expr]
   block(:body)
 ]::call(tokens)
 
 fn parse_while_let_loop(tokens) = ~Parser[
   Init[{type: :while_let_loop}]
-  ~Chomp[:while :let]
+  Chomp[:while :let]
   ~Then[parse_assign_expr :assign_expr]
-  ~Chomp[:eq]
+  Chomp[:eq]
   ~Then[parse_expr :test_expr]
   block(:body)
 ]::call(tokens)
 
 fn parse_continue(tokens) = ~Parser[
   Init[{type: :continue}]
-  ~Chomp[:continue]
+  Chomp[:continue]
 ]::call(tokens)
 
 fn parse_break(tokens) = ~Parser[
   Init[{type: :break}]
-  ~Chomp[:break]
+  Chomp[:break]
 ]::call(tokens)
 
 fn parse_catch(tokens) = ~Parser[
   Init[{type: :catch}]
-  ~Chomp[:catch]
+  Chomp[:catch]
   One[:id :name]
   block(:body)
 ]::call(tokens)
 
 fn parse_finally(tokens) = ~Parser[
   Init[{type: :finally}]
-  ~Chomp[:finally]
+  Chomp[:finally]
   block(:body)
 ]::call(tokens)
 
 fn parse_try(tokens) = ~Parser[
   Init[{type: :try}]
-  ~Chomp[:try]
+  Chomp[:try]
   block(:body)
   Optional[:catch parse_catch :catch]
   Optional[:finally parse_finally :finally]
@@ -1119,15 +1118,15 @@ fn parse_try(tokens) = ~Parser[
 
 let parse_impl_object = ~Parser[
   Init[{type: :impl_object}]
-  ~Chomp[:impl]
+  Chomp[:impl]
   One[:id :constructor]
-  ~Chomp[:eq]
+  Chomp[:eq]
   ~Then[parse_expr :expr]
 ]
 
 let parse_assign_all_as = ~Parser[
   Init[{type: :assign_all_as}]
-  ~Chomp[:times :as]
+  Chomp[:times :as]
   One[:id :name]
 ]
 
@@ -1140,34 +1139,34 @@ fn parse_import_assign_expr(tokens) = ~Parser[
 
 fn parse_import(tokens) = ~Parser[
   Init[{type: :import}]
-  ~Chomp[:import]
+  Chomp[:import]
   ~Until[:from parse_import_assign_expr :assign_exprs]
-  ~Chomp[:from]
+  Chomp[:from]
   ~Then[parse_str :path]
 ]::call(tokens)
 
 fn parse_export(tokens) = ~Parser[
   Init[{type: :export}]
-  ~Chomp[:export]
+  Chomp[:export]
   ~Then[parse_statement :statement]
 ]::call(tokens)
 
 let parse_export_all = ~Parser[
   Init[{type: :export_all}]
-  ~Chomp[:export :times :from]
+  Chomp[:export :times :from]
   One[:string_lit :path]
 ]
 
 fn parse_export_default(tokens) = ~Parser[
   Init[{type: :export_default}]
-  ~Chomp[:export :default]
+  Chomp[:export :default]
   ~Then[parse_expr :expr]
 ]::call(tokens)
 
 fn parse_label(tokens) = ~Parser[
   Init[{type: :label}]
   One[:id :label_name]
-  ~Chomp[:colon]
+  Chomp[:colon]
   ~Then[parse_statement :statement]
 ]::call(tokens)
 
@@ -1196,9 +1195,9 @@ fn parse_statement(tokens) = ~ParseMap{
 }::call(tokens)
 
 fn block(name) = ~Parser[
-  ~Chomp[:open_b]
+  Chomp[:open_b]
   ~Until[:close_b parse_statement name]
-  ~Chomp[:close_b]
+  Chomp[:close_b]
 ]
 
 fn parse(tokens) {
