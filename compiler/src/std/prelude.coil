@@ -344,8 +344,8 @@ lazily zips together a number of iterators
 Examples:
   [:axe :hammer :pickaxe]
     ::zip([3 1 4])
-    ::into(~Map{})
-  // -> ~Map{axe: 3, hammer: 1, pickaxe: 4}
+    ::into(Map{})
+  // -> Map{axe: 3, hammer: 1, pickaxe: 4}
 ")]
 fn zip(...iterables) = ::iterator_impl().zip.call(this::iter(), ...iterables)
 
@@ -528,7 +528,7 @@ Examples:
   [1 2 3]::len() // 3
   Set[1 2 3]::len() // 3
   {a: 10}::len() // 1
-  ~Map{a: :a, b: :b}::len() // 2
+  Map{a: :a, b: :b}::len() // 2
 ")]
 fn len() = this.[Collection].len.call(this)
 
@@ -563,9 +563,9 @@ Examples:
   // keywords coerce to strings for objects
   {a: 10}::at(:a) // 10
   {a: 10}::at(\"a\") // 10
-  ~Map{a: 10}::at(:a) // 10
+  Map{a: 10}::at(:a) // 10
   // strings can not lookup keywords in maps
-  ~Map{a: 10}::at(\"a\") // undefined
+  Map{a: 10}::at(\"a\") // undefined
 ")]
 fn at(key_or_idx) = this.[Collection].at.call(this, key_or_idx)
 
@@ -610,7 +610,7 @@ Get values of a record as an iterator OR a collection
 
 Example:
   {a: 10}::values() // [10]
-  ~Map{a: 10}::values()::into(Set[]) // Set[10]
+  Map{a: 10}::values()::into(Set[]) // Set[10]
 ")]
 fn values() = this.[Record].values.call(this)
 
@@ -619,7 +619,7 @@ Insert key & value into a record
 
 Example:
   {a: 10}::insert(:b 20) // {a: 10, b: 20}
-  ~Map{a: 10}::insert(:b 20) // ~Map{a: 10, b: 20}
+  Map{a: 10}::insert(:b 20) // Map{a: 10, b: 20}
 ")]
 fn insert(key, value) = this.[Record].insert.call(this, key, value)
 
@@ -635,9 +635,9 @@ with lossy conversions.
 Example:
   {a: 10}::merge({b: 20}) {a: 10 b: 20}
   {a: 10}::merge({a: 20})
-  ~Map{a: 10}::merge(~Map{a: 20}) // ~Map{a: 20}
+  Map{a: 10}::merge(Map{a: 20}) // Map{a: 20}
   // here's the unexpected result
-  ~Map{a: 10}::merge({a: 20}) // ~Map{a: 10, \"a\" => 20}
+  Map{a: 10}::merge({a: 20}) // Map{a: 10, \"a\" => 20}
 ")]
 fn merge(other) = this.[Record].merge.call(this, other)
 
@@ -663,7 +663,7 @@ This is used for record syntax
 Examples:
   Map::construct_record([[:a 20]])
     ==
-  ~Map{a: 20}
+  Map{a: 20}
 ")]
 fn construct_record(entries) = this.[Record](entries)
 
@@ -815,7 +815,7 @@ Examples:
 
   List::constructor_vector([1 2 3 4])
     ==
-  ~List[1 2 3 4]
+  List[1 2 3 4]
 ")]
 fn construct_vector(entries) = this.[Vector](entries)
 
@@ -1328,7 +1328,7 @@ Example:
   @def_record
   fn ArrayMap(@entries) {}
 
-  let name->role = ~ArrayMap{
+  let name->role = ArrayMap{
     \"marcelle rusu\" => \"coil language designer\"
   }
 
@@ -1342,7 +1342,7 @@ Example:
     ::find(fn([key]) = key::call(val))
     ::pipe(1)
 
-  let score->letter_grade = ~CallMap{
+  let score->letter_grade = CallMap{
     ..50 => :F
     50..60 => :D
     60..70 => :C
