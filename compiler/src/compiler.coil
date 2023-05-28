@@ -551,14 +551,22 @@ fn parse_op_eq(tokens lhs) = ~Parser[
   ~Then[parse_expr :rhs]
 ]::call(tokens)
 
+fn parse_raw_dynamic_access(tokens lhs) = ~Parser[
+  ~Init[{type: :raw_dynamic_access, lhs}]
+  ~Chomp[:dot :open_sq]
+  ~Then[parse_expr :expr]
+  ~Chomp[:close_sq]
+]::call(tokens)
+
 fn parse_snd_expr_step(tokens, lhs) = ~ParseMap{
-  :dot => parse_dot
   :open_p => parse_fn_call
   :double_colon => parse_infix_bind
   :open_sq => parse_dynamic_access
   :open_b => parse_record_lookup
   :is => parse_is
   :eq => parse_snd_assign
+  [:dot :open_sq] => parse_raw_dynamic_access
+  :dot => parse_dot
   [:single_and :dot] => parse_and_dot
   [:dot_dot :eq] => parse_inclusive_range
   :dot_dot => parse_exclusive_range
@@ -1447,7 +1455,7 @@ fn eval_not_equals(node) = str("negate.call(" eval_double_equals(node) ")")
 fn eval_not({expr}) = str("negate.call(" eval_expr(expr) ")")
 fn eval_dynamic_access({lhs exprs}) {
   let lhs_js = eval_expr(lhs)
-  return str(lhs_js "['[]'].call(" lhs_js ", " exprs::map_join(eval_expr ", ") ")")
+  return str(lhs_js "[Meta]['[]'].call(" lhs_js ", " exprs::map_join(eval_expr ", ") ")")
 }
 fn eval_record_lookup({lhs entries}) {
   let lhs_js = eval_expr(lhs)
@@ -1470,13 +1478,14 @@ fn eval_nullish({lhs, rhs}) = str(eval_expr(lhs) " ?? " eval_expr(rhs))
 fn eval_dynamic_access_assign({lhs, rhs}) {
   let {lhs: obj, exprs} = lhs
   let obj_js = eval_expr(obj)
-  return str(obj_js "['[]='].call(" obj_js ", [" exprs::map_join(eval_expr ", ") "], " eval_expr(rhs) ")")
+  return str(obj_js "[Meta]['[]='].call(" obj_js ", [" exprs::map_join(eval_expr ", ") "], " eval_expr(rhs) ")")
 }
 fn eval_general_snd_assign({lhs, rhs}) = str(eval_expr(lhs) " = " eval_expr(rhs))
 fn eval_snd_assign(node) = node::pipe(:lhs :type ~Map{
   :dynamic_access => eval_dynamic_access_assign
   :id_lookup => eval_general_snd_assign
   :property_lookup => eval_general_snd_assign
+  :raw_dynamic_access => eval_general_snd_assign
 })::call(node)
 fn eval_await({expr}) = str("await " eval_expr(expr))
 fn eval_yield({star? expr}) =
@@ -1609,6 +1618,9 @@ fn eval_op_eq({ lhs, op, rhs }) =
 fn eval_prefix_exclusive_range({ expr }) =
   str("new ERangeNoMin(" eval_expr(expr) ")") 
 
+fn eval_raw_dynamic_access({lhs expr}) =
+  str(eval_expr(lhs) "[" eval_expr(expr) "]")
+
 fn eval_expr(node) = node::at(:type)::pipe(~Map{
   :str => eval_str
   :regex_lit => eval_regex_lit
@@ -1616,6 +1628,7 @@ fn eval_expr(node) = node::at(:type)::pipe(~Map{
   :multi_decorator => eval_multi_decorator
   :keyword => eval_keyword
   :and_dot => eval_and_dot
+  :raw_dynamic_access => eval_raw_dynamic_access
   :prefix_exclusive_range => eval_prefix_exclusive_range
   :partial_fn_call => eval_partial_fn_call
   :partial_obj_dyn_access => eval_partial_obj_dyn_access

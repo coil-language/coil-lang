@@ -1,3 +1,8 @@
+protocol Meta
+impl Meta for Object = {
+  ["[]"]: fn (...keys) = keys::reduce(js_dynamic_object_lookup this)
+  ["[]="]: fn (keys, expr) = js_set_property(this, keys, expr)
+}
 impl "[]" for Object = fn(...keys) {
   let o = this
   for key of keys {
@@ -13,19 +18,19 @@ fn def_global(f) {
     .replaceAll("!", "__b")
     .replaceAll(">", "_lt_")
     .replaceAll("-", "_")
-  globalThis[resolved_name] = f
+  globalThis.[resolved_name] = f
   return f
 }
 
 protocol CustomNumberLiteral
-globalThis[:CustomNumberLiteral] = CustomNumberLiteral
+globalThis.CustomNumberLiteral = CustomNumberLiteral
 
 define CustomNumberLiteral for :custom_number_literal/n = BigInt
 
 // Doc Protocol
 
 protocol Doc
-globalThis[:Doc] = Doc
+globalThis.Doc = Doc
 
 @def_global
 fn doc(f, doc_str) {
@@ -38,12 +43,12 @@ fn log_doc() {
   if this.name {
     console.log(str("# " this.name))
   }  
-  console.log(this[Doc])
+  console.log(this.[Doc])
   return this
 }
 
 protocol Call
-globalThis[:Call] = Call
+globalThis.Call = Call
 
 // can't use decorators, ::call, or ::reduce since its being depended on everywhere
 fn compose(first_fn, ...fns) = fn(...args) {
@@ -65,7 +70,7 @@ example:
 impl Call for Function = fn(...args) = this(...args)
 impl Call for Set = fn(key) = this.has(key)
 impl Call for Map = fn(key) = this.get(key)
-impl Call for ObjectLiteral = fn(key) = this[key]
+impl Call for ObjectLiteral = fn(key) = this.[key]
 impl Call for Array = fn(index) = this.at(index)
 impl Call for String = fn(collection) {
   if typeof(collection) === "string" || collection is Keyword {
@@ -76,6 +81,7 @@ impl Call for String = fn(collection) {
 }
 impl Call for Number = fn(collection) {
   if collection is Keyword {
+    // this feels wrong
     return this[collection]
   } else {
     return collection::call(this)
@@ -87,6 +93,7 @@ impl Call for Keyword = fn(collection) {
   } else if Call keyof collection {
     return collection::call(this)
   } else {
+    // hmm? what is an example of this occurring?
     return collection[this]
   }
 }
@@ -107,7 +114,7 @@ impl :bind for Set = fn(val) = ::fn() = this::call(val)
 let nil? = Object.freeze(#{undefined null})
 
 protocol Pipe
-globalThis[:Pipe] = Pipe
+globalThis.Pipe = Pipe
 
 impl Pipe for Object = fn(callable) = callable::call(this)
 
@@ -177,7 +184,7 @@ See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_
 fn iter?() = ::iter() === this
 
 protocol Iterator
-globalThis[:Iterator] = Iterator
+globalThis.Iterator = Iterator
 
 let default_iterator_impl = {
   fn* take(n) {
@@ -456,7 +463,7 @@ fn join(sep) = ::reduce(fn(prev cur) {
 // INTO
 
 protocol Into
-globalThis[:Into] = Into
+globalThis.Into = Into
 
 impl Into for Array = fn(iterable) = [...this, ...iterable]
 impl Into for ObjectLiteral = fn(iterable) = ::merge(iterable)
@@ -478,10 +485,10 @@ Examples:
 fn into(output) = output[Into](this)
 
 protocol Collection
-globalThis[:Collection] = Collection
+globalThis.Collection = Collection
 
 impl Collection for ObjectLiteral = {
-  fn at(key) = this[key]
+  fn at(key) = this.[key]
   fn len() = Object.keys(this).length
   fn empty?() = this::len() === 0
   fn has?(key) = key keyof this
@@ -524,7 +531,7 @@ Examples:
   {a: 10}::len() // 1
   ~Map{a: :a, b: :b}::len() // 2
 ")]
-fn len() = this[Collection].len.call(this)
+fn len() = this.[Collection].len.call(this)
 
 @[def_call def_global doc("
 determines if a collection is empty
@@ -561,7 +568,7 @@ Examples:
   // strings can not lookup keywords in maps
   ~Map{a: 10}::at(\"a\") // undefined
 ")]
-fn at(key_or_idx) = this[Collection].at.call(this, key_or_idx)
+fn at(key_or_idx) = this.[Collection].at.call(this, key_or_idx)
 
 @[def_global doc("
 determines if a collection has a value
@@ -571,10 +578,10 @@ Examples:
   #{1 2 3}::has?(2) // true
   {a: 10}::has?(:a) // true
 ")]
-fn has?(val) = this[Collection].has?.call(this, val)
+fn has?(val) = this.[Collection].has?.call(this, val)
 
 protocol Record
-globalThis[:Record] = Record
+globalThis.Record = Record
 
 impl Record for ObjectLiteral = {
   fn insert(key, value) = {...this, [key]: value}
@@ -597,7 +604,7 @@ Example:
   {a: 10}::keys() // [\"a\"]
   ~Map{a: 10}::keys()::into(#{}) // #{:a}
 ")]
-fn keys() = this[Record].keys.call(this)
+fn keys() = this.[Record].keys.call(this)
 
 @[def_call def_global doc("
 Get values of a record as an iterator OR a collection
@@ -606,7 +613,7 @@ Example:
   {a: 10}::values() // [10]
   ~Map{a: 10}::values()::into(#{}) // #{10}
 ")]
-fn values() = this[Record].values.call(this)
+fn values() = this.[Record].values.call(this)
 
 @[def_global doc("
 Insert key & value into a record
@@ -615,7 +622,7 @@ Example:
   {a: 10}::insert(:b 20) // {a: 10, b: 20}
   ~Map{a: 10}::insert(:b 20) // ~Map{a: 10, b: 20}
 ")]
-fn insert(key, value) = this[Record].insert.call(this, key, value)
+fn insert(key, value) = this.[Record].insert.call(this, key, value)
 
 @[def_global doc("
 Merge 2 records together
@@ -633,7 +640,7 @@ Example:
   // here's the unexpected result
   ~Map{a: 10}::merge({a: 20}) // ~Map{a: 10, \"a\" => 20}
 ")]
-fn merge(other) = this[Record].merge.call(this, other)
+fn merge(other) = this.[Record].merge.call(this, other)
 
 define "{}" for Map = fn (entries) = new Map(entries)
 define "{}" for Object = Object.fromEntries
@@ -649,7 +656,7 @@ Examples:
   Map{}::record?() // true
   #{}::record?() // false
 ")]
-fn record?() = this[Record]::exists?()
+fn record?() = this.[Record]::exists?()
 
 @[def_global doc("
 Constructs a record based off an entries array
@@ -661,10 +668,10 @@ Examples:
     ==
   ~Map{a: 20}
 ")]
-fn construct_record(entries) = this[Record](entries)
+fn construct_record(entries) = this.[Record](entries)
 
 protocol Vector
-globalThis[:Vector] = Vector
+globalThis.Vector = Vector
 
 @[def_global doc("
 Determines if 'this' conforms to the vector protocol
@@ -674,7 +681,7 @@ Examples:
   #{}::vector?() // true
   {}::vector?() // false
 ")]
-fn vector?() = this[Vector]::exists?()
+fn vector?() = this.[Vector]::exists?()
 
 impl Vector for Array = {
   fn push(val) = [...this, val]
