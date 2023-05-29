@@ -442,7 +442,6 @@ fn parse_infix_bind(tokens lhs) = Parser[
   Case[ParseMap{
     :id => parse_id
     :fn => parse_fn
-    [:tilde :id :open_b] => parse_record_syntax
     all_math_ops => parse_unapplied_math_op
     :open_p => parse_paren_expr
   } :expr]
@@ -881,30 +880,6 @@ fn parse_record_entry(tokens) = ParseMap{
   _ => parse_regular_record_entry
 }::call(tokens)
 
-fn parse_record_syntax(tokens) = Parser[
-  Init[{type: :record_syntax}]
-  Chomp[:open_b]
-  Until[:close_b parse_record_entry :entries]
-  Chomp[:close_b]
-]::call(tokens)
-
-fn parse_vector_syntax(tokens) = Parser[
-  Init[{type: :vector_syntax}]
-  Chomp[:open_sq]
-  Until[:close_sq parse_expr :entries]
-  Chomp[:close_sq]
-]::call(tokens)
-
-fn parse_custom_data_syntax(tokens) = Parser[
-  Init[{type: :custom_data_literal}]
-  Chomp[:tilde]
-  Then[parse_single_expr :constructor_expr]
-  Case[ParseMap{
-    :open_sq => parse_vector_syntax
-    :open_b => parse_record_syntax
-  } :data]
-]::call(tokens)
-
 fn parse_set(tokens) = Parser[
   Init[{type: :set}]
   Chomp[:hash :open_b]
@@ -944,7 +919,6 @@ let SINGLE_EXPR_PARSE_MAP = ParseMap{
   [:hash :open_b] => parse_set
   [:async :fn] => parse_fn
   :fn => parse_fn
-  :tilde => parse_custom_data_syntax
   all_math_ops => parse_unapplied_math_op
 }
 
@@ -1465,23 +1439,6 @@ fn eval_record_entry(node) = node::at(:type)::pipe(Map{
   :keyword_record_entry => eval_keyword_record_entry
 })::call(node)
 
-protocol EvalNode
-
-fn eval_node(...args) = this::at(:type)[EvalNode](this, ...args)
-
-define EvalNode for :vector_syntax = fn({entries}, constructor_expr_js) =
-  str("construct_vector.call(" constructor_expr_js ", "
-        "[" entries::map_join(eval_expr ", ") "]"
-      ")")
-
-define EvalNode for :record_syntax = fn({entries}, constructor_expr_js) =
-  str("construct_record.call(" constructor_expr_js ", "
-        "[" entries::map_join(eval_record_entry ", ") "]"
-      ")")
-
-fn eval_custom_data_literal({constructor_expr, data}) =
-  data::eval_node(eval_expr(constructor_expr))
-
 fn eval_inclusive_range({lhs, rhs}) {
   if rhs {
     return str("new IRange(" eval_expr(lhs) ", " eval_expr(rhs) ")")
@@ -1612,7 +1569,6 @@ fn eval_expr(node) = node::at(:type)::pipe(Map{
   :snd_assign => eval_snd_assign
   :await => eval_await
   :yield => eval_yield
-  :custom_data_literal => eval_custom_data_literal
   :paren_expr => eval_paren_expr
   :unapplied_math_op => eval_unapplied_math_op
   :unapplied_and_and => eval_unapplied_and_and
