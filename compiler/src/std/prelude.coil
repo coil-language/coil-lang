@@ -655,18 +655,6 @@ Examples:
 ")]
 fn record?() = this.[Record]::exists?()
 
-@[def_global doc("
-Constructs a record based off an entries array
-
-This is used for record syntax
-
-Examples:
-  Map::construct_record([[:a 20]])
-    ==
-  Map{a: 20}
-")]
-fn construct_record(entries) = this.[Record](entries)
-
 // TODO: this should be called Sequence or something
 protocol Vector
 globalThis.Vector = Vector
@@ -804,20 +792,6 @@ Examples:
   [1 2 3]::last() // 3
 ")]
 fn last() = this.[OrderedSequence].last.call(this)
-
-@[def_global doc("
-constructs vector based off entries
-
-this is used for custom vector syntax
-
-Examples:
-  import { List } from \"immutable\"
-
-  List::constructor_vector([1 2 3 4])
-    ==
-  List[1 2 3 4]
-")]
-fn construct_vector(entries) = this.[Vector](entries)
 
 // EQUAL PROTOCOl
 

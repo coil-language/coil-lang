@@ -751,17 +751,6 @@ Examples:
   Set[]::record?() // false
 `))(function record__q() {
 return exists__q.bind(this[Record])();})
-let construct_record = compose(def_global, F => doc(F, `
-Constructs a record based off an entries array
-
-This is used for record syntax
-
-Examples:
-  Map::construct_record([[:a 20]])
-    ==
-  Map{a: 20}
-`))(function construct_record(entries) {
-return this[Record](entries);})
 const Vector = Symbol("Vector");
 globalThis['Vector'] = Vector
 let vector__q = compose(def_global, F => doc(F, `
@@ -890,19 +879,6 @@ Examples:
   [1 2 3]::last() // 3
 `))(function last() {
 return this[OrderedSequence]['last']['call'](this);})
-let construct_vector = compose(def_global, F => doc(F, `
-constructs vector based off entries
-
-this is used for custom vector syntax
-
-Examples:
-  import { List } from \"immutable\"
-
-  List::constructor_vector([1 2 3 4])
-    ==
-  List[1 2 3 4]
-`))(function construct_vector(entries) {
-return this[Vector](entries);})
 const Equal = Symbol("Equal");
 globalThis['Equal'] = Equal
 let impl_equal = compose(def_global, F => doc(F, `
