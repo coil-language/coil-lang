@@ -67,8 +67,6 @@ let lexer = Lexer{
   /^\/\/.*/ => pass
   /^\,/ => pass
   /^\;/ => pass
-  /^#/ => :hash
-  /^\~/ => :tilde
   /^if\b/ => :if
   /^is\b/ => :is
   /^else\b/ => :else
@@ -800,12 +798,6 @@ let parse_adjacent_num_raw = Parser[
   Then[parse_num_raw]
 ]
 
-let parse_anon_arg_id = Parser[
-  Init[{type: :anon_arg_id}]
-  Chomp[:single_and]
-  Optional[:num parse_adjacent_num_raw :arg_num]
-]
-
 let parse_unapplied_and_and = Parser[
   Init[{type: :unapplied_and_and}]
   Chomp[:and_and]
@@ -815,13 +807,6 @@ let parse_unapplied_or_or = Parser[
   Init[{type: :unapplied_or_or}]
   Chomp[:or_or]
 ]
-
-fn parse_shorthand_anon_fn(tokens) = Parser[
-  Init[{type: :shorthand_anon_fn}]
-  Chomp[:hash :open_p]
-  Then[parse_expr :expr]
-  Chomp[:close_p]
-]::call(tokens)
 
 let parse_async_modifier = Parser[
   Init[true]
@@ -880,13 +865,6 @@ fn parse_record_entry(tokens) = ParseMap{
   _ => parse_regular_record_entry
 }::call(tokens)
 
-fn parse_set(tokens) = Parser[
-  Init[{type: :set}]
-  Chomp[:hash :open_b]
-  Until[:close_b parse_expr :elements]
-  Chomp[:close_b]
-]::call(tokens)
-
 fn parse_prefix_exclusive_range(tokens) = Parser[
   Init[{type: :prefix_exclusive_range}]
   Chomp[:dot_dot]
@@ -907,7 +885,6 @@ let SINGLE_EXPR_PARSE_MAP = ParseMap{
   :double_colon => parse_bind_this
   :bang => parse_not
   :new => parse_new
-  :single_and => parse_anon_arg_id
   :open_b => parse_obj
   :and_and => parse_unapplied_and_and
   :or_or => parse_unapplied_or_or
@@ -915,8 +892,6 @@ let SINGLE_EXPR_PARSE_MAP = ParseMap{
   valid_ids_in_all_contexts::push(:import) => parse_id
   [:at :open_sq] => parse_multi_decorator
   :at => parse_decorator
-  [:hash :open_p] => parse_shorthand_anon_fn
-  [:hash :open_b] => parse_set
   [:async :fn] => parse_fn
   :fn => parse_fn
   all_math_ops => parse_unapplied_math_op
@@ -1265,7 +1240,8 @@ fn eval_obj_deconstruction_entry(node) = node::at(:type)::pipe(Map{
   :obj_reg_entry => eval_obj_reg_entry
   :obj_entry_rename => eval_obj_entry_rename
   :spread_assign => eval_spread_assign
-  :obj_str_rename_entry => #(str(&::at(:old_name) ": " resolve_name(&::at(:new_name))))
+  :obj_str_rename_entry => fn ({old_name new_name}) =
+    str(old_name ": " resolve_name(new_name))
 })::call(node)
 
 fn eval_object_deconstruction_names({entries}) =
@@ -1326,7 +1302,7 @@ fn eval_math_op({lhs op rhs}) = str(
   ")")
 
 fn eval_this_assignments(args) = args
-  ::keep(#(&::at(:type) == :this_assign))
+  ::keep(_::at(:type) == :this_assign)
   ::map(fn({name}) = str("this." name " = " name ";\n"))
   ::into("")
 
@@ -1339,9 +1315,6 @@ fn eval_fn({is_async? generator? name args body}) = str(
     eval_this_assignments(args)
     eval_ast(body)
   "}")
-
-fn eval_set({elements}) =
-  str("new Set([" elements::map_join(eval_expr ", ") "])")
 
 fn eval_bind({lhs expr}) =
   str(eval_expr(expr) ".bind(" eval_expr(lhs) ")")
@@ -1455,12 +1428,6 @@ fn eval_exclusive_range({lhs, rhs}) {
   }
 }
 
-fn eval_shorthand_anon_fn({expr}) =
-  str("(...__args) => " eval_expr(expr))
-
-fn eval_anon_arg_id({arg_num}) =
-  str("__args[" (arg_num || 1) - 1 "]")
-
 fn eval_multi_decorator({decorators fn_def}) {
   let fn_name = fn_def::pipe(:name resolve_name)
   let decorator_fn_js = decorators
@@ -1552,8 +1519,6 @@ fn eval_expr(node) = node::at(:type)::pipe(Map{
   :not => eval_not
   :fn => eval_fn
   :bind => eval_bind
-  :anon_arg_id => eval_anon_arg_id
-  :set => eval_set
   :obj_lit => eval_obj_lit
   :bind_this => eval_bind_this
   :dynamic_access => eval_dynamic_access
@@ -1573,7 +1538,6 @@ fn eval_expr(node) = node::at(:type)::pipe(Map{
   :unapplied_math_op => eval_unapplied_math_op
   :unapplied_and_and => eval_unapplied_and_and
   :unapplied_or_or => eval_unapplied_or_or
-  :shorthand_anon_fn => eval_shorthand_anon_fn
   :inclusive_range => eval_inclusive_range
   :exclusive_range => eval_exclusive_range
   :keyof => eval_keyof

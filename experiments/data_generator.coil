@@ -26,7 +26,6 @@ impl Sample for IRange = fn() =
 impl Sample for ERange = fn() =
   Math.floor(Math.random() * (this.end - this.start - 1)) + this.start
 
-@def_record
 fn Fake(@entries) {}
 
 impl Sample for Fake = fn() =

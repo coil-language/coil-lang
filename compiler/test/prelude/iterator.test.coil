@@ -9,7 +9,7 @@ Deno.test("[1 2 3] map" fn {
 })
 
 Deno.test("[1 2 3] flat_map" fn {
-  let itself = [1 2 3]::iter()::flat_map(#([&]))::into([])
+  let itself = [1 2 3]::iter()::flat_map(fn (n) = [n])::into([])
   assert_equals(itself, [1 2 3])
 })
 

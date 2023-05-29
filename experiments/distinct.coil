@@ -11,8 +11,8 @@ impl HashCode for ObjectLiteral = fn() =
 @def_call
 fn hash() = this[HashCode]()
 
-@def_vector
-fn HashSet(@items) {
+fn HashSet(...items) {
+  this.items = items  
   this.set = items::map(hash)::as_set()
 }
 impl Call for HashSet = fn(val) = this.set.has(val::hash())

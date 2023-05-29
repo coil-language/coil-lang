@@ -223,7 +223,7 @@ let default_iterator_impl = {
   fn* zip(...collections) {
     let generators = [this, ...collections]::map(iter)::into([])
     loop {
-      let gen_states = generators::map(#(&.next()))::into([])
+      let gen_states = generators::map(fn (state) = state.next())::into([])
       if gen_states::any?(:done) {
         break
       } else {
@@ -1287,50 +1287,6 @@ impl Symbol.iterator for ERangeNoMax = fn*() {
   }
 }
 
-@def_global
-fn def_vector(Constructor) {
-  define Vector for Constructor = fn(args) = new Constructor(...args)
-  return Constructor
-}
-
-@[def_global doc("
-Defines a basic record type for a given constructor.
-
-Important! make sure your constructor has its entries stored at this.entries.
-
-Example:
-  @def_record
-  fn ArrayMap(@entries) {}
-
-  let name->role = ArrayMap{
-    \"marcelle rusu\" => \"coil language designer\"
-  }
-
-  // note that in this most minimal use, def_record isn't super useful.
-  // let's take a look at something more practical
-
-  @def_record
-  fn CallMap(@entries) {}
-
-  impl Call for CallMap = fn(val) =
-    ::find(fn([key]) = key::call(val))
-    ::pipe(1)
-
-  let score->letter_grade = CallMap{
-    ..50 => :F
-    50..60 => :D
-    60..70 => :C
-    70..80 => :B
-    80.. => :A
-  }
-  score->letter_grade::call(60) // :C
-")]
-fn def_record(Constructor) {
-  define Record for Constructor = fn(entries) = new Constructor(entries)
-  impl Symbol.iterator for Constructor = fn() = this.entries::iter()
-  return Constructor
-}
-
 // string helpers
 let char_alpha? = ("a"..="z")::into(Set[]) + ("A"..="Z")::into(Set[])
 let char_numeric? = ("0"..="9")::into(Set[])
@@ -1345,7 +1301,7 @@ fn alpha?() = this::all?(char_alpha?)
 @[def_global doc("all characters in string are in a-z or A-Z or 0-9")]
 fn alpha_numeric?() = this::all?(char_alpha_numeric?)
 
-@[def_record def_global]
+@def_global
 fn CallMap(@entries) {}
 
 impl Call for CallMap = fn(value) =

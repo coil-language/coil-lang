@@ -12,7 +12,6 @@ impl Fmt for Colored = fn = {
   css: [str("color: " this.color) "color: unset"]
 }
 
-@def_vector
 fn FString(...elems) { this.elems = elems }
 impl Fmt for FString = fn {
   let fmt_keys = this.elems::map(fmt)::into([])
