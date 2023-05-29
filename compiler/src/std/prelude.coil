@@ -8,7 +8,7 @@ impl Meta for Function = {
   ["{}"]: fn (entries) = Reflect.construct(this [entries])
 }
 define Meta for Set = {
-  ["[]"]: fn (...elems) = new Set(elems)
+  ["[]"]: fn (...elems) = Reflect.construct(Set [elems])
 }
 
 fn def_global(f) {
@@ -73,7 +73,7 @@ impl Call for ObjectLiteral = fn(key) = this.[key]
 impl Call for Array = fn(index) = this.at(index)
 impl Call for String = fn(collection) {
   if typeof(collection) === "string" || collection is Keyword {
-    raise!(new TypeError("Can't 'call' a string with " + collection::as_str()))
+    raise!(TypeError["Can't 'call' a string with " + collection::as_str()])
   } else {
     return collection::call(this)
   }
@@ -88,7 +88,7 @@ impl Call for Number = fn(collection) {
 }
 impl Call for Keyword = fn(collection) {
   if collection is Keyword || typeof(collection) === "string" {
-    raise!(new TypeError("Can't 'call' a keyword with" + collection::as_str()))
+    raise!(TypeError["Can't 'call' a keyword with" + collection::as_str()])
   } else if Call keyof collection {
     return collection::call(this)
   } else {
@@ -590,8 +590,8 @@ impl Record for ObjectLiteral = {
 }
 
 impl Record for Map = {
-  fn insert(key, value) = new Map([...this, [key, value]])
-  fn merge(other) = new Map([...this, ...other])
+  fn insert(key, value) = Map{...this, key => value}
+  fn merge(other) = Map{...this, ...other}
   fn keys() = this.keys()
   fn values() = this.values()
 }
@@ -641,10 +641,6 @@ Example:
 ")]
 fn merge(other) = this.[Record].merge.call(this, other)
 
-// phase these out
-define Record for Map = fn(entries) = new Map(entries)
-define Record for Object = Object.fromEntries
-
 @[def_global doc("
 Determines if 'this' is a record
 
@@ -682,14 +678,14 @@ impl Vector for Array = {
 }
 
 impl Vector for Set = {
-  fn push(value) = new Set(this).add(value)
+  fn push(value) = Set[...this value]
   fn replace(old_val, new_val) {
-    let self = new Set(this)
+    let self = Set[...this]
     self.delete(old_value)
     self.add(new_val)
     return self
   }
-  fn concat(other) = new Set([...this, ...other])
+  fn concat(other) = Set[...this, ...other]
 }
 
 impl Vector for String = {
@@ -805,12 +801,12 @@ specifying the keys to measure equality by
 Examples:
   fn Dog(@name, @age) {}
 
-  new Dog(\"joey\" 1) == new Dog(\"joey\" 1) // false
+  Dog[\"joey\" 1] == Dog[\"joey\" 1] // false
 
   @impl_equal(:name :age)
   fn Dog(@name @age) {}
 
-  new Dog(\"joey\" 1) == new Dog(\"joey\" 1) // true
+  Dog[\"joey\" 1] == Dog[\"joey\" 1] // true
 ")]
 fn impl_equal(Ctor, ...keys) {
   impl Equal for Ctor = fn(other) =
@@ -893,7 +889,7 @@ globalThis.Or = Or
 @doc("raise! if 'this' isn't a 'type_str'")
 fn expect_primitive_type!(type_str) {
   if typeof(this) !== type_str {
-    raise!(new Error(str("Expected " type_str)))
+    raise!(Error[str("Expected " type_str)])
   }
 }
 
@@ -1155,16 +1151,16 @@ fn exists?() = !this::nil?()
 // Underscore
 
 @def_global
-fn Underscore(@transforms) {}
+fn Underscore(...transforms) { this.transforms = transforms }
 
 protocol UnderscoreInterpreter
 globalThis.UnderscoreInterpreter = UnderscoreInterpreter
 
-let _ = new Underscore([{f: fn id() = this, args: []}])
+let _ = Underscore[{f: fn id() = this, args: []}]
 globalThis._ = _
 
 impl :insert for Underscore = fn(f, ...args) =
-  new Underscore(this.transforms::push({f, args}))
+  Underscore[...this.transforms {f, args}]
 
 impl UnderscoreInterpreter for Object = fn(underscore) {
   let initial_value = this

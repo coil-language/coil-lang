@@ -11,7 +11,7 @@ impl OrderedSequence for CollectionView = {
   fn first() = this.collection::at(this.idx)
   fn last() = this.collection::last()
 }
-impl :skip for CollectionView = fn(n) = new CollectionView(this.collection, this.idx + n)
+impl :skip for CollectionView = fn(n) = CollectionView[this.collection, this.idx + n]
 
 impl Symbol.iterator for CollectionView = fn*() {
   for i of this.idx..=this.collection::len() {
@@ -55,7 +55,7 @@ impl Call for Lexer = fn(str) {
         break
       }
     }
-    if !found { raise!(new Error("No token matched.")) }
+    if !found { raise!(Error["No token matched."]) }
   }
 
   return tokens
@@ -91,7 +91,6 @@ let lexer = Lexer{
   /^yield\b/ => :yield
   /^async\b/ => :async
   /^await\b/ => :await
-  /^new\b/ => :new
   /^keyof\b/ => :keyof
   /^as\b/ => :as
   /^\=\>/ => :arrow
@@ -137,18 +136,18 @@ let lexer = Lexer{
 }
 
 fn ParseError(expected_token_type, actual_token) {
-  this.stack = (new Error()).stack
+  this.stack = Error[].stack
   this.message = str(
     "Expected: " expected_token_type
     " got " actual_token::at(:type)
     " @ " actual_token::at(:line)::as_str() ":" actual_token::at(:col)::as_str()
   )
 }
-ParseError.prototype = new Error()
+ParseError.prototype = Error[]
 
 fn expect_token!(kw) {
   if this::first()::at(:type) != kw {
-    raise!(new ParseError(kw, this::first()))
+    raise!(ParseError[kw, this::first()])
   } else {
     return this
   }
@@ -156,7 +155,7 @@ fn expect_token!(kw) {
 
 fn verify_exists!(parser) {
   if this::nil?() {
-    raise!(new Error("Parser Failed - Expected " + parser::js_log_friendly()))
+    raise!(Error["Parser Failed - Expected " + parser])
   } else {
     return this
   }
@@ -255,7 +254,7 @@ impl ParseInstruction for Case = fn([expr tokens]) {
     }
   } else {
     console.log(this.tokens::first(), this.parse_map)
-    raise!(new Error("Case Parse Failed"))
+    raise!(Error["Case Parse Failed"])
   }
 }
 
@@ -781,15 +780,6 @@ fn parse_not(tokens) = Parser[
   Then[parse_1_2_expr :expr]
 ]::call(tokens)
 
-fn parse_new(tokens) = Parser[
-  Init[{type: :new}]
-  Chomp[:new]
-  One[:id :constructor_name]
-  Chomp[:open_p]
-  Until[:close_p parse_expr :args]
-  Chomp[:close_p]
-]::call(tokens)
-
 fn parse_num_raw(tokens) =
   parse_num::call(tokens)::pipe(fn([expr, tokens]) = [expr::at(:value)::as_num(), tokens])
 
@@ -861,6 +851,7 @@ fn parse_regular_record_entry(tokens) = Parser[
 ]::call(tokens)
 
 fn parse_record_entry(tokens) = ParseMap{
+  :dot_dot_dot => parse_spread
   [:id :colon] => parse_keyword_record_entry
   _ => parse_regular_record_entry
 }::call(tokens)
@@ -884,7 +875,6 @@ let SINGLE_EXPR_PARSE_MAP = ParseMap{
   :dot_dot_dot => parse_spread
   :double_colon => parse_bind_this
   :bang => parse_not
-  :new => parse_new
   :open_b => parse_obj
   :and_and => parse_unapplied_and_and
   :or_or => parse_unapplied_or_or
@@ -1186,7 +1176,7 @@ fn eval_if_branch(branch) {
         "\n}" eval_if_branch(branch::at(:fail))
       )
     } else {
-      raise!(new Error("Expected else if"))
+      raise!(Error["Expected else if"])
     }
   }
 }
@@ -1366,8 +1356,6 @@ fn eval_record_lookup({lhs entries}) {
   let entries_js = entries::map_join(eval_record_entry ", ")
   return str(lhs_js "[Meta]['{}'].call(" lhs_js ", [" entries_js "])")
 }
-fn eval_new({constructor_name, args}) =
-  str("new " constructor_name "(" args::map_join(eval_expr ", ") ")")
 fn eval_triple_equals({lhs rhs}) =
   str(eval_expr(lhs) " === " eval_expr(rhs))
 fn eval_triple_not_equals({lhs rhs}) =
@@ -1410,6 +1398,7 @@ fn eval_keyword_record_entry({name expr}) =
 fn eval_record_entry(node) = node::at(:type)::pipe(Map{
   :regular_record_entry => eval_regular_record_entry
   :keyword_record_entry => eval_keyword_record_entry
+  :spread => eval_spread
 })::call(node)
 
 fn eval_inclusive_range({lhs, rhs}) {
@@ -1523,7 +1512,6 @@ fn eval_expr(node) = node::at(:type)::pipe(Map{
   :bind_this => eval_bind_this
   :dynamic_access => eval_dynamic_access
   :record_lookup => eval_record_lookup
-  :new => eval_new
   :triple_equals => eval_triple_equals
   :triple_not_equals => eval_triple_not_equals
   :spread => eval_spread
@@ -1671,11 +1659,11 @@ fn eval_statement(node) = node::at(:type)::pipe(Map{
 export fn eval_ast(ast) = ast::map_join(eval_statement "\n")
 
 export fn lex_and_parse(string) = lexer::call(string)
-  ::pipe(fn(tokens) = new CollectionView(tokens, 0))
+  ::pipe(fn(tokens) = CollectionView[tokens, 0])
   ::pipe(parse)
 
 export fn compile(string) = lexer::call(string)
-  ::pipe(fn(tokens) = new CollectionView(tokens, 0))
+  ::pipe(fn(tokens) = CollectionView[tokens, 0])
   ::pipe(parse)
   ::pipe(eval_ast)
 
