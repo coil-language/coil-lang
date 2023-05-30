@@ -91,7 +91,6 @@ let lexer = Lexer{
   /^yield\b/ => :yield
   /^async\b/ => :async
   /^await\b/ => :await
-  /^keyof\b/ => :keyof
   /^as\b/ => :as
   /^\=\>/ => :arrow
   /^\@/ => :at
@@ -185,7 +184,7 @@ impl ParseInstruction for Optional = fn([expr tokens]) {
     ::any?(fn(val) {
       if val == type {
         return true
-      } else if Vector keyof val {
+      } else if val.[Vector] {
         return val::has?(type)
       }
     })
@@ -265,12 +264,7 @@ impl ParseInstruction for Either = fn([expr tokens]) {
   return [expr::merge({[this.kw]: new_expr::at(:value)}), rest]
 }
 
-fn parse_step(result) {
-  if !(ParseInstruction keyof this) {
-    console.log("This is not parsable:", this::js_log_friendly())
-  }
-  return this[ParseInstruction](result)
-}
+fn parse_step(result) = this[ParseInstruction](result)
 
 fn Parser(...instructions) { this.instructions = instructions }
 
@@ -371,12 +365,6 @@ fn parse_nullish(tokens lhs) = Parser[
   Then[parse_expr :rhs]
 ]::call(tokens)
 
-fn parse_keyof(tokens lhs) = Parser[
-  Init[{type: :keyof, lhs}]
-  Chomp[:keyof]
-  Then[parse_expr :rhs]
-]::call(tokens)
-
 fn parse_comparison_op(tokens lhs) = Parser[
   Init[{type: :math_op, lhs}]
   Either[comparison_ops :op]
@@ -391,7 +379,6 @@ fn parse_third_expr_step(tokens, lhs) = ParseMap{
   :and_and => parse_and_and
   :or_or => parse_or_or
   :nullish => parse_nullish
-  :keyof => parse_keyof
   comparison_ops => parse_comparison_op
 }::call(tokens, lhs)
 
@@ -1452,7 +1439,6 @@ fn eval_decorator({name: decorator_name, fn_def args}) {
   }
 }
 
-fn eval_keyof({lhs rhs}) = str(eval_expr(lhs) " in " eval_expr(rhs))
 fn eval_and_dot({lhs rhs}) = str(eval_expr(lhs) "?." eval_expr(rhs))
 fn eval_partial_fn_call({expr}) = str("(" eval_expr(expr) ")")
 fn eval_partial_obj_dyn_access({expr}) = str("[" eval_expr(expr) "]")
@@ -1528,7 +1514,6 @@ fn eval_expr(node) = node::at(:type)::pipe(Map{
   :unapplied_or_or => eval_unapplied_or_or
   :inclusive_range => eval_inclusive_range
   :exclusive_range => eval_exclusive_range
-  :keyof => eval_keyof
   :op_eq => eval_op_eq
 })::call(node)
 

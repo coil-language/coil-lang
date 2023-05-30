@@ -89,7 +89,7 @@ impl Call for Number = fn(collection) {
 impl Call for Keyword = fn(collection) {
   if collection is Keyword || typeof(collection) === "string" {
     raise!(TypeError["Can't 'call' a keyword with" + collection::as_str()])
-  } else if Call keyof collection {
+  } else if collection.[Call] {
     return collection::call(this)
   } else {
     // hmm? what is an example of this occurring?
@@ -490,7 +490,7 @@ impl Collection for ObjectLiteral = {
   fn at(key) = this.[key]
   fn len() = Object.keys(this).length
   fn empty?() = this::len() === 0
-  fn has?(key) = key keyof this
+  fn has?(key) = this.[key]::exists?()
 }
 
 impl Collection for Array = {
