@@ -1,3 +1,7 @@
+define Meta for Error = {
+  ["[]"]: fn(...msg) = Reflect.construct(Error [str(...msg)])
+}
+
 fn CollectionView(@collection, @idx) {}
 
 // Its only partially implemented right now because most use-cases
@@ -55,7 +59,10 @@ impl Call for Lexer = fn(str) {
         break
       }
     }
-    if !found { raise!(Error["No token matched."]) }
+    if !found {
+      let program_line = str.split("\n")[line - 1]
+      raise!(Error["\n> `" program_line "`\nunexpected token @ " line ":" col "\n"])
+    }
   }
 
   return tokens

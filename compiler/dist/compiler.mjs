@@ -1329,7 +1329,9 @@ this.entries = entries;
 CallMap.prototype[Call] = function (value) {
 return pipe.bind(find.bind(this)(function ([callable, _]) {
 return call.bind(callable)(value);}))(function ([_, val]) {
-return val;});};function CollectionView(collection, idx) {
+return val;});};Error[Meta] = new ObjectLiteral({["[]"]: function (...msg) {
+return Reflect['construct'](Error, [str(...msg)]);}});
+function CollectionView(collection, idx) {
 this.collection = collection;
 this.idx = idx;
 }
@@ -1392,7 +1394,8 @@ break;
 };
 };
 if (truthy(negate.call(found))) {
-raise__b(Error[Meta]['[]'].call(Error, "No token matched."))
+let program_line = str['split']("\n")[Meta]['[]'].call(str['split']("\n"), minus.call(line,(1)));
+raise__b(Error[Meta]['[]'].call(Error, "\n> `", program_line, "`\nunexpected token @ ", line, ":", col, "\n"))
 };
 };
 return tokens;};
