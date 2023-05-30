@@ -47,13 +47,22 @@ impl Call for Lexer = fn(str) {
     for [pattern type] of this.entries {
       if let value = pattern::scan() {
         if type == newline {
-          line = line + 1
+          line += 1
           col = 1
+        } else if type == :string_lit { 
+          let lines = value.split("\n")
+          tokens.push({type, value, line, col})
+          if lines::len() > 1 {
+            line += lines::len() - 1
+            col = lines::at(-1)::len() + 1
+          } else {
+            col += value::len()
+          }
         } else if type != pass {
           tokens.push({type, value, line, col})
-          col = col + value::len()
+          col += value::len()
         } else {
-          col = col + value::len()
+          col += value::len()
         }
         found = true
         break

@@ -1381,13 +1381,22 @@ let __coil_if_let_temp = scan.bind(pattern)();
 if (truthy(__coil_if_let_temp)) {
 let value = __coil_if_let_temp;
 if (truthy(equals__q.call(type, newline))) {
-line = plus.call(line,(1))
+line = plus.call(line, (1))
 col = (1)
+} else if (equals__q.call(type, Keyword.for("string_lit"))) {
+let lines = value['split']("\n");
+tokens['push'](new ObjectLiteral({'type':type, 'value':value, 'line':line, 'col':col}))
+if (truthy(greater_than.call(len.bind(lines)(),(1)))) {
+line = plus.call(line, minus.call(len.bind(lines)(),(1)))
+col = plus.call(len.bind(at.bind(lines)((-1)))(),(1))
+} else {
+col = plus.call(col, len.bind(value)())
+};
 } else if (negate.call(equals__q.call(type, pass))) {
 tokens['push'](new ObjectLiteral({'type':type, 'value':value, 'line':line, 'col':col}))
-col = plus.call(col,len.bind(value)())
+col = plus.call(col, len.bind(value)())
 } else {
-col = plus.call(col,len.bind(value)())
+col = plus.call(col, len.bind(value)())
 };
 found = true
 break;
