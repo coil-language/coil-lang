@@ -247,10 +247,16 @@ fn Until(@end_kw, @parser, @kw) {}
 impl ParseInstruction for Until = fn([expr tokens]) {
   let exprs = []  
   while tokens::first()::at(:type) != this.end_kw {
-    let [expr new_tokens] = this.parser::call(tokens)
-      ::verify_exists!(this)
-    exprs.push(expr)
-    tokens = new_tokens
+    if let [expr new_tokens] = this.parser::call(tokens) {
+      exprs.push(expr)
+      tokens = new_tokens
+    } else {
+      if let {line col} = tokens::first() {
+        raise!(Error["Parser ["this.parser.name "] failed @ " line ":" col])
+      } else {
+        raise!(Error["Unexpected EOF"])
+      }
+    }  
   }
   if this.kw {
     return [expr::merge({[this.kw]: exprs}) tokens]
@@ -398,12 +404,14 @@ fn parse_third_expr_step(tokens, lhs) = ParseMap{
   comparison_ops => parse_comparison_op
 }::call(tokens, lhs)
 
-fn parse_third_expr([lhs tokens]) {  
-  while let [new_lhs rest] = parse_third_expr_step(tokens, lhs) {
-    lhs = new_lhs
-    tokens = rest
+fn parse_third_expr(result) {
+  if let [lhs tokens] = result {
+    while let [new_lhs rest] = parse_third_expr_step(tokens, lhs) {
+      lhs = new_lhs
+      tokens = rest
+    }
+    return [lhs tokens]
   }
-  return [lhs tokens]
 }
 
 fn parse_partial_obj_dyn_access(tokens) = Parser[
@@ -548,12 +556,14 @@ fn parse_snd_expr_step(tokens, lhs) = ParseMap{
   math_ops => parse_math_op
 }::call(tokens, lhs)
 
-fn parse_snd_expr([lhs tokens]) {  
-  while let [new_lhs rest] = parse_snd_expr_step(tokens, lhs) {
-    lhs = new_lhs
-    tokens = rest
+fn parse_snd_expr(result) {
+  if let [lhs tokens] = result {
+    while let [new_lhs rest] = parse_snd_expr_step(tokens, lhs) {
+      lhs = new_lhs
+      tokens = rest
+    }
+    return [lhs tokens]
   }
-  return [lhs tokens]
 }
 
 fn parse_call_expr(tokens) = Parser[

@@ -164,6 +164,7 @@ globalThis["raise__b"] = raise__b;
 globalThis["Keyword"] = Keyword;
 globalThis["ObjectLiteral"] = ObjectLiteral;
 globalThis["truthy"] = truthy;
+ObjectLiteral.prototype[Symbol['toStringTag']] = " ";
 const Meta = Symbol("Meta");
 Object.prototype[Meta] = new ObjectLiteral({["[]"]: function (...keys) {
 return reduce.bind(keys)(js_dynamic_object_lookup, this);}, ["[]="]: function (keys, expr) {
@@ -1173,6 +1174,9 @@ globalThis['UnderscoreInterpreter'] = UnderscoreInterpreter
 let _ = Underscore[Meta]['[]'].call(Underscore, new ObjectLiteral({'f': function id() {
 return this;}, 'args': []}));
 globalThis['_'] = _
+Underscore.prototype[Meta] = new ObjectLiteral({["[]"]: function (...keys) {
+return this['insert'](function (...keys) {
+return this[Meta]['[]'].call(this, ...keys);}, ...keys);}});
 Underscore.prototype[Keyword.for("insert")] = function (f, ...args) {
 return Underscore[Meta]['[]'].call(Underscore, ...this['transforms'], new ObjectLiteral({'f':f, 'args':args}));};
 Object.prototype[UnderscoreInterpreter] = function (underscore) {
@@ -1503,9 +1507,20 @@ this.kw = kw;
 Until.prototype[ParseInstruction] = function ([expr, tokens]) {
 let exprs = [];
 while (negate.call(equals__q.call(at.bind(first.bind(tokens)())(Keyword.for("type")), this['end_kw']))) {
-let [expr, new_tokens] = verify_exists__b.bind(call.bind(this['parser'])(tokens))(this);
+let __coil_if_let_temp = call.bind(this['parser'])(tokens);
+if (truthy(__coil_if_let_temp)) {
+let [expr, new_tokens] = __coil_if_let_temp;
 exprs['push'](expr)
 tokens = new_tokens
+} else {
+let __coil_if_let_temp = first.bind(tokens)();
+if (truthy(__coil_if_let_temp)) {
+let {'line': line, 'col': col} = __coil_if_let_temp;
+raise__b(Error[Meta]['[]'].call(Error, "Parser [", this['parser']['name'], "] failed @ ", line, ":", col))
+} else {
+raise__b(Error[Meta]['[]'].call(Error, "Unexpected EOF"))
+};
+};
 };
 if (truthy(this['kw'])) {
 return [merge.bind(expr)(new ObjectLiteral({[this['kw']]: exprs})), tokens];
@@ -1611,7 +1626,10 @@ function parse_comparison_op(tokens, lhs) {
 return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("math_op"), 'lhs':lhs})), Either[Meta]['[]'].call(Either, comparison_ops, Keyword.for("op")), Then[Meta]['[]'].call(Then, parse_1_2_expr, Keyword.for("rhs"))))(tokens);}
 function parse_third_expr_step(tokens, lhs) {
 return call.bind(ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("double_eq"), parse_double_eq], [Keyword.for("triple_eq"), parse_triple_eq], [Keyword.for("triple_not_eq"), parse_triple_not_eq], [Keyword.for("not_eq"), parse_not_eq], [Keyword.for("and_and"), parse_and_and], [Keyword.for("or_or"), parse_or_or], [Keyword.for("nullish"), parse_nullish], [comparison_ops, parse_comparison_op]]))(tokens, lhs);}
-function parse_third_expr([lhs, tokens]) {
+function parse_third_expr(result) {
+let __coil_if_let_temp = result;
+if (truthy(__coil_if_let_temp)) {
+let [lhs, tokens] = __coil_if_let_temp;
 let __coil_while_let_temp = parse_third_expr_step(tokens, lhs);
 while (__coil_while_let_temp) {
 let [new_lhs, rest] = __coil_while_let_temp;
@@ -1619,7 +1637,8 @@ lhs = new_lhs
 tokens = rest
 __coil_while_let_temp = parse_third_expr_step(tokens, lhs);
 };
-return [lhs, tokens];}
+return [lhs, tokens];
+};}
 function parse_partial_obj_dyn_access(tokens) {
 return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("partial_obj_dyn_access")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_sq")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_sq"))))(tokens);}
 function parse_partial_fn_call(tokens) {
@@ -1663,7 +1682,10 @@ function parse_raw_dynamic_access(tokens, lhs) {
 return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("raw_dynamic_access"), 'lhs':lhs})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("dot"), Keyword.for("open_sq")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_sq"))))(tokens);}
 function parse_snd_expr_step(tokens, lhs) {
 return call.bind(ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("open_p"), parse_fn_call], [Keyword.for("double_colon"), parse_infix_bind], [Keyword.for("open_sq"), parse_dynamic_access], [Keyword.for("open_b"), parse_record_lookup], [Keyword.for("is"), parse_is], [Keyword.for("eq"), parse_snd_assign], [[Keyword.for("dot"), Keyword.for("open_sq")], parse_raw_dynamic_access], [Keyword.for("dot"), parse_dot], [[Keyword.for("single_and"), Keyword.for("dot")], parse_and_dot], [[Keyword.for("dot_dot"), Keyword.for("eq")], parse_inclusive_range], [Keyword.for("dot_dot"), parse_exclusive_range], [[assignable_ops, Keyword.for("eq")], parse_op_eq], [math_ops, parse_math_op]]))(tokens, lhs);}
-function parse_snd_expr([lhs, tokens]) {
+function parse_snd_expr(result) {
+let __coil_if_let_temp = result;
+if (truthy(__coil_if_let_temp)) {
+let [lhs, tokens] = __coil_if_let_temp;
 let __coil_while_let_temp = parse_snd_expr_step(tokens, lhs);
 while (__coil_while_let_temp) {
 let [new_lhs, rest] = __coil_while_let_temp;
@@ -1671,7 +1693,8 @@ lhs = new_lhs
 tokens = rest
 __coil_while_let_temp = parse_snd_expr_step(tokens, lhs);
 };
-return [lhs, tokens];}
+return [lhs, tokens];
+};}
 function parse_call_expr(tokens) {
 return call.bind(Parser[Meta]['[]'].call(Parser, Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_p")), Until[Meta]['[]'].call(Until, Keyword.for("close_p"), parse_expr), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_p"))))(tokens);}
 function parse_decorator_expr(tokens) {
