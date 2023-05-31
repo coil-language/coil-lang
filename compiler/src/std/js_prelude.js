@@ -70,6 +70,15 @@ function js_or(a, b) {
 }
 globalThis.js_or = js_or;
 
+function js_nullish(a, b) {
+  if (a === null || a === undefined) {
+    return b();
+  } else {
+    return a;
+  }
+}
+globalThis.js_nullish = js_nullish;
+
 function js_plus(a, b) {
   return a + b;
 }
