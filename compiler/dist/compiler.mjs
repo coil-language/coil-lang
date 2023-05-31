@@ -196,7 +196,7 @@ return f;});
 const Nullish = Symbol("Nullish");
 globalThis['Nullish'] = Nullish
 function nullish(thunk) {
-return this?.[Nullish](thunk);}
+return js_nullish(this?.[Nullish](thunk), thunk);}
 Object.prototype[Nullish] = function (thunk) {
 return js_nullish(this, thunk);};
 let log_doc = def_global(function log_doc() {

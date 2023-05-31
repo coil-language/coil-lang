@@ -36,7 +36,7 @@ fn doc(f, doc_str) {
 protocol Nullish
 globalThis.Nullish = Nullish
 
-fn nullish(thunk) = this&.[Nullish](thunk)
+fn nullish(thunk) = js_nullish(this&.[Nullish](thunk), thunk)
 
 impl Nullish for Object = fn(thunk) = js_nullish(this, thunk)
 
