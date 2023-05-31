@@ -1335,6 +1335,26 @@ fn ERangeNoMax(@start) {}
 @[def_global impl_equal(:end)]
 fn ERangeNoMin(@end) {}
 
+impl Collection for IRange = {
+  fn has?(val) = this::call(val)
+}
+
+impl Collection for ERange = {
+  fn has?(val) = this::call(val)
+}
+
+impl Collection for IRangeNoMin = {
+  fn has?(val) = this::call(val)
+}
+
+impl Collection for ERangeNoMax = {
+  fn has?(val) = this::call(val)
+}
+
+impl Collection for ERangeNoMin = {
+  fn has?(val) = this::call(val)
+}
+
 impl Call for IRange = fn(value) = value >= this.start && value <= this.end
 impl Call for ERange = fn(value) = value >= this.start && value < this.end
 impl Call for IRangeNoMin = fn(value) = value <= this.end
