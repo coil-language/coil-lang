@@ -164,7 +164,6 @@ globalThis["raise__b"] = raise__b;
 globalThis["Keyword"] = Keyword;
 globalThis["ObjectLiteral"] = ObjectLiteral;
 globalThis["truthy"] = truthy;
-ObjectLiteral.prototype[Symbol['toStringTag']] = " ";
 const Meta = Symbol("Meta");
 Object.prototype[Meta] = new ObjectLiteral({["[]"]: function (...keys) {
 return reduce.bind(keys)(js_dynamic_object_lookup, this);}, ["[]="]: function (keys, expr) {
@@ -1174,9 +1173,6 @@ globalThis['UnderscoreInterpreter'] = UnderscoreInterpreter
 let _ = Underscore[Meta]['[]'].call(Underscore, new ObjectLiteral({'f': function id() {
 return this;}, 'args': []}));
 globalThis['_'] = _
-Underscore.prototype[Meta] = new ObjectLiteral({["[]"]: function (...keys) {
-return this['insert'](function (...keys) {
-return this[Meta]['[]'].call(this, ...keys);}, ...keys);}});
 Underscore.prototype[Keyword.for("insert")] = function (f, ...args) {
 return Underscore[Meta]['[]'].call(Underscore, ...this['transforms'], new ObjectLiteral({'f':f, 'args':args}));};
 Object.prototype[UnderscoreInterpreter] = function (underscore) {
