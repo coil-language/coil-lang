@@ -37,6 +37,13 @@ fn doc(f, doc_str) {
   return f
 }
 
+protocol Nullish
+globalThis.Nullish = Nullish
+
+fn nullish(thunk) = js_nullish(this&.[Nullish](thunk), thunk)
+
+impl Nullish for Object = fn(thunk) = js_nullish(this, thunk)
+
 @def_global
 fn log_doc() {
   if this.name {
@@ -173,7 +180,7 @@ Returns an iterator of 'this'.
 
 In the case 'this' is nil, you will get an empty array iterator.
 ")]
-fn iter() = this&.[Symbol.iterator]() ?? []::iter()
+fn iter() = this&.[Symbol.iterator]() || []::iter()
 
 @[def_call doc("
 Determines if 'this' is a valid Symbol.iterator
@@ -541,7 +548,7 @@ Examples:
   null::empty?() // true
   ""::empty?() // true
 ")]
-fn empty?() = this&.[Collection].empty?.call(this) ?? true
+fn empty?() = js_nullish(this&.[Collection].empty?.call(this) fn = true)
 
 @[def_call def_global doc("
 determines if a collection is not empty
@@ -859,7 +866,7 @@ Examples:
   // is the same as
   1 == 1 // true
 ")]
-fn equals?(other) = this&.[Equal](other) ?? this === other
+fn equals?(other) = js_or(this&.[Equal](other) fn = this === other)
 
 // OPERATORS
 
@@ -886,6 +893,7 @@ globalThis.And = And
 protocol Or
 globalThis.Or = Or
 
+
 @doc("raise! if 'this' isn't a 'type_str'")
 fn expect_primitive_type!(type_str) {
   if typeof(this) !== type_str {
@@ -896,6 +904,7 @@ fn expect_primitive_type!(type_str) {
 impl Negate for Object = fn() = js_negate(this)
 impl And for Object = fn(thunk) = js_and(this, thunk)
 impl Or for Object = fn(thunk) = js_or(this, thunk)
+impl Nullish for Object = fn(thunk) = js_nullish(this, thunk)
 impl Plus for Set = fn(other_set) = this::concat(other_set)
 impl Plus for Array = fn(arr) = this::concat(arr)
 impl Plus for Number = fn(other) {
@@ -1023,7 +1032,7 @@ fn plus(other) = this.[Plus](other)
 Examples:
   !true == true::negate()
 ")]
-fn negate() = this&.[Negate]() ?? true
+fn negate() = js_nullish(this&.[Negate]() fn = true)
 
 @[def_global doc("
 [[Minus]] method for '-' infix operator
@@ -1111,7 +1120,7 @@ fn and(thunk) = this&.[And](thunk)
 Examples:
   false::or(fn = :val) == false || :val
 ")]
-fn or(thunk) = this&.[Or](thunk) ?? thunk()
+fn or(thunk) = js_or(this&.[Or](thunk) thunk)
 
 @[def_global def_call]
 fn log(...args) {
@@ -1143,8 +1152,7 @@ fn as_keyword() = Keyword.["for"](this.toString())
 fn as_num() = Number(this)
 
 @[def_global def_call]
-fn as_str() = this&.toString() ?? ""
-
+fn as_str() = js_or(this&.toString() fn = "")
 @[def_global def_call]
 fn exists?() = !this::nil?()
 
@@ -1221,6 +1229,7 @@ impl Vector for Underscore = {
 impl Pipe for Underscore = fn(f) = this.insert(pipe, f)
 impl And for Underscore = fn(thunk) = this.insert(and, thunk)
 impl Or for Underscore = fn(thunk) = this.insert(or, thunk)
+impl Nullish for Underscore = fn(thunk) = this.insert(nullish, thunk)
 impl Plus for Underscore = fn(other) = this.insert(plus, other)
 impl Minus for Underscore = fn(other) = this.insert(minus, other)
 impl Times for Underscore = fn(other) = this.insert(times, other)

@@ -70,6 +70,15 @@ function js_or(a, b) {
 }
 globalThis.js_or = js_or;
 
+function js_nullish(a, b) {
+  if (a === null || a === undefined) {
+    return b();
+  } else {
+    return a;
+  }
+}
+globalThis.js_nullish = js_nullish;
+
 function js_plus(a, b) {
   return a + b;
 }
@@ -185,6 +194,12 @@ globalThis['Doc'] = Doc
 let doc = def_global(function doc(f, doc_str) {
 f[Doc] = doc_str['trim']();
 return f;});
+const Nullish = Symbol("Nullish");
+globalThis['Nullish'] = Nullish
+function nullish(thunk) {
+return js_nullish(this?.[Nullish](thunk), thunk);}
+Object.prototype[Nullish] = function (thunk) {
+return js_nullish(this, thunk);};
 let log_doc = def_global(function log_doc() {
 if (truthy(this['name'])) {
 console['log'](str("# ", this['name']))
@@ -303,7 +318,7 @@ Returns an iterator of 'this'.
 
 In the case 'this' is nil, you will get an empty array iterator.
 `))(function iter() {
-return this?.[Symbol['iterator']]() ?? iter.bind([])();})
+return or.call(this?.[Symbol['iterator']](), () => iter.bind([])());})
 let iter__q = compose(def_call, F => doc(F, `
 Determines if 'this' is a valid Symbol.iterator
 
@@ -645,7 +660,8 @@ Examples:
   null::empty?() // true
   `, `::empty?() // true
 `))(function empty__q() {
-return this?.[Collection]['empty?']['call'](this) ?? true;})
+return js_nullish(this?.[Collection]['empty?']['call'](this), function () {
+return true;});})
 let not_empty__q = compose(def_call, def_global, F => doc(F, `
 determines if a collection is not empty
 
@@ -936,7 +952,8 @@ Examples:
   // is the same as
   1 == 1 // true
 `))(function equals__q(other) {
-return this?.[Equal](other) ?? this === other;})
+return js_or(this?.[Equal](other), function () {
+return this === other;});})
 const Plus = Symbol("Plus");
 globalThis['Plus'] = Plus
 const Negate = Symbol("Negate");
@@ -969,6 +986,8 @@ Object.prototype[And] = function (thunk) {
 return js_and(this, thunk);};
 Object.prototype[Or] = function (thunk) {
 return js_or(this, thunk);};
+Object.prototype[Nullish] = function (thunk) {
+return js_nullish(this, thunk);};
 Set.prototype[Plus] = function (other_set) {
 return concat.bind(this)(other_set);};
 Array.prototype[Plus] = function (arr) {
@@ -1067,7 +1086,8 @@ let negate = compose(def_call, def_global, F => doc(F, `
 Examples:
   !true == true::negate()
 `))(function negate() {
-return this?.[Negate]() ?? true;})
+return js_nullish(this?.[Negate](), function () {
+return true;});})
 let minus = compose(def_global, F => doc(F, `
 [[Minus]] method for '-' infix operator
 
@@ -1144,7 +1164,7 @@ let or = compose(def_global, F => doc(F, `
 Examples:
   false::or(fn = :val) == false || :val
 `))(function or(thunk) {
-return this?.[Or](thunk) ?? thunk();})
+return js_or(this?.[Or](thunk), thunk);})
 let log = compose(def_global, def_call)(function log(...args) {
 console['log'](...args, this)
 return this;})
@@ -1163,7 +1183,8 @@ return Keyword["for"](this['toString']());})
 let as_num = compose(def_global, def_call)(function as_num() {
 return Number(this);})
 let as_str = compose(def_global, def_call)(function as_str() {
-return this?.toString() ?? "";})
+return js_or(this?.toString(), function () {
+return "";});})
 let exists__q = compose(def_global, def_call)(function exists__q() {
 return negate.call(nil__q.bind(this)());})
 let Underscore = def_global(function Underscore(...transforms) {
@@ -1246,6 +1267,8 @@ Underscore.prototype[And] = function (thunk) {
 return this['insert'](and, thunk);};
 Underscore.prototype[Or] = function (thunk) {
 return this['insert'](or, thunk);};
+Underscore.prototype[Nullish] = function (thunk) {
+return this['insert'](nullish, thunk);};
 Underscore.prototype[Plus] = function (other) {
 return this['insert'](plus, other);};
 Underscore.prototype[Minus] = function (other) {
@@ -1329,7 +1352,8 @@ this.entries = entries;
 CallMap.prototype[Call] = function (value) {
 return pipe.bind(find.bind(this)(function ([callable, _]) {
 return call.bind(callable)(value);}))(function ([_, val]) {
-return val;});};function CollectionView(collection, idx) {
+return val;});};console['log']("Compiling")
+function CollectionView(collection, idx) {
 this.collection = collection;
 this.idx = idx;
 }
@@ -1720,6 +1744,7 @@ let parse_adjacent_num_raw = Parser[Meta]['[]'].call(Parser, AbortIf[Meta]['[]']
 let parse_unapplied_and_and = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("unapplied_and_and")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("and_and")));
 let parse_unapplied_or_or = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("unapplied_or_or")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("or_or")));
 let parse_async_modifier = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, true), Chomp[Meta]['[]'].call(Chomp, Keyword.for("async")));
+let parse_unapplied_nullish = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("unapplied_nullish")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("nullish")));
 let parse_gen_modifier = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, true), Chomp[Meta]['[]'].call(Chomp, Keyword.for("times")));
 function parse_fn_expr_body(tokens) {
 return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("return")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("eq")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr")), FMap[Meta]['[]'].call(FMap, function (node) {
@@ -1739,7 +1764,7 @@ function parse_record_entry(tokens) {
 return call.bind(ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("dot_dot_dot"), parse_spread], [[Keyword.for("id"), Keyword.for("colon")], parse_keyword_record_entry], [_, parse_regular_record_entry]]))(tokens);}
 function parse_prefix_exclusive_range(tokens) {
 return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("prefix_exclusive_range")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("dot_dot")), Then[Meta]['[]'].call(Then, parse_1_2_expr, Keyword.for("expr"))))(tokens);}
-let SINGLE_EXPR_PARSE_MAP = ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("string_lit"), parse_str], [Keyword.for("regex_lit"), parse_regex], [Keyword.for("keyword"), parse_keyword], [Keyword.for("open_p"), parse_paren_expr], [Keyword.for("yield"), parse_yield], [Keyword.for("await"), parse_await], [Keyword.for("num"), parse_num], [Keyword.for("custom_number_literal"), parse_custom_number_literal], [Keyword.for("open_sq"), parse_array], [Keyword.for("dot_dot_dot"), parse_spread], [Keyword.for("double_colon"), parse_bind_this], [Keyword.for("bang"), parse_not], [Keyword.for("open_b"), parse_obj], [Keyword.for("and_and"), parse_unapplied_and_and], [Keyword.for("or_or"), parse_unapplied_or_or], [Keyword.for("dot_dot"), parse_prefix_exclusive_range], [push.bind(valid_ids_in_all_contexts)(Keyword.for("import")), parse_id], [[Keyword.for("at"), Keyword.for("open_sq")], parse_multi_decorator], [Keyword.for("at"), parse_decorator], [[Keyword.for("async"), Keyword.for("fn")], parse_fn], [Keyword.for("fn"), parse_fn], [all_math_ops, parse_unapplied_math_op]]);
+let SINGLE_EXPR_PARSE_MAP = ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("string_lit"), parse_str], [Keyword.for("regex_lit"), parse_regex], [Keyword.for("keyword"), parse_keyword], [Keyword.for("open_p"), parse_paren_expr], [Keyword.for("yield"), parse_yield], [Keyword.for("await"), parse_await], [Keyword.for("num"), parse_num], [Keyword.for("custom_number_literal"), parse_custom_number_literal], [Keyword.for("open_sq"), parse_array], [Keyword.for("dot_dot_dot"), parse_spread], [Keyword.for("double_colon"), parse_bind_this], [Keyword.for("bang"), parse_not], [Keyword.for("open_b"), parse_obj], [Keyword.for("and_and"), parse_unapplied_and_and], [Keyword.for("or_or"), parse_unapplied_or_or], [Keyword.for("nullish"), parse_unapplied_nullish], [Keyword.for("dot_dot"), parse_prefix_exclusive_range], [push.bind(valid_ids_in_all_contexts)(Keyword.for("import")), parse_id], [[Keyword.for("at"), Keyword.for("open_sq")], parse_multi_decorator], [Keyword.for("at"), parse_decorator], [[Keyword.for("async"), Keyword.for("fn")], parse_fn], [Keyword.for("fn"), parse_fn], [all_math_ops, parse_unapplied_math_op]]);
 function parse_single_expr(tokens) {
 return call.bind(SINGLE_EXPR_PARSE_MAP)(tokens);}
 function parse_1_2_expr(tokens) {
@@ -1939,7 +1964,7 @@ return str("and.call(", eval_expr(lhs), ", () => ", eval_expr(rhs), ")");}
 function eval_or_or({'lhs': lhs, 'rhs': rhs}) {
 return str("or.call(", eval_expr(lhs), ", () => ", eval_expr(rhs), ")");}
 function eval_nullish({'lhs': lhs, 'rhs': rhs}) {
-return str(eval_expr(lhs), " ?? ", eval_expr(rhs));}
+return str("nullish.call(", eval_expr(lhs), ", () => ", eval_expr(rhs), ")");}
 function eval_dynamic_access_assign({'lhs': lhs, 'rhs': rhs}) {
 let {'lhs': obj, 'exprs': exprs} = lhs;
 let obj_js = eval_expr(obj);
@@ -1960,6 +1985,8 @@ function eval_unapplied_and_and() {
 return "and";}
 function eval_unapplied_or_or() {
 return "or";}
+function eval_unapplied_nullish() {
+return "nullish";}
 function eval_keyword({'value': value}) {
 return str("Keyword.for(\"", value['slice']((1)), "\")");}
 function eval_regular_record_entry({'key_expr': key_expr, 'value_expr': value_expr}) {
@@ -2022,7 +2049,7 @@ return str("new ERangeNoMin(", eval_expr(expr), ")");}
 function eval_raw_dynamic_access({'lhs': lhs, 'expr': expr}) {
 return str(eval_expr(lhs), "[", eval_expr(expr), "]");}
 function eval_expr(node) {
-return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("str"), eval_str], [Keyword.for("regex_lit"), eval_regex_lit], [Keyword.for("decorator"), eval_decorator], [Keyword.for("multi_decorator"), eval_multi_decorator], [Keyword.for("keyword"), eval_keyword], [Keyword.for("and_dot"), eval_and_dot], [Keyword.for("raw_dynamic_access"), eval_raw_dynamic_access], [Keyword.for("prefix_exclusive_range"), eval_prefix_exclusive_range], [Keyword.for("partial_fn_call"), eval_partial_fn_call], [Keyword.for("partial_obj_dyn_access"), eval_partial_obj_dyn_access], [Keyword.for("property_lookup"), eval_property_lookup], [Keyword.for("id_lookup"), eval_id_lookup], [Keyword.for("fn_call"), eval_fn_call], [Keyword.for("num"), eval_num], [Keyword.for("custom_number_literal"), eval_custom_number_literal], [Keyword.for("array"), eval_array], [Keyword.for("math_op"), eval_math_op], [Keyword.for("double_equals"), eval_double_equals], [Keyword.for("not_equals"), eval_not_equals], [Keyword.for("not"), eval_not], [Keyword.for("fn"), eval_fn], [Keyword.for("bind"), eval_bind], [Keyword.for("obj_lit"), eval_obj_lit], [Keyword.for("bind_this"), eval_bind_this], [Keyword.for("dynamic_access"), eval_dynamic_access], [Keyword.for("record_lookup"), eval_record_lookup], [Keyword.for("triple_equals"), eval_triple_equals], [Keyword.for("triple_not_equals"), eval_triple_not_equals], [Keyword.for("spread"), eval_spread], [Keyword.for("is"), eval_is], [Keyword.for("and_and"), eval_and_and], [Keyword.for("or_or"), eval_or_or], [Keyword.for("nullish"), eval_nullish], [Keyword.for("snd_assign"), eval_snd_assign], [Keyword.for("await"), eval_await], [Keyword.for("yield"), eval_yield], [Keyword.for("paren_expr"), eval_paren_expr], [Keyword.for("unapplied_math_op"), eval_unapplied_math_op], [Keyword.for("unapplied_and_and"), eval_unapplied_and_and], [Keyword.for("unapplied_or_or"), eval_unapplied_or_or], [Keyword.for("inclusive_range"), eval_inclusive_range], [Keyword.for("exclusive_range"), eval_exclusive_range], [Keyword.for("op_eq"), eval_op_eq]])))(node);}
+return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("str"), eval_str], [Keyword.for("regex_lit"), eval_regex_lit], [Keyword.for("decorator"), eval_decorator], [Keyword.for("multi_decorator"), eval_multi_decorator], [Keyword.for("keyword"), eval_keyword], [Keyword.for("and_dot"), eval_and_dot], [Keyword.for("raw_dynamic_access"), eval_raw_dynamic_access], [Keyword.for("prefix_exclusive_range"), eval_prefix_exclusive_range], [Keyword.for("partial_fn_call"), eval_partial_fn_call], [Keyword.for("partial_obj_dyn_access"), eval_partial_obj_dyn_access], [Keyword.for("property_lookup"), eval_property_lookup], [Keyword.for("id_lookup"), eval_id_lookup], [Keyword.for("fn_call"), eval_fn_call], [Keyword.for("num"), eval_num], [Keyword.for("custom_number_literal"), eval_custom_number_literal], [Keyword.for("array"), eval_array], [Keyword.for("math_op"), eval_math_op], [Keyword.for("double_equals"), eval_double_equals], [Keyword.for("not_equals"), eval_not_equals], [Keyword.for("not"), eval_not], [Keyword.for("fn"), eval_fn], [Keyword.for("bind"), eval_bind], [Keyword.for("obj_lit"), eval_obj_lit], [Keyword.for("bind_this"), eval_bind_this], [Keyword.for("dynamic_access"), eval_dynamic_access], [Keyword.for("record_lookup"), eval_record_lookup], [Keyword.for("triple_equals"), eval_triple_equals], [Keyword.for("triple_not_equals"), eval_triple_not_equals], [Keyword.for("spread"), eval_spread], [Keyword.for("is"), eval_is], [Keyword.for("and_and"), eval_and_and], [Keyword.for("or_or"), eval_or_or], [Keyword.for("nullish"), eval_nullish], [Keyword.for("snd_assign"), eval_snd_assign], [Keyword.for("await"), eval_await], [Keyword.for("yield"), eval_yield], [Keyword.for("paren_expr"), eval_paren_expr], [Keyword.for("unapplied_math_op"), eval_unapplied_math_op], [Keyword.for("unapplied_and_and"), eval_unapplied_and_and], [Keyword.for("unapplied_or_or"), eval_unapplied_or_or], [Keyword.for("unapplied_nullish"), eval_unapplied_nullish], [Keyword.for("inclusive_range"), eval_inclusive_range], [Keyword.for("exclusive_range"), eval_exclusive_range], [Keyword.for("op_eq"), eval_op_eq]])))(node);}
 function eval_return({'expr': expr}) {
 if (truthy(expr)) {
 return str("return ", eval_expr(expr));
