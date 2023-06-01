@@ -7,6 +7,6 @@ export default fn test(f, vitest, name) {
     vitest.afterEach(ReactTestingLibrary.cleanup)
   }  
   if let {it} = vitest {
-    it(name ?? f.name, #(f(vitest)))
+    it(name ?? f.name, fn = f(vitest))
   }
 } 

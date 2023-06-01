@@ -9,7 +9,7 @@ impl Record for MapOrImpl = fn(entries) =
 impl Call for MapOrImpl = fn(val) =
   this.map.get(val) || this.f::call(val)
 
-let char_numeric? = ("0"..="9")::into(#{})
+let char_numeric? = ("0"..="9")::into(Set[])
 
 let btns = [
   [:AC :flip_sign :percent :divide_by]
@@ -45,7 +45,7 @@ fn App() {
   impl Select for Number = fn {
     if op.val {
       let math_fn = op.val::pipe(op->f)
-      amount.update(#(&::math_fn(this)))
+      amount.update(fn (old_val) = old_val::math_fn(this))
     } else {
       amount.update((_ * 10) + this)
     }
