@@ -12,7 +12,6 @@ fn def_into(Ctor, ...properties) {
 
 fn into(Ctor) = Ctor[Into].call(this)
 
-@def_record
 fn Rename(@entries) {}
 impl Call for Rename = fn(obj) =
   ::map(fn([old_key, new_key]) = [new_key obj[old_key]])

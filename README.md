@@ -13,9 +13,9 @@ let score->letter_grade = ~CallMap{
 
 let top_students =
   [{name: "marcelle", score: 53} {name: "jill", score: 80} {name: "john", score: 74}]
-    ::keep(:score score->letter_grade #{:A :B})
+    ::keep(:score score->letter_grade Set[:A :B])
     ::map(:name)
-    ::into(#{}) // #{"jill" "john"}
+    ::into(Set[]) // #{"jill" "john"}
 ```
 
 # Motivations

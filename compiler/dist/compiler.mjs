@@ -173,23 +173,24 @@ globalThis["raise__b"] = raise__b;
 globalThis["Keyword"] = Keyword;
 globalThis["ObjectLiteral"] = ObjectLiteral;
 globalThis["truthy"] = truthy;
-Object.prototype["[]"] = function (...keys) {
-let o = this;
-for  (let key of keys) {
-o = js_dynamic_object_lookup(o, key)
-};
-return o;};
-Object.prototype["[]="] = function (keys, expr) {
-return js_set_property(this, keys, expr);};
+const Meta = Symbol("Meta");
+Object.prototype[Meta] = new ObjectLiteral({["[]"]: function (...keys) {
+return reduce.bind(keys)(js_dynamic_object_lookup, this);}, ["[]="]: function (keys, expr) {
+return js_set_property(this, keys, expr);}});
+Function.prototype[Meta] = new ObjectLiteral({["[]"]: function (...args) {
+return Reflect['construct'](this, args);}, ["{}"]: function (entries) {
+return Reflect['construct'](this, [entries]);}});
+Set[Meta] = new ObjectLiteral({["[]"]: function (...elems) {
+return Reflect['construct'](Set, [elems]);}});
 function def_global(f) {
 let resolved_name = f['name']['replaceAll']("?", "__q")['replaceAll']("!", "__b")['replaceAll'](">", "_lt_")['replaceAll']("-", "_");
-globalThis['[]='].call(globalThis, [resolved_name], f)
+globalThis[resolved_name] = f
 return f;}
 const CustomNumberLiteral = Symbol("CustomNumberLiteral");
-globalThis['[]='].call(globalThis, [Keyword.for("CustomNumberLiteral")], CustomNumberLiteral)
+globalThis['CustomNumberLiteral'] = CustomNumberLiteral
 Keyword.for("custom_number_literal/n")[CustomNumberLiteral] = BigInt;
 const Doc = Symbol("Doc");
-globalThis['[]='].call(globalThis, [Keyword.for("Doc")], Doc)
+globalThis['Doc'] = Doc
 let doc = def_global(function doc(f, doc_str) {
 f[Doc] = doc_str['trim']();
 return f;});
@@ -203,10 +204,10 @@ let log_doc = def_global(function log_doc() {
 if (truthy(this['name'])) {
 console['log'](str("# ", this['name']))
 };
-console['log'](this['[]'].call(this, Doc))
+console['log'](this[Doc])
 return this;});
 const Call = Symbol("Call");
-globalThis['[]='].call(globalThis, [Keyword.for("Call")], Call)
+globalThis['Call'] = Call
 function compose(first_fn, ...fns) {
 return function (...args) {
 let result = first_fn?.[Call](...args);
@@ -228,28 +229,28 @@ return this['has'](key);};
 Map.prototype[Call] = function (key) {
 return this['get'](key);};
 ObjectLiteral.prototype[Call] = function (key) {
-return this['[]'].call(this, key);};
+return this[key];};
 Array.prototype[Call] = function (index) {
 return this['at'](index);};
 String.prototype[Call] = function (collection) {
 if (truthy(or.call(typeof(collection) === "string", () => collection instanceof Keyword))) {
-raise__b(new TypeError(plus.call("Can't 'call' a string with ",as_str.bind(collection)())))
+raise__b(TypeError[Meta]['[]'].call(TypeError, plus.call("Can't 'call' a string with ",as_str.bind(collection)())))
 } else {
 return call.bind(collection)(this);
 };};
 Number.prototype[Call] = function (collection) {
 if (truthy(collection instanceof Keyword)) {
-return this['[]'].call(this, collection);
+return this[Meta]['[]'].call(this, collection);
 } else {
 return call.bind(collection)(this);
 };};
 Keyword.prototype[Call] = function (collection) {
 if (truthy(or.call(collection instanceof Keyword, () => typeof(collection) === "string"))) {
-raise__b(new TypeError(plus.call("Can't 'call' a keyword with",as_str.bind(collection)())))
-} else if (Call in collection) {
+raise__b(TypeError[Meta]['[]'].call(TypeError, plus.call("Can't 'call' a keyword with",as_str.bind(collection)())))
+} else if (collection[Call]) {
 return call.bind(collection)(this);
 } else {
-return collection['[]'].call(collection, this);
+return collection[Meta]['[]'].call(collection, this);
 };};
 let call = compose(def_global, F => doc(F, `
 Invokes [[Call]] on 'this'
@@ -263,9 +264,9 @@ return this?.[Call](...args);})
 Set.prototype[Keyword.for("bind")] = function (val) {
 return function () {
 return call.bind(this)(val);}.bind(this);};
-let nil__q = Object['freeze'](new Set([undefined, null]));
+let nil__q = Object['freeze'](Set[Meta]['[]'].call(Set, undefined, null));
 const Pipe = Symbol("Pipe");
-globalThis['[]='].call(globalThis, [Keyword.for("Pipe")], Pipe)
+globalThis['Pipe'] = Pipe
 Object.prototype[Pipe] = function (callable) {
 return call.bind(callable)(this);};
 let pipe = compose(def_global, F => doc(F, `
@@ -325,7 +326,7 @@ See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_
 `))(function iter__q() {
 return iter.bind(this)() === this;})
 const Iterator = Symbol("Iterator");
-globalThis['[]='].call(globalThis, [Keyword.for("Iterator")], Iterator)
+globalThis['Iterator'] = Iterator
 let default_iterator_impl = new ObjectLiteral({*['take'](n) {
 for  (let [elem, i] of zip.bind(this)(new ERangeNoMax((0)))) {
 if (truthy(equals__q.call(i, n))) {
@@ -359,7 +360,8 @@ return elem;
 }, *['zip'](...collections) {
 let generators = into.bind(map.bind([this, ...collections])(iter))([]);
 while (true) {
-let gen_states = into.bind(map.bind(generators)((...__args) => __args[0]['next']()))([]);
+let gen_states = into.bind(map.bind(generators)(function (state) {
+return state['next']();}))([]);
 if (truthy(any__q.bind(gen_states)(Keyword.for("done")))) {
 break;
 } else {
@@ -465,8 +467,8 @@ lazily zips together a number of iterators
 Examples:
   [:axe :hammer :pickaxe]
     ::zip([3 1 4])
-    ::into(~Map{})
-  // -> ~Map{axe: 3, hammer: 1, pickaxe: 4}
+    ::into(Map{})
+  // -> Map{axe: 3, hammer: 1, pickaxe: 4}
 `))(function zip(...iterables) {
 return iterator_impl.bind(this)()['zip']['call'](iter.bind(this)(), ...iterables);})
 let map = compose(def_global, F => doc(F, `
@@ -492,7 +494,7 @@ eagerly finds a value in an iterator
 
 Examples:
   [1 2 3 4 5]
-    ::find(#{4 5}) // 4
+    ::find(Set[4 5]) // 4
 `))(function find(...fns) {
 return iterator_impl.bind(this)()['find']['call'](iter.bind(this)(), compose(...fns));})
 let keep = compose(def_global, F => doc(F, `
@@ -517,7 +519,7 @@ let any__q = compose(def_global, F => doc(F, `
 eagerly finds out if an element matches the condition
 
 Examples:
-  [1 2 3 4 5]::any?(#{3}) // true
+  [1 2 3 4 5]::any?(Set[3]) // true
 `))(function any__q(...fns) {
 return iterator_impl.bind(this)()['any?']['call'](iter.bind(this)(), compose(...fns));})
 let all__q = compose(def_global, F => doc(F, `
@@ -539,7 +541,7 @@ lazily splits an iterator
 
 Examples:
   \"hey there buddy\"
-    ::split(#{`, `})
+    ::split(Set[`, `])
     ::take(2)
     ::into([]) // [\"hey\" \"there\"]
 `))(function split(...fns) {
@@ -568,7 +570,7 @@ return cur;
 return plus.call(prev,plus.call(sep,cur));
 };}, "");})
 const Into = Symbol("Into");
-globalThis['[]='].call(globalThis, [Keyword.for("Into")], Into)
+globalThis['Into'] = Into
 Array.prototype[Into] = function (iterable) {
 return [...this, ...iterable];};
 ObjectLiteral.prototype[Into] = function (iterable) {
@@ -586,22 +588,22 @@ converts 'this' iterator into 'output', prepending existing values in 'output'
 
 Examples:
   [1 2 3 4]
-    ::into(#{}) // #{1 2 3 4}
+    ::into(Set[]) // Set[1 2 3 4]
 
   [[:score 10] [:grade :bad]]
     ::into({}) // {score: 20, grade: :bad}
 `))(function into(output) {
-return output['[]'].call(output, Into)(this);})
+return output[Meta]['[]'].call(output, Into)(this);})
 const Collection = Symbol("Collection");
-globalThis['[]='].call(globalThis, [Keyword.for("Collection")], Collection)
+globalThis['Collection'] = Collection
 ObjectLiteral.prototype[Collection] = new ObjectLiteral({['at'](key) {
-return this['[]'].call(this, key);
+return this[key];
 }, ['len']() {
 return Object['keys'](this)['length'];
 }, ['empty?']() {
 return len.bind(this)() === (0);
 }, ['has?'](key) {
-return key in this;
+return exists__q.bind(this[key])();
 }});
 Array.prototype[Collection] = new ObjectLiteral({['at'](idx) {
 return this['at'](idx);
@@ -644,21 +646,22 @@ gets length of a collection
 
 Examples:
   [1 2 3]::len() // 3
-  #{1 2 3}::len() // 3
+  Set[1 2 3]::len() // 3
   {a: 10}::len() // 1
-  ~Map{a: :a, b: :b}::len() // 2
+  Map{a: :a, b: :b}::len() // 2
 `))(function len() {
-return this['[]'].call(this, Collection)['len']['call'](this);})
+return this[Collection]['len']['call'](this);})
 let empty__q = compose(def_call, def_global, F => doc(F, `
 determines if a collection is empty
 
 Examples:
   []::empty?() // true
-  #{1}::empty?() // false
+  Set[1]::empty?() // false
   null::empty?() // true
   `, `::empty?() // true
 `))(function empty__q() {
-return js_nullish(this?.[Collection]['empty?']['call'](this), (...__args) => true);})
+return js_nullish(this?.[Collection]['empty?']['call'](this), function () {
+return true;});})
 let not_empty__q = compose(def_call, def_global, F => doc(F, `
 determines if a collection is not empty
 
@@ -674,26 +677,26 @@ extracts value from collection based on a key or index
 Examples:
   [1 3 4]::at(2) // 4
   // set::at works as an identity function if the value is in the set
-  #{4 3 1}::at(4) // 4
+  Set[4 3 1]::at(4) // 4
   // keywords coerce to strings for objects
   {a: 10}::at(:a) // 10
   {a: 10}::at(\"a\") // 10
-  ~Map{a: 10}::at(:a) // 10
+  Map{a: 10}::at(:a) // 10
   // strings can not lookup keywords in maps
-  ~Map{a: 10}::at(\"a\") // undefined
+  Map{a: 10}::at(\"a\") // undefined
 `))(function at(key_or_idx) {
-return this['[]'].call(this, Collection)['at']['call'](this, key_or_idx);})
+return this[Collection]['at']['call'](this, key_or_idx);})
 let has__q = compose(def_global, F => doc(F, `
 determines if a collection has a value
 
 Examples:
   [1 2 3 4]::has?(3) // true
-  #{1 2 3}::has?(2) // true
+  Set[1 2 3]::has?(2) // true
   {a: 10}::has?(:a) // true
 `))(function has__q(val) {
-return this['[]'].call(this, Collection)['has?']['call'](this, val);})
+return this[Collection]['has?']['call'](this, val);})
 const Record = Symbol("Record");
-globalThis['[]='].call(globalThis, [Keyword.for("Record")], Record)
+globalThis['Record'] = Record
 ObjectLiteral.prototype[Record] = new ObjectLiteral({['insert'](key, value) {
 return new ObjectLiteral({...this, [key]: value});
 }, ['merge'](other) {
@@ -704,9 +707,9 @@ return Object['keys'](this);
 return Object['values'](this);
 }});
 Map.prototype[Record] = new ObjectLiteral({['insert'](key, value) {
-return new Map([...this, [key, value]]);
+return Map[Meta]['{}'].call(Map, [...this, [key, value]]);
 }, ['merge'](other) {
-return new Map([...this, ...other]);
+return Map[Meta]['{}'].call(Map, [...this, ...other]);
 }, ['keys']() {
 return this['keys']();
 }, ['values']() {
@@ -717,25 +720,25 @@ Get keys of a record as an iterator OR a collection
 
 Example:
   {a: 10}::keys() // [\"a\"]
-  ~Map{a: 10}::keys()::into(#{}) // #{:a}
+  Map{a: 10}::keys()::into(Set[]) // Set[:a]
 `))(function keys() {
-return this['[]'].call(this, Record)['keys']['call'](this);})
+return this[Record]['keys']['call'](this);})
 let values = compose(def_call, def_global, F => doc(F, `
 Get values of a record as an iterator OR a collection
 
 Example:
   {a: 10}::values() // [10]
-  ~Map{a: 10}::values()::into(#{}) // #{10}
+  Map{a: 10}::values()::into(Set[]) // Set[10]
 `))(function values() {
-return this['[]'].call(this, Record)['values']['call'](this);})
+return this[Record]['values']['call'](this);})
 let insert = compose(def_global, F => doc(F, `
 Insert key & value into a record
 
 Example:
   {a: 10}::insert(:b 20) // {a: 10, b: 20}
-  ~Map{a: 10}::insert(:b 20) // ~Map{a: 10, b: 20}
+  Map{a: 10}::insert(:b 20) // Map{a: 10, b: 20}
 `))(function insert(key, value) {
-return this['[]'].call(this, Record)['insert']['call'](this, key, value);})
+return this[Record]['insert']['call'](this, key, value);})
 let merge = compose(def_global, F => doc(F, `
 Merge 2 records together
 
@@ -748,48 +751,31 @@ with lossy conversions.
 Example:
   {a: 10}::merge({b: 20}) {a: 10 b: 20}
   {a: 10}::merge({a: 20})
-  ~Map{a: 10}::merge(~Map{a: 20}) // ~Map{a: 20}
+  Map{a: 10}::merge(Map{a: 20}) // Map{a: 20}
   // here's the unexpected result
-  ~Map{a: 10}::merge({a: 20}) // ~Map{a: 10, \"a\" => 20}
+  Map{a: 10}::merge({a: 20}) // Map{a: 10, \"a\" => 20}
 `))(function merge(other) {
-return this['[]'].call(this, Record)['merge']['call'](this, other);})
-Map["{}"] = function (entries) {
-return new Map(entries);};
-Object["{}"] = Object['fromEntries'];
-Map[Record] = function (entries) {
-return new Map(entries);};
-Object[Record] = Object['fromEntries'];
+return this[Record]['merge']['call'](this, other);})
 let record__q = compose(def_global, F => doc(F, `
 Determines if 'this' is a record
 
 Examples:
   {}::record?() // true
   Map{}::record?() // true
-  #{}::record?() // false
+  Set[]::record?() // false
 `))(function record__q() {
-return exists__q.bind(this['[]'].call(this, Record))();})
-let construct_record = compose(def_global, F => doc(F, `
-Constructs a record based off an entries array
-
-This is used for record syntax
-
-Examples:
-  Map::construct_record([[:a 20]])
-    ==
-  ~Map{a: 20}
-`))(function construct_record(entries) {
-return this['[]'].call(this, Record)(entries);})
+return exists__q.bind(this[Record])();})
 const Vector = Symbol("Vector");
-globalThis['[]='].call(globalThis, [Keyword.for("Vector")], Vector)
+globalThis['Vector'] = Vector
 let vector__q = compose(def_global, F => doc(F, `
 Determines if 'this' conforms to the vector protocol
 
 Examples:
   []::vector?() // true
-  #{}::vector?() // true
+  Set[]::vector?() // true
   {}::vector?() // false
 `))(function vector__q() {
-return exists__q.bind(this['[]'].call(this, Vector))();})
+return exists__q.bind(this[Vector])();})
 Array.prototype[Vector] = new ObjectLiteral({['push'](val) {
 return [...this, val];
 }, ['replace'](old_val, new_val) {
@@ -803,14 +789,14 @@ return val;
 return [...this, ...other];
 }});
 Set.prototype[Vector] = new ObjectLiteral({['push'](value) {
-return new Set(this)['add'](value);
+return Set[Meta]['[]'].call(Set, ...this, value);
 }, ['replace'](old_val, new_val) {
-let self = new Set(this);
+let self = Set[Meta]['[]'].call(Set, ...this);
 self['delete'](old_value)
 self['add'](new_val)
 return self;
 }, ['concat'](other) {
-return new Set([...this, ...other]);
+return Set[Meta]['[]'].call(Set, ...this, ...other);
 }});
 String.prototype[Vector] = new ObjectLiteral({['push'](val) {
 return plus.call(this,val);
@@ -825,29 +811,29 @@ push a value onto a vector
 Examples:
   [1 2]::push(3) // [1 2 3]
   // order is not guaranteed for sets
-  #{1 2}::push(3) // #{3 1 2}
+  Set[1 2]::push(3) // Set[3 1 2]
 `))(function push(val) {
-return this['[]'].call(this, Vector)['push']['call'](this, val);})
+return this[Vector]['push']['call'](this, val);})
 let replace = compose(def_global, F => doc(F, `
 replace a value in a vector
 
 Examples:
   [1 2 3]::replace(2 3) // [1 3 3]
-  #{1 2 3}::replace(2 3) // #{1 3}
+  Set[1 2 3]::replace(2 3) // Set[1 3]
 `))(function replace(old_val, new_val) {
-return this['[]'].call(this, Vector)['replace']['call'](this, old_val, new_val);})
+return this[Vector]['replace']['call'](this, old_val, new_val);})
 let concat = compose(def_global, F => doc(F, `
 concat two vectors
 
 Examples:
   [1 2]::concat([3 4]) // [1 2 3 4]
-  [1 2]::concat(#{3 4}) // [1 2 4 3] - set order unknowable
-  #{1 2}::concat([3 4]) // #{1 2 3 4}
-  #{1 2}::concat(#{2 3}) // #{1 2 3}
+  [1 2]::concat(Set[3 4]) // [1 2 4 3] - set order unknowable
+  Set[1 2]::concat([3 4]) // Set[1 2 3 4]
+  Set[1 2]::concat(Set[2 3]) // Set[1 2 3]
 `))(function concat(other) {
-return this['[]'].call(this, Vector)['concat']['call'](this, other);})
+return this[Vector]['concat']['call'](this, other);})
 const OrderedSequence = Symbol("OrderedSequence");
-globalThis['[]='].call(globalThis, [Keyword.for("OrderedSequence")], OrderedSequence)
+globalThis['OrderedSequence'] = OrderedSequence
 Array.prototype[OrderedSequence] = new ObjectLiteral({['prepend'](val) {
 return [val, ...this];
 }, ['update_at'](idx, f) {
@@ -857,7 +843,7 @@ return [...before, f(at.bind(this)(idx)), ...after];
 let [before, after] = [take.bind(this)(idx), skip.bind(this)(plus.call(idx,(1)))];
 return [...before, val, ...after];
 }, ['first']() {
-return this['[]'].call(this, (0));
+return this[(0)];
 }, ['last']() {
 return this['at']((-1));
 }});
@@ -868,7 +854,7 @@ return plus.call(this['slice']((0), idx),plus.call(f(this['at'](idx)),this['slic
 }, ['insert_at'](idx, val) {
 return plus.call(this['slice']((0), idx),plus.call(val,this['slice'](idx)));
 }, ['first']() {
-return this['[]'].call(this, (0));
+return this[(0)];
 }, ['last']() {
 return this['at']((-1));
 }});
@@ -878,52 +864,37 @@ inserts element at beginning of collection
 Examples:
   [1 2 3]::prepend(0) // [0 1 2 3]
 `))(function prepend(val) {
-return this['[]'].call(this, OrderedSequence)['prepend']['call'](this, val);})
+return this[OrderedSequence]['prepend']['call'](this, val);})
 let update_at = compose(def_global, F => doc(F, `
 updates element at given index
 
 Examples:
   [1 2 3]::update_at(1 as_keyword) // [1 :2 3]
 `))(function update_at(idx, ...fns) {
-return this['[]'].call(this, OrderedSequence)['update_at']['call'](this, idx, compose(...fns));})
+return this[OrderedSequence]['update_at']['call'](this, idx, compose(...fns));})
 let insert_at = compose(def_global, F => doc(F, `
 inserts element at given index
 
 Examples:
   [1 2 4]::insert_at(1 3) // [1 2 3 4]
 `))(function insert_at(idx, val) {
-return this['[]'].call(this, OrderedSequence)['insert_at']['call'](this, idx, val);})
+return this[OrderedSequence]['insert_at']['call'](this, idx, val);})
 let first = compose(def_call, def_global, F => doc(F, `
 gets first element of collection
 
 Examples:
   [1 2 3]::first() // 1
 `))(function first() {
-return this['[]'].call(this, OrderedSequence)['first']['call'](this);})
+return this[OrderedSequence]['first']['call'](this);})
 let last = compose(def_call, def_global, F => doc(F, `
 gets last element of collection
 
 Examples:
   [1 2 3]::last() // 3
 `))(function last() {
-return this['[]'].call(this, OrderedSequence)['last']['call'](this);})
-Array["[]"] = function (...entries) {
-return entries;};
-let construct_vector = compose(def_global, F => doc(F, `
-constructs vector based off entries
-
-this is used for custom vector syntax
-
-Examples:
-  import { List } from \"immutable\"
-
-  List::constructor_vector([1 2 3 4])
-    ==
-  ~List[1 2 3 4]
-`))(function construct_vector(entries) {
-return this['[]'].call(this, Vector)(entries);})
+return this[OrderedSequence]['last']['call'](this);})
 const Equal = Symbol("Equal");
-globalThis['[]='].call(globalThis, [Keyword.for("Equal")], Equal)
+globalThis['Equal'] = Equal
 let impl_equal = compose(def_global, F => doc(F, `
 implement [[Equal]] for a generic constructor by
 specifying the keys to measure equality by
@@ -931,16 +902,16 @@ specifying the keys to measure equality by
 Examples:
   fn Dog(@name, @age) {}
 
-  new Dog(\"joey\" 1) == new Dog(\"joey\" 1) // false
+  Dog[\"joey\" 1] == Dog[\"joey\" 1] // false
 
   @impl_equal(:name :age)
   fn Dog(@name @age) {}
 
-  new Dog(\"joey\" 1) == new Dog(\"joey\" 1) // true
+  Dog[\"joey\" 1] == Dog[\"joey\" 1] // true
 `))(function impl_equal(Ctor, ...keys) {
 Ctor.prototype[Equal] = function (other) {
 return and.call(other instanceof Ctor, () => all__q.bind(keys)(function (key) {
-return equals__q.call(this['[]'].call(this, key), other['[]'].call(other, key));}.bind(this)));};
+return equals__q.call(this[key], other[key]);}.bind(this)));};
 return Ctor;})
 Object.prototype[Equal] = function (other) {
 return this === other;};
@@ -981,32 +952,33 @@ Examples:
   // is the same as
   1 == 1 // true
 `))(function equals__q(other) {
-return js_or(this?.[Equal](other), (...__args) => this === other);})
+return js_or(this?.[Equal](other), function () {
+return this === other;});})
 const Plus = Symbol("Plus");
-globalThis['[]='].call(globalThis, [Keyword.for("Plus")], Plus)
+globalThis['Plus'] = Plus
 const Negate = Symbol("Negate");
-globalThis['[]='].call(globalThis, [Keyword.for("Negate")], Negate)
+globalThis['Negate'] = Negate
 const Minus = Symbol("Minus");
-globalThis['[]='].call(globalThis, [Keyword.for("Minus")], Minus)
+globalThis['Minus'] = Minus
 const Times = Symbol("Times");
-globalThis['[]='].call(globalThis, [Keyword.for("Times")], Times)
+globalThis['Times'] = Times
 const Divide = Symbol("Divide");
-globalThis['[]='].call(globalThis, [Keyword.for("Divide")], Divide)
+globalThis['Divide'] = Divide
 const Exponent = Symbol("Exponent");
-globalThis['[]='].call(globalThis, [Keyword.for("Exponent")], Exponent)
+globalThis['Exponent'] = Exponent
 const Mod = Symbol("Mod");
-globalThis['[]='].call(globalThis, [Keyword.for("Mod")], Mod)
+globalThis['Mod'] = Mod
 const Comparable = Symbol("Comparable");
-globalThis['[]='].call(globalThis, [Keyword.for("Comparable")], Comparable)
+globalThis['Comparable'] = Comparable
 const LessThan = Symbol("LessThan");
-globalThis['[]='].call(globalThis, [Keyword.for("LessThan")], LessThan)
+globalThis['LessThan'] = LessThan
 const And = Symbol("And");
-globalThis['[]='].call(globalThis, [Keyword.for("And")], And)
+globalThis['And'] = And
 const Or = Symbol("Or");
-globalThis['[]='].call(globalThis, [Keyword.for("Or")], Or)
+globalThis['Or'] = Or
 let expect_primitive_type__b = doc(function expect_primitive_type__b(type_str) {
 if (truthy(typeof(this) !== type_str)) {
-raise__b(new Error(str("Expected ", type_str)))
+raise__b(Error[Meta]['[]'].call(Error, str("Expected ", type_str)))
 };}, "raise! if 'this' isn't a 'type_str'");
 Object.prototype[Negate] = function () {
 return js_negate(this);};
@@ -1107,77 +1079,78 @@ let plus = compose(def_call, def_global, F => doc(F, `
 Examples:
   1::plus(2) == 1 + 2
 `))(function plus(other) {
-return this['[]'].call(this, Plus)(other);})
+return this[Plus](other);})
 let negate = compose(def_call, def_global, F => doc(F, `
 [[Negate]] method for '!' prefix operator
 
 Examples:
   !true == true::negate()
 `))(function negate() {
-return js_nullish(this?.[Negate](), (...__args) => true);})
+return js_nullish(this?.[Negate](), function () {
+return true;});})
 let minus = compose(def_global, F => doc(F, `
 [[Minus]] method for '-' infix operator
 
 Examples:
   1::minus(2) == 1 - 2
 `))(function minus(other) {
-return this['[]'].call(this, Minus)(other);})
+return this[Minus](other);})
 let times = compose(def_global, F => doc(F, `
 [[Times]] method for '*' infix operator
 
 Examples:
   2::times(3) == 2 * 3
 `))(function times(other) {
-return this['[]'].call(this, Times)(other);})
+return this[Times](other);})
 let divide_by = compose(def_global, F => doc(F, `
 [[Divide]] method for '/' infix operator
 
 Examples:
   2::divide_by(3) == 2 / 3
 `))(function divide_by(other) {
-return this['[]'].call(this, Divide)(other);})
+return this[Divide](other);})
 let exponent = compose(def_global, F => doc(F, `
 [[Exponent]] method for '**' infix operator
 
 Examples:
   2::exponent(3) == 2 ** 3
 `))(function exponent(other) {
-return this['[]'].call(this, Exponent)(other);})
+return this[Exponent](other);})
 let mod = compose(def_global, F => doc(F, `
 [[Mod]] method for '%' infix operator
 
 Examples:
   11::mod(2) == 11 % 2
 `))(function mod(other) {
-return this['[]'].call(this, Mod)(other);})
+return this[Mod](other);})
 let greater_than = compose(def_global, F => doc(F, `
 [[Comparable]].greater_than method for '>' infix operator
 
 Examples:
   2::greater_than(1) == 2 > 1
 `))(function greater_than(other) {
-return this['[]'].call(this, Comparable)['greater_than']['call'](this, other);})
+return this[Comparable]['greater_than']['call'](this, other);})
 let greater_than_eq = compose(def_global, F => doc(F, `
 [[Comparable]].greater_than_eq method for '>=' infix operator
 
 Examples:
   2::greater_than_eq(2) == 2 >= 2
 `))(function greater_than_eq(other) {
-return this['[]'].call(this, Comparable)['greater_than_eq']['call'](this, other);})
+return this[Comparable]['greater_than_eq']['call'](this, other);})
 let less_than = compose(def_global, F => doc(F, `
 [[Comparable]].less_than method for '<' infix operator
 
 Examples:
   2::less_than(3) == 2 < 3
 `))(function less_than(other) {
-return this['[]'].call(this, Comparable)['less_than']['call'](this, other);})
+return this[Comparable]['less_than']['call'](this, other);})
 let less_than_eq = compose(def_global, F => doc(F, `
 [[Comparable]].less_than_eq method for '<=' infix operator
 
 Examples:
   2::less_than_eq(2) == 2 <= 3
 `))(function less_than_eq(other) {
-return this['[]'].call(this, Comparable)['less_than_eq']['call'](this, other);})
+return this[Comparable]['less_than_eq']['call'](this, other);})
 let and = compose(def_global, F => doc(F, `
 [[And]] method for '&&' infix operator
 
@@ -1192,27 +1165,6 @@ Examples:
   false::or(fn = :val) == false || :val
 `))(function or(thunk) {
 return js_or(this?.[Or](thunk), thunk);})
-const JsLogFriendly = Symbol("JsLogFriendly");
-globalThis['[]='].call(globalThis, [Keyword.for("JsLogFriendly")], JsLogFriendly)
-ObjectLiteral.prototype[JsLogFriendly] = function () {
-return into.bind(this)(Object);};
-Map.prototype[JsLogFriendly] = function () {
-return into.bind(map.bind(this)(function ([k, v]) {
-return [js_log_friendly.bind(k)(), js_log_friendly.bind(v)()];}))(construct_record.call(Map, []));};
-Array.prototype[JsLogFriendly] = function () {
-return into.bind(map.bind(this)(js_log_friendly))([]);};
-Set.prototype[JsLogFriendly] = function () {
-return str("#{", join.bind(map.bind(this)(js_log_friendly, as_str))(", "), "}");};
-Keyword.prototype[JsLogFriendly] = function () {
-return str(":", this['value']);};
-Boolean.prototype[JsLogFriendly] = function () {
-return this;};
-String.prototype[JsLogFriendly] = function () {
-return this;};
-Function.prototype[JsLogFriendly] = function () {
-return this;};
-let js_log_friendly = compose(def_global, def_call)(function js_log_friendly() {
-return this?.[JsLogFriendly]();})
 let log = compose(def_global, def_call)(function log(...args) {
 console['log'](...args, this)
 return this;})
@@ -1227,23 +1179,23 @@ return equals__q.call(typeof(this), "bigint");})
 let str__q = compose(def_global, def_call)(function str__q() {
 return equals__q.call(typeof(this), "string");})
 let as_keyword = compose(def_global, def_call)(function as_keyword() {
-return Keyword['[]'].call(Keyword, "for")(this['toString']());})
+return Keyword["for"](this['toString']());})
 let as_num = compose(def_global, def_call)(function as_num() {
 return Number(this);})
 let as_str = compose(def_global, def_call)(function as_str() {
-return js_or(this?.toString(), (...__args) => "");})
+return js_or(this?.toString(), function () {
+return "";});})
 let exists__q = compose(def_global, def_call)(function exists__q() {
 return negate.call(nil__q.bind(this)());})
-let Underscore = def_global(function Underscore(transforms) {
-this.transforms = transforms;
-});
+let Underscore = def_global(function Underscore(...transforms) {
+this['transforms'] = transforms});
 const UnderscoreInterpreter = Symbol("UnderscoreInterpreter");
-globalThis['[]='].call(globalThis, [Keyword.for("UnderscoreInterpreter")], UnderscoreInterpreter)
-let _ = new Underscore([new ObjectLiteral({'f': function id() {
-return this;}, 'args': []})]);
-globalThis['[]='].call(globalThis, [Keyword.for("_")], _)
+globalThis['UnderscoreInterpreter'] = UnderscoreInterpreter
+let _ = Underscore[Meta]['[]'].call(Underscore, new ObjectLiteral({'f': function id() {
+return this;}, 'args': []}));
+globalThis['_'] = _
 Underscore.prototype[Keyword.for("insert")] = function (f, ...args) {
-return new Underscore(push.bind(this['transforms'])(new ObjectLiteral({'f':f, 'args':args})));};
+return Underscore[Meta]['[]'].call(Underscore, ...this['transforms'], new ObjectLiteral({'f':f, 'args':args}));};
 Object.prototype[UnderscoreInterpreter] = function (underscore) {
 let initial_value = this;
 let result = initial_value;
@@ -1258,7 +1210,7 @@ Underscore.prototype[Call] = function (data, ...args) {
 if (truthy(nil__q.bind(data)())) {
 return js_lookup_property_key(Object, UnderscoreInterpreter)['call'](data, this, ...args);
 } else {
-return data['[]'].call(data, UnderscoreInterpreter)(this, ...args);
+return data[UnderscoreInterpreter](this, ...args);
 };};
 Underscore.prototype[Comparable] = new ObjectLiteral({['less_than'](val) {
 return this['insert'](less_than, val);
@@ -1329,24 +1281,8 @@ Underscore.prototype[Exponent] = function (other) {
 return this['insert'](exponent, other);};
 Underscore.prototype[Mod] = function (other) {
 return this['insert'](mod, other);};
-Underscore.prototype[JsLogFriendly] = function () {
-let fn_to_op = construct_record.call(Map, [["greater_than", ">"], ["greater_than_eq", ">="], ["less_than", "<"], ["less_than_eq", "<="], ["times", "*"], ["exponent", "**"], ["divide_by", "/"], ["plus", "+"], ["minus", "-"], ["mod", "%"], ["eq__q", "=="], ["and", "&&"], ["or", "||"], ["nullish", "??"]]);
-return str("_", into.bind(map.bind(skip.bind(this['transforms'])((1)))(function ({'f': f, 'args': args}) {
-let fn_name = js_log_friendly.bind(f)();
-let __coil_if_let_temp = call.bind(fn_to_op)(fn_name);
-if (truthy(__coil_if_let_temp)) {
-let op = __coil_if_let_temp;
-let [rhs] = args;
-if (truthy(call.bind(new Set([and, or]))(f))) {
-rhs = rhs()
-};
-return str(" ", op, " ", js_log_friendly.bind(rhs)());
-} else {
-let formatted_args = join.bind(map.bind(args)(js_log_friendly))(", ");
-return str("::", fn_name, "(", formatted_args, ")");
-};}))(""));};
 const Inc = Symbol("Inc");
-globalThis['[]='].call(globalThis, [Keyword.for("Inc")], Inc)
+globalThis['Inc'] = Inc
 Number.prototype[Inc] = function () {
 return plus.call(this,(1));};
 BigInt.prototype[Inc] = function () {
@@ -1354,7 +1290,7 @@ return plus.call(this,Keyword.for("custom_number_literal/n")[CustomNumberLiteral
 String.prototype[Inc] = function () {
 return String['fromCharCode'](plus.call(this['charCodeAt']((0)),(1)));};
 let inc = compose(def_call, def_global)(function inc() {
-return this['[]'].call(this, Inc)();})
+return this[Inc]();})
 let IRange = compose(def_global, F => impl_equal(F, Keyword.for("start"), Keyword.for("end")))(function IRange(start, end) {
 this.start = start;
 this.end = end;
@@ -1382,16 +1318,6 @@ ERangeNoMax.prototype[Call] = function (value) {
 return greater_than_eq.call(value,this['start']);};
 ERangeNoMin.prototype[Call] = function (value) {
 return less_than.call(value,this['end']);};
-IRange.prototype[JsLogFriendly] = function () {
-return str(this['start'], "..=", this['end']);};
-ERange.prototype[JsLogFriendly] = function () {
-return str(this['start'], "..", this['end']);};
-IRangeNoMin.prototype[JsLogFriendly] = function () {
-return str("..=", this['end']);};
-ERangeNoMax.prototype[JsLogFriendly] = function () {
-return str(this['start'], "..");};
-ERangeNoMin.prototype[JsLogFriendly] = function () {
-return str("..", this['end']);};
 IRange.prototype[Symbol['iterator']] = function *() {
 let {'start': i, 'end': end} = this;
 while (less_than_eq.call(i,end)) {
@@ -1410,60 +1336,19 @@ while (true) {
 yield i
 i = inc.bind(i)()
 };};
-let def_vector = def_global(function def_vector(Constructor) {
-Constructor[Vector] = function (args) {
-return new Constructor(...args);};
-return Constructor;});
-let def_record = compose(def_global, F => doc(F, `
-Defines a basic record type for a given constructor.
-
-Important! make sure your constructor has its entries stored at this.entries.
-
-Example:
-  @def_record
-  fn ArrayMap(@entries) {}
-
-  let name->role = ~ArrayMap{
-    \"marcelle rusu\" => \"coil language designer\"
-  }
-
-  // note that in this most minimal use, def_record isn't super useful.
-  // let's take a look at something more practical
-
-  @def_record
-  fn CallMap(@entries) {}
-
-  impl Call for CallMap = fn(val) =
-    ::find(fn([key]) = key::call(val))
-    ::pipe(1)
-
-  let score->letter_grade = ~CallMap{
-    ..50 => :F
-    50..60 => :D
-    60..70 => :C
-    70..80 => :B
-    80.. => :A
-  }
-  score->letter_grade::call(60) // :C
-`))(function def_record(Constructor) {
-Constructor[Record] = function (entries) {
-return new Constructor(entries);};
-Constructor.prototype[Symbol['iterator']] = function () {
-return iter.bind(this['entries'])();};
-return Constructor;})
-let char_alpha__q = plus.call(into.bind((new IRange("a", "z")))(new Set([])),into.bind((new IRange("A", "Z")))(new Set([])));
-let char_numeric__q = into.bind((new IRange("0", "9")))(new Set([]));
+let char_alpha__q = plus.call(into.bind((new IRange("a", "z")))(Set[Meta]['[]'].call(Set, )),into.bind((new IRange("A", "Z")))(Set[Meta]['[]'].call(Set, )));
+let char_numeric__q = into.bind((new IRange("0", "9")))(Set[Meta]['[]'].call(Set, ));
 let char_alpha_numeric__q = plus.call(char_alpha__q,char_numeric__q);
-globalThis['[]='].call(globalThis, [Keyword.for("char_alpha__q")], char_alpha__q)
-globalThis['[]='].call(globalThis, [Keyword.for("char_numeric__q")], char_numeric__q)
-globalThis['[]='].call(globalThis, [Keyword.for("char_alpha_numeric__q")], char_alpha_numeric__q)
+globalThis['char_alpha__q'] = char_alpha__q
+globalThis['char_numeric__q'] = char_numeric__q
+globalThis['char_alpha_numeric__q'] = char_alpha_numeric__q
 let alpha__q = compose(def_global, F => doc(F, "all characters in string are in a-z or A-Z"))(function alpha__q() {
 return all__q.bind(this)(char_alpha__q);})
 let alpha_numeric__q = compose(def_global, F => doc(F, "all characters in string are in a-z or A-Z or 0-9"))(function alpha_numeric__q() {
 return all__q.bind(this)(char_alpha_numeric__q);})
-let CallMap = compose(def_record, def_global)(function CallMap(entries) {
+let CallMap = def_global(function CallMap(entries) {
 this.entries = entries;
-})
+});
 CallMap.prototype[Call] = function (value) {
 return pipe.bind(find.bind(this)(function ([callable, _]) {
 return call.bind(callable)(value);}))(function ([_, val]) {
@@ -1485,16 +1370,14 @@ return at.bind(this['collection'])(this['idx']);
 return last.bind(this['collection'])();
 }});
 CollectionView.prototype[Keyword.for("skip")] = function (n) {
-return new CollectionView(this['collection'], plus.call(this['idx'],n));};
+return CollectionView[Meta]['[]'].call(CollectionView, this['collection'], plus.call(this['idx'],n));};
 CollectionView.prototype[Symbol['iterator']] = function *() {
 for  (let i of new IRange(this['idx'], len.bind(this['collection'])())) {
-yield this['collection']['[]'].call(this['collection'], i)
+yield this['collection'][Meta]['[]'].call(this['collection'], i)
 };};
-CollectionView.prototype[JsLogFriendly] = function () {
-return this['collection']['skip'](this['idx']);};
-let Lexer = def_record(function Lexer(entries) {
+function Lexer(entries) {
 this.entries = entries;
-});
+}
 function pass() {
 }
 function newline() {
@@ -1509,8 +1392,8 @@ let result = rest_of_string()['match'](this);
 if (truthy(or.call(negate.call(result), () => negate.call(equals__q.call(result['index'], (0)))))) {
 return false;
 };
-index = plus.call(index,result['[]'].call(result, (0))['length'])
-return result['[]'].call(result, (0));}
+index = plus.call(index,result[Meta]['[]'].call(result, (0))['length'])
+return result[Meta]['[]'].call(result, (0));}
 let line = (1);
 let col = (1);
 while (negate.call(equals__q.call(rest_of_string(), ""))) {
@@ -1533,51 +1416,47 @@ break;
 };
 };
 if (truthy(negate.call(found))) {
-raise__b(new Error("No token matched."))
+raise__b(Error[Meta]['[]'].call(Error, "No token matched."))
 };
 };
 return tokens;};
-let lexer = construct_record.call(Lexer, [[/^\n/, newline], [/^\s+/, pass], [/^\/\/.*/, pass], [/^\,/, pass], [/^\;/, pass], [/^#/, Keyword.for("hash")], [/^\~/, Keyword.for("tilde")], [/^if\b/, Keyword.for("if")], [/^is\b/, Keyword.for("is")], [/^else\b/, Keyword.for("else")], [/^return\b/, Keyword.for("return")], [/^import\b/, Keyword.for("import")], [/^export\b/, Keyword.for("export")], [/^default\b/, Keyword.for("default")], [/^from\b/, Keyword.for("from")], [/^let\b/, Keyword.for("let")], [/^protocol\b/, Keyword.for("protocol")], [/^for\b/, Keyword.for("for")], [/^try\b/, Keyword.for("try")], [/^catch\b/, Keyword.for("catch")], [/^finally\b/, Keyword.for("finally")], [/^while\b/, Keyword.for("while")], [/^loop\b/, Keyword.for("loop")], [/^continue\b/, Keyword.for("continue")], [/^break\b/, Keyword.for("break")], [/^of\b/, Keyword.for("of")], [/^impl\b/, Keyword.for("impl")], [/^define\b/, Keyword.for("define")], [/^yield\b/, Keyword.for("yield")], [/^async\b/, Keyword.for("async")], [/^await\b/, Keyword.for("await")], [/^new\b/, Keyword.for("new")], [/^keyof\b/, Keyword.for("keyof")], [/^as\b/, Keyword.for("as")], [/^\=\>/, Keyword.for("arrow")], [/^\@/, Keyword.for("at")], [/^\&\&/, Keyword.for("and_and")], [/^\|\|/, Keyword.for("or_or")], [/^\?\?/, Keyword.for("nullish")], [/^\=\=\=/, Keyword.for("triple_eq")], [/^\!\=\=/, Keyword.for("triple_not_eq")], [/^\=\=/, Keyword.for("double_eq")], [/^\!\=/, Keyword.for("not_eq")], [/^\!/, Keyword.for("bang")], [/^\=/, Keyword.for("eq")], [/^fn\b/, Keyword.for("fn")], [/^\{/, Keyword.for("open_b")], [/^\}/, Keyword.for("close_b")], [/^\(/, Keyword.for("open_p")], [/^\)/, Keyword.for("close_p")], [/^[\-\+]?(\d*\.)?\d+[a-zA-Z]+/, Keyword.for("custom_number_literal")], [/^[\-\+]?(\d*\.)?\d+/, Keyword.for("num")], [/^\.\.\./, Keyword.for("dot_dot_dot")], [/^\.\./, Keyword.for("dot_dot")], [/^\./, Keyword.for("dot")], [/^\/.*\/[a-z]?/, Keyword.for("regex_lit")], [/^\>\=/, Keyword.for("gt_eq")], [/^\<\=/, Keyword.for("lt_eq")], [/^\>/, Keyword.for("gt")], [/^\</, Keyword.for("lt")], [/^\+/, Keyword.for("plus")], [/^\%/, Keyword.for("mod")], [/^\-/, Keyword.for("minus")], [/^\*\*/, Keyword.for("pow")], [/^\*/, Keyword.for("times")], [/^\&/, Keyword.for("single_and")], [/^\:\:/, Keyword.for("double_colon")], [/^\:[a-zA-Z_\?\!\$0-9\/\.]+/, Keyword.for("keyword")], [/^\:/, Keyword.for("colon")], [/^\//, Keyword.for("div")], [/^\[/, Keyword.for("open_sq")], [/^\]/, Keyword.for("close_sq")], [/^\"([^\\\"]|\\.)*\"/s, Keyword.for("string_lit")], [/^[a-zA-Z_\?\!\$0-9\>\-]+/, Keyword.for("id")]]);
+let lexer = Lexer[Meta]['{}'].call(Lexer, [[/^\n/, newline], [/^\s+/, pass], [/^\/\/.*/, pass], [/^\,/, pass], [/^\;/, pass], [/^if\b/, Keyword.for("if")], [/^is\b/, Keyword.for("is")], [/^else\b/, Keyword.for("else")], [/^return\b/, Keyword.for("return")], [/^import\b/, Keyword.for("import")], [/^export\b/, Keyword.for("export")], [/^default\b/, Keyword.for("default")], [/^from\b/, Keyword.for("from")], [/^let\b/, Keyword.for("let")], [/^protocol\b/, Keyword.for("protocol")], [/^for\b/, Keyword.for("for")], [/^try\b/, Keyword.for("try")], [/^catch\b/, Keyword.for("catch")], [/^finally\b/, Keyword.for("finally")], [/^while\b/, Keyword.for("while")], [/^loop\b/, Keyword.for("loop")], [/^continue\b/, Keyword.for("continue")], [/^break\b/, Keyword.for("break")], [/^of\b/, Keyword.for("of")], [/^impl\b/, Keyword.for("impl")], [/^define\b/, Keyword.for("define")], [/^yield\b/, Keyword.for("yield")], [/^async\b/, Keyword.for("async")], [/^await\b/, Keyword.for("await")], [/^as\b/, Keyword.for("as")], [/^\=\>/, Keyword.for("arrow")], [/^\@/, Keyword.for("at")], [/^\&\&/, Keyword.for("and_and")], [/^\|\|/, Keyword.for("or_or")], [/^\?\?/, Keyword.for("nullish")], [/^\=\=\=/, Keyword.for("triple_eq")], [/^\!\=\=/, Keyword.for("triple_not_eq")], [/^\=\=/, Keyword.for("double_eq")], [/^\!\=/, Keyword.for("not_eq")], [/^\!/, Keyword.for("bang")], [/^\=/, Keyword.for("eq")], [/^fn\b/, Keyword.for("fn")], [/^\{/, Keyword.for("open_b")], [/^\}/, Keyword.for("close_b")], [/^\(/, Keyword.for("open_p")], [/^\)/, Keyword.for("close_p")], [/^[\-\+]?(\d*\.)?\d+[a-zA-Z]+/, Keyword.for("custom_number_literal")], [/^[\-\+]?(\d*\.)?\d+/, Keyword.for("num")], [/^\.\.\./, Keyword.for("dot_dot_dot")], [/^\.\./, Keyword.for("dot_dot")], [/^\./, Keyword.for("dot")], [/^\/.*\/[a-z]?/, Keyword.for("regex_lit")], [/^\>\=/, Keyword.for("gt_eq")], [/^\<\=/, Keyword.for("lt_eq")], [/^\>/, Keyword.for("gt")], [/^\</, Keyword.for("lt")], [/^\+/, Keyword.for("plus")], [/^\%/, Keyword.for("mod")], [/^\-/, Keyword.for("minus")], [/^\*\*/, Keyword.for("pow")], [/^\*/, Keyword.for("times")], [/^\&/, Keyword.for("single_and")], [/^\:\:/, Keyword.for("double_colon")], [/^\:[a-zA-Z_\?\!\$0-9\/\.]+/, Keyword.for("keyword")], [/^\:/, Keyword.for("colon")], [/^\//, Keyword.for("div")], [/^\[/, Keyword.for("open_sq")], [/^\]/, Keyword.for("close_sq")], [/^\"([^\\\"]|\\.)*\"/s, Keyword.for("string_lit")], [/^[a-zA-Z_\?\!\$0-9\>\-]+/, Keyword.for("id")]]);
 function ParseError(expected_token_type, actual_token) {
-this['stack'] = (new Error())['stack']
-this['message'] = str("Expected: ", js_log_friendly.bind(expected_token_type)(), " got ", js_log_friendly.bind(at.bind(actual_token)(Keyword.for("type")))(), " @ ", as_str.bind(at.bind(actual_token)(Keyword.for("line")))(), ":", as_str.bind(at.bind(actual_token)(Keyword.for("col")))())}
-ParseError['prototype'] = new Error()
+this['stack'] = Error[Meta]['[]'].call(Error, )['stack']
+this['message'] = str("Expected: ", expected_token_type, " got ", at.bind(actual_token)(Keyword.for("type")), " @ ", as_str.bind(at.bind(actual_token)(Keyword.for("line")))(), ":", as_str.bind(at.bind(actual_token)(Keyword.for("col")))())}
+ParseError['prototype'] = Error[Meta]['[]'].call(Error, )
 function expect_token__b(kw) {
 if (truthy(negate.call(equals__q.call(at.bind(first.bind(this)())(Keyword.for("type")), kw)))) {
-raise__b(new ParseError(kw, first.bind(this)()))
+raise__b(ParseError[Meta]['[]'].call(ParseError, kw, first.bind(this)()))
 } else {
 return this;
 };}
 function verify_exists__b(parser) {
 if (truthy(nil__q.bind(this)())) {
-raise__b(new Error(plus.call("Parser Failed - Expected ",js_log_friendly.bind(parser)())))
+raise__b(Error[Meta]['[]'].call(Error, plus.call("Parser Failed - Expected ",parser)))
 } else {
 return this;
 };}
 const ParseInstruction = Symbol("ParseInstruction");
 function line_and_col({'line': line, 'col': col}) {
 return new ObjectLiteral({'line':line, 'col':col});}
-let Init = def_vector(function Init(expr) {
+function Init(expr) {
 this.expr = expr;
-});
+}
 Init.prototype[ParseInstruction] = function ([_expr, tokens]) {
 return [new ObjectLiteral({...this['expr'], 'pos': line_and_col(first.bind(tokens)())}), tokens];};
-Init.prototype[JsLogFriendly] = function () {
-return str("Init(", js_log_friendly.bind(this['expr'])(), ")");};
-let One = def_vector(function One(kw, as) {
+function One(kw, as) {
 this.kw = kw;
 this.as = as;
-});
+}
 One.prototype[ParseInstruction] = function ([expr, tokens]) {
 let {'value': value, 'type': type} = first.bind(expect_token__b.bind(tokens)(this['kw']))();
 return [merge.bind(expr)(new ObjectLiteral({[this['as']]: value})), tokens['skip']((1))];};
-One.prototype[JsLogFriendly] = function () {
-return str("One(kw: ", this['kw'], ", as: ", this['as'], ")");};
-let Optional = def_vector(function Optional(set_or_kw, parse_fn, as) {
+function Optional(set_or_kw, parse_fn, as) {
 this.set_or_kw = set_or_kw;
 this.parse_fn = parse_fn;
 this.as = as;
-});
+}
 Optional.prototype[ParseInstruction] = function ([expr, tokens]) {
 if (truthy(empty__q.bind(tokens)())) {
 return [expr, tokens];
@@ -1586,23 +1465,21 @@ function check_set(type) {
 return any__q.bind(this)(function (val) {
 if (truthy(equals__q.call(val, type))) {
 return true;
-} else if (Vector in val) {
+} else if (val[Vector]) {
 return has__q.bind(val)(type);
 };});}
 let {'type': type} = first.bind(tokens)();
 if (truthy(and.call(this['set_or_kw'] instanceof Keyword, () => equals__q.call(type, this['set_or_kw'])))) {
-return parse_step.bind(construct_vector.call(Then, [this['parse_fn'], this['as']]))([expr, tokens]);
+return parse_step.bind(Then[Meta]['[]'].call(Then, this['parse_fn'], this['as']))([expr, tokens]);
 } else if (and.call(this['set_or_kw'] instanceof Set, () => check_set.bind(this['set_or_kw'])(type))) {
-return parse_step.bind(construct_vector.call(Then, [this['parse_fn'], this['as']]))([expr, tokens]);
+return parse_step.bind(Then[Meta]['[]'].call(Then, this['parse_fn'], this['as']))([expr, tokens]);
 } else {
 return [expr, tokens];
 };};
-Optional.prototype[JsLogFriendly] = function () {
-return str("Optional(kw: ", this['kw'], ", as: ", this['as'], ")");};
 Function.prototype[ParseInstruction] = function ([_expr, tokens]) {
 return this(tokens);};
-let Chomp = def_vector(function Chomp(...kws) {
-this['kws'] = kws});
+function Chomp(...kws) {
+this['kws'] = kws}
 Chomp.prototype[ParseInstruction] = function ([expr, tokens]) {
 let i = (0);
 for  (let kw of this['kws']) {
@@ -1610,12 +1487,10 @@ expect_token__b.bind(tokens['skip'](i))(kw)
 i = plus.call(i,(1))
 };
 return [expr, tokens['skip'](i)];};
-Chomp.prototype[JsLogFriendly] = function () {
-return str("Chomp(", this['kws'], ")");};
-let Then = def_vector(function Then(parser, kw) {
+function Then(parser, kw) {
 this.parser = parser;
 this.kw = kw;
-});
+}
 Then.prototype[ParseInstruction] = function ([expr, tokens]) {
 let result = call.bind(this['parser'])(tokens);
 if (truthy(nil__q.bind(result)())) {
@@ -1627,20 +1502,16 @@ return [merge.bind(expr)(new ObjectLiteral({[this['kw']]: new_expr})), new_token
 } else {
 return [new_expr, new_tokens];
 };};
-Then.prototype[JsLogFriendly] = function () {
-return str("Then(", this['parser']['name'], ", as:", this['kw'], ")");};
-let FMap = def_vector(function FMap(f) {
+function FMap(f) {
 this.f = f;
-});
+}
 FMap.prototype[ParseInstruction] = function ([expr, tokens]) {
 return [call.bind(this['f'])(expr), tokens];};
-FMap.prototype[JsLogFriendly] = function () {
-return str("Fmap(", this['f']['name'], ")");};
-let Until = def_vector(function Until(end_kw, parser, kw) {
+function Until(end_kw, parser, kw) {
 this.end_kw = end_kw;
 this.parser = parser;
 this.kw = kw;
-});
+}
 Until.prototype[ParseInstruction] = function ([expr, tokens]) {
 let exprs = [];
 while (negate.call(equals__q.call(at.bind(first.bind(tokens)())(Keyword.for("type")), this['end_kw']))) {
@@ -1653,12 +1524,10 @@ return [merge.bind(expr)(new ObjectLiteral({[this['kw']]: exprs})), tokens];
 } else {
 return [exprs, tokens];
 };};
-Until.prototype[JsLogFriendly] = function () {
-return str("Until(end: ", js_log_friendly.bind(this['end_kw'])(), ", f: ", this['parser']['name'], ", as: ", js_log_friendly.bind(this['kw'])(), ")");};
-let Case = def_vector(function Case(parse_map, kw) {
+function Case(parse_map, kw) {
 this.parse_map = parse_map;
 this.kw = kw;
-});
+}
 Case.prototype[ParseInstruction] = function ([expr, tokens]) {
 let __coil_if_let_temp = call.bind(this['parse_map'])(tokens);
 if (truthy(__coil_if_let_temp)) {
@@ -1670,36 +1539,25 @@ return [new_expr, new_tokens];
 };
 } else {
 console['log'](first.bind(this['tokens'])(), this['parse_map'])
-raise__b(new Error("Case Parse Failed"))
+raise__b(Error[Meta]['[]'].call(Error, "Case Parse Failed"))
 };};
-Case.prototype[JsLogFriendly] = function () {
-return plus.call("Case(",plus.call(js_log_friendly.bind(this['parse_map'])(),plus.call(", as: ",plus.call(js_log_friendly.bind(this['kw'])(),")"))));};
-let Either = def_vector(function Either(set, kw) {
+function Either(set, kw) {
 this.set = set;
 this.kw = kw;
-});
+}
 Either.prototype[ParseInstruction] = function ([expr, tokens]) {
 let op = verify_exists__b.bind(call.bind(this['set'])(at.bind(first.bind(tokens)())(Keyword.for("type"))))(this['set']);
 let [new_expr, rest] = [first.bind(tokens)(), tokens['skip']((1))];
 return [merge.bind(expr)(new ObjectLiteral({[this['kw']]: at.bind(new_expr)(Keyword.for("value"))})), rest];};
-Either.prototype[JsLogFriendly] = function () {
-return plus.call("Either(",plus.call(js_log_friendly.bind(this['set'])(),plus.call(", as: ",plus.call(js_log_friendly.bind(this['kw'])(),")"))));};
 function parse_step(result) {
-if (truthy(negate.call((ParseInstruction in this)))) {
-console['log']("This is not parsable:", js_log_friendly.bind(this)())
-};
-return this['[]'].call(this, ParseInstruction)(result);}
-let Parser = def_vector(function Parser(...instructions) {
-this['instructions'] = instructions});
-Parser.prototype[JsLogFriendly] = function () {
-return plus.call("~Parser[",plus.call(js_log_friendly.bind(this['instructions'])()['join'](", "),"]"));};
+return this[Meta]['[]'].call(this, ParseInstruction)(result);}
+function Parser(...instructions) {
+this['instructions'] = instructions}
 Parser.prototype[Call] = function (tokens) {
 return parse_step.bind(this)([null, tokens]);};
-let AbortIf = def_vector(function AbortIf(cond_fn) {
+function AbortIf(cond_fn) {
 this.cond_fn = cond_fn;
-});
-AbortIf.prototype[JsLogFriendly] = function () {
-return plus.call("~AbortIf[",plus.call(_resolve_keyword_str(this['cond_fn']['name']),"]"));};
+}
 Parser.prototype[ParseInstruction] = function (result) {
 for  (let instruction of this['instructions']) {
 if (truthy(instruction instanceof AbortIf)) {
@@ -1712,11 +1570,11 @@ continue;
 result = parse_step.bind(instruction)(result)
 };
 return result;};
-let ParseMap = def_record(function ParseMap(entries) {
+function ParseMap(entries) {
 this.entries = entries;
-});
+}
 ParseMap.prototype[Record] = new ObjectLiteral({['keys']() {
-return into.bind(map.bind(this['entries'])(first))(new Set([]));
+return into.bind(map.bind(this['entries'])(first))(Set[Meta]['[]'].call(Set, ));
 }});
 ParseMap.prototype[Call] = function (tokens, ...args) {
 if (truthy(empty__q.bind(tokens)())) {
@@ -1744,29 +1602,27 @@ if (truthy(and.call(pattern instanceof Keyword, () => equals__q.call(pattern, at
 return call.bind(parser)(tokens, ...args);
 };
 };};
-let math_ops = new Set([Keyword.for("mod"), Keyword.for("plus"), Keyword.for("minus"), Keyword.for("times"), Keyword.for("pow"), Keyword.for("div")]);
-let comparison_ops = new Set([Keyword.for("lt"), Keyword.for("gt"), Keyword.for("lt_eq"), Keyword.for("gt_eq")]);
+let math_ops = Set[Meta]['[]'].call(Set, Keyword.for("mod"), Keyword.for("plus"), Keyword.for("minus"), Keyword.for("times"), Keyword.for("pow"), Keyword.for("div"));
+let comparison_ops = Set[Meta]['[]'].call(Set, Keyword.for("lt"), Keyword.for("gt"), Keyword.for("lt_eq"), Keyword.for("gt_eq"));
 let all_math_ops = concat.bind(math_ops)(comparison_ops);
 function parse_double_eq(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("double_equals"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("double_eq")]), construct_vector.call(Then, [parse_1_2_expr, Keyword.for("rhs")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("double_equals"), 'lhs':lhs})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("double_eq")), Then[Meta]['[]'].call(Then, parse_1_2_expr, Keyword.for("rhs"))))(tokens);}
 function parse_not_eq(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("not_equals"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("not_eq")]), construct_vector.call(Then, [parse_1_2_expr, Keyword.for("rhs")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("not_equals"), 'lhs':lhs})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("not_eq")), Then[Meta]['[]'].call(Then, parse_1_2_expr, Keyword.for("rhs"))))(tokens);}
 function parse_triple_eq(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("triple_equals"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("triple_eq")]), construct_vector.call(Then, [parse_1_2_expr, Keyword.for("rhs")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("triple_equals"), 'lhs':lhs})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("triple_eq")), Then[Meta]['[]'].call(Then, parse_1_2_expr, Keyword.for("rhs"))))(tokens);}
 function parse_triple_not_eq(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("triple_not_equals"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("triple_not_eq")]), construct_vector.call(Then, [parse_1_2_expr, Keyword.for("rhs")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("triple_not_equals"), 'lhs':lhs})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("triple_not_eq")), Then[Meta]['[]'].call(Then, parse_1_2_expr, Keyword.for("rhs"))))(tokens);}
 function parse_and_and(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("and_and"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("and_and")]), construct_vector.call(Then, [parse_expr, Keyword.for("rhs")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("and_and"), 'lhs':lhs})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("and_and")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("rhs"))))(tokens);}
 function parse_or_or(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("or_or"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("or_or")]), construct_vector.call(Then, [parse_expr, Keyword.for("rhs")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("or_or"), 'lhs':lhs})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("or_or")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("rhs"))))(tokens);}
 function parse_nullish(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("nullish"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("nullish")]), construct_vector.call(Then, [parse_expr, Keyword.for("rhs")])]))(tokens);}
-function parse_keyof(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("keyof"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("keyof")]), construct_vector.call(Then, [parse_expr, Keyword.for("rhs")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("nullish"), 'lhs':lhs})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("nullish")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("rhs"))))(tokens);}
 function parse_comparison_op(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("math_op"), 'lhs':lhs})]), construct_vector.call(Either, [comparison_ops, Keyword.for("op")]), construct_vector.call(Then, [parse_1_2_expr, Keyword.for("rhs")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("math_op"), 'lhs':lhs})), Either[Meta]['[]'].call(Either, comparison_ops, Keyword.for("op")), Then[Meta]['[]'].call(Then, parse_1_2_expr, Keyword.for("rhs"))))(tokens);}
 function parse_third_expr_step(tokens, lhs) {
-return call.bind(construct_record.call(ParseMap, [[Keyword.for("double_eq"), parse_double_eq], [Keyword.for("triple_eq"), parse_triple_eq], [Keyword.for("triple_not_eq"), parse_triple_not_eq], [Keyword.for("not_eq"), parse_not_eq], [Keyword.for("and_and"), parse_and_and], [Keyword.for("or_or"), parse_or_or], [Keyword.for("nullish"), parse_nullish], [Keyword.for("keyof"), parse_keyof], [comparison_ops, parse_comparison_op]]))(tokens, lhs);}
+return call.bind(ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("double_eq"), parse_double_eq], [Keyword.for("triple_eq"), parse_triple_eq], [Keyword.for("triple_not_eq"), parse_triple_not_eq], [Keyword.for("not_eq"), parse_not_eq], [Keyword.for("and_and"), parse_and_and], [Keyword.for("or_or"), parse_or_or], [Keyword.for("nullish"), parse_nullish], [comparison_ops, parse_comparison_op]]))(tokens, lhs);}
 function parse_third_expr([lhs, tokens]) {
 let __coil_while_let_temp = parse_third_expr_step(tokens, lhs);
 while (__coil_while_let_temp) {
@@ -1777,21 +1633,21 @@ __coil_while_let_temp = parse_third_expr_step(tokens, lhs);
 };
 return [lhs, tokens];}
 function parse_partial_obj_dyn_access(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("partial_obj_dyn_access")})]), construct_vector.call(Chomp, [Keyword.for("open_sq")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")]), construct_vector.call(Chomp, [Keyword.for("close_sq")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("partial_obj_dyn_access")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_sq")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_sq"))))(tokens);}
 function parse_partial_fn_call(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("partial_fn_call")})]), construct_vector.call(Chomp, [Keyword.for("open_p")]), construct_vector.call(Until, [Keyword.for("close_p"), parse_expr, Keyword.for("args")]), construct_vector.call(Chomp, [Keyword.for("close_p")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("partial_fn_call")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_p")), Until[Meta]['[]'].call(Until, Keyword.for("close_p"), parse_expr, Keyword.for("args")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_p"))))(tokens);}
 function parse_and_dot(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("and_dot"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("single_and"), Keyword.for("dot")]), construct_vector.call(Case, [construct_record.call(ParseMap, [[Keyword.for("id"), parse_id], [Keyword.for("open_sq"), parse_partial_obj_dyn_access], [Keyword.for("open_p"), parse_partial_fn_call]]), Keyword.for("rhs")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("and_dot"), 'lhs':lhs})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("single_and"), Keyword.for("dot")), Case[Meta]['[]'].call(Case, ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("id"), parse_id], [Keyword.for("open_sq"), parse_partial_obj_dyn_access], [Keyword.for("open_p"), parse_partial_fn_call]]), Keyword.for("rhs"))))(tokens);}
 function parse_dot(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("property_lookup"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("dot")]), construct_vector.call(Either, [new Set([Keyword.for("id"), Keyword.for("from")]), Keyword.for("property")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("property_lookup"), 'lhs':lhs})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("dot")), Either[Meta]['[]'].call(Either, Set[Meta]['[]'].call(Set, Keyword.for("id"), Keyword.for("from")), Keyword.for("property"))))(tokens);}
 function parse_infix_bind(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("bind"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("double_colon")]), construct_vector.call(Case, [construct_record.call(ParseMap, [[Keyword.for("id"), parse_id], [Keyword.for("fn"), parse_fn], [[Keyword.for("tilde"), Keyword.for("id"), Keyword.for("open_b")], parse_record_syntax], [all_math_ops, parse_unapplied_math_op], [Keyword.for("open_p"), parse_paren_expr]]), Keyword.for("expr")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("bind"), 'lhs':lhs})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("double_colon")), Case[Meta]['[]'].call(Case, ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("id"), parse_id], [Keyword.for("fn"), parse_fn], [all_math_ops, parse_unapplied_math_op], [Keyword.for("open_p"), parse_paren_expr]]), Keyword.for("expr"))))(tokens);}
 function parse_is(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("is"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("is")]), construct_vector.call(Then, [parse_1_2_expr, Keyword.for("rhs")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("is"), 'lhs':lhs})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("is")), Then[Meta]['[]'].call(Then, parse_1_2_expr, Keyword.for("rhs"))))(tokens);}
 function parse_snd_assign(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("snd_assign"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("eq")]), construct_vector.call(Then, [parse_expr, Keyword.for("rhs")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("snd_assign"), 'lhs':lhs})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("eq")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("rhs"))))(tokens);}
 function parse_math_op(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("math_op"), 'lhs':lhs})]), construct_vector.call(Either, [math_ops, Keyword.for("op")]), construct_vector.call(Then, [parse_1_2_expr, Keyword.for("rhs")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("math_op"), 'lhs':lhs})), Either[Meta]['[]'].call(Either, math_ops, Keyword.for("op")), Then[Meta]['[]'].call(Then, parse_1_2_expr, Keyword.for("rhs"))))(tokens);}
 function not_adjacent__q([_expr, tokens]) {
 let current = first.bind(tokens)();
 let previous = at.bind(tokens['collection'])(minus.call(tokens['idx'],(1)));
@@ -1801,22 +1657,24 @@ return true;
 let end_of_prev_token = plus.call(previous['col'],previous['value']['length']);
 return greater_than_eq.call((minus.call(current['col'],end_of_prev_token)),(1));}
 function parse_adjacent_1_2_expr(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(AbortIf, [not_adjacent__q]), construct_vector.call(Then, [parse_1_2_expr])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, AbortIf[Meta]['[]'].call(AbortIf, not_adjacent__q), Then[Meta]['[]'].call(Then, parse_1_2_expr)))(tokens);}
 function parse_inclusive_range(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(AbortIf, [not_adjacent__q]), construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("inclusive_range"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("dot_dot"), Keyword.for("eq")]), construct_vector.call(Optional, [keys.bind(SINGLE_EXPR_PARSE_MAP)(), parse_adjacent_1_2_expr, Keyword.for("rhs")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, AbortIf[Meta]['[]'].call(AbortIf, not_adjacent__q), Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("inclusive_range"), 'lhs':lhs})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("dot_dot"), Keyword.for("eq")), Optional[Meta]['[]'].call(Optional, keys.bind(SINGLE_EXPR_PARSE_MAP)(), parse_adjacent_1_2_expr, Keyword.for("rhs"))))(tokens);}
 function parse_exclusive_range(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(AbortIf, [not_adjacent__q]), construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("exclusive_range"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("dot_dot")]), construct_vector.call(Optional, [keys.bind(SINGLE_EXPR_PARSE_MAP)(), parse_adjacent_1_2_expr, Keyword.for("rhs")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, AbortIf[Meta]['[]'].call(AbortIf, not_adjacent__q), Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("exclusive_range"), 'lhs':lhs})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("dot_dot")), Optional[Meta]['[]'].call(Optional, keys.bind(SINGLE_EXPR_PARSE_MAP)(), parse_adjacent_1_2_expr, Keyword.for("rhs"))))(tokens);}
 function parse_fn_call(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(AbortIf, [not_adjacent__q]), construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("fn_call"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("open_p")]), construct_vector.call(Until, [Keyword.for("close_p"), parse_expr, Keyword.for("args")]), construct_vector.call(Chomp, [Keyword.for("close_p")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, AbortIf[Meta]['[]'].call(AbortIf, not_adjacent__q), Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("fn_call"), 'lhs':lhs})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_p")), Until[Meta]['[]'].call(Until, Keyword.for("close_p"), parse_expr, Keyword.for("args")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_p"))))(tokens);}
 function parse_record_lookup(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(AbortIf, [not_adjacent__q]), construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("record_lookup"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("open_b")]), construct_vector.call(Until, [Keyword.for("close_b"), parse_record_entry, Keyword.for("entries")]), construct_vector.call(Chomp, [Keyword.for("close_b")])]))(tokens, lhs);}
+return call.bind(Parser[Meta]['[]'].call(Parser, AbortIf[Meta]['[]'].call(AbortIf, not_adjacent__q), Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("record_lookup"), 'lhs':lhs})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_b")), Until[Meta]['[]'].call(Until, Keyword.for("close_b"), parse_record_entry, Keyword.for("entries")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_b"))))(tokens, lhs);}
 function parse_dynamic_access(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(AbortIf, [not_adjacent__q]), construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("dynamic_access"), 'lhs':lhs})]), construct_vector.call(Chomp, [Keyword.for("open_sq")]), construct_vector.call(Until, [Keyword.for("close_sq"), parse_expr, Keyword.for("exprs")]), construct_vector.call(Chomp, [Keyword.for("close_sq")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, AbortIf[Meta]['[]'].call(AbortIf, not_adjacent__q), Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("dynamic_access"), 'lhs':lhs})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_sq")), Until[Meta]['[]'].call(Until, Keyword.for("close_sq"), parse_expr, Keyword.for("exprs")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_sq"))))(tokens);}
 let assignable_ops = concat.bind(math_ops)([Keyword.for("or_or"), Keyword.for("and_and")]);
 function parse_op_eq(tokens, lhs) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("op_eq"), 'lhs':lhs})]), construct_vector.call(Either, [assignable_ops, Keyword.for("op")]), construct_vector.call(Chomp, [Keyword.for("eq")]), construct_vector.call(Then, [parse_expr, Keyword.for("rhs")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("op_eq"), 'lhs':lhs})), Either[Meta]['[]'].call(Either, assignable_ops, Keyword.for("op")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("eq")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("rhs"))))(tokens);}
+function parse_raw_dynamic_access(tokens, lhs) {
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("raw_dynamic_access"), 'lhs':lhs})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("dot"), Keyword.for("open_sq")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_sq"))))(tokens);}
 function parse_snd_expr_step(tokens, lhs) {
-return call.bind(construct_record.call(ParseMap, [[Keyword.for("dot"), parse_dot], [Keyword.for("open_p"), parse_fn_call], [Keyword.for("double_colon"), parse_infix_bind], [Keyword.for("open_sq"), parse_dynamic_access], [Keyword.for("open_b"), parse_record_lookup], [Keyword.for("is"), parse_is], [Keyword.for("eq"), parse_snd_assign], [[Keyword.for("single_and"), Keyword.for("dot")], parse_and_dot], [[Keyword.for("dot_dot"), Keyword.for("eq")], parse_inclusive_range], [Keyword.for("dot_dot"), parse_exclusive_range], [[assignable_ops, Keyword.for("eq")], parse_op_eq], [math_ops, parse_math_op]]))(tokens, lhs);}
+return call.bind(ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("open_p"), parse_fn_call], [Keyword.for("double_colon"), parse_infix_bind], [Keyword.for("open_sq"), parse_dynamic_access], [Keyword.for("open_b"), parse_record_lookup], [Keyword.for("is"), parse_is], [Keyword.for("eq"), parse_snd_assign], [[Keyword.for("dot"), Keyword.for("open_sq")], parse_raw_dynamic_access], [Keyword.for("dot"), parse_dot], [[Keyword.for("single_and"), Keyword.for("dot")], parse_and_dot], [[Keyword.for("dot_dot"), Keyword.for("eq")], parse_inclusive_range], [Keyword.for("dot_dot"), parse_exclusive_range], [[assignable_ops, Keyword.for("eq")], parse_op_eq], [math_ops, parse_math_op]]))(tokens, lhs);}
 function parse_snd_expr([lhs, tokens]) {
 let __coil_while_let_temp = parse_snd_expr_step(tokens, lhs);
 while (__coil_while_let_temp) {
@@ -1827,103 +1685,86 @@ __coil_while_let_temp = parse_snd_expr_step(tokens, lhs);
 };
 return [lhs, tokens];}
 function parse_call_expr(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Chomp, [Keyword.for("open_p")]), construct_vector.call(Until, [Keyword.for("close_p"), parse_expr]), construct_vector.call(Chomp, [Keyword.for("close_p")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_p")), Until[Meta]['[]'].call(Until, Keyword.for("close_p"), parse_expr), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_p"))))(tokens);}
 function parse_decorator_expr(tokens) {
-return call.bind(construct_record.call(ParseMap, [[Keyword.for("id"), parse_expr]]))(tokens);}
+return call.bind(ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("id"), parse_expr]]))(tokens);}
 function parse_multi_decorator(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("multi_decorator")})]), construct_vector.call(Chomp, [Keyword.for("at"), Keyword.for("open_sq")]), construct_vector.call(Until, [Keyword.for("close_sq"), parse_decorator_expr, Keyword.for("decorators")]), construct_vector.call(Chomp, [Keyword.for("close_sq")]), construct_vector.call(Then, [parse_fn, Keyword.for("fn_def")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("multi_decorator")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("at"), Keyword.for("open_sq")), Until[Meta]['[]'].call(Until, Keyword.for("close_sq"), parse_decorator_expr, Keyword.for("decorators")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_sq")), Then[Meta]['[]'].call(Then, parse_fn, Keyword.for("fn_def"))))(tokens);}
 function parse_decorator(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("decorator")})]), construct_vector.call(Chomp, [Keyword.for("at")]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")]), construct_vector.call(Optional, [Keyword.for("open_p"), parse_call_expr, Keyword.for("args")]), construct_vector.call(Then, [parse_fn, Keyword.for("fn_def")])]))(tokens);}
-let parse_regex = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("regex_lit")})]), construct_vector.call(One, [Keyword.for("regex_lit"), Keyword.for("value")])]);
-let parse_str = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("str")})]), construct_vector.call(One, [Keyword.for("string_lit"), Keyword.for("value")])]);
-let valid_ids_in_all_contexts = new Set([Keyword.for("id"), Keyword.for("from"), Keyword.for("as")]);
-let parse_id = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("id_lookup")})]), construct_vector.call(Either, [push.bind(valid_ids_in_all_contexts)(Keyword.for("import")), Keyword.for("name")])]);
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("decorator")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("at")), One[Meta]['[]'].call(One, Keyword.for("id"), Keyword.for("name")), Optional[Meta]['[]'].call(Optional, Keyword.for("open_p"), parse_call_expr, Keyword.for("args")), Then[Meta]['[]'].call(Then, parse_fn, Keyword.for("fn_def"))))(tokens);}
+let parse_regex = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("regex_lit")})), One[Meta]['[]'].call(One, Keyword.for("regex_lit"), Keyword.for("value")));
+let parse_str = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("str")})), One[Meta]['[]'].call(One, Keyword.for("string_lit"), Keyword.for("value")));
+let valid_ids_in_all_contexts = Set[Meta]['[]'].call(Set, Keyword.for("id"), Keyword.for("from"), Keyword.for("as"));
+let parse_id = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("id_lookup")})), Either[Meta]['[]'].call(Either, push.bind(valid_ids_in_all_contexts)(Keyword.for("import")), Keyword.for("name")));
 function parse_reg_obj_entry(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("reg_obj_entry")})]), construct_vector.call(Either, [new Set([Keyword.for("id"), Keyword.for("num")]), Keyword.for("key")]), construct_vector.call(Chomp, [Keyword.for("colon")]), construct_vector.call(Then, [parse_expr, Keyword.for("value")])]))(tokens);}
-let parse_obj_shorthand_entry = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("obj_shorthand_entry")})]), construct_vector.call(Either, [valid_ids_in_all_contexts, Keyword.for("id")])]);
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("reg_obj_entry")})), Either[Meta]['[]'].call(Either, Set[Meta]['[]'].call(Set, Keyword.for("id"), Keyword.for("num")), Keyword.for("key")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("colon")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("value"))))(tokens);}
+let parse_obj_shorthand_entry = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("obj_shorthand_entry")})), Either[Meta]['[]'].call(Either, valid_ids_in_all_contexts, Keyword.for("id")));
 function parse_dynamic_obj_entry(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("dynamic_obj_entry")})]), construct_vector.call(Chomp, [Keyword.for("open_sq")]), construct_vector.call(Then, [parse_expr, Keyword.for("key_expr")]), construct_vector.call(Chomp, [Keyword.for("close_sq"), Keyword.for("colon")]), construct_vector.call(Then, [parse_expr, Keyword.for("value")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("dynamic_obj_entry")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_sq")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("key_expr")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_sq"), Keyword.for("colon")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("value"))))(tokens);}
 function parse_spread_obj_entry(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("spread_obj_entry")})]), construct_vector.call(Chomp, [Keyword.for("dot_dot_dot")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("spread_obj_entry")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("dot_dot_dot")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr"))))(tokens);}
 function parse_obj_entry(tokens) {
-return call.bind(construct_record.call(ParseMap, [[Keyword.for("open_sq"), parse_dynamic_obj_entry], [Keyword.for("dot_dot_dot"), parse_spread_obj_entry], [Keyword.for("fn"), parse_fn], [[Keyword.for("async"), Keyword.for("fn")], parse_fn], [[Keyword.for("id"), Keyword.for("colon")], parse_reg_obj_entry], [[Keyword.for("num"), Keyword.for("colon")], parse_reg_obj_entry], [Keyword.for("id"), parse_obj_shorthand_entry]]))(tokens);}
+return call.bind(ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("open_sq"), parse_dynamic_obj_entry], [Keyword.for("dot_dot_dot"), parse_spread_obj_entry], [Keyword.for("fn"), parse_fn], [[Keyword.for("async"), Keyword.for("fn")], parse_fn], [[Keyword.for("id"), Keyword.for("colon")], parse_reg_obj_entry], [[Keyword.for("num"), Keyword.for("colon")], parse_reg_obj_entry], [Keyword.for("id"), parse_obj_shorthand_entry]]))(tokens);}
 function parse_obj(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("obj_lit")})]), construct_vector.call(Chomp, [Keyword.for("open_b")]), construct_vector.call(Until, [Keyword.for("close_b"), parse_obj_entry, Keyword.for("entries")]), construct_vector.call(Chomp, [Keyword.for("close_b")])]))(tokens);}
-let parse_spread_assign = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("spread_assign")})]), construct_vector.call(Chomp, [Keyword.for("dot_dot_dot")]), construct_vector.call(Either, [valid_ids_in_all_contexts, Keyword.for("name")])]);
-let parse_assign_id = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("id_assign")})]), construct_vector.call(Either, [valid_ids_in_all_contexts, Keyword.for("name")])]);
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("obj_lit")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_b")), Until[Meta]['[]'].call(Until, Keyword.for("close_b"), parse_obj_entry, Keyword.for("entries")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_b"))))(tokens);}
+let parse_spread_assign = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("spread_assign")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("dot_dot_dot")), Either[Meta]['[]'].call(Either, valid_ids_in_all_contexts, Keyword.for("name")));
+let parse_assign_id = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("id_assign")})), Either[Meta]['[]'].call(Either, valid_ids_in_all_contexts, Keyword.for("name")));
 function parse_assign_array_entry(tokens) {
-return call.bind(construct_record.call(ParseMap, [[Keyword.for("id"), parse_assign_id], [Keyword.for("open_sq"), parse_assign_array], [Keyword.for("dot_dot_dot"), parse_spread_assign]]))(tokens);}
-let parse_assign_array = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("array_deconstruction")})]), construct_vector.call(Chomp, [Keyword.for("open_sq")]), construct_vector.call(Until, [Keyword.for("close_sq"), parse_assign_array_entry, Keyword.for("entries")]), construct_vector.call(Chomp, [Keyword.for("close_sq")])]);
-let parse_obj_entry_rename = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("obj_entry_rename")})]), construct_vector.call(Either, [valid_ids_in_all_contexts, Keyword.for("old_name")]), construct_vector.call(Chomp, [Keyword.for("colon")]), construct_vector.call(Either, [valid_ids_in_all_contexts, Keyword.for("new_name")])]);
-let parse_regular_obj_assign_entry = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("obj_reg_entry")})]), construct_vector.call(Either, [valid_ids_in_all_contexts, Keyword.for("name")])]);
-let parse_string_obj_assign_entry = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("obj_str_rename_entry")})]), construct_vector.call(One, [Keyword.for("string_lit"), Keyword.for("old_name")]), construct_vector.call(Chomp, [Keyword.for("colon")]), construct_vector.call(Either, [valid_ids_in_all_contexts, Keyword.for("new_name")])]);
-let parse_obj_assign_entry = construct_record.call(ParseMap, [[[Keyword.for("id"), Keyword.for("colon")], parse_obj_entry_rename], [Keyword.for("id"), parse_regular_obj_assign_entry], [Keyword.for("string_lit"), parse_string_obj_assign_entry], [Keyword.for("dot_dot_dot"), parse_spread_assign]]);
-let parse_assign_obj = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("object_deconstruction")})]), construct_vector.call(Chomp, [Keyword.for("open_b")]), construct_vector.call(Until, [Keyword.for("close_b"), parse_obj_assign_entry, Keyword.for("entries")]), construct_vector.call(Chomp, [Keyword.for("close_b")])]);
-let parse_this_assign = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("this_assign")})]), construct_vector.call(Chomp, [Keyword.for("at")]), construct_vector.call(Either, [valid_ids_in_all_contexts, Keyword.for("name")])]);
-let parse_assign_expr = construct_record.call(ParseMap, [[Keyword.for("id"), parse_assign_id], [Keyword.for("open_sq"), parse_assign_array], [Keyword.for("open_b"), parse_assign_obj], [Keyword.for("dot_dot_dot"), parse_spread_assign], [Keyword.for("at"), parse_this_assign]]);
-let parse_keyword = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("keyword")})]), construct_vector.call(One, [Keyword.for("keyword"), Keyword.for("value")])]);
+return call.bind(ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("id"), parse_assign_id], [Keyword.for("open_sq"), parse_assign_array], [Keyword.for("dot_dot_dot"), parse_spread_assign]]))(tokens);}
+let parse_assign_array = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("array_deconstruction")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_sq")), Until[Meta]['[]'].call(Until, Keyword.for("close_sq"), parse_assign_array_entry, Keyword.for("entries")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_sq")));
+let parse_obj_entry_rename = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("obj_entry_rename")})), Either[Meta]['[]'].call(Either, valid_ids_in_all_contexts, Keyword.for("old_name")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("colon")), Either[Meta]['[]'].call(Either, valid_ids_in_all_contexts, Keyword.for("new_name")));
+let parse_regular_obj_assign_entry = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("obj_reg_entry")})), Either[Meta]['[]'].call(Either, valid_ids_in_all_contexts, Keyword.for("name")));
+let parse_string_obj_assign_entry = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("obj_str_rename_entry")})), One[Meta]['[]'].call(One, Keyword.for("string_lit"), Keyword.for("old_name")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("colon")), Either[Meta]['[]'].call(Either, valid_ids_in_all_contexts, Keyword.for("new_name")));
+let parse_obj_assign_entry = ParseMap[Meta]['{}'].call(ParseMap, [[[Keyword.for("id"), Keyword.for("colon")], parse_obj_entry_rename], [Keyword.for("id"), parse_regular_obj_assign_entry], [Keyword.for("string_lit"), parse_string_obj_assign_entry], [Keyword.for("dot_dot_dot"), parse_spread_assign]]);
+let parse_assign_obj = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("object_deconstruction")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_b")), Until[Meta]['[]'].call(Until, Keyword.for("close_b"), parse_obj_assign_entry, Keyword.for("entries")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_b")));
+let parse_this_assign = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("this_assign")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("at")), Either[Meta]['[]'].call(Either, valid_ids_in_all_contexts, Keyword.for("name")));
+let parse_assign_expr = ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("id"), parse_assign_id], [Keyword.for("open_sq"), parse_assign_array], [Keyword.for("open_b"), parse_assign_obj], [Keyword.for("dot_dot_dot"), parse_spread_assign], [Keyword.for("at"), parse_this_assign]]);
+let parse_keyword = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("keyword")})), One[Meta]['[]'].call(One, Keyword.for("keyword"), Keyword.for("value")));
 function parse_paren_expr(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("paren_expr")})]), construct_vector.call(Chomp, [Keyword.for("open_p")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")]), construct_vector.call(Chomp, [Keyword.for("close_p")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("paren_expr")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_p")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_p"))))(tokens);}
 function parse_yield(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("yield")})]), construct_vector.call(Chomp, [Keyword.for("yield")]), construct_vector.call(Optional, [Keyword.for("times"), parse_gen_modifier, Keyword.for("star?")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("yield")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("yield")), Optional[Meta]['[]'].call(Optional, Keyword.for("times"), parse_gen_modifier, Keyword.for("star?")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr"))))(tokens);}
 function parse_await(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("await")})]), construct_vector.call(Chomp, [Keyword.for("await")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")])]))(tokens);}
-let parse_num = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("num")})]), construct_vector.call(One, [Keyword.for("num"), Keyword.for("value")])]);
-let parse_custom_number_literal = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("custom_number_literal")})]), construct_vector.call(One, [Keyword.for("custom_number_literal"), Keyword.for("value")])]);
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("await")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("await")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr"))))(tokens);}
+let parse_num = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("num")})), One[Meta]['[]'].call(One, Keyword.for("num"), Keyword.for("value")));
+let parse_custom_number_literal = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("custom_number_literal")})), One[Meta]['[]'].call(One, Keyword.for("custom_number_literal"), Keyword.for("value")));
 function parse_array(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("array")})]), construct_vector.call(Chomp, [Keyword.for("open_sq")]), construct_vector.call(Until, [Keyword.for("close_sq"), parse_expr, Keyword.for("elements")]), construct_vector.call(Chomp, [Keyword.for("close_sq")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("array")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_sq")), Until[Meta]['[]'].call(Until, Keyword.for("close_sq"), parse_expr, Keyword.for("elements")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_sq"))))(tokens);}
 function parse_spread(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("spread")})]), construct_vector.call(Chomp, [Keyword.for("dot_dot_dot")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")])]))(tokens);}
-let parse_unapplied_math_op = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("unapplied_math_op")})]), construct_vector.call(Either, [all_math_ops, Keyword.for("op")])]);
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("spread")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("dot_dot_dot")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr"))))(tokens);}
+let parse_unapplied_math_op = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("unapplied_math_op")})), Either[Meta]['[]'].call(Either, all_math_ops, Keyword.for("op")));
 function parse_bind_this(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("bind_this")})]), construct_vector.call(Chomp, [Keyword.for("double_colon")]), construct_vector.call(Case, [construct_record.call(ParseMap, [[Keyword.for("id"), parse_id], [Keyword.for("fn"), parse_fn], [all_math_ops, parse_unapplied_math_op], [Keyword.for("open_p"), parse_paren_expr]]), Keyword.for("expr")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("bind_this")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("double_colon")), Case[Meta]['[]'].call(Case, ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("id"), parse_id], [Keyword.for("fn"), parse_fn], [all_math_ops, parse_unapplied_math_op], [Keyword.for("open_p"), parse_paren_expr]]), Keyword.for("expr"))))(tokens);}
 function parse_not(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("not")})]), construct_vector.call(Chomp, [Keyword.for("bang")]), construct_vector.call(Then, [parse_1_2_expr, Keyword.for("expr")])]))(tokens);}
-function parse_new(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("new")})]), construct_vector.call(Chomp, [Keyword.for("new")]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("constructor_name")]), construct_vector.call(Chomp, [Keyword.for("open_p")]), construct_vector.call(Until, [Keyword.for("close_p"), parse_expr, Keyword.for("args")]), construct_vector.call(Chomp, [Keyword.for("close_p")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("not")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("bang")), Then[Meta]['[]'].call(Then, parse_1_2_expr, Keyword.for("expr"))))(tokens);}
 function parse_num_raw(tokens) {
 return pipe.bind(call.bind(parse_num)(tokens))(function ([expr, tokens]) {
 return [as_num.bind(at.bind(expr)(Keyword.for("value")))(), tokens];});}
-let parse_adjacent_num_raw = construct_vector.call(Parser, [construct_vector.call(AbortIf, [not_adjacent__q]), construct_vector.call(Then, [parse_num_raw])]);
-let parse_anon_arg_id = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("anon_arg_id")})]), construct_vector.call(Chomp, [Keyword.for("single_and")]), construct_vector.call(Optional, [Keyword.for("num"), parse_adjacent_num_raw, Keyword.for("arg_num")])]);
-let parse_unapplied_and_and = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("unapplied_and_and")})]), construct_vector.call(Chomp, [Keyword.for("and_and")])]);
-let parse_unapplied_or_or = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("unapplied_or_or")})]), construct_vector.call(Chomp, [Keyword.for("or_or")])]);
-let parse_unapplied_nullish = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("unapplied_nullish")})]), construct_vector.call(Chomp, [Keyword.for("nullish")])]);
-function parse_shorthand_anon_fn(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("shorthand_anon_fn")})]), construct_vector.call(Chomp, [Keyword.for("hash"), Keyword.for("open_p")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")]), construct_vector.call(Chomp, [Keyword.for("close_p")])]))(tokens);}
-let parse_async_modifier = construct_vector.call(Parser, [construct_vector.call(Init, [true]), construct_vector.call(Chomp, [Keyword.for("async")])]);
-let parse_gen_modifier = construct_vector.call(Parser, [construct_vector.call(Init, [true]), construct_vector.call(Chomp, [Keyword.for("times")])]);
+let parse_adjacent_num_raw = Parser[Meta]['[]'].call(Parser, AbortIf[Meta]['[]'].call(AbortIf, not_adjacent__q), Then[Meta]['[]'].call(Then, parse_num_raw));
+let parse_unapplied_and_and = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("unapplied_and_and")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("and_and")));
+let parse_unapplied_or_or = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("unapplied_or_or")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("or_or")));
+let parse_async_modifier = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, true), Chomp[Meta]['[]'].call(Chomp, Keyword.for("async")));
+let parse_unapplied_nullish = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("unapplied_nullish")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("nullish")));
+let parse_gen_modifier = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, true), Chomp[Meta]['[]'].call(Chomp, Keyword.for("times")));
 function parse_fn_expr_body(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("return")})]), construct_vector.call(Chomp, [Keyword.for("eq")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")]), construct_vector.call(FMap, [function (node) {
-return [node];}])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("return")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("eq")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr")), FMap[Meta]['[]'].call(FMap, function (node) {
+return [node];})))(tokens);}
 function parse_args_def(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Chomp, [Keyword.for("open_p")]), construct_vector.call(Until, [Keyword.for("close_p"), parse_assign_expr]), construct_vector.call(Chomp, [Keyword.for("close_p")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_p")), Until[Meta]['[]'].call(Until, Keyword.for("close_p"), parse_assign_expr), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_p"))))(tokens);}
 function parse_fn_name(tokens) {
 return pipe.bind(call.bind(parse_id)(tokens))(function ([expr, tokens]) {
 return [at.bind(expr)(Keyword.for("name")), tokens];});}
 function parse_fn(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("fn")})]), construct_vector.call(Optional, [Keyword.for("async"), parse_async_modifier, Keyword.for("is_async?")]), construct_vector.call(Chomp, [Keyword.for("fn")]), construct_vector.call(Optional, [Keyword.for("times"), parse_gen_modifier, Keyword.for("generator?")]), construct_vector.call(Optional, [Keyword.for("id"), parse_fn_name, Keyword.for("name")]), construct_vector.call(Optional, [Keyword.for("open_p"), parse_args_def, Keyword.for("args")]), construct_vector.call(Case, [construct_record.call(ParseMap, [[Keyword.for("eq"), parse_fn_expr_body], [Keyword.for("open_b"), block()]]), Keyword.for("body")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("fn")})), Optional[Meta]['[]'].call(Optional, Keyword.for("async"), parse_async_modifier, Keyword.for("is_async?")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("fn")), Optional[Meta]['[]'].call(Optional, Keyword.for("times"), parse_gen_modifier, Keyword.for("generator?")), Optional[Meta]['[]'].call(Optional, Keyword.for("id"), parse_fn_name, Keyword.for("name")), Optional[Meta]['[]'].call(Optional, Keyword.for("open_p"), parse_args_def, Keyword.for("args")), Case[Meta]['[]'].call(Case, ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("eq"), parse_fn_expr_body], [Keyword.for("open_b"), block()]]), Keyword.for("body"))))(tokens);}
 function parse_keyword_record_entry(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("keyword_record_entry")})]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")]), construct_vector.call(Chomp, [Keyword.for("colon")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("keyword_record_entry")})), One[Meta]['[]'].call(One, Keyword.for("id"), Keyword.for("name")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("colon")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr"))))(tokens);}
 function parse_regular_record_entry(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("regular_record_entry")})]), construct_vector.call(Then, [parse_expr, Keyword.for("key_expr")]), construct_vector.call(Chomp, [Keyword.for("arrow")]), construct_vector.call(Then, [parse_expr, Keyword.for("value_expr")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("regular_record_entry")})), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("key_expr")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("arrow")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("value_expr"))))(tokens);}
 function parse_record_entry(tokens) {
-return call.bind(construct_record.call(ParseMap, [[[Keyword.for("id"), Keyword.for("colon")], parse_keyword_record_entry], [_, parse_regular_record_entry]]))(tokens);}
-function parse_default_record_syntax(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("default_record_syntax")})]), construct_vector.call(Chomp, [Keyword.for("tilde")]), construct_vector.call(Chomp, [Keyword.for("open_b")]), construct_vector.call(Until, [Keyword.for("close_b"), parse_record_entry, Keyword.for("entries")]), construct_vector.call(Chomp, [Keyword.for("close_b")])]))(tokens);}
-function parse_default_vector_syntax(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("default_vector_syntax")})]), construct_vector.call(Chomp, [Keyword.for("tilde")]), construct_vector.call(Chomp, [Keyword.for("open_sq")]), construct_vector.call(Until, [Keyword.for("close_sq"), parse_expr, Keyword.for("entries")]), construct_vector.call(Chomp, [Keyword.for("close_sq")])]))(tokens);}
-function parse_record_syntax(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("record_syntax")})]), construct_vector.call(Chomp, [Keyword.for("open_b")]), construct_vector.call(Until, [Keyword.for("close_b"), parse_record_entry, Keyword.for("entries")]), construct_vector.call(Chomp, [Keyword.for("close_b")])]))(tokens);}
-function parse_vector_syntax(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("vector_syntax")})]), construct_vector.call(Chomp, [Keyword.for("open_sq")]), construct_vector.call(Until, [Keyword.for("close_sq"), parse_expr, Keyword.for("entries")]), construct_vector.call(Chomp, [Keyword.for("close_sq")])]))(tokens);}
-function parse_custom_data_syntax(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("custom_data_literal")})]), construct_vector.call(Chomp, [Keyword.for("tilde")]), construct_vector.call(Then, [parse_single_expr, Keyword.for("constructor_expr")]), construct_vector.call(Case, [construct_record.call(ParseMap, [[Keyword.for("open_sq"), parse_vector_syntax], [Keyword.for("open_b"), parse_record_syntax]]), Keyword.for("data")])]))(tokens);}
-function parse_set(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("set")})]), construct_vector.call(Chomp, [Keyword.for("hash"), Keyword.for("open_b")]), construct_vector.call(Until, [Keyword.for("close_b"), parse_expr, Keyword.for("elements")]), construct_vector.call(Chomp, [Keyword.for("close_b")])]))(tokens);}
+return call.bind(ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("dot_dot_dot"), parse_spread], [[Keyword.for("id"), Keyword.for("colon")], parse_keyword_record_entry], [_, parse_regular_record_entry]]))(tokens);}
 function parse_prefix_exclusive_range(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("prefix_exclusive_range")})]), construct_vector.call(Chomp, [Keyword.for("dot_dot")]), construct_vector.call(Then, [parse_1_2_expr, Keyword.for("expr")])]))(tokens);}
-let SINGLE_EXPR_PARSE_MAP = construct_record.call(ParseMap, [[Keyword.for("string_lit"), parse_str], [Keyword.for("regex_lit"), parse_regex], [Keyword.for("keyword"), parse_keyword], [Keyword.for("open_p"), parse_paren_expr], [Keyword.for("yield"), parse_yield], [Keyword.for("await"), parse_await], [Keyword.for("num"), parse_num], [Keyword.for("custom_number_literal"), parse_custom_number_literal], [Keyword.for("open_sq"), parse_array], [Keyword.for("dot_dot_dot"), parse_spread], [Keyword.for("double_colon"), parse_bind_this], [Keyword.for("bang"), parse_not], [Keyword.for("new"), parse_new], [Keyword.for("single_and"), parse_anon_arg_id], [Keyword.for("open_b"), parse_obj], [Keyword.for("and_and"), parse_unapplied_and_and], [Keyword.for("or_or"), parse_unapplied_or_or], [Keyword.for("nullish"), parse_unapplied_nullish], [Keyword.for("dot_dot"), parse_prefix_exclusive_range], [push.bind(valid_ids_in_all_contexts)(Keyword.for("import")), parse_id], [[Keyword.for("at"), Keyword.for("open_sq")], parse_multi_decorator], [Keyword.for("at"), parse_decorator], [[Keyword.for("hash"), Keyword.for("open_p")], parse_shorthand_anon_fn], [[Keyword.for("hash"), Keyword.for("open_b")], parse_set], [[Keyword.for("async"), Keyword.for("fn")], parse_fn], [Keyword.for("fn"), parse_fn], [[Keyword.for("tilde"), Keyword.for("open_sq")], parse_default_vector_syntax], [[Keyword.for("tilde"), Keyword.for("open_b")], parse_default_record_syntax], [Keyword.for("tilde"), parse_custom_data_syntax], [all_math_ops, parse_unapplied_math_op]]);
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("prefix_exclusive_range")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("dot_dot")), Then[Meta]['[]'].call(Then, parse_1_2_expr, Keyword.for("expr"))))(tokens);}
+let SINGLE_EXPR_PARSE_MAP = ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("string_lit"), parse_str], [Keyword.for("regex_lit"), parse_regex], [Keyword.for("keyword"), parse_keyword], [Keyword.for("open_p"), parse_paren_expr], [Keyword.for("yield"), parse_yield], [Keyword.for("await"), parse_await], [Keyword.for("num"), parse_num], [Keyword.for("custom_number_literal"), parse_custom_number_literal], [Keyword.for("open_sq"), parse_array], [Keyword.for("dot_dot_dot"), parse_spread], [Keyword.for("double_colon"), parse_bind_this], [Keyword.for("bang"), parse_not], [Keyword.for("open_b"), parse_obj], [Keyword.for("and_and"), parse_unapplied_and_and], [Keyword.for("or_or"), parse_unapplied_or_or], [Keyword.for("nullish"), parse_unapplied_nullish], [Keyword.for("dot_dot"), parse_prefix_exclusive_range], [push.bind(valid_ids_in_all_contexts)(Keyword.for("import")), parse_id], [[Keyword.for("at"), Keyword.for("open_sq")], parse_multi_decorator], [Keyword.for("at"), parse_decorator], [[Keyword.for("async"), Keyword.for("fn")], parse_fn], [Keyword.for("fn"), parse_fn], [all_math_ops, parse_unapplied_math_op]]);
 function parse_single_expr(tokens) {
 return call.bind(SINGLE_EXPR_PARSE_MAP)(tokens);}
 function parse_1_2_expr(tokens) {
@@ -1931,56 +1772,56 @@ return pipe.bind(parse_single_expr(tokens))(parse_snd_expr);}
 function parse_expr(tokens) {
 return pipe.bind(pipe.bind(parse_single_expr(tokens))(parse_snd_expr))(parse_third_expr);}
 function parse_else_branch(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("else")})]), construct_vector.call(Chomp, [Keyword.for("else")]), block(Keyword.for("body"))]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("else")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("else")), block(Keyword.for("body"))))(tokens);}
 function parse_else_if_branch(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("else_if")})]), construct_vector.call(Chomp, [Keyword.for("else"), Keyword.for("if")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")]), block(Keyword.for("pass")), construct_vector.call(Optional, [Keyword.for("else"), parse_if_branch, Keyword.for("fail")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("else_if")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("else"), Keyword.for("if")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr")), block(Keyword.for("pass")), Optional[Meta]['[]'].call(Optional, Keyword.for("else"), parse_if_branch, Keyword.for("fail"))))(tokens);}
 function parse_if_branch(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Case, [construct_record.call(ParseMap, [[[Keyword.for("else"), Keyword.for("if")], parse_else_if_branch], [Keyword.for("else"), parse_else_branch]])])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Case[Meta]['[]'].call(Case, ParseMap[Meta]['{}'].call(ParseMap, [[[Keyword.for("else"), Keyword.for("if")], parse_else_if_branch], [Keyword.for("else"), parse_else_branch]]))))(tokens);}
 function parse_if(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("if")})]), construct_vector.call(Chomp, [Keyword.for("if")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")]), block(Keyword.for("pass")), construct_vector.call(Optional, [Keyword.for("else"), parse_if_branch, Keyword.for("fail")])]))(tokens);}
-let parse_let = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("let")})]), construct_vector.call(Chomp, [Keyword.for("let")]), construct_vector.call(Then, [parse_assign_expr, Keyword.for("assign_expr")]), construct_vector.call(Chomp, [Keyword.for("eq")]), construct_vector.call(Then, [parse_expr, Keyword.for("rhs")])]);
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("if")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("if")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr")), block(Keyword.for("pass")), Optional[Meta]['[]'].call(Optional, Keyword.for("else"), parse_if_branch, Keyword.for("fail"))))(tokens);}
+let parse_let = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("let")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("let")), Then[Meta]['[]'].call(Then, parse_assign_expr, Keyword.for("assign_expr")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("eq")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("rhs")));
 function parse_if_let(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("if_let")})]), construct_vector.call(Chomp, [Keyword.for("if"), Keyword.for("let")]), construct_vector.call(Then, [parse_assign_expr, Keyword.for("assign_expr")]), construct_vector.call(Chomp, [Keyword.for("eq")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")]), construct_vector.call(Chomp, [Keyword.for("open_b")]), construct_vector.call(Until, [Keyword.for("close_b"), parse_statement, Keyword.for("pass")]), construct_vector.call(Chomp, [Keyword.for("close_b")]), construct_vector.call(Optional, [Keyword.for("else"), parse_else_branch, Keyword.for("fail")])]))(tokens);}
-let parse_impl_for = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("impl_for")})]), construct_vector.call(Chomp, [Keyword.for("impl")]), construct_vector.call(Then, [parse_expr, Keyword.for("proto_expr")]), construct_vector.call(Chomp, [Keyword.for("for")]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("constructor")]), construct_vector.call(Chomp, [Keyword.for("eq")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")])]);
-let parse_define = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("define_for")})]), construct_vector.call(Chomp, [Keyword.for("define")]), construct_vector.call(Then, [parse_expr, Keyword.for("proto_expr")]), construct_vector.call(Chomp, [Keyword.for("for")]), construct_vector.call(Then, [parse_single_expr, Keyword.for("src_expr")]), construct_vector.call(Chomp, [Keyword.for("eq")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")])]);
-let parse_protocol = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("protocol_def")})]), construct_vector.call(Chomp, [Keyword.for("protocol")]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")])]);
-let parse_return = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("return")})]), construct_vector.call(Chomp, [Keyword.for("return")]), construct_vector.call(Optional, [keys.bind(SINGLE_EXPR_PARSE_MAP)(), parse_expr, Keyword.for("expr")])]);
-let parse_await_modifier = construct_vector.call(Parser, [construct_vector.call(Init, [true]), construct_vector.call(Chomp, [Keyword.for("await")])]);
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("if_let")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("if"), Keyword.for("let")), Then[Meta]['[]'].call(Then, parse_assign_expr, Keyword.for("assign_expr")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("eq")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_b")), Until[Meta]['[]'].call(Until, Keyword.for("close_b"), parse_statement, Keyword.for("pass")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_b")), Optional[Meta]['[]'].call(Optional, Keyword.for("else"), parse_else_branch, Keyword.for("fail"))))(tokens);}
+let parse_impl_for = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("impl_for")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("impl")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("proto_expr")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("for")), One[Meta]['[]'].call(One, Keyword.for("id"), Keyword.for("constructor")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("eq")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr")));
+let parse_define = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("define_for")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("define")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("proto_expr")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("for")), Then[Meta]['[]'].call(Then, parse_single_expr, Keyword.for("src_expr")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("eq")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr")));
+let parse_protocol = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("protocol_def")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("protocol")), One[Meta]['[]'].call(One, Keyword.for("id"), Keyword.for("name")));
+let parse_return = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("return")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("return")), Optional[Meta]['[]'].call(Optional, keys.bind(SINGLE_EXPR_PARSE_MAP)(), parse_expr, Keyword.for("expr")));
+let parse_await_modifier = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, true), Chomp[Meta]['[]'].call(Chomp, Keyword.for("await")));
 function parse_for_loop(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("for_loop")})]), construct_vector.call(Chomp, [Keyword.for("for")]), construct_vector.call(Optional, [Keyword.for("await"), parse_await_modifier, Keyword.for("is_await?")]), construct_vector.call(Then, [parse_assign_expr, Keyword.for("assign_expr")]), construct_vector.call(Chomp, [Keyword.for("of")]), construct_vector.call(Then, [parse_expr, Keyword.for("iterable_expr")]), block(Keyword.for("body"))]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("for_loop")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("for")), Optional[Meta]['[]'].call(Optional, Keyword.for("await"), parse_await_modifier, Keyword.for("is_await?")), Then[Meta]['[]'].call(Then, parse_assign_expr, Keyword.for("assign_expr")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("of")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("iterable_expr")), block(Keyword.for("body"))))(tokens);}
 function parse_loop(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("loop")})]), construct_vector.call(Chomp, [Keyword.for("loop")]), block(Keyword.for("body"))]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("loop")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("loop")), block(Keyword.for("body"))))(tokens);}
 function parse_while_loop(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("while_loop")})]), construct_vector.call(Chomp, [Keyword.for("while")]), construct_vector.call(Then, [parse_expr, Keyword.for("test_expr")]), block(Keyword.for("body"))]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("while_loop")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("while")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("test_expr")), block(Keyword.for("body"))))(tokens);}
 function parse_while_let_loop(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("while_let_loop")})]), construct_vector.call(Chomp, [Keyword.for("while"), Keyword.for("let")]), construct_vector.call(Then, [parse_assign_expr, Keyword.for("assign_expr")]), construct_vector.call(Chomp, [Keyword.for("eq")]), construct_vector.call(Then, [parse_expr, Keyword.for("test_expr")]), block(Keyword.for("body"))]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("while_let_loop")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("while"), Keyword.for("let")), Then[Meta]['[]'].call(Then, parse_assign_expr, Keyword.for("assign_expr")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("eq")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("test_expr")), block(Keyword.for("body"))))(tokens);}
 function parse_continue(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("continue")})]), construct_vector.call(Chomp, [Keyword.for("continue")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("continue")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("continue"))))(tokens);}
 function parse_break(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("break")})]), construct_vector.call(Chomp, [Keyword.for("break")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("break")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("break"))))(tokens);}
 function parse_catch(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("catch")})]), construct_vector.call(Chomp, [Keyword.for("catch")]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")]), block(Keyword.for("body"))]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("catch")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("catch")), One[Meta]['[]'].call(One, Keyword.for("id"), Keyword.for("name")), block(Keyword.for("body"))))(tokens);}
 function parse_finally(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("finally")})]), construct_vector.call(Chomp, [Keyword.for("finally")]), block(Keyword.for("body"))]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("finally")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("finally")), block(Keyword.for("body"))))(tokens);}
 function parse_try(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("try")})]), construct_vector.call(Chomp, [Keyword.for("try")]), block(Keyword.for("body")), construct_vector.call(Optional, [Keyword.for("catch"), parse_catch, Keyword.for("catch")]), construct_vector.call(Optional, [Keyword.for("finally"), parse_finally, Keyword.for("finally")])]))(tokens);}
-let parse_impl_object = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("impl_object")})]), construct_vector.call(Chomp, [Keyword.for("impl")]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("constructor")]), construct_vector.call(Chomp, [Keyword.for("eq")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")])]);
-let parse_assign_all_as = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("assign_all_as")})]), construct_vector.call(Chomp, [Keyword.for("times"), Keyword.for("as")]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("name")])]);
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("try")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("try")), block(Keyword.for("body")), Optional[Meta]['[]'].call(Optional, Keyword.for("catch"), parse_catch, Keyword.for("catch")), Optional[Meta]['[]'].call(Optional, Keyword.for("finally"), parse_finally, Keyword.for("finally"))))(tokens);}
+let parse_impl_object = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("impl_object")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("impl")), One[Meta]['[]'].call(One, Keyword.for("id"), Keyword.for("constructor")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("eq")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr")));
+let parse_assign_all_as = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("assign_all_as")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("times"), Keyword.for("as")), One[Meta]['[]'].call(One, Keyword.for("id"), Keyword.for("name")));
 function parse_import_assign_expr(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Case, [construct_record.call(ParseMap, [[[Keyword.for("times"), Keyword.for("as")], parse_assign_all_as], [_, parse_assign_expr]])])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Case[Meta]['[]'].call(Case, ParseMap[Meta]['{}'].call(ParseMap, [[[Keyword.for("times"), Keyword.for("as")], parse_assign_all_as], [_, parse_assign_expr]]))))(tokens);}
 function parse_import(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("import")})]), construct_vector.call(Chomp, [Keyword.for("import")]), construct_vector.call(Until, [Keyword.for("from"), parse_import_assign_expr, Keyword.for("assign_exprs")]), construct_vector.call(Chomp, [Keyword.for("from")]), construct_vector.call(Then, [parse_str, Keyword.for("path")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("import")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("import")), Until[Meta]['[]'].call(Until, Keyword.for("from"), parse_import_assign_expr, Keyword.for("assign_exprs")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("from")), Then[Meta]['[]'].call(Then, parse_str, Keyword.for("path"))))(tokens);}
 function parse_export(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("export")})]), construct_vector.call(Chomp, [Keyword.for("export")]), construct_vector.call(Then, [parse_statement, Keyword.for("statement")])]))(tokens);}
-let parse_export_all = construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("export_all")})]), construct_vector.call(Chomp, [Keyword.for("export"), Keyword.for("times"), Keyword.for("from")]), construct_vector.call(One, [Keyword.for("string_lit"), Keyword.for("path")])]);
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("export")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("export")), Then[Meta]['[]'].call(Then, parse_statement, Keyword.for("statement"))))(tokens);}
+let parse_export_all = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("export_all")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("export"), Keyword.for("times"), Keyword.for("from")), One[Meta]['[]'].call(One, Keyword.for("string_lit"), Keyword.for("path")));
 function parse_export_default(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("export_default")})]), construct_vector.call(Chomp, [Keyword.for("export"), Keyword.for("default")]), construct_vector.call(Then, [parse_expr, Keyword.for("expr")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("export_default")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("export"), Keyword.for("default")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr"))))(tokens);}
 function parse_label(tokens) {
-return call.bind(construct_vector.call(Parser, [construct_vector.call(Init, [new ObjectLiteral({'type': Keyword.for("label")})]), construct_vector.call(One, [Keyword.for("id"), Keyword.for("label_name")]), construct_vector.call(Chomp, [Keyword.for("colon")]), construct_vector.call(Then, [parse_statement, Keyword.for("statement")])]))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("label")})), One[Meta]['[]'].call(One, Keyword.for("id"), Keyword.for("label_name")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("colon")), Then[Meta]['[]'].call(Then, parse_statement, Keyword.for("statement"))))(tokens);}
 function parse_statement(tokens) {
-return call.bind(construct_record.call(ParseMap, [[Keyword.for("let"), parse_let], [Keyword.for("for"), parse_for_loop], [Keyword.for("define"), parse_define], [Keyword.for("try"), parse_try], [Keyword.for("protocol"), parse_protocol], [Keyword.for("return"), parse_return], [Keyword.for("continue"), parse_continue], [Keyword.for("break"), parse_break], [Keyword.for("loop"), parse_loop], [Keyword.for("import"), parse_import], [[Keyword.for("export"), Keyword.for("default")], parse_export_default], [[Keyword.for("export"), Keyword.for("times")], parse_export_all], [Keyword.for("export"), parse_export], [[Keyword.for("impl"), Keyword.for("id"), Keyword.for("eq")], parse_impl_object], [Keyword.for("impl"), parse_impl_for], [[Keyword.for("while"), Keyword.for("let")], parse_while_let_loop], [Keyword.for("while"), parse_while_loop], [[Keyword.for("if"), Keyword.for("let")], parse_if_let], [Keyword.for("if"), parse_if], [[Keyword.for("id"), Keyword.for("colon")], parse_label], [_, parse_expr]]))(tokens);}
+return call.bind(ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("let"), parse_let], [Keyword.for("for"), parse_for_loop], [Keyword.for("define"), parse_define], [Keyword.for("try"), parse_try], [Keyword.for("protocol"), parse_protocol], [Keyword.for("return"), parse_return], [Keyword.for("continue"), parse_continue], [Keyword.for("break"), parse_break], [Keyword.for("loop"), parse_loop], [Keyword.for("import"), parse_import], [[Keyword.for("export"), Keyword.for("default")], parse_export_default], [[Keyword.for("export"), Keyword.for("times")], parse_export_all], [Keyword.for("export"), parse_export], [[Keyword.for("impl"), Keyword.for("id"), Keyword.for("eq")], parse_impl_object], [Keyword.for("impl"), parse_impl_for], [[Keyword.for("while"), Keyword.for("let")], parse_while_let_loop], [Keyword.for("while"), parse_while_loop], [[Keyword.for("if"), Keyword.for("let")], parse_if_let], [Keyword.for("if"), parse_if], [[Keyword.for("id"), Keyword.for("colon")], parse_label], [_, parse_expr]]))(tokens);}
 function block(name) {
-return construct_vector.call(Parser, [construct_vector.call(Chomp, [Keyword.for("open_b")]), construct_vector.call(Until, [Keyword.for("close_b"), parse_statement, name]), construct_vector.call(Chomp, [Keyword.for("close_b")])]);}
+return Parser[Meta]['[]'].call(Parser, Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_b")), Until[Meta]['[]'].call(Until, Keyword.for("close_b"), parse_statement, name), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_b")));}
 function parse(tokens) {
 let ast = [];
 let __coil_while_let_temp = call.bind(parse_statement)(tokens);
@@ -2012,7 +1853,7 @@ return str(" else {\n", eval_ast(or.call(at.bind(branch)(Keyword.for("body")), (
 if (truthy(equals__q.call(at.bind(branch)(Keyword.for("type")), Keyword.for("else_if")))) {
 return str(" else if (", eval_expr(at.bind(branch)(Keyword.for("expr"))), ") {\n", eval_ast(or.call(at.bind(branch)(Keyword.for("pass")), () => [])), "\n}", eval_if_branch(at.bind(branch)(Keyword.for("fail"))));
 } else {
-raise__b(new Error("Expected else if"))
+raise__b(Error[Meta]['[]'].call(Error, "Expected else if"))
 };
 };}
 function eval_if({'expr': expr, 'pass': pass, 'fail': fail}) {
@@ -2024,7 +1865,7 @@ return str("`", value, "`");
 } else {
 return str("\"", value, "\"");
 };}
-let RESERVED_IDS = new Set(["import"]);
+let RESERVED_IDS = Set[Meta]['[]'].call(Set, "import");
 function eval_property_lookup({'lhs': lhs, 'property': property}) {
 let lhs_js = eval_expr(lhs);
 if (truthy(has__q.bind(RESERVED_IDS)(lhs_js))) {
@@ -2039,7 +1880,7 @@ return resolve_name(name);}
 function eval_spread_assign({'name': name}) {
 return str("...", resolve_name(name));}
 function eval_array_deconstruction_entry(node) {
-return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("id_assign"), eval_id_assign_name], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("array_deconstruction"), eval_array_deconstruction_names]])))(node);}
+return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("id_assign"), eval_id_assign_name], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("array_deconstruction"), eval_array_deconstruction_names]])))(node);}
 function eval_array_deconstruction_names({'entries': entries}) {
 return str("[", map_join.bind(entries)(eval_array_deconstruction_entry, ", "), "]");}
 function eval_obj_reg_entry({'name': name}) {
@@ -2047,7 +1888,8 @@ return str("'", name, "': ", resolve_name(name));}
 function eval_obj_entry_rename({'old_name': old_name, 'new_name': new_name}) {
 return str("'", old_name, "': ", resolve_name(new_name));}
 function eval_obj_deconstruction_entry(node) {
-return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("obj_reg_entry"), eval_obj_reg_entry], [Keyword.for("obj_entry_rename"), eval_obj_entry_rename], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("obj_str_rename_entry"), (...__args) => str(at.bind(__args[0])(Keyword.for("old_name")), ": ", resolve_name(at.bind(__args[0])(Keyword.for("new_name"))))]])))(node);}
+return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("obj_reg_entry"), eval_obj_reg_entry], [Keyword.for("obj_entry_rename"), eval_obj_entry_rename], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("obj_str_rename_entry"), function ({'old_name': old_name, 'new_name': new_name}) {
+return str(old_name, ": ", resolve_name(new_name));}]])))(node);}
 function eval_object_deconstruction_names({'entries': entries}) {
 return str("{", map_join.bind(entries)(eval_obj_deconstruction_entry, ", "), "}");}
 function eval_this_assign({'name': name}) {
@@ -2055,7 +1897,7 @@ return name;}
 function eval_assign_all_as({'name': name}) {
 return str("* as ", name);}
 function eval_assign_expr(node) {
-return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("id_assign"), eval_id_assign_name], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("array_deconstruction"), eval_array_deconstruction_names], [Keyword.for("object_deconstruction"), eval_object_deconstruction_names], [Keyword.for("this_assign"), eval_this_assign]])))(node);}
+return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("id_assign"), eval_id_assign_name], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("array_deconstruction"), eval_array_deconstruction_names], [Keyword.for("object_deconstruction"), eval_object_deconstruction_names], [Keyword.for("this_assign"), eval_this_assign]])))(node);}
 function eval_while_let_loop({'assign_expr': assign_expr, 'test_expr': test_expr, 'body': body}) {
 return str("let __coil_while_let_temp = ", eval_expr(test_expr), ";\n", "while (__coil_while_let_temp) {\n", "let ", eval_assign_expr(assign_expr), " = __coil_while_let_temp;\n", eval_ast(body), "\n", "__coil_while_let_temp = ", eval_expr(test_expr), ";\n", "}");}
 function eval_if_let({'assign_expr': assign_expr, 'expr': expr, 'pass': pass, 'fail': fail}) {
@@ -2066,16 +1908,14 @@ function eval_let({'assign_expr': assign_expr, 'rhs': rhs}) {
 return str("let ", eval_assign_expr(assign_expr), " = ", eval_expr(rhs));}
 function eval_array({'elements': elements}) {
 return str("[", map_join.bind(elements)(eval_expr, ", "), "]");}
-let math_op_to_method = construct_record.call(Map, [[">", "greater_than"], ["<", "less_than"], [">=", "greater_than_eq"], ["<=", "less_than_eq"], ["*", "times"], ["**", "exponent"], ["/", "divide_by"], ["+", "plus"], ["-", "minus"], ["%", "mod"]]);
+let math_op_to_method = Map[Meta]['{}'].call(Map, [[">", "greater_than"], ["<", "less_than"], [">=", "greater_than_eq"], ["<=", "less_than_eq"], ["*", "times"], ["**", "exponent"], ["/", "divide_by"], ["+", "plus"], ["-", "minus"], ["%", "mod"]]);
 function eval_math_op({'lhs': lhs, 'op': op, 'rhs': rhs}) {
 return str(call.bind(math_op_to_method)(op), ".call(", eval_expr(lhs), ",", eval_expr(rhs), ")");}
 function eval_this_assignments(args) {
-return into.bind(map.bind(keep.bind(args)((...__args) => equals__q.call(at.bind(__args[0])(Keyword.for("type")), Keyword.for("this_assign"))))(function ({'name': name}) {
+return into.bind(map.bind(keep.bind(args)(equals__q.call(at.bind(_)(Keyword.for("type")), Keyword.for("this_assign"))))(function ({'name': name}) {
 return str("this.", name, " = ", name, ";\n");}))("");}
 function eval_fn({'is_async?': is_async__q, 'generator?': generator__q, 'name': name, 'args': args, 'body': body}) {
 return str((and.call(is_async__q, () => "async ")), "function ", (and.call(generator__q, () => "*")), resolve_name(name), "(", map_join.bind(args)(eval_assign_expr, ", "), ") {\n", eval_this_assignments(args), eval_ast(body), "}");}
-function eval_set({'elements': elements}) {
-return str("new Set([", map_join.bind(elements)(eval_expr, ", "), "])");}
 function eval_bind({'lhs': lhs, 'expr': expr}) {
 return str(eval_expr(expr), ".bind(", eval_expr(lhs), ")");}
 function eval_reg_obj_entry({'key': key, 'value': value}) {
@@ -2087,7 +1927,7 @@ return str("[", eval_expr(key_expr), "]: ", eval_expr(value));}
 function eval_obj_fn({'name': name, 'generator?': generator__q, 'is_async?': is_async__q, 'args': args, 'body': body}) {
 return str((and.call(is_async__q, () => "async ")), (and.call(generator__q, () => "*")), "['", name, "'](", map_join.bind(args)(eval_assign_expr, ", "), ") {\n", eval_ast(body), "\n}");}
 function eval_obj_entry(node) {
-return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("reg_obj_entry"), eval_reg_obj_entry], [Keyword.for("obj_shorthand_entry"), eval_obj_shorthand_entry], [Keyword.for("dynamic_obj_entry"), eval_dynamic_obj_entry], [Keyword.for("spread_obj_entry"), eval_spread], [Keyword.for("fn"), eval_obj_fn]])))(node);}
+return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("reg_obj_entry"), eval_reg_obj_entry], [Keyword.for("obj_shorthand_entry"), eval_obj_shorthand_entry], [Keyword.for("dynamic_obj_entry"), eval_dynamic_obj_entry], [Keyword.for("spread_obj_entry"), eval_spread], [Keyword.for("fn"), eval_obj_fn]])))(node);}
 function eval_obj_lit({'entries': entries}) {
 return str("new ObjectLiteral({", map_join.bind(entries)(eval_obj_entry, ", "), "})");}
 function eval_bind_this({'expr': expr}) {
@@ -2108,13 +1948,11 @@ function eval_not({'expr': expr}) {
 return str("negate.call(", eval_expr(expr), ")");}
 function eval_dynamic_access({'lhs': lhs, 'exprs': exprs}) {
 let lhs_js = eval_expr(lhs);
-return str(lhs_js, "['[]'].call(", lhs_js, ", ", map_join.bind(exprs)(eval_expr, ", "), ")");}
+return str(lhs_js, "[Meta]['[]'].call(", lhs_js, ", ", map_join.bind(exprs)(eval_expr, ", "), ")");}
 function eval_record_lookup({'lhs': lhs, 'entries': entries}) {
 let lhs_js = eval_expr(lhs);
 let entries_js = map_join.bind(entries)(eval_record_entry, ", ");
-return str(lhs_js, "['{}'].call(", lhs_js, ", [", entries_js, "])");}
-function eval_new({'constructor_name': constructor_name, 'args': args}) {
-return str("new ", constructor_name, "(", map_join.bind(args)(eval_expr, ", "), ")");}
+return str(lhs_js, "[Meta]['{}'].call(", lhs_js, ", [", entries_js, "])");}
 function eval_triple_equals({'lhs': lhs, 'rhs': rhs}) {
 return str(eval_expr(lhs), " === ", eval_expr(rhs));}
 function eval_triple_not_equals({'lhs': lhs, 'rhs': rhs}) {
@@ -2130,11 +1968,11 @@ return str("nullish.call(", eval_expr(lhs), ", () => ", eval_expr(rhs), ")");}
 function eval_dynamic_access_assign({'lhs': lhs, 'rhs': rhs}) {
 let {'lhs': obj, 'exprs': exprs} = lhs;
 let obj_js = eval_expr(obj);
-return str(obj_js, "['[]='].call(", obj_js, ", [", map_join.bind(exprs)(eval_expr, ", "), "], ", eval_expr(rhs), ")");}
+return str(obj_js, "[Meta]['[]='].call(", obj_js, ", [", map_join.bind(exprs)(eval_expr, ", "), "], ", eval_expr(rhs), ")");}
 function eval_general_snd_assign({'lhs': lhs, 'rhs': rhs}) {
 return str(eval_expr(lhs), " = ", eval_expr(rhs));}
 function eval_snd_assign(node) {
-return call.bind(pipe.bind(node)(Keyword.for("lhs"), Keyword.for("type"), construct_record.call(Map, [[Keyword.for("dynamic_access"), eval_dynamic_access_assign], [Keyword.for("id_lookup"), eval_general_snd_assign], [Keyword.for("property_lookup"), eval_general_snd_assign]])))(node);}
+return call.bind(pipe.bind(node)(Keyword.for("lhs"), Keyword.for("type"), Map[Meta]['{}'].call(Map, [[Keyword.for("dynamic_access"), eval_dynamic_access_assign], [Keyword.for("id_lookup"), eval_general_snd_assign], [Keyword.for("property_lookup"), eval_general_snd_assign], [Keyword.for("raw_dynamic_access"), eval_general_snd_assign]])))(node);}
 function eval_await({'expr': expr}) {
 return str("await ", eval_expr(expr));}
 function eval_yield({'star?': star__q, 'expr': expr}) {
@@ -2156,20 +1994,7 @@ return str("[", eval_expr(key_expr), ", ", eval_expr(value_expr), "]");}
 function eval_keyword_record_entry({'name': name, 'expr': expr}) {
 return str("[", eval_keyword(new ObjectLiteral({'value': str(":", name)})), ", ", eval_expr(expr), "]");}
 function eval_record_entry(node) {
-return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("regular_record_entry"), eval_regular_record_entry], [Keyword.for("keyword_record_entry"), eval_keyword_record_entry]])))(node);}
-function eval_default_record_syntax({'constructor_name': constructor_name, 'entries': entries}) {
-return str("construct_record.call(Dict, [", map_join.bind(entries)(eval_record_entry, ", "), "])");}
-function eval_default_vector_syntax({'entries': entries}) {
-return str("construct_vector.call(Vec, [", map_join.bind(entries)(eval_expr, ", "), "])");}
-const EvalNode = Symbol("EvalNode");
-function eval_node(...args) {
-return at.bind(this)(Keyword.for("type"))['[]'].call(at.bind(this)(Keyword.for("type")), EvalNode)(this, ...args);}
-Keyword.for("vector_syntax")[EvalNode] = function ({'entries': entries}, constructor_expr_js) {
-return str("construct_vector.call(", constructor_expr_js, ", ", "[", map_join.bind(entries)(eval_expr, ", "), "]", ")");};
-Keyword.for("record_syntax")[EvalNode] = function ({'entries': entries}, constructor_expr_js) {
-return str("construct_record.call(", constructor_expr_js, ", ", "[", map_join.bind(entries)(eval_record_entry, ", "), "]", ")");};
-function eval_custom_data_literal({'constructor_expr': constructor_expr, 'data': data}) {
-return eval_node.bind(data)(eval_expr(constructor_expr));}
+return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("regular_record_entry"), eval_regular_record_entry], [Keyword.for("keyword_record_entry"), eval_keyword_record_entry], [Keyword.for("spread"), eval_spread]])))(node);}
 function eval_inclusive_range({'lhs': lhs, 'rhs': rhs}) {
 if (truthy(rhs)) {
 return str("new IRange(", eval_expr(lhs), ", ", eval_expr(rhs), ")");
@@ -2182,18 +2007,14 @@ return str("new ERange(", eval_expr(lhs), ", ", eval_expr(rhs), ")");
 } else {
 return str("new ERangeNoMax(", eval_expr(lhs), ")");
 };}
-function eval_shorthand_anon_fn({'expr': expr}) {
-return str("(...__args) => ", eval_expr(expr));}
-function eval_anon_arg_id({'arg_num': arg_num}) {
-return str("__args[", minus.call((or.call(arg_num, () => (1))),(1)), "]");}
 function eval_multi_decorator({'decorators': decorators, 'fn_def': fn_def}) {
 let fn_name = pipe.bind(fn_def)(Keyword.for("name"), resolve_name);
 let decorator_fn_js = pipe.bind(join.bind(map.bind(decorators)(function (node) {
-if (truthy(pipe.bind(node)(Keyword.for("type"), new Set([Keyword.for("id_lookup")])))) {
+if (truthy(pipe.bind(node)(Keyword.for("type"), Set[Meta]['[]'].call(Set, Keyword.for("id_lookup"))))) {
 return pipe.bind(node)(Keyword.for("name"), resolve_name);
 } else {
 let {'lhs': lhs, 'args': args} = node;
-return str("F => ", eval_expr(lhs), "(F", pipe.bind(len.bind(args)())(construct_record.call(Map, [[(0), ""]]), or.call(_, () => ", ")), map_join.bind(args)(eval_expr, ", "), ")");
+return str("F => ", eval_expr(lhs), "(F", pipe.bind(len.bind(args)())(Map[Meta]['{}'].call(Map, [[(0), ""]]), or.call(_, () => ", ")), map_join.bind(args)(eval_expr, ", "), ")");
 };}))(", "))(function (decorators) {
 return str("compose(", decorators, ")");});
 return str("let ", fn_name, " = ", decorator_fn_js, "(", eval_expr(fn_def), ")");}
@@ -2205,8 +2026,6 @@ return str("let ", fn_name, " = ", decorator_name, "(", fn_def_js, ");");
 } else {
 return str("let ", fn_name, " = ", decorator_name, "(", fn_def_js, ", ", map_join.bind(args)(eval_expr, ", "), ");");
 };}
-function eval_keyof({'lhs': lhs, 'rhs': rhs}) {
-return str(eval_expr(lhs), " in ", eval_expr(rhs));}
 function eval_and_dot({'lhs': lhs, 'rhs': rhs}) {
 return str(eval_expr(lhs), "?.", eval_expr(rhs));}
 function eval_partial_fn_call({'expr': expr}) {
@@ -2215,7 +2034,7 @@ function eval_partial_obj_dyn_access({'expr': expr}) {
 return str("[", eval_expr(expr), "]");}
 function eval_regex_lit({'value': value}) {
 return value;}
-let logic_ops = construct_record.call(Map, [["||", "or"], ["&&", "and"]]);
+let logic_ops = Map[Meta]['{}'].call(Map, [["||", "or"], ["&&", "and"]]);
 let all_ops_to_method = merge.bind(math_op_to_method)(logic_ops);
 function eval_rhs_based_on_op(op, rhs) {
 if (truthy(has__q.bind(logic_ops)(op))) {
@@ -2227,8 +2046,10 @@ function eval_op_eq({'lhs': lhs, 'op': op, 'rhs': rhs}) {
 return str(eval_expr(lhs), " = ", call.bind(all_ops_to_method)(op), ".call(", eval_expr(lhs), ", ", eval_rhs_based_on_op(op, rhs), ")");}
 function eval_prefix_exclusive_range({'expr': expr}) {
 return str("new ERangeNoMin(", eval_expr(expr), ")");}
+function eval_raw_dynamic_access({'lhs': lhs, 'expr': expr}) {
+return str(eval_expr(lhs), "[", eval_expr(expr), "]");}
 function eval_expr(node) {
-return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("str"), eval_str], [Keyword.for("regex_lit"), eval_regex_lit], [Keyword.for("decorator"), eval_decorator], [Keyword.for("multi_decorator"), eval_multi_decorator], [Keyword.for("keyword"), eval_keyword], [Keyword.for("and_dot"), eval_and_dot], [Keyword.for("prefix_exclusive_range"), eval_prefix_exclusive_range], [Keyword.for("partial_fn_call"), eval_partial_fn_call], [Keyword.for("partial_obj_dyn_access"), eval_partial_obj_dyn_access], [Keyword.for("property_lookup"), eval_property_lookup], [Keyword.for("id_lookup"), eval_id_lookup], [Keyword.for("fn_call"), eval_fn_call], [Keyword.for("num"), eval_num], [Keyword.for("custom_number_literal"), eval_custom_number_literal], [Keyword.for("array"), eval_array], [Keyword.for("math_op"), eval_math_op], [Keyword.for("double_equals"), eval_double_equals], [Keyword.for("not_equals"), eval_not_equals], [Keyword.for("not"), eval_not], [Keyword.for("fn"), eval_fn], [Keyword.for("bind"), eval_bind], [Keyword.for("anon_arg_id"), eval_anon_arg_id], [Keyword.for("set"), eval_set], [Keyword.for("obj_lit"), eval_obj_lit], [Keyword.for("bind_this"), eval_bind_this], [Keyword.for("dynamic_access"), eval_dynamic_access], [Keyword.for("record_lookup"), eval_record_lookup], [Keyword.for("new"), eval_new], [Keyword.for("triple_equals"), eval_triple_equals], [Keyword.for("triple_not_equals"), eval_triple_not_equals], [Keyword.for("spread"), eval_spread], [Keyword.for("is"), eval_is], [Keyword.for("and_and"), eval_and_and], [Keyword.for("or_or"), eval_or_or], [Keyword.for("nullish"), eval_nullish], [Keyword.for("snd_assign"), eval_snd_assign], [Keyword.for("await"), eval_await], [Keyword.for("yield"), eval_yield], [Keyword.for("default_record_syntax"), eval_default_record_syntax], [Keyword.for("default_vector_syntax"), eval_default_vector_syntax], [Keyword.for("custom_data_literal"), eval_custom_data_literal], [Keyword.for("paren_expr"), eval_paren_expr], [Keyword.for("unapplied_math_op"), eval_unapplied_math_op], [Keyword.for("unapplied_and_and"), eval_unapplied_and_and], [Keyword.for("unapplied_or_or"), eval_unapplied_or_or], [Keyword.for("unapplied_nullish"), eval_unapplied_nullish], [Keyword.for("shorthand_anon_fn"), eval_shorthand_anon_fn], [Keyword.for("inclusive_range"), eval_inclusive_range], [Keyword.for("exclusive_range"), eval_exclusive_range], [Keyword.for("keyof"), eval_keyof], [Keyword.for("op_eq"), eval_op_eq]])))(node);}
+return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("str"), eval_str], [Keyword.for("regex_lit"), eval_regex_lit], [Keyword.for("decorator"), eval_decorator], [Keyword.for("multi_decorator"), eval_multi_decorator], [Keyword.for("keyword"), eval_keyword], [Keyword.for("and_dot"), eval_and_dot], [Keyword.for("raw_dynamic_access"), eval_raw_dynamic_access], [Keyword.for("prefix_exclusive_range"), eval_prefix_exclusive_range], [Keyword.for("partial_fn_call"), eval_partial_fn_call], [Keyword.for("partial_obj_dyn_access"), eval_partial_obj_dyn_access], [Keyword.for("property_lookup"), eval_property_lookup], [Keyword.for("id_lookup"), eval_id_lookup], [Keyword.for("fn_call"), eval_fn_call], [Keyword.for("num"), eval_num], [Keyword.for("custom_number_literal"), eval_custom_number_literal], [Keyword.for("array"), eval_array], [Keyword.for("math_op"), eval_math_op], [Keyword.for("double_equals"), eval_double_equals], [Keyword.for("not_equals"), eval_not_equals], [Keyword.for("not"), eval_not], [Keyword.for("fn"), eval_fn], [Keyword.for("bind"), eval_bind], [Keyword.for("obj_lit"), eval_obj_lit], [Keyword.for("bind_this"), eval_bind_this], [Keyword.for("dynamic_access"), eval_dynamic_access], [Keyword.for("record_lookup"), eval_record_lookup], [Keyword.for("triple_equals"), eval_triple_equals], [Keyword.for("triple_not_equals"), eval_triple_not_equals], [Keyword.for("spread"), eval_spread], [Keyword.for("is"), eval_is], [Keyword.for("and_and"), eval_and_and], [Keyword.for("or_or"), eval_or_or], [Keyword.for("nullish"), eval_nullish], [Keyword.for("snd_assign"), eval_snd_assign], [Keyword.for("await"), eval_await], [Keyword.for("yield"), eval_yield], [Keyword.for("paren_expr"), eval_paren_expr], [Keyword.for("unapplied_math_op"), eval_unapplied_math_op], [Keyword.for("unapplied_and_and"), eval_unapplied_and_and], [Keyword.for("unapplied_or_or"), eval_unapplied_or_or], [Keyword.for("unapplied_nullish"), eval_unapplied_nullish], [Keyword.for("inclusive_range"), eval_inclusive_range], [Keyword.for("exclusive_range"), eval_exclusive_range], [Keyword.for("op_eq"), eval_op_eq]])))(node);}
 function eval_return({'expr': expr}) {
 if (truthy(expr)) {
 return str("return ", eval_expr(expr));
@@ -2269,16 +2090,16 @@ finally_js = str(" finally {\n", eval_ast(body), "\n}")
 };
 return str("try {\n", body_js, "\n", "}", catch_js, finally_js);}
 function get_deconstructed_obj_entry_name(node) {
-return pipe.bind(at.bind(construct_record.call(Map, [[Keyword.for("obj_reg_entry"), Keyword.for("name")], [Keyword.for("obj_entry_rename"), Keyword.for("old_name")]]))(at.bind(node)(Keyword.for("type"))))(node);}
+return pipe.bind(at.bind(Map[Meta]['{}'].call(Map, [[Keyword.for("obj_reg_entry"), Keyword.for("name")], [Keyword.for("obj_entry_rename"), Keyword.for("old_name")]]))(at.bind(node)(Keyword.for("type"))))(node);}
 function get_deconstructed_array_entry_name(node) {
-return pipe.bind(at.bind(construct_record.call(Map, [[Keyword.for("id_assign"), Keyword.for("name")]]))(at.bind(node)(Keyword.for("type"))))(node);}
+return pipe.bind(at.bind(Map[Meta]['{}'].call(Map, [[Keyword.for("id_assign"), Keyword.for("name")]]))(at.bind(node)(Keyword.for("type"))))(node);}
 function eval_import_deconstruction_entry(node) {
-return call.bind(pipe.bind(node)(Keyword.for("type"), construct_record.call(Map, [[Keyword.for("obj_reg_entry"), pipe.bind(_)(Keyword.for("name"), resolve_name)], [Keyword.for("obj_entry_rename"), function ({'old_name': old_name, 'new_name': new_name}) {
+return call.bind(pipe.bind(node)(Keyword.for("type"), Map[Meta]['{}'].call(Map, [[Keyword.for("obj_reg_entry"), pipe.bind(_)(Keyword.for("name"), resolve_name)], [Keyword.for("obj_entry_rename"), function ({'old_name': old_name, 'new_name': new_name}) {
 return str(resolve_name(old_name), " as ", resolve_name(new_name));}]])))(node);}
 function eval_import_deconstruction_expr({'entries': entries}) {
 return str("{", map_join.bind(entries)(eval_import_deconstruction_entry, ", "), "}");}
 function eval_import_assign_exprs(node) {
-return call.bind(pipe.bind(node)(Keyword.for("type"), construct_record.call(Map, [[Keyword.for("id_assign"), eval_id_assign_name], [Keyword.for("object_deconstruction"), eval_import_deconstruction_expr], [Keyword.for("assign_all_as"), eval_assign_all_as]])))(node);}
+return call.bind(pipe.bind(node)(Keyword.for("type"), Map[Meta]['{}'].call(Map, [[Keyword.for("id_assign"), eval_id_assign_name], [Keyword.for("object_deconstruction"), eval_import_deconstruction_expr], [Keyword.for("assign_all_as"), eval_assign_all_as]])))(node);}
 function eval_import({'assign_exprs': assign_exprs, 'path': path}) {
 return str("import ", map_join.bind(assign_exprs)(eval_import_assign_exprs, ", "), " from \"", path['value']['slice']((1), (-1)), "\"");}
 function eval_export({'statement': statement}) {
@@ -2290,7 +2111,7 @@ return str("export * from ", path);}
 function eval_label({'label_name': label_name, 'statement': statement}) {
 return str(label_name, ": ", eval_statement(statement));}
 function eval_statement(node) {
-return call.bind(pipe.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(construct_record.call(Map, [[Keyword.for("label"), eval_label], [Keyword.for("if"), eval_if], [Keyword.for("import"), eval_import], [Keyword.for("export"), eval_export], [Keyword.for("export_default"), eval_export_default], [Keyword.for("export_all"), eval_export_all], [Keyword.for("let"), eval_let], [Keyword.for("if_let"), eval_if_let], [Keyword.for("return"), eval_return], [Keyword.for("protocol_def"), eval_protocol], [Keyword.for("impl_for"), eval_impl_for], [Keyword.for("impl_object"), eval_impl_object], [Keyword.for("define_for"), eval_define_for], [Keyword.for("for_loop"), eval_for_loop], [Keyword.for("id_assign"), eval_id_assign], [Keyword.for("while_loop"), eval_while_loop], [Keyword.for("loop"), eval_loop], [Keyword.for("while_let_loop"), eval_while_let_loop], [Keyword.for("continue"), eval_continue], [Keyword.for("break"), eval_break], [Keyword.for("try"), eval_try]])))(function (f) {
+return call.bind(pipe.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("label"), eval_label], [Keyword.for("if"), eval_if], [Keyword.for("import"), eval_import], [Keyword.for("export"), eval_export], [Keyword.for("export_default"), eval_export_default], [Keyword.for("export_all"), eval_export_all], [Keyword.for("let"), eval_let], [Keyword.for("if_let"), eval_if_let], [Keyword.for("return"), eval_return], [Keyword.for("protocol_def"), eval_protocol], [Keyword.for("impl_for"), eval_impl_for], [Keyword.for("impl_object"), eval_impl_object], [Keyword.for("define_for"), eval_define_for], [Keyword.for("for_loop"), eval_for_loop], [Keyword.for("id_assign"), eval_id_assign], [Keyword.for("while_loop"), eval_while_loop], [Keyword.for("loop"), eval_loop], [Keyword.for("while_let_loop"), eval_while_let_loop], [Keyword.for("continue"), eval_continue], [Keyword.for("break"), eval_break], [Keyword.for("try"), eval_try]])))(function (f) {
 if (truthy(f)) {
 return compose(f, plus.call(_,";"));
 } else {
@@ -2300,10 +2121,10 @@ export function eval_ast(ast) {
 return map_join.bind(ast)(eval_statement, "\n");};
 export function lex_and_parse(string) {
 return pipe.bind(pipe.bind(call.bind(lexer)(string))(function (tokens) {
-return new CollectionView(tokens, (0));}))(parse);};
+return CollectionView[Meta]['[]'].call(CollectionView, tokens, (0));}))(parse);};
 export function compile(string) {
 return pipe.bind(pipe.bind(pipe.bind(call.bind(lexer)(string))(function (tokens) {
-return new CollectionView(tokens, (0));}))(parse))(eval_ast);};
+return CollectionView[Meta]['[]'].call(CollectionView, tokens, (0));}))(parse))(eval_ast);};
 function compile_file(src_file_name, out_name) {
 let src = Deno['readTextFileSync'](src_file_name);
 Deno['writeTextFile'](out_name, compile(src))}
@@ -2313,10 +2134,10 @@ prelude = plus.call(prelude,compile(Deno['readTextFileSync'](prelude_src)))
 let src = Deno['readTextFileSync'](src_file_name);
 Deno['writeTextFile'](out_name, plus.call(prelude,compile(src)))}
 if (truthy(and.call(globalThis['Deno'], () => not_empty__q.bind(Deno['args'])()))) {
-let src_file_name = Deno['args']['[]'].call(Deno['args'], (0));
-let out_name = Deno['args']['[]'].call(Deno['args'], (1));
+let src_file_name = Deno['args'][Meta]['[]'].call(Deno['args'], (0));
+let out_name = Deno['args'][Meta]['[]'].call(Deno['args'], (1));
 let prelude_src = "./src/std/prelude.coil";
-if (truthy(equals__q.call(Deno['args']['[]'].call(Deno['args'], (2)), "-w"))) {
+if (truthy(equals__q.call(Deno['args'][Meta]['[]'].call(Deno['args'], (2)), "-w"))) {
 let watcher = Deno['watchFs']([src_file_name, prelude_src]);
 for await  (let event of watcher) {
 if (truthy(negate.call(equals__q.call(event['kind'], "modify")))) {
@@ -2329,7 +2150,7 @@ compile_file_and_prelude(src_file_name, out_name, prelude_src)
 console['error']("Compile Failed", e)
 };
 };
-} else if (equals__q.call(Deno['args']['[]'].call(Deno['args'], (2)), "-no-prelude")) {
+} else if (equals__q.call(Deno['args'][Meta]['[]'].call(Deno['args'], (2)), "-no-prelude")) {
 compile_file(src_file_name, out_name)
 } else {
 compile_file_and_prelude(src_file_name, out_name, prelude_src)

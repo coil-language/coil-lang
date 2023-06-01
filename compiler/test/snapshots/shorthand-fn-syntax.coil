@@ -1,3 +1,0 @@
-[{keep: true, count: 9}, {count: 11}]
-  ::filter(#(&.keep || &.count < 10))
-  ::log()

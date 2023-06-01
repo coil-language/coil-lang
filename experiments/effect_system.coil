@@ -97,7 +97,7 @@ impl Equal for Msg = fn(obj) =
 let EventStream = ~Struct["EventStream" :event_type :filter]
 
 impl Validation for EventStream = {
-  event_type: #(window::has?("on" + &::as_str()))
+  event_type: fn (type) = window::has?("on" + type::as_str())
 }
 
 impl EventStream = {

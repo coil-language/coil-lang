@@ -26,7 +26,6 @@ impl Sample for IRange = fn() =
 impl Sample for ERange = fn() =
   Math.floor(Math.random() * (this.end - this.start - 1)) + this.start
 
-@def_record
 fn Fake(@entries) {}
 
 impl Sample for Fake = fn() =
@@ -39,5 +38,5 @@ define Sample for :first_name = fn() {
 
 ~Fake{name: :first_name
       age: 0..100
-      grade: #{:A :B :C :D :F}}
+      grade: Set[:A :B :C :D :F]}
   ::sample_stream()::take(5)::as_array()::log()

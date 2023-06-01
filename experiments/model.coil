@@ -1,4 +1,4 @@
-@pre(:options :mapping _::values()::iter()::all?(#(&[Invertible])))
+@pre(:options :mapping _::values()::iter()::all?(fn (x) = x.[Invertible])))
 fn Model(name, options) {
   this.name = name
   this.options = options
@@ -26,8 +26,8 @@ impl Model = {
     output.data = {}
     for [key map_fn] of mapping {
       output.data[key] = map_fn::call(data)
-      if key keyof schema {
-        assert! schema::at(key)::call(output.data[key])
+      if let cond = schema.[key] {
+        assert! cond::call(output.data[key])
       }
     }
     return output
@@ -36,8 +36,8 @@ impl Model = {
     let {mapping, schema} = this.options
     let output = {}
     for [key mapper] of mapping {
-      if key keyof schema {  
-        assert! schema[key]::call(this.data[key])
+      if let cond = schema.[key] {  
+        assert! cond::call(this.data[key])
       }
       output = mapper::invert(output, this.data[key])
     }
@@ -47,7 +47,6 @@ impl Model = {
 
 impl Printable for Model = fn() = this.data::printable()
 
-@def_vector
 fn Lookup(...keys) { this.keys = keys }
 
 impl Call for Lookup = fn(obj) =
@@ -91,7 +90,6 @@ impl Invertible for Lookup = fn(output, value) {
 
 fn Point(x, y) { this.x = x; this.y = y }
 
-@def_vector
 fn Construct(ctor, ...entries) { this.ctor = ctor; this.entries = entries }
 
 impl Symbol.iterator for Construct = fn*() {
