@@ -1,6 +1,6 @@
 # Coil-Lang
 
-Coil is a small magical language for creating web app
+Coil is a small magical language for creating web apps
 
 ```
 let score->letter-grade = CallMap{
