@@ -1350,10 +1350,9 @@ let CallMap = def_global(function CallMap(entries) {
 this.entries = entries;
 });
 CallMap.prototype[Call] = function (value) {
-return pipe.bind(find.bind(this)(function ([callable, _]) {
+return pipe.bind(find.bind(this['entries'])(function ([callable, _]) {
 return call.bind(callable)(value);}))(function ([_, val]) {
-return val;});};console['log']("Compiling")
-function CollectionView(collection, idx) {
+return val;});};function CollectionView(collection, idx) {
 this.collection = collection;
 this.idx = idx;
 }

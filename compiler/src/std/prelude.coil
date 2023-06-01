@@ -1309,6 +1309,6 @@ fn alpha_numeric?() = this::all?(char_alpha_numeric?)
 @def_global
 fn CallMap(@entries) {}
 
-impl Call for CallMap = fn(value) =
+impl Call for CallMap = fn(value) = this.entries
   ::find(fn([callable, _]) = callable::call(value))
   ::pipe(fn([_, val]) = val)

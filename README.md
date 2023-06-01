@@ -1,9 +1,9 @@
 # Coil-Lang
 
-Coil is a delightfully small yet powerful language.
+Coil is a small magical language for creating web app
 
 ```
-let score->letter_grade = ~CallMap{
+let score->letter-grade = CallMap{
   ..50 => :F
   50..60 => :D
   60..70 => :C
@@ -11,11 +11,11 @@ let score->letter_grade = ~CallMap{
   80.. => :A
 }
 
-let top_students =
+let top-students =
   [{name: "marcelle", score: 53} {name: "jill", score: 80} {name: "john", score: 74}]
-    ::keep(:score score->letter_grade Set[:A :B])
+    ::keep(:score score->letter-grade Set[:A :B])
     ::map(:name)
-    ::into(Set[]) // #{"jill" "john"}
+    ::into(Set[]) // Set["jill" "john"]
 ```
 
 # Motivations
