@@ -98,28 +98,16 @@
     "variables": {
       "patterns": [
         {
-          "match": "\\b([A-Z][a-zA-Z0-9_\\!\\?]*)\\b",
+          "match": "\\b([A-Z][a-zA-Z0-9_\\-\\!\\?]*)\\b",
           "name": "entity.name.type"
         },
         {
-          "match": "\\b([a-z][a-zA-Z0-9_\\!\\?]*)\\b",
+          "match": "\\b([a-z][a-zA-Z0-9_\\-\\!\\?]*)\\b",
           "name": "variable.name"
         },
         {
           "name": "variable",
           "match": "&"
-        }
-      ]
-    },
-    "record_constructor": {
-      "patterns": [
-        {
-          "match": "\\~([a-zA-Z][a-zA-Z0-9_\\!\\?]*)\\{",
-          "captures": {
-            "1": {
-              "name": "entity.name.type"
-            }
-          }
         }
       ]
     },
@@ -138,7 +126,7 @@
     "properties": {
       "patterns": [
         {
-          "match": "\\.([a-zA-Z][a-zA-Z0-9_\\!\\?]*)\\(\\b",
+          "match": "\\.([a-zA-Z][a-zA-Z0-9_\\-\\!\\?]*)\\(\\b",
           "name": "entity.name.function"
         }
       ]
@@ -146,7 +134,7 @@
     "bind": {
       "patterns": [
         {
-          "match": "::([a-zA-Z][a-zA-Z0-9_\\!\\?]*)\\b",
+          "match": "::([a-zA-Z][a-zA-Z0-9_\\-\\!\\?]*)\\b",
           "captures": {
             "1": {
               "name": "entity.name.function"
@@ -154,7 +142,7 @@
           }
         },
         {
-          "match": "([a-zA-Z][a-zA-Z0-9_\\!\\?]*)\\(",
+          "match": "([a-zA-Z][a-zA-Z0-9_\\-\\!\\?]*)\\(",
           "captures": {
             "1": {
               "name": "entity.name.function"
