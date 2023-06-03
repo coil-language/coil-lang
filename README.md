@@ -50,7 +50,7 @@ Map{a: 10}
 Record{a: 10}
 ```
 
-Coil expands upon messaging by the notion of "protocols" which are in essence namespaced messages.
+Coil expands upon messaging by the notion of "protocols" which enable messages to have behave differently in different contexts.
 
 Let's take a look at a common OO pattern that falls apart without context.
 
