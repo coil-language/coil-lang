@@ -28,7 +28,7 @@ That being said, there's a lot of work being done to enable strong tooling aroun
 
 The vision for coil is to have end users easily specify domain specific rules to your framework, and/or library, and/or application.
 
-While a linter is not a type system, its an open system where users can let the language know which rules matter to them. This mean that as a user I don't waste cpu cycles on rules that don't impact my code, and I can express things that I wouldn't normally be able to express in a type system.
+While a linter is not a type system, its an open system where users can let the language know which rules matter to them. This mean that as a user I don't waste time and computer resources on rules that don't impact my code, and I can express things that I wouldn't normally be able to express in a type system.
 
 ### Functional vs Object Oriented
 
