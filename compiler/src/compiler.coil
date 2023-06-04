@@ -304,10 +304,12 @@ impl Call for ParseMap = fn(tokens, ...args) {
       return parser::call(tokens, ...args)
     }
     if pattern is Array && pattern::zip(tokens)::all?(fn([p, token]) {
-      let type = token::at(:type)
-      if p is Keyword { return p == type }
-      if p is Set { return p::has?(type) }
-      return false
+      if let {type} = token {
+        if p is Keyword { return p == type }
+        if p is Set { return p::has?(type) }
+      } else {
+        return false
+      }
     }) {
       return parser::call(tokens, ...args)
     }
@@ -1448,7 +1450,7 @@ fn eval_decorator({name: decorator_name, fn_def args}) {
 }
 
 fn eval_and_dot({lhs rhs}) = str(eval_expr(lhs) "?." eval_expr(rhs))
-fn eval_partial_fn_call({expr}) = str("(" eval_expr(expr) ")")
+fn eval_partial_fn_call({args}) = str("(" args::map_join(eval_expr ", ") ")")
 fn eval_partial_obj_dyn_access({expr}) = str("[" eval_expr(expr) "]")
 fn eval_regex_lit({value}) = value
 

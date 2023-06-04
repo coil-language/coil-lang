@@ -1,0 +1,55 @@
+// import * as _prelude from "./dist/prelude.js"
+import * as _prelude from "./dist/prelude.js"
+import * as coil from "./dist/compiler-no-prelude.js"
+
+// repl functionality
+// [x] for now assume we're only ever dealing with 1 file
+// [x] we have a context object
+// all [x] let & [todo] fn calls to the repl define a new context of that kind
+// [todo] every time we look up a variable we attach "context." before it.
+// [x] eval, and return
+// [x] pretty printing out of scope
+
+let context = {}
+
+let server = Deno.listen({port: 7070})
+console.log("HTTP webserver running.  Access it at:  http://localhost:7070/");
+
+fn context_id(property) = {
+  type: :property_lookup
+  lhs: {type: :id_lookup, name: "context", pos: {line: 0, col: 0}}
+  pos: {line: 0, col: 0}
+  property
+}
+
+fn coil_eval(code) {
+  let [node] = coil.lex_and_parse(code)::log()
+  console.log(node)
+  if node[:type :value] == "let" {
+    node = {
+      type: :snd_assign,
+      lhs: context_id(node[:assign_expr :name]),
+      rhs: node[:rhs],
+      pos: {line: 0, col: 0}
+    }
+  } else if node[:type :value] == "id_lookup" {
+    node = context_id(node[:name])
+  } else {
+  }
+  return eval(str("\"use strict\";" coil.eval_ast([node])))
+}
+
+for await conn of server {
+  for await e of Deno.serveHttp(conn) {
+    try {
+      e.respondWith(Response[str(coil_eval(await e.request.text()) "\n")])
+    } catch err {
+      console.log(err)  
+      e.respondWith(Response["an error occurred\n"])
+    }
+  }
+}
+
+
+// start a deno server
+// send javascript commands to it and execute

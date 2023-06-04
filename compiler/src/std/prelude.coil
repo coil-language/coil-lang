@@ -1,4 +1,5 @@
 protocol Meta
+globalThis.Meta = Meta
 impl Meta for Object = {
   ["[]"]: fn (...keys) = keys::reduce(js_dynamic_object_lookup this)
   ["[]="]: fn (keys, expr) = js_set_property(this, keys, expr)
@@ -86,7 +87,9 @@ impl Call for String = fn(collection) {
   }
 }
 impl Call for Number = fn(collection) {
-  if collection is Keyword {
+  if collection is Number {
+    raise!(TypeError["Can't call a number on a number"])
+  } else if collection is Keyword {
     // this feels wrong
     return this[collection]
   } else {
