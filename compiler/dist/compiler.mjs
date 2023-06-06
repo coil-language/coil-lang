@@ -174,6 +174,7 @@ globalThis["Keyword"] = Keyword;
 globalThis["ObjectLiteral"] = ObjectLiteral;
 globalThis["truthy"] = truthy;
 const Meta = Symbol("Meta");
+globalThis['Meta'] = Meta
 Object.prototype[Meta] = new ObjectLiteral({["[]"]: function (...keys) {
 return reduce.bind(keys)(js_dynamic_object_lookup, this);}, ["[]="]: function (keys, expr) {
 return js_set_property(this, keys, expr);}});
@@ -767,18 +768,18 @@ Examples:
   Set[]::record?() // false
 `))(function record__q() {
 return exists__q.bind(this[Record])();})
-const Vector = Symbol("Vector");
-globalThis['Vector'] = Vector
-let vector__q = compose(def_global, F => doc(F, `
-Determines if 'this' conforms to the vector protocol
+const Bag = Symbol("Bag");
+globalThis['Bag'] = Bag
+let bag__q = compose(def_global, F => doc(F, `
+Determines if 'this' conforms to the 'Bag' protocol
 
 Examples:
-  []::vector?() // true
-  Set[]::vector?() // true
-  {}::vector?() // false
-`))(function vector__q() {
-return exists__q.bind(this[Vector])();})
-Array.prototype[Vector] = new ObjectLiteral({['push'](val) {
+  []::bag?() // true
+  Set[]::bag?() // true
+  {}::bag?() // false
+`))(function bag__q() {
+return exists__q.bind(this[Bag])();})
+Array.prototype[Bag] = new ObjectLiteral({['push'](val) {
 return [...this, val];
 }, ['replace'](old_val, new_val) {
 return map.bind(this)(function (val) {
@@ -790,7 +791,7 @@ return val;
 }, ['concat'](other) {
 return [...this, ...other];
 }});
-Set.prototype[Vector] = new ObjectLiteral({['push'](value) {
+Set.prototype[Bag] = new ObjectLiteral({['push'](value) {
 return Set[Meta]['[]'].call(Set, ...this, value);
 }, ['replace'](old_val, new_val) {
 let self = Set[Meta]['[]'].call(Set, ...this);
@@ -800,7 +801,7 @@ return self;
 }, ['concat'](other) {
 return Set[Meta]['[]'].call(Set, ...this, ...other);
 }});
-String.prototype[Vector] = new ObjectLiteral({['push'](val) {
+String.prototype[Bag] = new ObjectLiteral({['push'](val) {
 return plus.call(this,val);
 }, ['replace'](old_substr, new_substr) {
 return this['replaceAll'](old_substr, new_substr);
@@ -808,24 +809,24 @@ return this['replaceAll'](old_substr, new_substr);
 return plus.call(this,other);
 }});
 let push = compose(def_global, F => doc(F, `
-push a value onto a vector
+push a value onto a bag
 
 Examples:
   [1 2]::push(3) // [1 2 3]
   // order is not guaranteed for sets
   Set[1 2]::push(3) // Set[3 1 2]
 `))(function push(val) {
-return this[Vector]['push']['call'](this, val);})
+return this[Bag]['push']['call'](this, val);})
 let replace = compose(def_global, F => doc(F, `
-replace a value in a vector
+replace a value in a bag
 
 Examples:
   [1 2 3]::replace(2 3) // [1 3 3]
   Set[1 2 3]::replace(2 3) // Set[1 3]
 `))(function replace(old_val, new_val) {
-return this[Vector]['replace']['call'](this, old_val, new_val);})
+return this[Bag]['replace']['call'](this, old_val, new_val);})
 let concat = compose(def_global, F => doc(F, `
-concat two vectors
+concat two bags by swallowing the second one into the first
 
 Examples:
   [1 2]::concat([3 4]) // [1 2 3 4]
@@ -833,7 +834,7 @@ Examples:
   Set[1 2]::concat([3 4]) // Set[1 2 3 4]
   Set[1 2]::concat(Set[2 3]) // Set[1 2 3]
 `))(function concat(other) {
-return this[Vector]['concat']['call'](this, other);})
+return this[Bag]['concat']['call'](this, other);})
 const OrderedSequence = Symbol("OrderedSequence");
 globalThis['OrderedSequence'] = OrderedSequence
 Array.prototype[OrderedSequence] = new ObjectLiteral({['prepend'](val) {
@@ -1256,7 +1257,7 @@ return this['insert'](first);
 }, ['last']() {
 return this['insert'](last);
 }});
-Underscore.prototype[Vector] = new ObjectLiteral({['push'](value) {
+Underscore.prototype[Bag] = new ObjectLiteral({['push'](value) {
 return this['insert'](push, value);
 }, ['replace'](old_value, new_value) {
 return this['insert'](has__q, old_value, new_value);
@@ -1310,6 +1311,21 @@ this.start = start;
 let ERangeNoMin = compose(def_global, F => impl_equal(F, Keyword.for("end")))(function ERangeNoMin(end) {
 this.end = end;
 })
+IRange.prototype[Collection] = new ObjectLiteral({['has?'](val) {
+return call.bind(this)(val);
+}});
+ERange.prototype[Collection] = new ObjectLiteral({['has?'](val) {
+return call.bind(this)(val);
+}});
+IRangeNoMin.prototype[Collection] = new ObjectLiteral({['has?'](val) {
+return call.bind(this)(val);
+}});
+ERangeNoMax.prototype[Collection] = new ObjectLiteral({['has?'](val) {
+return call.bind(this)(val);
+}});
+ERangeNoMin.prototype[Collection] = new ObjectLiteral({['has?'](val) {
+return call.bind(this)(val);
+}});
 IRange.prototype[Call] = function (value) {
 return and.call(greater_than_eq.call(value,this['start']), () => less_than_eq.call(value,this['end']));};
 ERange.prototype[Call] = function (value) {
@@ -1466,7 +1482,7 @@ function check_set(type) {
 return any__q.bind(this)(function (val) {
 if (truthy(equals__q.call(val, type))) {
 return true;
-} else if (val[Vector]) {
+} else if (val[Bag]) {
 return has__q.bind(val)(type);
 };});}
 let {'type': type} = first.bind(tokens)();
@@ -1823,8 +1839,9 @@ function parse_export_default(tokens) {
 return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("export_default")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("export"), Keyword.for("default")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr"))))(tokens);}
 function parse_label(tokens) {
 return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("label")})), One[Meta]['[]'].call(One, Keyword.for("id"), Keyword.for("label_name")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("colon")), Then[Meta]['[]'].call(Then, parse_statement, Keyword.for("statement"))))(tokens);}
+let parse_direct_import = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("direct_import")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("import")), One[Meta]['[]'].call(One, Keyword.for("string_lit"), Keyword.for("path")));
 function parse_statement(tokens) {
-return call.bind(ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("let"), parse_let], [Keyword.for("for"), parse_for_loop], [Keyword.for("define"), parse_define], [Keyword.for("try"), parse_try], [Keyword.for("protocol"), parse_protocol], [Keyword.for("return"), parse_return], [Keyword.for("continue"), parse_continue], [Keyword.for("break"), parse_break], [Keyword.for("loop"), parse_loop], [Keyword.for("import"), parse_import], [[Keyword.for("export"), Keyword.for("default")], parse_export_default], [[Keyword.for("export"), Keyword.for("times")], parse_export_all], [Keyword.for("export"), parse_export], [[Keyword.for("impl"), Keyword.for("id"), Keyword.for("eq")], parse_impl_object], [Keyword.for("impl"), parse_impl_for], [[Keyword.for("while"), Keyword.for("let")], parse_while_let_loop], [Keyword.for("while"), parse_while_loop], [[Keyword.for("if"), Keyword.for("let")], parse_if_let], [Keyword.for("if"), parse_if], [[Keyword.for("id"), Keyword.for("colon")], parse_label], [_, parse_expr]]))(tokens);}
+return call.bind(ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("let"), parse_let], [Keyword.for("for"), parse_for_loop], [Keyword.for("define"), parse_define], [Keyword.for("try"), parse_try], [Keyword.for("protocol"), parse_protocol], [Keyword.for("return"), parse_return], [Keyword.for("continue"), parse_continue], [Keyword.for("break"), parse_break], [Keyword.for("loop"), parse_loop], [[Keyword.for("import"), Keyword.for("string_lit")], parse_direct_import], [Keyword.for("import"), parse_import], [[Keyword.for("export"), Keyword.for("default")], parse_export_default], [[Keyword.for("export"), Keyword.for("times")], parse_export_all], [Keyword.for("export"), parse_export], [[Keyword.for("impl"), Keyword.for("id"), Keyword.for("eq")], parse_impl_object], [Keyword.for("impl"), parse_impl_for], [[Keyword.for("while"), Keyword.for("let")], parse_while_let_loop], [Keyword.for("while"), parse_while_loop], [[Keyword.for("if"), Keyword.for("let")], parse_if_let], [Keyword.for("if"), parse_if], [[Keyword.for("id"), Keyword.for("colon")], parse_label], [_, parse_expr]]))(tokens);}
 function block(name) {
 return Parser[Meta]['[]'].call(Parser, Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_b")), Until[Meta]['[]'].call(Until, Keyword.for("close_b"), parse_statement, name), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_b")));}
 function parse(tokens) {
@@ -2115,8 +2132,10 @@ function eval_export_all({'path': path}) {
 return str("export * from ", path);}
 function eval_label({'label_name': label_name, 'statement': statement}) {
 return str(label_name, ": ", eval_statement(statement));}
+function eval_direct_import({'path': path}) {
+return str("import ", path);}
 function eval_statement(node) {
-return call.bind(pipe.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("label"), eval_label], [Keyword.for("if"), eval_if], [Keyword.for("import"), eval_import], [Keyword.for("export"), eval_export], [Keyword.for("export_default"), eval_export_default], [Keyword.for("export_all"), eval_export_all], [Keyword.for("let"), eval_let], [Keyword.for("if_let"), eval_if_let], [Keyword.for("return"), eval_return], [Keyword.for("protocol_def"), eval_protocol], [Keyword.for("impl_for"), eval_impl_for], [Keyword.for("impl_object"), eval_impl_object], [Keyword.for("define_for"), eval_define_for], [Keyword.for("for_loop"), eval_for_loop], [Keyword.for("id_assign"), eval_id_assign], [Keyword.for("while_loop"), eval_while_loop], [Keyword.for("loop"), eval_loop], [Keyword.for("while_let_loop"), eval_while_let_loop], [Keyword.for("continue"), eval_continue], [Keyword.for("break"), eval_break], [Keyword.for("try"), eval_try]])))(function (f) {
+return call.bind(pipe.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("label"), eval_label], [Keyword.for("if"), eval_if], [Keyword.for("direct_import"), eval_direct_import], [Keyword.for("import"), eval_import], [Keyword.for("export"), eval_export], [Keyword.for("export_default"), eval_export_default], [Keyword.for("export_all"), eval_export_all], [Keyword.for("let"), eval_let], [Keyword.for("if_let"), eval_if_let], [Keyword.for("return"), eval_return], [Keyword.for("protocol_def"), eval_protocol], [Keyword.for("impl_for"), eval_impl_for], [Keyword.for("impl_object"), eval_impl_object], [Keyword.for("define_for"), eval_define_for], [Keyword.for("for_loop"), eval_for_loop], [Keyword.for("id_assign"), eval_id_assign], [Keyword.for("while_loop"), eval_while_loop], [Keyword.for("loop"), eval_loop], [Keyword.for("while_let_loop"), eval_while_let_loop], [Keyword.for("continue"), eval_continue], [Keyword.for("break"), eval_break], [Keyword.for("try"), eval_try]])))(function (f) {
 if (truthy(f)) {
 return compose(f, plus.call(_,";"));
 } else {

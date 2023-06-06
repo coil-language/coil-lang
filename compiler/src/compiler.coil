@@ -7,10 +7,12 @@ impl Collection for CollectionView = {
   fn empty?() = this::len() == 0
   fn at(idx) = this.collection::at(this.idx + idx)
 }
+
 impl OrderedSequence for CollectionView = {
   fn first() = this.collection::at(this.idx)
   fn last() = this.collection::last()
 }
+
 impl :skip for CollectionView = fn(n) = CollectionView[this.collection, this.idx + n]
 
 impl Symbol.iterator for CollectionView = fn*() {
@@ -184,7 +186,7 @@ impl ParseInstruction for Optional = fn([expr tokens]) {
     ::any?(fn(val) {
       if val == type {
         return true
-      } else if val.[Vector] {
+      } else if val.[Bag] {
         return val::has?(type)
       }
     })
@@ -1096,6 +1098,12 @@ fn parse_label(tokens) = Parser[
   Then[parse_statement :statement]
 ]::call(tokens)
 
+let parse_direct_import = Parser[
+  Init[{type: :direct_import}]
+  Chomp[:import]
+  One[:string_lit :path]
+]
+
 fn parse_statement(tokens) = ParseMap{
   :let => parse_let
   :for => parse_for_loop
@@ -1106,6 +1114,7 @@ fn parse_statement(tokens) = ParseMap{
   :continue => parse_continue
   :break => parse_break
   :loop => parse_loop
+  [:import :string_lit] => parse_direct_import
   :import => parse_import
   [:export :default] => parse_export_default
   [:export :times] => parse_export_all
@@ -1624,9 +1633,13 @@ fn eval_export_all({path}) =
 fn eval_label({label_name, statement}) =
   str(label_name ": " eval_statement(statement))
 
+fn eval_direct_import({path}) =
+  str("import " path)
+
 fn eval_statement(node) = node::at(:type)::pipe(Map{
   :label => eval_label  
   :if => eval_if
+  :direct_import => eval_direct_import
   :import => eval_import
   :export => eval_export
   :export_default => eval_export_default
