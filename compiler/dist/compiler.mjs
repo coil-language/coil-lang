@@ -1600,11 +1600,9 @@ return;
 for  (let [pattern, parser] of this['entries']) {
 if (truthy(equals__q.call(pattern, _))) {
 return call.bind(parser)(tokens, ...args);
-};
-if (truthy(and.call(pattern instanceof Set, () => call.bind(pattern)(at.bind(first.bind(tokens)())(Keyword.for("type")))))) {
+} else if (and.call(pattern instanceof Set, () => call.bind(pattern)(at.bind(first.bind(tokens)())(Keyword.for("type"))))) {
 return call.bind(parser)(tokens, ...args);
-};
-if (truthy(and.call(pattern instanceof Array, () => all__q.bind(zip.bind(pattern)(tokens))(function ([p, token]) {
+} else if (and.call(pattern instanceof Array, () => all__q.bind(zip.bind(pattern)(tokens))(function ([p, token]) {
 let __coil_if_let_temp = token;
 if (truthy(__coil_if_let_temp)) {
 let {'type': type} = __coil_if_let_temp;
@@ -1616,10 +1614,9 @@ return has__q.bind(p)(type);
 };
 } else {
 return false;
-};})))) {
+};}))) {
 return call.bind(parser)(tokens, ...args);
-};
-if (truthy(and.call(pattern instanceof Keyword, () => equals__q.call(pattern, at.bind(first.bind(tokens)())(Keyword.for("type")))))) {
+} else if (and.call(pattern instanceof Keyword, () => equals__q.call(pattern, at.bind(first.bind(tokens)())(Keyword.for("type"))))) {
 return call.bind(parser)(tokens, ...args);
 };
 };};

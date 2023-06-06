@@ -301,11 +301,9 @@ impl Call for ParseMap = fn(tokens, ...args) {
   for [pattern parser] of this.entries {
     if pattern == _ {
       return parser::call(tokens, ...args)
-    }
-    if pattern is Set && pattern::call(tokens::first()::at(:type)) {
+    } else if pattern is Set && pattern::call(tokens::first()::at(:type)) {
       return parser::call(tokens, ...args)
-    }
-    if pattern is Array && pattern::zip(tokens)::all?(fn([p, token]) {
+    } else if pattern is Array && pattern::zip(tokens)::all?(fn([p, token]) {
       if let {type} = token {
         if p is Keyword { return p == type }
         if p is Set { return p::has?(type) }
@@ -314,8 +312,7 @@ impl Call for ParseMap = fn(tokens, ...args) {
       }
     }) {
       return parser::call(tokens, ...args)
-    }
-    if pattern is Keyword && pattern == tokens::first()::at(:type) {
+    } else if pattern is Keyword && pattern == tokens::first()::at(:type) {
       return parser::call(tokens, ...args)
     }
   }

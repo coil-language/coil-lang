@@ -174,7 +174,7 @@ globalThis["Keyword"] = Keyword;
 globalThis["ObjectLiteral"] = ObjectLiteral;
 globalThis["truthy"] = truthy;
 const Meta = Symbol("Meta");
-globalThis["Meta"] = Meta;
+globalThis['Meta'] = Meta
 Object.prototype[Meta] = new ObjectLiteral({["[]"]: function (...keys) {
 return reduce.bind(keys)(js_dynamic_object_lookup, this);}, ["[]="]: function (keys, expr) {
 return js_set_property(this, keys, expr);}});
@@ -268,7 +268,6 @@ Set.prototype[Keyword.for("bind")] = function (val) {
 return function () {
 return call.bind(this)(val);}.bind(this);};
 let nil__q = Object['freeze'](Set[Meta]['[]'].call(Set, undefined, null));
-globalThis["nil__q"] = nil__q;
 const Pipe = Symbol("Pipe");
 globalThis['Pipe'] = Pipe
 Object.prototype[Pipe] = function (callable) {
@@ -769,18 +768,18 @@ Examples:
   Set[]::record?() // false
 `))(function record__q() {
 return exists__q.bind(this[Record])();})
-const Vector = Symbol("Vector");
-globalThis['Vector'] = Vector
-let vector__q = compose(def_global, F => doc(F, `
-Determines if 'this' conforms to the vector protocol
+const Bag = Symbol("Bag");
+globalThis['Bag'] = Bag
+let bag__q = compose(def_global, F => doc(F, `
+Determines if 'this' conforms to the 'Bag' protocol
 
 Examples:
-  []::vector?() // true
-  Set[]::vector?() // true
-  {}::vector?() // false
-`))(function vector__q() {
-return exists__q.bind(this[Vector])();})
-Array.prototype[Vector] = new ObjectLiteral({['push'](val) {
+  []::bag?() // true
+  Set[]::bag?() // true
+  {}::bag?() // false
+`))(function bag__q() {
+return exists__q.bind(this[Bag])();})
+Array.prototype[Bag] = new ObjectLiteral({['push'](val) {
 return [...this, val];
 }, ['replace'](old_val, new_val) {
 return map.bind(this)(function (val) {
@@ -792,7 +791,7 @@ return val;
 }, ['concat'](other) {
 return [...this, ...other];
 }});
-Set.prototype[Vector] = new ObjectLiteral({['push'](value) {
+Set.prototype[Bag] = new ObjectLiteral({['push'](value) {
 return Set[Meta]['[]'].call(Set, ...this, value);
 }, ['replace'](old_val, new_val) {
 let self = Set[Meta]['[]'].call(Set, ...this);
@@ -802,7 +801,7 @@ return self;
 }, ['concat'](other) {
 return Set[Meta]['[]'].call(Set, ...this, ...other);
 }});
-String.prototype[Vector] = new ObjectLiteral({['push'](val) {
+String.prototype[Bag] = new ObjectLiteral({['push'](val) {
 return plus.call(this,val);
 }, ['replace'](old_substr, new_substr) {
 return this['replaceAll'](old_substr, new_substr);
@@ -810,24 +809,24 @@ return this['replaceAll'](old_substr, new_substr);
 return plus.call(this,other);
 }});
 let push = compose(def_global, F => doc(F, `
-push a value onto a vector
+push a value onto a bag
 
 Examples:
   [1 2]::push(3) // [1 2 3]
   // order is not guaranteed for sets
   Set[1 2]::push(3) // Set[3 1 2]
 `))(function push(val) {
-return this[Vector]['push']['call'](this, val);})
+return this[Bag]['push']['call'](this, val);})
 let replace = compose(def_global, F => doc(F, `
-replace a value in a vector
+replace a value in a bag
 
 Examples:
   [1 2 3]::replace(2 3) // [1 3 3]
   Set[1 2 3]::replace(2 3) // Set[1 3]
 `))(function replace(old_val, new_val) {
-return this[Vector]['replace']['call'](this, old_val, new_val);})
+return this[Bag]['replace']['call'](this, old_val, new_val);})
 let concat = compose(def_global, F => doc(F, `
-concat two vectors
+concat two bags by swallowing the second one into the first
 
 Examples:
   [1 2]::concat([3 4]) // [1 2 3 4]
@@ -835,7 +834,7 @@ Examples:
   Set[1 2]::concat([3 4]) // Set[1 2 3 4]
   Set[1 2]::concat(Set[2 3]) // Set[1 2 3]
 `))(function concat(other) {
-return this[Vector]['concat']['call'](this, other);})
+return this[Bag]['concat']['call'](this, other);})
 const OrderedSequence = Symbol("OrderedSequence");
 globalThis['OrderedSequence'] = OrderedSequence
 Array.prototype[OrderedSequence] = new ObjectLiteral({['prepend'](val) {
@@ -1258,7 +1257,7 @@ return this['insert'](first);
 }, ['last']() {
 return this['insert'](last);
 }});
-Underscore.prototype[Vector] = new ObjectLiteral({['push'](value) {
+Underscore.prototype[Bag] = new ObjectLiteral({['push'](value) {
 return this['insert'](push, value);
 }, ['replace'](old_value, new_value) {
 return this['insert'](has__q, old_value, new_value);
@@ -1312,6 +1311,21 @@ this.start = start;
 let ERangeNoMin = compose(def_global, F => impl_equal(F, Keyword.for("end")))(function ERangeNoMin(end) {
 this.end = end;
 })
+IRange.prototype[Collection] = new ObjectLiteral({['has?'](val) {
+return call.bind(this)(val);
+}});
+ERange.prototype[Collection] = new ObjectLiteral({['has?'](val) {
+return call.bind(this)(val);
+}});
+IRangeNoMin.prototype[Collection] = new ObjectLiteral({['has?'](val) {
+return call.bind(this)(val);
+}});
+ERangeNoMax.prototype[Collection] = new ObjectLiteral({['has?'](val) {
+return call.bind(this)(val);
+}});
+ERangeNoMin.prototype[Collection] = new ObjectLiteral({['has?'](val) {
+return call.bind(this)(val);
+}});
 IRange.prototype[Call] = function (value) {
 return and.call(greater_than_eq.call(value,this['start']), () => less_than_eq.call(value,this['end']));};
 ERange.prototype[Call] = function (value) {
