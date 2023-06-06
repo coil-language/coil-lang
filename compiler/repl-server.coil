@@ -24,7 +24,6 @@ fn context_id(property) = {
 
 fn coil_eval(code) {
   let [node] = coil.lex_and_parse(code)::log()
-  console.log(node)
   if node[:type :value] == "let" {
     node = {
       type: :snd_assign,
