@@ -1,0 +1,57 @@
+import "./dist/prelude.js"
+
+fn CollectionView(@collection, @idx) {}
+
+// Its only partially implemented right now because most use-cases
+// don't require the complete collections api.
+impl Collection for CollectionView = {
+  fn len() = this.collection::len() - this.idx
+  fn empty?() = this::len() == 0
+  fn at(idx) = this.collection::at(this.idx + idx)
+}
+
+impl OrderedSequence for CollectionView = {
+  fn first() = this.collection::at(this.idx)
+  fn last() = this.collection::last()
+}
+
+impl :skip for CollectionView = fn(n) = CollectionView[this.collection, this.idx + n]
+
+fn ParseMap(@entries) {}
+
+impl Record for ParseMap = {
+  fn keys() = this.entries::map(first)::into(Set[])
+}
+
+protocol ParseCond
+
+define ParseCond for _ = fn = true
+
+impl ParseCond for Set = fn (tokens) = ::has?(tokens::first()::at(:type))
+
+impl ParseCond for Array = fn (tokens) = 
+  tokens::len() == ::len() &&
+  ::zip(0..)::all?(fn ([pattern i]) = pattern.[ParseCond](tokens.skip(i)))
+
+impl ParseCond for Keyword = fn (tokens) = this == tokens::first()::at(:type)
+
+impl Call for ParseMap = fn (tokens, ...args) {
+  if tokens::empty?() { return }
+
+  for [pattern parser] of this.entries {
+    if pattern.[ParseCond](tokens) {
+      return parser::call(tokens ...args)
+    }
+  }
+}
+
+let parser = ParseMap{
+  [:age :id] => fn = "id :)"
+  _ => fn = :fallback
+}
+
+let tokens = [{type: :age} {type: :id}] 
+
+parser
+  ::call(CollectionView[tokens 0])
+  ::log()
