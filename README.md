@@ -13,8 +13,8 @@ let score->letter-grade = CallMap{
 
 let top-students =
   [{name: "marcelle", score: 53} {name: "jill", score: 80} {name: "john", score: 74}]
-    ::keep(:score score->letter-grade Set[:A :B])
-    ::map(:name)
+    ::where(:score score->letter-grade Set[:A :B])
+    ::select(:name)
     ::into(Set[]) // Set["jill" "john"]
 ```
 

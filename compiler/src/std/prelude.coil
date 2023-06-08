@@ -374,6 +374,8 @@ Examples:
 ")]
 fn map(...fns) = ::iterator_impl().map.call(this::iter(), compose(...fns))
 
+let select = map
+
 @[def_global doc("
 lazily flat maps functions over an iterator
 
@@ -383,6 +385,9 @@ Examples:
     ::into([]) // [1 2 3 4 5 6 7 8 9 10]
 ")]
 fn flat_map(...fns) = ::iterator_impl().flat_map.call(this::iter(), compose(...fns))
+
+@[def_global doc("Inverse of ::has?")]
+fn in?(coll) = coll::has?(this)
 
 @[def_global doc("
 eagerly finds a value in an iterator
@@ -402,6 +407,8 @@ Examples:
     ::into([]) // [{admin: true, name: \"bob\"}]
 ")]
 fn keep(...fns) = ::iterator_impl().keep.call(this::iter(), compose(...fns))
+
+let where = keep
 
 @[def_global doc("
 lazily rejects values based of a condition

@@ -483,6 +483,7 @@ Examples:
     ::into([]) // [8 4]
 `))(function map(...fns) {
 return iterator_impl.bind(this)()['map']['call'](iter.bind(this)(), compose(...fns));})
+let select = map;
 let flat_map = compose(def_global, F => doc(F, `
 lazily flat maps functions over an iterator
 
@@ -492,6 +493,8 @@ Examples:
     ::into([]) // [1 2 3 4 5 6 7 8 9 10]
 `))(function flat_map(...fns) {
 return iterator_impl.bind(this)()['flat_map']['call'](iter.bind(this)(), compose(...fns));})
+let in__q = compose(def_global, F => doc(F, "Inverse of ::has?"))(function in__q(coll) {
+return has__q.bind(coll)(this);})
 let find = compose(def_global, F => doc(F, `
 eagerly finds a value in an iterator
 
@@ -509,6 +512,7 @@ Examples:
     ::into([]) // [{admin: true, name: \"bob\"}]
 `))(function keep(...fns) {
 return iterator_impl.bind(this)()['keep']['call'](iter.bind(this)(), compose(...fns));})
+let where = keep;
 let reject = compose(def_global, F => doc(F, `
 lazily rejects values based of a condition
 
