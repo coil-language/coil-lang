@@ -386,9 +386,6 @@ Examples:
 ")]
 fn flat_map(...fns) = ::iterator_impl().flat_map.call(this::iter(), compose(...fns))
 
-@[def_global doc("Inverse of ::has?")]
-fn in?(coll) = coll::has?(this)
-
 @[def_global doc("
 eagerly finds a value in an iterator
 
@@ -600,6 +597,9 @@ Examples:
   {a: 10}::has?(:a) // true
 ")]
 fn has?(val) = this.[Collection].has?.call(this, val)
+
+@[def_global doc("Inverse of ::has?")]
+fn in?(coll) = coll::has?(this)
 
 protocol Record
 globalThis.Record = Record
