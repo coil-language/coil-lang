@@ -381,7 +381,7 @@ return acc;
 for  (let elem of this) {
 yield f(elem)
 };
-}, *['flat_map'](f) {
+}, *['flat-map'](f) {
 for  (let elem of this) {
 yield* f(elem)
 };
@@ -489,10 +489,10 @@ lazily flat maps functions over an iterator
 
 Examples:
   [[1 5] [6 10]]
-    ::flat_map(fn([start, end]) = (start..=end)::into([]))
+    ::flat-map(fn([start, end]) = (start..=end)::into([]))
     ::into([]) // [1 2 3 4 5 6 7 8 9 10]
 `))(function flat_map(...fns) {
-return iterator_impl.bind(this)()['flat_map']['call'](iter.bind(this)(), compose(...fns));})
+return iterator_impl.bind(this)()['flat-map']['call'](iter.bind(this)(), compose(...fns));})
 let find = compose(def_global, F => doc(F, `
 eagerly finds a value in an iterator
 
@@ -671,9 +671,9 @@ let not_empty__q = compose(def_call, def_global, F => doc(F, `
 determines if a collection is not empty
 
 Examples:
-  [1]::not_empty?() // true
-  `, `::not_empty?() // false
-  null::not_empty?() // false
+  [1]::not-empty?() // true
+  `, `::not-empty?() // false
+  null::not-empty?() // false
 `))(function not_empty__q() {
 return negate.call(empty__q.bind(this)());})
 let at = compose(def_global, F => doc(F, `
@@ -843,10 +843,10 @@ const OrderedSequence = Symbol("OrderedSequence");
 globalThis['OrderedSequence'] = OrderedSequence
 Array.prototype[OrderedSequence] = new ObjectLiteral({['prepend'](val) {
 return [val, ...this];
-}, ['update_at'](idx, f) {
+}, ['update-at'](idx, f) {
 let [before, after] = [take.bind(this)(idx), skip.bind(this)(plus.call(idx,(1)))];
 return [...before, f(at.bind(this)(idx)), ...after];
-}, ['insert_at'](idx, val) {
+}, ['insert-at'](idx, val) {
 let [before, after] = [take.bind(this)(idx), skip.bind(this)(plus.call(idx,(1)))];
 return [...before, val, ...after];
 }, ['first']() {
@@ -856,9 +856,9 @@ return this['at']((-1));
 }});
 String.prototype[OrderedSequence] = new ObjectLiteral({['prepend'](val) {
 return plus.call(val,this);
-}, ['update_at'](idx, f) {
+}, ['update-at'](idx, f) {
 return plus.call(this['slice']((0), idx),plus.call(f(this['at'](idx)),this['slice'](idx)));
-}, ['insert_at'](idx, val) {
+}, ['insert-at'](idx, val) {
 return plus.call(this['slice']((0), idx),plus.call(val,this['slice'](idx)));
 }, ['first']() {
 return this[(0)];
@@ -876,16 +876,16 @@ let update_at = compose(def_global, F => doc(F, `
 updates element at given index
 
 Examples:
-  [1 2 3]::update_at(1 as_keyword) // [1 :2 3]
+  [1 2 3]::update-at(1 as_keyword) // [1 :2 3]
 `))(function update_at(idx, ...fns) {
-return this[OrderedSequence]['update_at']['call'](this, idx, compose(...fns));})
+return this[OrderedSequence]['update-at']['call'](this, idx, compose(...fns));})
 let insert_at = compose(def_global, F => doc(F, `
 inserts element at given index
 
 Examples:
-  [1 2 4]::insert_at(1 3) // [1 2 3 4]
+  [1 2 4]::insert-at(1 3) // [1 2 3 4]
 `))(function insert_at(idx, val) {
-return this[OrderedSequence]['insert_at']['call'](this, idx, val);})
+return this[OrderedSequence]['insert-at']['call'](this, idx, val);})
 let first = compose(def_call, def_global, F => doc(F, `
 gets first element of collection
 
@@ -1254,9 +1254,9 @@ return this['insert'](values);
 }});
 Underscore.prototype[OrderedSequence] = new ObjectLiteral({['prepend'](value) {
 return this['insert'](prepend, value);
-}, ['update_at'](idx, callable) {
+}, ['update-at'](idx, callable) {
 return this['insert'](update_at, idx, callable);
-}, ['insert_at'](idx, val) {
+}, ['insert-at'](idx, val) {
 return this['insert'](insert_at, idx, val);
 }, ['first']() {
 return this['insert'](first);

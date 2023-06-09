@@ -258,7 +258,7 @@ let fallback-iterator-impl = {
       yield f(elem)
     }
   }
-  fn* flat_map(f) {
+  fn* flat-map(f) {
     for elem of this {
       yield* f(elem)
     }
@@ -381,10 +381,10 @@ lazily flat maps functions over an iterator
 
 Examples:
   [[1 5] [6 10]]
-    ::flat_map(fn([start, end]) = (start..=end)::into([]))
+    ::flat-map(fn([start, end]) = (start..=end)::into([]))
     ::into([]) // [1 2 3 4 5 6 7 8 9 10]
 ")]
-fn flat_map(...fns) = ::iterator-impl().flat_map.call(this::iter(), compose(...fns))
+fn flat-map(...fns) = ::iterator-impl().flat-map.call(this::iter(), compose(...fns))
 
 @[def-global doc("
 eagerly finds a value in an iterator
@@ -566,11 +566,11 @@ fn empty?() = js_nullish(this&.[Collection].empty?.call(this) fn = true)
 determines if a collection is not empty
 
 Examples:
-  [1]::not_empty?() // true
-  ""::not_empty?() // false
-  null::not_empty?() // false
+  [1]::not-empty?() // true
+  ""::not-empty?() // false
+  null::not-empty?() // false
 ")]
-fn not_empty?() = !this::empty?()
+fn not-empty?() = !this::empty?()
 
 @[def-global doc("
 extracts value from collection based on a key or index
@@ -689,9 +689,9 @@ fn bag?() = this.[Bag]::exists?()
 
 impl Bag for Array = {
   fn push(val) = [...this, val]
-  fn replace(old_val, new_val) = ::map(fn(val) {
-    if val == old_val {
-      return new_val
+  fn replace(old-val, new-val) = ::map(fn(val) {
+    if val == old-val {
+      return new-val
     } else {
       return val
     }
@@ -701,10 +701,10 @@ impl Bag for Array = {
 
 impl Bag for Set = {
   fn push(value) = Set[...this value]
-  fn replace(old_val, new_val) {
+  fn replace(old-val, new-val) {
     let self = Set[...this]
-    self.delete(old_value)
-    self.add(new_val)
+    self.delete(old-value)
+    self.add(new-val)
     return self
   }
   fn concat(other) = Set[...this, ...other]
@@ -712,7 +712,7 @@ impl Bag for Set = {
 
 impl Bag for String = {
   fn push(val) = this + val
-  fn replace(old_substr, new_substr) = this.replaceAll(old_substr, new_substr)
+  fn replace(old-substr, new-substr) = this.replaceAll(old-substr, new-substr)
   fn concat(other) = this + other
 }
 
@@ -733,7 +733,7 @@ Examples:
   [1 2 3]::replace(2 3) // [1 3 3]
   Set[1 2 3]::replace(2 3) // Set[1 3]
 ")]
-fn replace(old_val, new_val) = this.[Bag].replace.call(this, old_val, new_val)
+fn replace(old-val, new-val) = this.[Bag].replace.call(this, old-val, new-val)
 
 @[def-global doc("
 concat two bags by swallowing the second one into the first
@@ -751,11 +751,11 @@ globalThis.OrderedSequence = OrderedSequence
 
 impl OrderedSequence for Array = {
   fn prepend(val) = [val, ...this]
-  fn update_at(idx, f) {
+  fn update-at(idx, f) {
     let [before after] = [this::take(idx) this::skip(idx + 1)]
     return [...before, f(::at(idx)), ...after]
   }
-  fn insert_at(idx, val) {
+  fn insert-at(idx, val) {
     let [before after] = [this::take(idx) this::skip(idx + 1)]
     return [...before, val, ...after]
   }
@@ -765,8 +765,8 @@ impl OrderedSequence for Array = {
 
 impl OrderedSequence for String = {
   fn prepend(val) = val + this
-  fn update_at(idx, f) = this.slice(0, idx) + f(this.at(idx)) + this.slice(idx)
-  fn insert_at(idx, val) = this.slice(0, idx) + val + this.slice(idx)
+  fn update-at(idx, f) = this.slice(0, idx) + f(this.at(idx)) + this.slice(idx)
+  fn insert-at(idx, val) = this.slice(0, idx) + val + this.slice(idx)
   fn first() = this.[0]
   fn last() = this.at(-1)
 }
@@ -783,17 +783,17 @@ fn prepend(val) = this.[OrderedSequence].prepend.call(this, val)
 updates element at given index
 
 Examples:
-  [1 2 3]::update_at(1 as_keyword) // [1 :2 3]
+  [1 2 3]::update-at(1 as_keyword) // [1 :2 3]
 ")]
-fn update_at(idx, ...fns) = this.[OrderedSequence].update_at.call(this, idx, compose(...fns))
+fn update-at(idx, ...fns) = this.[OrderedSequence].update-at.call(this, idx, compose(...fns))
 
 @[def-global doc("
 inserts element at given index
 
 Examples:
-  [1 2 4]::insert_at(1 3) // [1 2 3 4]
+  [1 2 4]::insert-at(1 3) // [1 2 3 4]
 ")]
-fn insert_at(idx, val) = this.[OrderedSequence].insert_at.call(this, idx, val)
+fn insert-at(idx, val) = this.[OrderedSequence].insert-at.call(this, idx, val)
 
 @[def-call def-global doc("
 gets first element of collection
@@ -859,7 +859,7 @@ impl Equal for Array = fn(other) {
 }
 
 @doc("determine if 2 records of any kind are equal")
-fn record_equals?(other) {
+fn record-equals?(other) {
   if this.constructor !== other.constructor {
     return false
   } else if this::len() != other::len() {
@@ -869,9 +869,9 @@ fn record_equals?(other) {
   }
 }
 
-impl Equal for Map = record_equals?
+impl Equal for Map = record-equals?
 
-impl Equal for ObjectLiteral = record_equals?
+impl Equal for ObjectLiteral = record-equals?
 
 @[def-call def-global doc("
 [[Equal]] invocation
@@ -1235,8 +1235,8 @@ impl Record for Underscore = {
 }
 impl OrderedSequence for Underscore = {
   fn prepend(value) = this.insert(prepend, value)
-  fn update_at(idx, callable) = this.insert(update_at, idx, callable)
-  fn insert_at(idx, val) = this.insert(insert_at, idx, val)
+  fn update-at(idx, callable) = this.insert(update-at, idx, callable)
+  fn insert-at(idx, val) = this.insert(insert-at, idx, val)
   fn first() = this.insert(first)
   fn last() = this.insert(last)
 }
