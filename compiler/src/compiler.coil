@@ -1279,17 +1279,18 @@ fn eval-while-let-loop({assign_expr test_expr body}) = str(
     "__coil_while_let_temp = " eval-expr(test_expr) ";\n"
   "}")
 
-fn eval-if-let({assign_expr expr pass fail}) = str(
-  "let __coil_if_let_temp = " eval_expr(expr) ";\n"
+let eval-if-let = str.kw(
+  "let __coil_if_let_temp = " _[:expr eval_expr] ";\n"
   "if (truthy(__coil_if_let_temp)) {\n"
-  "let " eval-assign-expr(assign_expr) " = __coil_if_let_temp;\n"
-    eval-ast(pass) "\n"
-  "}" eval-if-branch(fail))
+    "let " _[:assign_expr eval-assign-expr] " = __coil_if_let_temp;\n"
+    _[:pass eval-ast] "\n"
+  "}" _[:fail eval-if-branch]
+)
 
-fn eval-spread({expr}) = str("..." eval-expr(expr))
+let eval-spread = str.kw("..." _[:expr eval-expr])
 
-fn eval-let({assign_expr rhs}) =
-  str("let " eval-assign-expr(assign_expr) " = " eval-expr(rhs))
+let eval-let =
+  str.kw("let " _[:assign_expr eval-assign-expr] " = " _[:rhs eval-expr])
 
 fn eval-array({elements}) =
   str("[" elements::map-join(eval-expr ", ") "]")
@@ -1307,13 +1308,11 @@ let math-op-to-method = Map{
   "%" => "mod"
 }
 
-fn eval-math-op({lhs op rhs}) = str(
-  math-op-to-method::call(op) ".call("
-    eval-expr(lhs) "," eval-expr(rhs)
-  ")")
+let eval-math-op =
+  str.kw(_[:op math-op-to-method] ".call(" _[:lhs eval-expr] ", " _[:rhs eval-expr] ")")
 
 fn eval-this-assignments(args) = args
-  ::keep(:type Set[:this_assign :this_spread_assign])
+  ::where(:type Set[:this_assign :this_spread_assign])
   ::map(str.kw("this['" :name "'] = " _[:name resolve-name] ";\n"))
   ::into("")
 
@@ -1327,16 +1326,14 @@ fn eval-fn({is_async? generator? name args body}) = str(
     eval-ast(body)
   "}")
 
-fn eval-bind({lhs expr}) =
-  str(eval-expr(expr) ".bind(" eval-expr(lhs) ")")
+let eval-bind = str.kw(_[:expr eval-expr] ".bind(" _[:lhs eval-expr] ")")
 
-fn eval-reg-obj-entry({key, value}) =
-  str("'" key "': " eval-expr(value))
+let eval-reg-obj-entry = str.kw("'" :key "': " _[:value eval-expr])
 
-fn eval-obj-shorthand-entry({id}) = str("'" id "':" resolve-name(id))
+let eval-obj-shorthand-entry = str.kw("'" :id "':" _[:id resolve-name])
 
-fn eval-dynamic-obj-entry({key_expr value}) =
-  str("[" eval-expr(key_expr)"]: " eval-expr(value))
+let eval-dynamic-obj-entry =
+  str.kw("[" _[:key_expr eval-expr] "]: " _[:value eval-expr])
 
 fn eval-obj-fn({name generator? is_async? args body}) =
   str((is_async? && "async ")
@@ -1356,11 +1353,11 @@ fn eval-obj-lit({entries}) =
   str("new ObjectLiteral({"
       entries::map-join(eval-obj-entry ", ") "})")
 
-fn eval-bind-this({expr}) = str(eval-expr(expr) ".bind(this)")
+let eval-bind-this = str.kw(_[:expr eval-expr] ".bind(this)")
 
-fn eval-id-lookup({name}) = resolve-name(name)
+let eval-id-lookup = _[:name resolve-name]
 
-fn eval-num({value}) = str("(" value ")")
+let eval-num = str.kw("(" :value ")")
 
 fn eval-custom-number-literal({value}) {
   let [num] = value.split(/[a-zA-Z]+/)
@@ -1368,12 +1365,13 @@ fn eval-custom-number-literal({value}) {
   return str("Keyword.for(\"custom_number_literal/" modifier "\")[CustomNumberLiteral](" num ")")
 }
 
-fn eval-double-equals({lhs rhs}) = str(
-  resolve-name("equals?") ".call(" eval-expr(lhs) ", " eval-expr(rhs) ")")
+let eval-double-equals = str.kw(
+  resolve-name("equals?") ".call(" _[:lhs eval-expr] ", " _[:rhs eval-expr] ")"
+)
 
 fn eval-not-equals(node) = str("negate.call(" eval-double-equals(node) ")")
 
-fn eval-not({expr}) = str("negate.call(" eval-expr(expr) ")")
+let eval-not = str.kw("negate.call(" _[:expr eval-expr] ")")
 
 fn eval-dynamic-access({lhs exprs}) {
   let lhs-js = eval-expr(lhs)
@@ -1386,23 +1384,22 @@ fn eval-record-lookup({lhs entries}) {
   return str(lhs-js "[Meta]['{}'].call(" lhs-js ", [" entries-js "])")
 }
 
-fn eval-triple-equals({lhs rhs}) =
-  str(eval-expr(lhs) " === " eval-expr(rhs))
+let eval-triple-equals =
+  str.kw(_[:lhs eval-expr] " === " _[:rhs eval-expr])
 
-fn eval-triple-not-equals({lhs rhs}) =
-  str(eval-expr(lhs) " !== " eval-expr(rhs))
+let eval-triple-not-equals =
+  str.kw(_[:lhs eval-expr] " !== " _[:rhs eval-expr])
 
-fn eval-is({lhs rhs}) =
-  str(eval-expr(lhs) " instanceof " eval-expr(rhs))
+let eval-is = str.kw(_[:lhs eval-expr] " instanceof " _[:rhs eval-expr])
 
-fn eval-and-and({lhs rhs}) =
-  str("and.call(" eval-expr(lhs) ", () => " eval-expr(rhs) ")")
+let eval-and-and =
+  str.kw("and.call(" _[:lhs eval-expr] ", () => " _[:rhs eval-expr] ")")
 
-fn eval-or-or({lhs rhs}) =
-  str("or.call(" eval-expr(lhs) ", () => " eval-expr(rhs) ")")
+let eval-or-or =
+  str.kw("or.call(" _[:lhs eval-expr] ", () => " _[:rhs eval-expr] ")")
 
-fn eval-nullish({lhs, rhs}) = 
-  str("nullish.call(" eval-expr(lhs) ", () => " eval-expr(rhs) ")")
+let eval-nullish =
+  str.kw("nullish.call(" _[:lhs eval-expr] ", () => " _[:rhs eval-expr] ")")
 
 fn eval-dynamic-access-assign({lhs, rhs}) {
   let {lhs: obj, exprs} = lhs
@@ -1410,7 +1407,7 @@ fn eval-dynamic-access-assign({lhs, rhs}) {
   return str(obj-js "[Meta]['[]='].call(" obj-js ", [" exprs::map-join(eval-expr ", ") "], " eval-expr(rhs) ")")
 }
 
-fn eval-general-snd-assign({lhs, rhs}) = str(eval-expr(lhs) " = " eval-expr(rhs))
+let eval-general-snd-assign = str.kw(_[:lhs eval-expr] " = " _[:rhs eval-expr])
 
 fn eval-snd-assign(node) = node::pipe(:lhs :type Map{
   :dynamic_access => eval-dynamic-access-assign
@@ -1419,14 +1416,14 @@ fn eval-snd-assign(node) = node::pipe(:lhs :type Map{
   :raw_dynamic_access => eval-general-snd-assign
 })::call(node)
 
-fn eval-await({expr}) = str("await " eval-expr(expr))
+let eval-await = str.kw("await " _[:expr eval-expr])
 
 fn eval-yield({star? expr}) =
   str("yield" (star? && "*") " " eval-expr(expr))
 
-fn eval-paren-expr({expr}) = str("(" eval-expr(expr) ")")
+let eval-paren-expr = str.kw("(" _[:expr eval-expr] ")")
 
-fn eval-unapplied-math-op({op}) = math-op-to-method::call(op)
+let eval-unapplied-math-op = _[:op math-op-to-method]
 
 fn eval-unapplied-and-and() = "and"
 
