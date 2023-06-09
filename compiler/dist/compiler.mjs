@@ -483,6 +483,7 @@ Examples:
     ::into([]) // [8 4]
 `))(function map(...fns) {
 return iterator_impl.bind(this)()['map']['call'](iter.bind(this)(), compose(...fns));})
+let select = map;
 let flat_map = compose(def_global, F => doc(F, `
 lazily flat maps functions over an iterator
 
@@ -509,6 +510,7 @@ Examples:
     ::into([]) // [{admin: true, name: \"bob\"}]
 `))(function keep(...fns) {
 return iterator_impl.bind(this)()['keep']['call'](iter.bind(this)(), compose(...fns));})
+let where = keep;
 let reject = compose(def_global, F => doc(F, `
 lazily rejects values based of a condition
 
@@ -698,6 +700,8 @@ Examples:
   {a: 10}::has?(:a) // true
 `))(function has__q(val) {
 return this[Collection]['has?']['call'](this, val);})
+let in__q = compose(def_global, F => doc(F, "Inverse of ::has?"))(function in__q(coll) {
+return has__q.bind(coll)(this);})
 const Record = Symbol("Record");
 globalThis['Record'] = Record
 ObjectLiteral.prototype[Record] = new ObjectLiteral({['insert'](key, value) {
@@ -1192,6 +1196,9 @@ let exists__q = compose(def_global, def_call)(function exists__q() {
 return negate.call(nil__q.bind(this)());})
 let Underscore = def_global(function Underscore(...transforms) {
 this['transforms'] = transforms});
+Underscore.prototype[Meta] = new ObjectLiteral({["[]"]: function (...keys) {
+return reduce.bind(keys)(function (under, f) {
+return under['insert'](pipe, f);}, this);}});
 const UnderscoreInterpreter = Symbol("UnderscoreInterpreter");
 globalThis['UnderscoreInterpreter'] = UnderscoreInterpreter
 let _ = Underscore[Meta]['[]'].call(Underscore, new ObjectLiteral({'f': function id() {
@@ -1295,21 +1302,21 @@ return String['fromCharCode'](plus.call(this['charCodeAt']((0)),(1)));};
 let inc = compose(def_call, def_global)(function inc() {
 return this[Inc]();})
 let IRange = compose(def_global, F => impl_equal(F, Keyword.for("start"), Keyword.for("end")))(function IRange(start, end) {
-this.start = start;
-this.end = end;
+this['start'] = start;
+this['end'] = end;
 })
 let ERange = compose(def_global, F => impl_equal(F, Keyword.for("start"), Keyword.for("end")))(function ERange(start, end) {
-this.start = start;
-this.end = end;
+this['start'] = start;
+this['end'] = end;
 })
 let IRangeNoMin = compose(def_global, F => impl_equal(F, Keyword.for("end")))(function IRangeNoMin(end) {
-this.end = end;
+this['end'] = end;
 })
 let ERangeNoMax = compose(def_global, F => impl_equal(F, Keyword.for("start")))(function ERangeNoMax(start) {
-this.start = start;
+this['start'] = start;
 })
 let ERangeNoMin = compose(def_global, F => impl_equal(F, Keyword.for("end")))(function ERangeNoMin(end) {
-this.end = end;
+this['end'] = end;
 })
 IRange.prototype[Collection] = new ObjectLiteral({['has?'](val) {
 return call.bind(this)(val);
@@ -1365,14 +1372,22 @@ return all__q.bind(this)(char_alpha__q);})
 let alpha_numeric__q = compose(def_global, F => doc(F, "all characters in string are in a-z or A-Z or 0-9"))(function alpha_numeric__q() {
 return all__q.bind(this)(char_alpha_numeric__q);})
 let CallMap = def_global(function CallMap(entries) {
-this.entries = entries;
+this['entries'] = entries;
 });
 CallMap.prototype[Call] = function (value) {
 return pipe.bind(find.bind(this['entries'])(function ([callable, _]) {
 return call.bind(callable)(value);}))(function ([_, val]) {
-return val;});};function CollectionView(collection, idx) {
-this.collection = collection;
-this.idx = idx;
+return val;});};str['kw'] = function (...args) {
+return function (obj) {
+return into.bind(map.bind(args)(function (arg) {
+if (truthy(str__q.bind(arg)())) {
+return arg;
+} else {
+return call.bind(arg)(obj);
+};}))("");};}
+function CollectionView(collection, idx) {
+this['collection'] = collection;
+this['idx'] = idx;
 }
 CollectionView.prototype[Collection] = new ObjectLiteral({['len']() {
 return minus.call(len.bind(this['collection'])(),this['idx']);
@@ -1393,7 +1408,7 @@ for  (let i of new IRange(this['idx'], len.bind(this['collection'])())) {
 yield this['collection'][Meta]['[]'].call(this['collection'], i)
 };};
 function Lexer(entries) {
-this.entries = entries;
+this['entries'] = entries;
 }
 function pass() {
 }
@@ -1458,21 +1473,21 @@ const ParseInstruction = Symbol("ParseInstruction");
 function line_and_col({'line': line, 'col': col}) {
 return new ObjectLiteral({'line':line, 'col':col});}
 function Init(expr) {
-this.expr = expr;
+this['expr'] = expr;
 }
 Init.prototype[ParseInstruction] = function ([_expr, tokens]) {
 return [new ObjectLiteral({...this['expr'], 'pos': line_and_col(first.bind(tokens)())}), tokens];};
 function One(kw, as) {
-this.kw = kw;
-this.as = as;
+this['kw'] = kw;
+this['as'] = as;
 }
 One.prototype[ParseInstruction] = function ([expr, tokens]) {
 let {'value': value, 'type': type} = first.bind(expect_token__b.bind(tokens)(this['kw']))();
 return [merge.bind(expr)(new ObjectLiteral({[this['as']]: value})), tokens['skip']((1))];};
 function Optional(set_or_kw, parse_fn, as) {
-this.set_or_kw = set_or_kw;
-this.parse_fn = parse_fn;
-this.as = as;
+this['set_or_kw'] = set_or_kw;
+this['parse_fn'] = parse_fn;
+this['as'] = as;
 }
 Optional.prototype[ParseInstruction] = function ([expr, tokens]) {
 if (truthy(empty__q.bind(tokens)())) {
@@ -1505,8 +1520,8 @@ i = plus.call(i,(1))
 };
 return [expr, tokens['skip'](i)];};
 function Then(parser, kw) {
-this.parser = parser;
-this.kw = kw;
+this['parser'] = parser;
+this['kw'] = kw;
 }
 Then.prototype[ParseInstruction] = function ([expr, tokens]) {
 let result = call.bind(this['parser'])(tokens);
@@ -1520,14 +1535,14 @@ return [merge.bind(expr)(new ObjectLiteral({[this['kw']]: new_expr})), new_token
 return [new_expr, new_tokens];
 };};
 function FMap(f) {
-this.f = f;
+this['f'] = f;
 }
 FMap.prototype[ParseInstruction] = function ([expr, tokens]) {
 return [call.bind(this['f'])(expr), tokens];};
 function Until(end_kw, parser, kw) {
-this.end_kw = end_kw;
-this.parser = parser;
-this.kw = kw;
+this['end_kw'] = end_kw;
+this['parser'] = parser;
+this['kw'] = kw;
 }
 Until.prototype[ParseInstruction] = function ([expr, tokens]) {
 let exprs = [];
@@ -1542,8 +1557,8 @@ return [merge.bind(expr)(new ObjectLiteral({[this['kw']]: exprs})), tokens];
 return [exprs, tokens];
 };};
 function Case(parse_map, kw) {
-this.parse_map = parse_map;
-this.kw = kw;
+this['parse_map'] = parse_map;
+this['kw'] = kw;
 }
 Case.prototype[ParseInstruction] = function ([expr, tokens]) {
 let __coil_if_let_temp = call.bind(this['parse_map'])(tokens);
@@ -1559,8 +1574,8 @@ console['log'](first.bind(this['tokens'])(), this['parse_map'])
 raise__b(Error[Meta]['[]'].call(Error, "Case Parse Failed"))
 };};
 function Either(set, kw) {
-this.set = set;
-this.kw = kw;
+this['set'] = set;
+this['kw'] = kw;
 }
 Either.prototype[ParseInstruction] = function ([expr, tokens]) {
 let op = verify_exists__b.bind(call.bind(this['set'])(at.bind(first.bind(tokens)())(Keyword.for("type"))))(this['set']);
@@ -1573,7 +1588,7 @@ this['instructions'] = instructions}
 Parser.prototype[Call] = function (tokens) {
 return parse_step.bind(this)([null, tokens]);};
 function AbortIf(cond_fn) {
-this.cond_fn = cond_fn;
+this['cond_fn'] = cond_fn;
 }
 Parser.prototype[ParseInstruction] = function (result) {
 for  (let instruction of this['instructions']) {
@@ -1588,7 +1603,7 @@ result = parse_step.bind(instruction)(result)
 };
 return result;};
 function ParseMap(entries) {
-this.entries = entries;
+this['entries'] = entries;
 }
 ParseMap.prototype[Record] = new ObjectLiteral({['keys']() {
 return into.bind(map.bind(this['entries'])(first))(Set[Meta]['[]'].call(Set, ));
@@ -1736,7 +1751,8 @@ let parse_string_obj_assign_entry = Parser[Meta]['[]'].call(Parser, Init[Meta]['
 let parse_obj_assign_entry = ParseMap[Meta]['{}'].call(ParseMap, [[[Keyword.for("id"), Keyword.for("colon")], parse_obj_entry_rename], [Keyword.for("id"), parse_regular_obj_assign_entry], [Keyword.for("string_lit"), parse_string_obj_assign_entry], [Keyword.for("dot_dot_dot"), parse_spread_assign]]);
 let parse_assign_obj = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("object_deconstruction")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_b")), Until[Meta]['[]'].call(Until, Keyword.for("close_b"), parse_obj_assign_entry, Keyword.for("entries")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_b")));
 let parse_this_assign = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("this_assign")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("at")), Either[Meta]['[]'].call(Either, valid_ids_in_all_contexts, Keyword.for("name")));
-let parse_assign_expr = ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("id"), parse_assign_id], [Keyword.for("open_sq"), parse_assign_array], [Keyword.for("open_b"), parse_assign_obj], [Keyword.for("dot_dot_dot"), parse_spread_assign], [Keyword.for("at"), parse_this_assign]]);
+let parse_this_spread_assign = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("this_spread_assign")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("dot_dot_dot"), Keyword.for("at")), One[Meta]['[]'].call(One, Keyword.for("id"), Keyword.for("name")));
+let parse_assign_expr = ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("id"), parse_assign_id], [Keyword.for("open_sq"), parse_assign_array], [Keyword.for("open_b"), parse_assign_obj], [Keyword.for("at"), parse_this_assign], [[Keyword.for("dot_dot_dot"), Keyword.for("at")], parse_this_spread_assign], [Keyword.for("dot_dot_dot"), parse_spread_assign]]);
 let parse_keyword = Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("keyword")})), One[Meta]['[]'].call(One, Keyword.for("keyword"), Keyword.for("value")));
 function parse_paren_expr(tokens) {
 return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("paren_expr")})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_p")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_p"))))(tokens);}
@@ -1912,11 +1928,13 @@ return str(old_name, ": ", resolve_name(new_name));}]])))(node);}
 function eval_object_deconstruction_names({'entries': entries}) {
 return str("{", map_join.bind(entries)(eval_obj_deconstruction_entry, ", "), "}");}
 function eval_this_assign({'name': name}) {
-return name;}
+return resolve_name(name);}
+function eval_this_spread_assign({'name': name}) {
+return str("...", resolve_name(name));}
 function eval_assign_all_as({'name': name}) {
 return str("* as ", name);}
 function eval_assign_expr(node) {
-return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("id_assign"), eval_id_assign_name], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("array_deconstruction"), eval_array_deconstruction_names], [Keyword.for("object_deconstruction"), eval_object_deconstruction_names], [Keyword.for("this_assign"), eval_this_assign]])))(node);}
+return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("id_assign"), eval_id_assign_name], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("array_deconstruction"), eval_array_deconstruction_names], [Keyword.for("object_deconstruction"), eval_object_deconstruction_names], [Keyword.for("this_assign"), eval_this_assign], [Keyword.for("this_spread_assign"), eval_spread_assign]])))(node);}
 function eval_while_let_loop({'assign_expr': assign_expr, 'test_expr': test_expr, 'body': body}) {
 return str("let __coil_while_let_temp = ", eval_expr(test_expr), ";\n", "while (__coil_while_let_temp) {\n", "let ", eval_assign_expr(assign_expr), " = __coil_while_let_temp;\n", eval_ast(body), "\n", "__coil_while_let_temp = ", eval_expr(test_expr), ";\n", "}");}
 function eval_if_let({'assign_expr': assign_expr, 'expr': expr, 'pass': pass, 'fail': fail}) {
@@ -1931,8 +1949,7 @@ let math_op_to_method = Map[Meta]['{}'].call(Map, [[">", "greater_than"], ["<", 
 function eval_math_op({'lhs': lhs, 'op': op, 'rhs': rhs}) {
 return str(call.bind(math_op_to_method)(op), ".call(", eval_expr(lhs), ",", eval_expr(rhs), ")");}
 function eval_this_assignments(args) {
-return into.bind(map.bind(keep.bind(args)(equals__q.call(at.bind(_)(Keyword.for("type")), Keyword.for("this_assign"))))(function ({'name': name}) {
-return str("this.", name, " = ", name, ";\n");}))("");}
+return into.bind(map.bind(keep.bind(args)(Keyword.for("type"), Set[Meta]['[]'].call(Set, Keyword.for("this_assign"), Keyword.for("this_spread_assign"))))(str['kw']("this['", Keyword.for("name"), "'] = ", _[Meta]['[]'].call(_, Keyword.for("name"), resolve_name), ";\n")))("");}
 function eval_fn({'is_async?': is_async__q, 'generator?': generator__q, 'name': name, 'args': args, 'body': body}) {
 return str((and.call(is_async__q, () => "async ")), "function ", (and.call(generator__q, () => "*")), resolve_name(name), "(", map_join.bind(args)(eval_assign_expr, ", "), ") {\n", eval_this_assignments(args), eval_ast(body), "}");}
 function eval_bind({'lhs': lhs, 'expr': expr}) {

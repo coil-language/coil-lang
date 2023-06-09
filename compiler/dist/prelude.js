@@ -493,8 +493,6 @@ Examples:
     ::into([]) // [1 2 3 4 5 6 7 8 9 10]
 `))(function flat_map(...fns) {
 return iterator_impl.bind(this)()['flat_map']['call'](iter.bind(this)(), compose(...fns));})
-let in__q = compose(def_global, F => doc(F, "Inverse of ::has?"))(function in__q(coll) {
-return has__q.bind(coll)(this);})
 let find = compose(def_global, F => doc(F, `
 eagerly finds a value in an iterator
 
@@ -702,6 +700,8 @@ Examples:
   {a: 10}::has?(:a) // true
 `))(function has__q(val) {
 return this[Collection]['has?']['call'](this, val);})
+let in__q = compose(def_global, F => doc(F, "Inverse of ::has?"))(function in__q(coll) {
+return has__q.bind(coll)(this);})
 const Record = Symbol("Record");
 globalThis['Record'] = Record
 ObjectLiteral.prototype[Record] = new ObjectLiteral({['insert'](key, value) {
@@ -1196,6 +1196,9 @@ let exists__q = compose(def_global, def_call)(function exists__q() {
 return negate.call(nil__q.bind(this)());})
 let Underscore = def_global(function Underscore(...transforms) {
 this['transforms'] = transforms});
+Underscore.prototype[Meta] = new ObjectLiteral({["[]"]: function (...keys) {
+return reduce.bind(keys)(function (under, f) {
+return under['insert'](pipe, f);}, this);}});
 const UnderscoreInterpreter = Symbol("UnderscoreInterpreter");
 globalThis['UnderscoreInterpreter'] = UnderscoreInterpreter
 let _ = Underscore[Meta]['[]'].call(Underscore, new ObjectLiteral({'f': function id() {

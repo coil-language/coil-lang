@@ -1176,6 +1176,10 @@ fn exists?() = !this::nil?()
 @def_global
 fn Underscore(...transforms) { this.transforms = transforms }
 
+impl Meta for Underscore = {
+  ["[]"]: fn (...keys) = keys::reduce(fn (under, f) = under.insert(pipe, f), this)
+}
+
 protocol UnderscoreInterpreter
 globalThis.UnderscoreInterpreter = UnderscoreInterpreter
 
