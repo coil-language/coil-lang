@@ -20,7 +20,8 @@ impl OrderedSequence for CollectionView = {
   fn last() = this.collection::last()
 }
 
-impl :skip for CollectionView = fn(n) = CollectionView[this.collection, this.idx + n]
+impl :skip for CollectionView = fn(n) =
+  CollectionView[this.collection, this.idx + n]
 
 impl Symbol.iterator for CollectionView = fn*() {
   for i of this.idx..=this.collection::len() {
@@ -1197,10 +1198,11 @@ fn eval-if-branch(branch) {
   }
 }
 
-fn eval-if({expr pass fail}) = str(
-  "if (truthy(" eval-expr(expr) ")) {\n"
-    eval-ast(pass) "\n"
-  "}" eval-if-branch(fail))
+let eval-if = str.kw(
+  "if (truthy(" _[:expr eval-expr] ")) {\n"
+    _[:pass eval-ast] "\n"
+  "}" _[:fail eval-if-branch]
+)
 
 fn eval-str({value}) {
   value = value.slice(1, -1)
@@ -1247,8 +1249,7 @@ fn eval-obj-deconstruction-entry(node) = node::at(:type)::pipe(Map{
   :obj_reg_entry => eval-obj-reg-entry
   :obj_entry_rename => eval-obj-entry-rename
   :spread_assign => eval-spread-assign
-  :obj_str_rename_entry => fn ({old_name new_name}) =
-    str(old_name ": " resolve-name(new_name))
+  :obj_str_rename_entry => str.kw(:old_name ": " _[:new_name resolve-name])
 })::call(node)
 
 fn eval-object-deconstruction-names({entries}) =

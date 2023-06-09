@@ -1197,8 +1197,7 @@ return negate.call(nil__q.bind(this)());})
 let Underscore = def_global(function Underscore(...transforms) {
 this['transforms'] = transforms});
 Underscore.prototype[Meta] = new ObjectLiteral({["[]"]: function (...keys) {
-return reduce.bind(keys)(function (under, f) {
-return under['insert'](pipe, f);}, this);}});
+return this['insert'](pipe, ...keys);}});
 const UnderscoreInterpreter = Symbol("UnderscoreInterpreter");
 globalThis['UnderscoreInterpreter'] = UnderscoreInterpreter
 let _ = Underscore[Meta]['[]'].call(Underscore, new ObjectLiteral({'f': function id() {
@@ -1891,8 +1890,7 @@ return str(" else if (", eval_expr(at.bind(branch)(Keyword.for("expr"))), ") {\n
 raise__b(Error[Meta]['[]'].call(Error, "Expected else if"))
 };
 };}
-function eval_if({'expr': expr, 'pass': pass, 'fail': fail}) {
-return str("if (truthy(", eval_expr(expr), ")) {\n", eval_ast(pass), "\n", "}", eval_if_branch(fail));}
+let eval_if = str['kw']("if (truthy(", _[Meta]['[]'].call(_, Keyword.for("expr"), eval_expr), ")) {\n", _[Meta]['[]'].call(_, Keyword.for("pass"), eval_ast), "\n", "}", _[Meta]['[]'].call(_, Keyword.for("fail"), eval_if_branch));
 function eval_str({'value': value}) {
 value = value['slice']((1), (-1))
 if (truthy(value['includes']("\n"))) {
@@ -1923,8 +1921,7 @@ return str("'", name, "': ", resolve_name(name));}
 function eval_obj_entry_rename({'old_name': old_name, 'new_name': new_name}) {
 return str("'", old_name, "': ", resolve_name(new_name));}
 function eval_obj_deconstruction_entry(node) {
-return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("obj_reg_entry"), eval_obj_reg_entry], [Keyword.for("obj_entry_rename"), eval_obj_entry_rename], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("obj_str_rename_entry"), function ({'old_name': old_name, 'new_name': new_name}) {
-return str(old_name, ": ", resolve_name(new_name));}]])))(node);}
+return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("obj_reg_entry"), eval_obj_reg_entry], [Keyword.for("obj_entry_rename"), eval_obj_entry_rename], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("obj_str_rename_entry"), str['kw'](Keyword.for("old_name"), ": ", _[Meta]['[]'].call(_, Keyword.for("new_name"), resolve_name))]])))(node);}
 function eval_object_deconstruction_names({'entries': entries}) {
 return str("{", map_join.bind(entries)(eval_obj_deconstruction_entry, ", "), "}");}
 function eval_this_assign({'name': name}) {
