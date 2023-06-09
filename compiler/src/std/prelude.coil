@@ -16,7 +16,7 @@ define Meta for Set = {
   ["[]"]: fn (...elems) = Reflect.construct(Set [elems])
 }
 
-fn def_global(f) {
+fn def-global(f) {
   let resolved_name = f.name
     .replaceAll("?", "__q")
     .replaceAll("!", "__b")
@@ -37,7 +37,7 @@ define CustomNumberLiteral for :custom_number_literal/n = BigInt
 protocol Doc
 globalThis.Doc = Doc
 
-@def_global
+@def-global
 fn doc(f, doc_str) {
   define Doc for f = doc_str.trim()
   return f
@@ -50,8 +50,8 @@ fn nullish(thunk) = js_nullish(this&.[Nullish](thunk), thunk)
 
 impl Nullish for Object = fn(thunk) = js_nullish(this, thunk)
 
-@def_global
-fn log_doc() {
+@def-global
+fn log-doc() {
   if this.name {
     console.log(str("# " this.name))
   }  
@@ -63,15 +63,15 @@ protocol Call
 globalThis.Call = Call
 
 // can't use decorators, ::call, or ::reduce since its being depended on everywhere
-fn compose(first_fn, ...fns) = fn(...args) {
-  let result = first_fn&.[Call](...args)
+fn compose(first-fn, ...fns) = fn(...args) {
+  let result = first-fn&.[Call](...args)
   for f of fns {
     result = f&.[Call](result)
   }
   return result
 }
 
-compose = def_global(compose)
+compose = def-global(compose)
 compose = doc(compose "
 composes a list of [[Call]] objects into a single function
 
@@ -112,7 +112,7 @@ impl Call for Keyword = fn(collection) {
   }
 }
 
-@[def_global doc("
+@[def-global doc("
 Invokes [[Call]] on 'this'
 
 
@@ -132,7 +132,7 @@ globalThis.Pipe = Pipe
 
 impl Pipe for Object = fn(callable) = callable::call(this)
 
-@[def_global doc("
+@[def-global doc("
 invokes [[Pipe]] protocol
 
 args:
@@ -156,7 +156,7 @@ fn pipe(...callables) {
   }
 }
 
-@[def_global doc("
+@[def-global doc("
 decorator to define [[Call]]
 
 takes f, and applies first argument as the 'this' arg.
@@ -170,27 +170,27 @@ example:
   // I want this to work.. but it doesn't
   [[1] [2] [3]]::map(first) // Error
 
-  // if I use @def_call we can do this
-  @def_call
+  // if I use @def-call we can do this
+  @def-call
   fn first() = this[0]
 
   [[1] [2] [3]]::map(first) // [1 2 3]  
 ")]
-fn def_call(f) {
+fn def-call(f) {
   define Call for f = fn(first, ...rest) = first::f(...rest)
   return f
 }
 
 // Iterable Protocol
 
-@[def_call doc("
+@[def-call doc("
 Returns an iterator of 'this'.
 
 In the case 'this' is nil, you will get an empty array iterator.
 ")]
 fn iter() = this&.[Symbol.iterator]() || []::iter()
 
-@[def_call doc("
+@[def-call doc("
 Determines if 'this' is a valid Symbol.iterator
 
 See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterator_protocol for more
@@ -200,7 +200,7 @@ fn iter?() = ::iter() === this
 protocol Iterator
 globalThis.Iterator = Iterator
 
-let default_iterator_impl = {
+let fallback-iterator-impl = {
   fn* take(n) {
     for [elem i] of this::zip(0..) {
       if i == n {
@@ -314,36 +314,36 @@ let default_iterator_impl = {
   }
 }
 
-fn iterator_impl() = this&.[Iterator] || default_iterator_impl
+fn iterator-impl() = this&.[Iterator] || fallback-iterator-impl
 
-@[def_global doc("
+@[def-global doc("
 lazily skips 'n' elements for an iterator
 
 Examples:
   [1 2 3 4 5]::skip(1)::into([]) // -> [2 3 4 5]
   [1 2 3]::skip(20)::into([]) // -> []
 ")]
-fn skip(n) = ::iterator_impl().skip.call(this::iter(), n)
+fn skip(n) = ::iterator-impl().skip.call(this::iter(), n)
 
-@[def_global doc("
+@[def-global doc("
 lazily takes 'n' elements for an iterator
 
 Examples:
   [1 2 3 4]::take(2)::into([]) // -> [1 2]
   [1 2 3]::take(200)::into([]) // -> [1 2 3]
 ")]
-fn take(n) = ::iterator_impl().take.call(this::iter(), n)
+fn take(n) = ::iterator-impl().take.call(this::iter(), n)
 
-@[def_global doc("
+@[def-global doc("
 eagerly consumes an iterator by calling 'f' on each elem
 
 Examples:
   [{name: \"bob\"} {name: \"jill\"}]
     ::each(:name log) // prints 'bob' and 'jill'
 ")]
-fn each(...fns) = ::iterator_impl().each.call(this::iter(), compose(...fns))
+fn each(...fns) = ::iterator-impl().each.call(this::iter(), compose(...fns))
 
-@[def_global doc("
+@[def-global doc("
 lazily defines an end point for an iterator
 
 Examples:
@@ -351,9 +351,9 @@ Examples:
     ::until(_ > 3)
     ::into([]) // [1 2 3]
 ")]
-fn until(...fns) = ::iterator_impl().until.call(this::iter(), compose(...fns))
+fn until(...fns) = ::iterator-impl().until.call(this::iter(), compose(...fns))
 
-@[def_global doc("
+@[def-global doc("
 lazily zips together a number of iterators
 
 Examples:
@@ -362,9 +362,9 @@ Examples:
     ::into(Map{})
   // -> Map{axe: 3, hammer: 1, pickaxe: 4}
 ")]
-fn zip(...iterables) = ::iterator_impl().zip.call(this::iter(), ...iterables)
+fn zip(...iterables) = ::iterator-impl().zip.call(this::iter(), ...iterables)
 
-@[def_global doc("
+@[def-global doc("
 lazily maps functions over an iterator
 
 Examples:
@@ -372,11 +372,11 @@ Examples:
     ::map(:name len)
     ::into([]) // [8 4]
 ")]
-fn map(...fns) = ::iterator_impl().map.call(this::iter(), compose(...fns))
+fn map(...fns) = ::iterator-impl().map.call(this::iter(), compose(...fns))
 
 let select = map
 
-@[def_global doc("
+@[def-global doc("
 lazily flat maps functions over an iterator
 
 Examples:
@@ -384,18 +384,18 @@ Examples:
     ::flat_map(fn([start, end]) = (start..=end)::into([]))
     ::into([]) // [1 2 3 4 5 6 7 8 9 10]
 ")]
-fn flat_map(...fns) = ::iterator_impl().flat_map.call(this::iter(), compose(...fns))
+fn flat_map(...fns) = ::iterator-impl().flat_map.call(this::iter(), compose(...fns))
 
-@[def_global doc("
+@[def-global doc("
 eagerly finds a value in an iterator
 
 Examples:
   [1 2 3 4 5]
     ::find(Set[4 5]) // 4
 ")]
-fn find(...fns) = ::iterator_impl().find.call(this::iter(), compose(...fns))
+fn find(...fns) = ::iterator-impl().find.call(this::iter(), compose(...fns))
 
-@[def_global doc("
+@[def-global doc("
 lazily keeps values based off a condition
 
 Examples:
@@ -403,11 +403,11 @@ Examples:
     ::keep(:admin)
     ::into([]) // [{admin: true, name: \"bob\"}]
 ")]
-fn keep(...fns) = ::iterator_impl().keep.call(this::iter(), compose(...fns))
+fn keep(...fns) = ::iterator-impl().keep.call(this::iter(), compose(...fns))
 
 let where = keep
 
-@[def_global doc("
+@[def-global doc("
 lazily rejects values based of a condition
 
 Examples:
@@ -417,31 +417,31 @@ Examples:
 ")]
 fn reject(...fns) = ::keep(...fns, !_)
 
-@[def_global doc("
+@[def-global doc("
 eagerly finds out if an element matches the condition
 
 Examples:
   [1 2 3 4 5]::any?(Set[3]) // true
 ")]
-fn any?(...fns) = ::iterator_impl().any?.call(this::iter(), compose(...fns))
+fn any?(...fns) = ::iterator-impl().any?.call(this::iter(), compose(...fns))
 
-@[def_global doc("
+@[def-global doc("
 eagerly finds out all elements matches the condition
 
 Examples:
   [1 2 3 4 5]::all?(_ > 0) // true
 ")]
-fn all?(...fns) = ::iterator_impl().all?.call(this::iter(), compose(...fns))
+fn all?(...fns) = ::iterator-impl().all?.call(this::iter(), compose(...fns))
 
-@[def_global doc("
+@[def-global doc("
 eagerly reduces an iterator
 
 Examples:
   [1 2 3 4 5]::reduce(+ 0) // 15
 ")]
-fn reduce(f, start) = ::iterator_impl().reduce.call(this::iter(), f::call, start)
+fn reduce(f, start) = ::iterator-impl().reduce.call(this::iter(), f::call, start)
 
-@[def_global doc("
+@[def-global doc("
 lazily splits an iterator
 
 Examples:
@@ -450,9 +450,9 @@ Examples:
     ::take(2)
     ::into([]) // [\"hey\" \"there\"]
 ")]
-fn split(...fns) = ::iterator_impl().split.call(this::iter(), compose(...fns))
+fn split(...fns) = ::iterator-impl().split.call(this::iter(), compose(...fns))
 
-@[def_global doc("
+@[def-global doc("
 lazily compacts an iterator
 
 Examples:
@@ -461,9 +461,9 @@ Examples:
     ::compact()
     ::into([]) // [:great :broken]
 ")]
-fn compact() = ::iterator_impl().compact.call(this::iter())
+fn compact() = ::iterator-impl().compact.call(this::iter())
 
-@[def_global doc("
+@[def-global doc("
 eagerly joins an iterator
 
 Examples:
@@ -490,7 +490,7 @@ impl Into for Set = fn(iterable) = ::concat(iterable)
 impl Into for String = fn(iterable) = this + iterable::reduce(+ "")
 define Into for Object = fn(iterable) = Object.fromEntries(iterable)
 
-@[def_global doc("
+@[def-global doc("
 converts 'this' iterator into 'output', prepending existing values in 'output'
 
 Examples:
@@ -540,7 +540,7 @@ impl Collection for Set = {
   fn has?(val) = this.has(val)
 }
 
-@[def_call def_global doc("
+@[def-call def-global doc("
 gets length of a collection
 
 Examples:
@@ -551,7 +551,7 @@ Examples:
 ")]
 fn len() = this.[Collection].len.call(this)
 
-@[def_call def_global doc("
+@[def-call def-global doc("
 determines if a collection is empty
 
 Examples:
@@ -562,7 +562,7 @@ Examples:
 ")]
 fn empty?() = js_nullish(this&.[Collection].empty?.call(this) fn = true)
 
-@[def_call def_global doc("
+@[def-call def-global doc("
 determines if a collection is not empty
 
 Examples:
@@ -572,7 +572,7 @@ Examples:
 ")]
 fn not_empty?() = !this::empty?()
 
-@[def_global doc("
+@[def-global doc("
 extracts value from collection based on a key or index
 
 Examples:
@@ -588,7 +588,7 @@ Examples:
 ")]
 fn at(key_or_idx) = this.[Collection].at.call(this, key_or_idx)
 
-@[def_global doc("
+@[def-global doc("
 determines if a collection has a value
 
 Examples:
@@ -598,7 +598,7 @@ Examples:
 ")]
 fn has?(val) = this.[Collection].has?.call(this, val)
 
-@[def_global doc("Inverse of ::has?")]
+@[def-global doc("Inverse of ::has?")]
 fn in?(coll) = coll::has?(this)
 
 protocol Record
@@ -618,7 +618,7 @@ impl Record for Map = {
   fn values() = this.values()
 }
 
-@[def_call def_global doc("
+@[def-call def-global doc("
 Get keys of a record as an iterator OR a collection
 
 Example:
@@ -627,7 +627,7 @@ Example:
 ")]
 fn keys() = this.[Record].keys.call(this)
 
-@[def_call def_global doc("
+@[def-call def-global doc("
 Get values of a record as an iterator OR a collection
 
 Example:
@@ -636,7 +636,7 @@ Example:
 ")]
 fn values() = this.[Record].values.call(this)
 
-@[def_global doc("
+@[def-global doc("
 Insert key & value into a record
 
 Example:
@@ -645,7 +645,7 @@ Example:
 ")]
 fn insert(key, value) = this.[Record].insert.call(this, key, value)
 
-@[def_global doc("
+@[def-global doc("
 Merge 2 records together
 
 Note that since all object literal keys are strings, merging a
@@ -663,7 +663,7 @@ Example:
 ")]
 fn merge(other) = this.[Record].merge.call(this, other)
 
-@[def_global doc("
+@[def-global doc("
 Determines if 'this' is a record
 
 Examples:
@@ -677,7 +677,7 @@ fn record?() = this.[Record]::exists?()
 protocol Bag
 globalThis.Bag = Bag
 
-@[def_global doc("
+@[def-global doc("
 Determines if 'this' conforms to the 'Bag' protocol
 
 Examples:
@@ -716,7 +716,7 @@ impl Bag for String = {
   fn concat(other) = this + other
 }
 
-@[def_global doc("
+@[def-global doc("
 push a value onto a bag
 
 Examples:
@@ -726,7 +726,7 @@ Examples:
 ")]
 fn push(val) = this.[Bag].push.call(this, val)
 
-@[def_global doc("
+@[def-global doc("
 replace a value in a bag
 
 Examples:
@@ -735,7 +735,7 @@ Examples:
 ")]
 fn replace(old_val, new_val) = this.[Bag].replace.call(this, old_val, new_val)
 
-@[def_global doc("
+@[def-global doc("
 concat two bags by swallowing the second one into the first
 
 Examples:
@@ -771,7 +771,7 @@ impl OrderedSequence for String = {
   fn last() = this.at(-1)
 }
 
-@[def_global doc("
+@[def-global doc("
 inserts element at beginning of collection
 
 Examples:
@@ -779,7 +779,7 @@ Examples:
 ")]
 fn prepend(val) = this.[OrderedSequence].prepend.call(this, val)
 
-@[def_global doc("
+@[def-global doc("
 updates element at given index
 
 Examples:
@@ -787,7 +787,7 @@ Examples:
 ")]
 fn update_at(idx, ...fns) = this.[OrderedSequence].update_at.call(this, idx, compose(...fns))
 
-@[def_global doc("
+@[def-global doc("
 inserts element at given index
 
 Examples:
@@ -795,7 +795,7 @@ Examples:
 ")]
 fn insert_at(idx, val) = this.[OrderedSequence].insert_at.call(this, idx, val)
 
-@[def_call def_global doc("
+@[def-call def-global doc("
 gets first element of collection
 
 Examples:
@@ -803,7 +803,7 @@ Examples:
 ")]
 fn first() = this.[OrderedSequence].first.call(this)
 
-@[def_call def_global doc("
+@[def-call def-global doc("
 gets last element of collection
 
 Examples:
@@ -816,7 +816,7 @@ fn last() = this.[OrderedSequence].last.call(this)
 protocol Equal
 globalThis.Equal = Equal
 
-@[def_global doc("
+@[def-global doc("
 implement [[Equal]] for a generic constructor by
 specifying the keys to measure equality by
 
@@ -873,7 +873,7 @@ impl Equal for Map = record_equals?
 
 impl Equal for ObjectLiteral = record_equals?
 
-@[def_call def_global doc("
+@[def-call def-global doc("
 [[Equal]] invocation
 
 Examples:
@@ -1033,7 +1033,7 @@ impl Comparable for String = {
   }
 }
 
-@[def_call def_global doc("
+@[def-call def-global doc("
 [[Plus]] method for '+' infix operator
 
 Examples:
@@ -1041,7 +1041,7 @@ Examples:
 ")]
 fn plus(other) = this.[Plus](other)
 
-@[def_call def_global doc("
+@[def-call def-global doc("
 [[Negate]] method for '!' prefix operator
 
 Examples:
@@ -1049,7 +1049,7 @@ Examples:
 ")]
 fn negate() = js_nullish(this&.[Negate]() fn = true)
 
-@[def_global doc("
+@[def-global doc("
 [[Minus]] method for '-' infix operator
 
 Examples:
@@ -1057,7 +1057,7 @@ Examples:
 ")]
 fn minus(other) = this.[Minus](other)
 
-@[def_global doc("
+@[def-global doc("
 [[Times]] method for '*' infix operator
 
 Examples:
@@ -1065,7 +1065,7 @@ Examples:
 ")]
 fn times(other) = this.[Times](other)
 
-@[def_global doc("
+@[def-global doc("
 [[Divide]] method for '/' infix operator
 
 Examples:
@@ -1073,7 +1073,7 @@ Examples:
 ")]
 fn divide_by(other) = this.[Divide](other)
 
-@[def_global doc("
+@[def-global doc("
 [[Exponent]] method for '**' infix operator
 
 Examples:
@@ -1081,7 +1081,7 @@ Examples:
 ")]
 fn exponent(other) = this.[Exponent](other)
 
-@[def_global doc("
+@[def-global doc("
 [[Mod]] method for '%' infix operator
 
 Examples:
@@ -1089,7 +1089,7 @@ Examples:
 ")]
 fn mod(other) = this.[Mod](other)
 
-@[def_global doc("
+@[def-global doc("
 [[Comparable]].greater_than method for '>' infix operator
 
 Examples:
@@ -1097,7 +1097,7 @@ Examples:
 ")]
 fn greater_than(other) = this.[Comparable].greater_than.call(this, other)
 
-@[def_global doc("
+@[def-global doc("
 [[Comparable]].greater_than_eq method for '>=' infix operator
 
 Examples:
@@ -1105,7 +1105,7 @@ Examples:
 ")]
 fn greater_than_eq(other) = this.[Comparable].greater_than_eq.call(this, other)
 
-@[def_global doc("
+@[def-global doc("
 [[Comparable]].less_than method for '<' infix operator
 
 Examples:
@@ -1113,7 +1113,7 @@ Examples:
 ")]
 fn less_than(other) = this.[Comparable].less_than.call(this, other)
 
-@[def_global doc("
+@[def-global doc("
 [[Comparable]].less_than_eq method for '<=' infix operator
 
 Examples:
@@ -1121,7 +1121,7 @@ Examples:
 ")]
 fn less_than_eq(other) = this.[Comparable].less_than_eq.call(this, other)
 
-@[def_global doc("
+@[def-global doc("
 [[And]] method for '&&' infix operator
 
 Examples:
@@ -1129,7 +1129,7 @@ Examples:
 ")]
 fn and(thunk) = this&.[And](thunk)
 
-@[def_global doc("
+@[def-global doc("
 [[Or]] method for '||' infix operator
 
 Examples:
@@ -1137,7 +1137,7 @@ Examples:
 ")]
 fn or(thunk) = js_or(this&.[Or](thunk) thunk)
 
-@[def_global def_call]
+@[def-global def-call]
 fn log(...args) {
   console.log(...args, this)
   return this
@@ -1145,39 +1145,39 @@ fn log(...args) {
 
 // Global Helpers
 
-@def_global
+@def-global
 fn str(...args) = args.join("")
 
-@[def_global def_call]
+@[def-global def-call]
 fn nan?() = Number.isNaN(this)
 
-@[def_global def_call]
+@[def-global def-call]
 fn num?() = typeof(this) == "number"
 
-@[def_global def_call]
+@[def-global def-call]
 fn bigint?() = typeof(this) == "bigint"
 
-@[def_global def_call]
+@[def-global def-call]
 fn str?() = typeof(this) == "string"
 
-@[def_global def_call]
+@[def-global def-call]
 fn as_keyword() = Keyword.["for"](this.toString())
 
-@[def_global def_call]
+@[def-global def-call]
 fn as_num() = Number(this)
 
-@[def_global def_call]
+@[def-global def-call]
 fn as_str() = js_or(this&.toString() fn = "")
-@[def_global def_call]
+@[def-global def-call]
 fn exists?() = !this::nil?()
 
 // Underscore
 
-@def_global
+@def-global
 fn Underscore(...transforms) { this.transforms = transforms }
 
 impl Meta for Underscore = {
-  ["[]"]: fn (...keys) = keys::reduce(fn (under, f) = under.insert(pipe, f), this)
+  ["[]"]: fn (...keys) = this.insert(pipe, ...keys)
 }
 
 protocol UnderscoreInterpreter
@@ -1265,22 +1265,22 @@ impl Inc for Number = fn() = this + 1
 impl Inc for BigInt = fn() = this + 1n
 impl Inc for String = fn() = String.fromCharCode(this.charCodeAt(0) + 1)
 
-@[def_call def_global]
+@[def-call def-global]
 fn inc() = this.[Inc]()
 
-@[def_global impl_equal(:start, :end)]
+@[def-global impl_equal(:start, :end)]
 fn IRange(@start, @end) {}
 
-@[def_global impl_equal(:start, :end)]
+@[def-global impl_equal(:start, :end)]
 fn ERange(@start, @end) {}
 
-@[def_global impl_equal(:end)]
+@[def-global impl_equal(:end)]
 fn IRangeNoMin(@end) {}
 
-@[def_global impl_equal(:start)]
+@[def-global impl_equal(:start)]
 fn ERangeNoMax(@start) {}
 
-@[def_global impl_equal(:end)]
+@[def-global impl_equal(:end)]
 fn ERangeNoMin(@end) {}
 
 impl Collection for IRange = {
@@ -1339,13 +1339,13 @@ globalThis.char_alpha__q = char_alpha?
 globalThis.char_numeric__q = char_numeric?
 globalThis.char_alpha_numeric__q = char_alpha_numeric?
 
-@[def_global doc("all characters in string are in a-z or A-Z")]
+@[def-global doc("all characters in string are in a-z or A-Z")]
 fn alpha?() = this::all?(char_alpha?)
 
-@[def_global doc("all characters in string are in a-z or A-Z or 0-9")]
+@[def-global doc("all characters in string are in a-z or A-Z or 0-9")]
 fn alpha_numeric?() = this::all?(char_alpha_numeric?)
 
-@def_global
+@def-global
 fn CallMap(@entries) {}
 
 impl Call for CallMap = fn(value) = this.entries

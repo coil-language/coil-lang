@@ -307,8 +307,8 @@ example:
   // I want this to work.. but it doesn't
   [[1] [2] [3]]::map(first) // Error
 
-  // if I use @def_call we can do this
-  @def_call
+  // if I use @def-call we can do this
+  @def-call
   fn first() = this[0]
 
   [[1] [2] [3]]::map(first) // [1 2 3]  
@@ -330,7 +330,7 @@ See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_
 return iter.bind(this)() === this;})
 const Iterator = Symbol("Iterator");
 globalThis['Iterator'] = Iterator
-let default_iterator_impl = new ObjectLiteral({*['take'](n) {
+let fallback_iterator_impl = new ObjectLiteral({*['take'](n) {
 for  (let [elem, i] of zip.bind(this)(new ERangeNoMax((0)))) {
 if (truthy(equals__q.call(i, n))) {
 break;
@@ -430,7 +430,7 @@ yield elem
 };
 }});
 function iterator_impl() {
-return or.call(this?.[Iterator], () => default_iterator_impl);}
+return or.call(this?.[Iterator], () => fallback_iterator_impl);}
 let skip = compose(def_global, F => doc(F, `
 lazily skips 'n' elements for an iterator
 
@@ -2053,6 +2053,7 @@ return str("compose(", decorators, ")");});
 return str("let ", fn_name, " = ", decorator_fn_js, "(", eval_expr(fn_def), ")");}
 function eval_decorator({'name': decorator_name, 'fn_def': fn_def, 'args': args}) {
 let fn_name = pipe.bind(fn_def)(Keyword.for("name"), resolve_name);
+decorator_name = resolve_name(decorator_name)
 let fn_def_js = eval_fn(fn_def);
 if (truthy(empty__q.bind(args)())) {
 return str("let ", fn_name, " = ", decorator_name, "(", fn_def_js, ");");

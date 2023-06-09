@@ -1487,6 +1487,7 @@ fn eval-multi-decorator({decorators fn_def}) {
 
 fn eval-decorator({name: decorator_name, fn_def args}) {
   let fn_name = fn_def::pipe(:name resolve_name)
+  decorator_name = resolve-name(decorator_name)
   let fn_def_js = eval_fn(fn_def)
   if args::empty?() {
     return str("let " fn_name " = " decorator_name "(" fn_def_js ");")
