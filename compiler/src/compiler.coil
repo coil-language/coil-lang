@@ -77,31 +77,31 @@ let lexer = Lexer{
   /^\/\/.*/ => pass
   /^\,/ => pass
   /^\;/ => pass
-  /^if\b/ => :if
-  /^is\b/ => :is
-  /^else\b/ => :else
-  /^return\b/ => :return
-  /^import\b/ => :import
-  /^export\b/ => :export
-  /^default\b/ => :default
-  /^from\b/ => :from
-  /^let\b/ => :let
-  /^protocol\b/ => :protocol
-  /^for\b/ => :for
-  /^try\b/ => :try
-  /^catch\b/ => :catch
-  /^finally\b/ => :finally
-  /^while\b/ => :while
-  /^loop\b/ => :loop
-  /^continue\b/ => :continue
-  /^break\b/ => :break
-  /^of\b/ => :of
-  /^impl\b/ => :impl
-  /^define\b/ => :define
-  /^yield\b/ => :yield
-  /^async\b/ => :async
-  /^await\b/ => :await
-  /^as\b/ => :as
+  /^if\s/ => :if
+  /^is\s/ => :is
+  /^else\s/ => :else
+  /^return\s/ => :return
+  /^import\s/ => :import
+  /^export\s/ => :export
+  /^default\s/ => :default
+  /^from\s/ => :from
+  /^let\s/ => :let
+  /^protocol\s/ => :protocol
+  /^for\s/ => :for
+  /^try\s/ => :try
+  /^catch\s/ => :catch
+  /^finally\s/ => :finally
+  /^while\s/ => :while
+  /^loop\s/ => :loop
+  /^continue\s/ => :continue
+  /^break\s/ => :break
+  /^of\s/ => :of
+  /^impl\s/ => :impl
+  /^define\s/ => :define
+  /^yield\s/ => :yield
+  /^async\s/ => :async
+  /^await\s/ => :await
+  /^as\s/ => :as
   /^\=\>/ => :arrow
   /^\@/ => :at
   /^\&\&/ => :and_and
@@ -210,7 +210,7 @@ impl ParseInstruction for Optional = fn([expr tokens]) {
 
 impl ParseInstruction for Function = fn([_expr tokens]) = this(tokens)
 
-fn Chomp(...kws) { this.kws = kws }
+fn Chomp(...@kws) {}
 impl ParseInstruction for Chomp = fn([expr tokens]) {
   // this.kws::zip(tokens)::all!(fn([a b]) = a == b)
   // return [expr tokens::skip(this.kws::len())]
@@ -276,7 +276,7 @@ impl ParseInstruction for Either = fn([expr tokens]) {
 
 fn parse-step(result) = this[ParseInstruction](result)
 
-fn Parser(...instructions) { this.instructions = instructions }
+fn Parser(...@instructions) {}
 
 impl Call for Parser = fn(tokens) =
   this::parse-step([null tokens])
