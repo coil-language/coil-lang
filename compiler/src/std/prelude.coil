@@ -7,6 +7,10 @@ impl Meta for Object = {
   ["[]="]: fn (keys, expr) = js_set_property(this, keys, expr)
 }
 
+define Meta for Object = {
+  ["{}"]: Object.fromEntries
+}
+
 impl Meta for Function = {
   ["[]"]: fn (...args) = Reflect.construct(this args)
   ["{}"]: fn (entries) = Reflect.construct(this [entries])
@@ -14,6 +18,12 @@ impl Meta for Function = {
 
 define Meta for Set = {
   ["[]"]: fn (...elems) = Reflect.construct(Set [elems])
+}
+
+fn inherit(f, ...Ctors) {
+  // TODO: why can't we do Ctors::map(:prototype) ?
+  f.prototype = Object.assign(f.prototype, ...Ctors::map(fn (x) = x.prototype))
+  return f
 }
 
 fn def-global(f) {
