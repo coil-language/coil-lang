@@ -1,158 +1,24 @@
-import * as React from "./react.coil"
+import * as React from "@coil-lang/react"
 import * as ReactDOM from "react-dom/client"
-let {component, use_state, View, view, Css} = React
+let {component, use_state, ToReactChild, view, Css} = React
 
-impl View for Number = fn({val set!}) = 
-  ~:input{onChange: compose(:target :value as_num set!)
-          type: "number"
-          value: val}::view()
+protocol Views
 
-@component(~Css[
-".days_of_week {
-  display: flex;
-  color: gray;
-  width: 100%;
-}"
-".days_of_week div {
-  width: 100%;
-  text-align: end;
-  padding-right: 5px;
-}"
-])
-fn DaysOfWeek = ~:div.days_of_week[
-  ~:div["Mon"]
-  ~:div["Tue"]
-  ~:div["Wed"]
-  ~:div["Thu"]
-  ~:div["Fri"]
-  ~:div["Sat"]
-  ~:div["Sun"]
+fn User(@name @age) {}
+
+impl Views for User = {
+  fn tr = :tr[:td[this.name] :td[this.age]]
+}
+
+impl Into for Keyword = fn (object) =
+  object.[Views].[this].call(object)
+
+@component
+fn App = :table[
+  :thead[:tr[:th["name"] :th["age"]]]
+  :tbody[User["marcelle" 25]::into(:tr)]
 ]
-
-@component(~Css[
-".event {
-  font-size: 10px;
-  padding: 3px;
-  padding-left: 6px;
-  background: #1299E555;
-  border-radius: 5px;
-}"
-".event:hover {
-  cursor: pointer;
-  background: #1299E5;
-}"
-])
-fn Event({name}) = ~:div.event[name]
-
-@component(~Css[
-".cal_day {
-  padding: 4px;
-  padding-right: 10px;
-  width: 100%;
-  color: white;
-  border: 1px solid #2E2E2E;
-  border-right: none;
-  height: calc((100vw - 2em) / 7);
-}"
-".cal_day:last-of-type {
-  border-right: 1px solid #2E2E2E;
-}"
-".cal_day:hover {
-  background: #2E2E2E
-}"
-".cal_day_header[data-inactive] {
-  color: grey;
-}"
-".cal_day_header {
-  text-align: end;
-}"
-".events {
-  margin-top: 5px;
-}"
-])
-fn Day({day, inactive}) = ~:div.cal_day[
-  ~:div.cal_day_header{"data-inactive" => inactive, children: day}
-  ~:div.events[~Event{name: "Cinema: Ant Man"}]
-]
-
-@component(~Css[
-"header {
-  color: white;
-  height: 1.5em;
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  align-items: center;
-  font-size: 40px;
-}"
-".calendar {
-  background: #1E1E1E;
-  padding: 1em;
-  border-radius: 5px;
-}"
-".year {
-  color: #3E3E3E;
-}"
-".week {
-  display: flex;
-  width: 100%;
-}"
-])
-fn Calendar({month year}) = ~:div.calendar[
-  ~:header[~:div[month] ~:div.year[year]]
-  ~DaysOfWeek{}
-  ~:div.week[
-    ~Day{day: "30", inactive: true}
-    ~Day{day: "31", inactive: true}
-    ~Day{day: "1"}
-    ~Day{day: "2"}
-    ~Day{day: "3"}
-    ~Day{day: "4"}
-    ~Day{day: "5"}
-  ]
-  ~:div.week[
-    ~Day{day: "6"}
-    ~Day{day: "7"}
-    ~Day{day: "8"}
-    ~Day{day: "9"}
-    ~Day{day: "10"}
-    ~Day{day: "11"}
-    ~Day{day: "12"}
-  ]
-  ~:div.week[
-    ~Day{day: "13"}
-    ~Day{day: "14"}
-    ~Day{day: "15"}
-    ~Day{day: "16"}
-    ~Day{day: "17"}
-    ~Day{day: "18"}
-    ~Day{day: "19"}
-  ]
-  ~:div.week[
-    ~Day{day: "20"}
-    ~Day{day: "21"}
-    ~Day{day: "22"}
-    ~Day{day: "23"}
-    ~Day{day: "24"}
-    ~Day{day: "25"}
-    ~Day{day: "26"}
-  ]
-  ~:div.week[
-    ~Day{day: "27"}
-    ~Day{day: "28"}
-    ~Day{day: "29"}
-    ~Day{day: "30"}
-    ~Day{day: "1", inactive: true}
-    ~Day{day: "2", inactive: true}
-    ~Day{day: "3", inactive: true}
-  ]
-]
-
-@component(~Css[
-"html {background: black}"
-])
-fn App = ~Calendar{month: "April" year: "2023"}
 
 ReactDOM
   .createRoot(document.getElementById("app"))
-  .render(~App{})
+  .render(App[])
