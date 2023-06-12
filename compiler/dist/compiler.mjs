@@ -178,11 +178,16 @@ globalThis['Meta'] = Meta
 Object.prototype[Meta] = new ObjectLiteral({["[]"]: function (...keys) {
 return reduce.bind(keys)(js_dynamic_object_lookup, this);}, ["[]="]: function (keys, expr) {
 return js_set_property(this, keys, expr);}});
+Object[Meta] = new ObjectLiteral({["{}"]: Object['fromEntries']});
 Function.prototype[Meta] = new ObjectLiteral({["[]"]: function (...args) {
 return Reflect['construct'](this, args);}, ["{}"]: function (entries) {
 return Reflect['construct'](this, [entries]);}});
 Set[Meta] = new ObjectLiteral({["[]"]: function (...elems) {
 return Reflect['construct'](Set, [elems]);}});
+function inherit(f, ...Ctors) {
+f['prototype'] = Object['assign'](f['prototype'], ...map.bind(Ctors)(function (x) {
+return x['prototype'];}))
+return f;}
 function def_global(f) {
 let resolved_name = f['name']['replaceAll']("?", "__q")['replaceAll']("!", "__b")['replaceAll'](">", "_lt_")['replaceAll']("-", "_");
 globalThis[resolved_name] = f
