@@ -2,21 +2,40 @@ import * as React from "@coil-lang/react"
 import * as ReactDOM from "react-dom/client"
 let {component, use_state, ToReactChild, view, Css} = React
 
-protocol Views
-
-fn User(@name @age) {}
-
-impl Views for User = {
-  fn tr = :tr[:td[this.name] :td[this.age]]
+fn into(output) {
+  // ehhhh
+  if this is Underscore {  
+    return this.insert(into output)
+  } else {  
+    return output.[Into](this)
+  }
 }
 
 impl Into for Keyword = fn (object) =
-  object.[Views].[this].call(object)
+  object.[KeywordView].[this].call(object)
+
+protocol KeywordView
+
+fn User(@name @age) {}
+
+impl KeywordView for User = {
+  fn tr = :tr[:td[this.name] :td[this.age]]
+}
+
+define KeywordView for User = {
+  fn thead = :thead[:tr[:th["Name"] :th["Age"]]]
+}
+
+let users = [
+  User["marcelle" 25]
+  User["john" 23]
+  User["jack" 30]
+]
 
 @component
 fn App = :table[
-  :thead[:tr[:th["name"] :th["age"]]]
-  :tbody[User["marcelle" 25]::into(:tr)]
+  User::into(:thead)
+  :tbody[...users::map(_::into(:tr))]
 ]
 
 ReactDOM
