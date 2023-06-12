@@ -510,7 +510,7 @@ Examples:
   [[:score 10] [:grade :bad]]
     ::into({}) // {score: 20, grade: :bad}
 ")]
-fn into(output) = output[Into](this)
+fn into(output) = output.[Into](this)
 
 protocol Collection
 globalThis.Collection = Collection

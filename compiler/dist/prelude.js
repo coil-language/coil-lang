@@ -603,7 +603,7 @@ Examples:
   [[:score 10] [:grade :bad]]
     ::into({}) // {score: 20, grade: :bad}
 `))(function into(output) {
-return output[Meta]['[]'].call(output, Into)(this);})
+return output[Into](this);})
 const Collection = Symbol("Collection");
 globalThis['Collection'] = Collection
 ObjectLiteral.prototype[Collection] = new ObjectLiteral({['at'](key) {
