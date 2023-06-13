@@ -1,9 +1,9 @@
 # Coil-Lang
 
-Coil is an opinionated language for application development
+Coil is an opinionated language for rapid application development
 
 ```
-let score->letter-grade = CallMap{
+let score->letter-grade = CondMap{
   ..50 => :F
   50..60 => :D
   60..70 => :C

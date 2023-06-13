@@ -49,17 +49,17 @@ impl Call for Lexer = fn(str) {
   let line = 1
   let col = 1
   while rest-of-string() != "" {
-    let found = false  
+    let found = false
     for [pattern type] of this.entries {
       if let value = pattern::scan() {
         if type == newline {
-          line = line + 1
+          line += 1
           col = 1
         } else if type != pass {
           tokens.push({type, value, line, col})
-          col = col + value::len()
+          col += value::len()
         } else {
-          col = col + value::len()
+          col += value::len()
         }
         found = true
         break

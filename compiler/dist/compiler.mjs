@@ -489,6 +489,7 @@ Examples:
 `))(function map(...fns) {
 return iterator_impl.bind(this)()['map']['call'](iter.bind(this)(), compose(...fns));})
 let select = map;
+globalThis['select'] = select
 let flat_map = compose(def_global, F => doc(F, `
 lazily flat maps functions over an iterator
 
@@ -516,6 +517,7 @@ Examples:
 `))(function keep(...fns) {
 return iterator_impl.bind(this)()['keep']['call'](iter.bind(this)(), compose(...fns));})
 let where = keep;
+globalThis['where'] = where
 let reject = compose(def_global, F => doc(F, `
 lazily rejects values based of a condition
 
@@ -603,7 +605,11 @@ Examples:
   [[:score 10] [:grade :bad]]
     ::into({}) // {score: 20, grade: :bad}
 `))(function into(output) {
-return output[Meta]['[]'].call(output, Into)(this);})
+if (truthy(this instanceof Underscore)) {
+return this['insert'](into, output);
+} else {
+return output[Into](this);
+};})
 const Collection = Symbol("Collection");
 globalThis['Collection'] = Collection
 ObjectLiteral.prototype[Collection] = new ObjectLiteral({['at'](key) {
@@ -1375,13 +1381,46 @@ let alpha__q = compose(def_global, F => doc(F, "all characters in string are in 
 return all__q.bind(this)(char_alpha__q);})
 let alpha_numeric__q = compose(def_global, F => doc(F, "all characters in string are in a-z or A-Z or 0-9"))(function alpha_numeric__q() {
 return all__q.bind(this)(char_alpha_numeric__q);})
-let CallMap = def_global(function CallMap(entries) {
+let CondMap = def_global(function CondMap(entries) {
 this['entries'] = entries;
 });
-CallMap.prototype[Call] = function (value) {
+CondMap.prototype[Call] = function (value) {
 return pipe.bind(find.bind(this['entries'])(function ([callable, _]) {
 return call.bind(callable)(value);}))(function ([_, val]) {
-return val;});};str['kw'] = function (...args) {
+return val;});};
+let KeyedSet = doc(function KeyedSet(key, map) {
+this['key'] = key;
+this['map'] = map;
+}, `
+KeyedSet is an efficient set-like data structure for cheaply
+defining uniqueness
+
+Examples:
+let users = KeyedSet{key: :id, items: [{id: 1, name: \"jack\"} {id: 2, name: \"john\"}]}
+
+users::has?({id: 2, name: \"john\"}) // true
+`);
+KeyedSet[Meta] = new ObjectLiteral({["{}"]: function (entries) {
+let {'key': key, 'items': items} = into.bind(entries)(new ObjectLiteral({}));
+let map = into.bind(select.bind(items)(function (item) {
+return [at.bind(item)(key), item];}))(Map[Meta]['{}'].call(Map, []));
+return Reflect['construct'](KeyedSet, [key, map]);}});
+KeyedSet.prototype[Symbol['iterator']] = function () {
+return select.bind(this['map'])((1));};
+KeyedSet.prototype[Collection] = new ObjectLiteral({['at'](object) {
+return pipe.bind(at.bind(object)(this['key']))(this['map']);
+}, ['len']() {
+return len.bind(this['map'])();
+}, ['empty?']() {
+return empty__q.bind(this['map'])();
+}, ['has?'](object) {
+return pipe.bind(at.bind(object)(this['key']))(has__q.bind(this['map']));
+}});
+function subtype(Ctor, ParentCtor) {
+Ctor[Meta] = new ObjectLiteral({["[]"]: function (...args) {
+return Reflect['construct'](ParentCtor, args, Ctor);}});
+Ctor['prototype'] = Object['setPrototypeOf'](Ctor, ParentCtor['prototype'])
+return Ctor;}str['kw'] = function (...args) {
 return function (obj) {
 return into.bind(map.bind(args)(function (arg) {
 if (truthy(str__q.bind(arg)())) {
