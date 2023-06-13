@@ -1,6 +1,86 @@
-import * as React from "@coil-lang/react"
+import {component} from "@coil-lang/react"
 import * as ReactDOM from "react-dom/client"
-let {component, use_state, ToReactChild, view, Css} = React
+
+
+let select = map
+
+fn subtype(Ctor, ParentCtor) {
+  define Meta for Ctor = {
+    ["[]"]: fn (...args) = Reflect.construct(ParentCtor, args, Ctor)
+  }
+  Ctor.prototype = Object.setPrototypeOf(Ctor, ParentCtor.prototype)
+  return Ctor
+}
+
+protocol IntoCtors
+
+impl Into for Keyword = fn (object) =
+  object.[IntoCtors].[this].call(object)
+
+// into delegation
+
+// you may not go directly into a specific type, but an idea of a form
+// for example user::into(:tr) means I'm going into a table row
+// but I don't know how I'm going to get there
+// and in fact it may not even be a <tr> element, if I wanna do something funky
+// but I want to go into something that behaves like a <tr>
+// this seems like a useful concept
+
+// attempt 2
+
+// into delegation
+// sometimes you want to put data into a format, but 
+// the optimal format depends on the data.
+
+// lets take a look at example for going into a set
+[1 2 1 3]::into(Set[]) // Set[1 2 3] <- works great
+[{id: 1} {id: 1} {id: 2}]::into(Set[]) // Set[{id: 1} {id: 1} {id: 2}]
+// this is because the literal `Set` data type checks equality by `===` semantics
+// this is good for most usecases because its performant.
+// Now I could just create a more general Set data structure
+// that would hash the object & compare equality that way.
+// That's fine, though now you have a suboptimal Set implementation
+// for the `===` cases.
+// How do we get the best of both?
+// What if I did the following
+
+fn KeyedSet(@key, @map) {}
+
+define Meta for KeyedSet = {
+  ["{}"]: fn(entries) {
+    let {key, items} = entries::into({})
+    let map = items::select(fn (item) = [item::at(key) item])
+      ::into(Map{})
+
+    return Reflect.construct(KeyedSet [key map])
+  }
+}
+
+impl Symbol.iterator for KeyedSet = fn = this.map::select(1)
+
+impl Collection for KeyedSet = {
+  fn at(object) = object::at(this.key)::pipe(this.map)
+  fn len() = this.map::len()
+  fn empty?() = this.map::empty?()
+  fn has?(object) = object::at(this.key)::pipe(this.map::has?)
+}
+
+@subtype(Array)
+fn Users {}
+
+define IntoCtors for Users = {
+  fn Set() = KeyedSet{key: :id, items: this}
+}
+
+Users[{id: 1, name: "marcelle"} {id: 2, name: "jack"}]
+  ::into(:Set)
+  ::log()
+// first we create a subtype of Array, and then specify that
+// we want something that behaves like a set
+// so first we ask Users, what kind of Set do you prefer, and 
+// how should we construct it?
+// Users prefers a KeyedSet, and it has an implementation 
+// in `IntoCtors`
 
 fn into(output) {
   // ehhhh
@@ -11,33 +91,32 @@ fn into(output) {
   }
 }
 
-impl Into for Keyword = fn (object) =
-  object.[KeywordView].[this].call(object)
-
-protocol KeywordView
-
 fn User(@name @age) {}
 
-impl KeywordView for User = {
+impl IntoCtors for User = {
   fn tr = :tr[:td[this.name] :td[this.age]]
 }
 
-define KeywordView for User = {
+define IntoCtors for User = {
   fn thead = :thead[:tr[:th["Name"] :th["Age"]]]
 }
 
-let users = [
-  User["marcelle" 25]
-  User["john" 23]
-  User["jack" 30]
-]
-
 @component
-fn App = :table[
+fn App({children}) = :table[
   User::into(:thead)
-  :tbody[...users::map(_::into(:tr))]
+  :tbody[...children::map(_::into(:tr))]
 ]
 
 ReactDOM
   .createRoot(document.getElementById("app"))
-  .render(App[])
+  .render(App[User["marcelle" 25] User["john" 23] User["jack" 30]])
+
+impl Symbol.iterator for HTMLElement = fn =
+  this.children.[Symbol.iterator]()
+
+setTimeout(fn {
+  document.querySelector("tr")
+    ::map(:textContent)
+    ::into([])
+    ::log()
+})

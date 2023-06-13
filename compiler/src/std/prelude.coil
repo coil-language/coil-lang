@@ -385,6 +385,7 @@ Examples:
 fn map(...fns) = ::iterator-impl().map.call(this::iter(), compose(...fns))
 
 let select = map
+globalThis.select = select
 
 @[def-global doc("
 lazily flat maps functions over an iterator
@@ -416,6 +417,7 @@ Examples:
 fn keep(...fns) = ::iterator-impl().keep.call(this::iter(), compose(...fns))
 
 let where = keep
+globalThis.where = where
 
 @[def-global doc("
 lazily rejects values based of a condition
@@ -497,7 +499,7 @@ impl Into for Array = fn(iterable) = [...this, ...iterable]
 impl Into for ObjectLiteral = fn(iterable) = ::merge(iterable)
 impl Into for Map = fn(iterable) = ::merge(iterable)
 impl Into for Set = fn(iterable) = ::concat(iterable)
-impl Into for String = fn(iterable) = this + iterable::reduce(+ "")
+impl Into for String = fn(iterable) = this + iterable::reduce(+, "")
 define Into for Object = fn(iterable) = Object.fromEntries(iterable)
 
 @[def-global doc("
@@ -510,7 +512,15 @@ Examples:
   [[:score 10] [:grade :bad]]
     ::into({}) // {score: 20, grade: :bad}
 ")]
-fn into(output) = output.[Into](this)
+fn into(output) {
+  // ehhhh, this isn't great, but Underscore
+  // is tricky to implement for into
+  if this is Underscore {  
+    return this.insert(into output)
+  } else {  
+    return output.[Into](this)
+  }
+}
 
 protocol Collection
 globalThis.Collection = Collection
@@ -1342,22 +1352,60 @@ impl Symbol.iterator for ERangeNoMax = fn*() {
 }
 
 // string helpers
-let char_alpha? = ("a"..="z")::into(Set[]) + ("A"..="Z")::into(Set[])
-let char_numeric? = ("0"..="9")::into(Set[])
-let char_alpha_numeric? = char_alpha? + char_numeric?
-globalThis.char_alpha__q = char_alpha?
-globalThis.char_numeric__q = char_numeric?
-globalThis.char_alpha_numeric__q = char_alpha_numeric?
+let char-alpha? = ("a"..="z")::into(Set[]) + ("A"..="Z")::into(Set[])
+let char-numeric? = ("0"..="9")::into(Set[])
+let char-alpha_numeric? = char-alpha? + char-numeric?
+globalThis.char_alpha__q = char-alpha?
+globalThis.char_numeric__q = char-numeric?
+globalThis.char_alpha_numeric__q = char-alpha-numeric?
 
 @[def-global doc("all characters in string are in a-z or A-Z")]
-fn alpha?() = this::all?(char_alpha?)
+fn alpha?() = this::all?(char-alpha?)
 
 @[def-global doc("all characters in string are in a-z or A-Z or 0-9")]
-fn alpha_numeric?() = this::all?(char_alpha_numeric?)
+fn alpha-numeric?() = this::all?(char-alpha-numeric?)
 
 @def-global
-fn CallMap(@entries) {}
+fn CondMap(@entries) {}
 
-impl Call for CallMap = fn(value) = this.entries
+impl Call for CondMap = fn(value) = this.entries
   ::find(fn([callable, _]) = callable::call(value))
   ::pipe(fn([_, val]) = val)
+
+@doc("
+KeyedSet is an efficient set-like data structure for cheaply
+defining uniqueness
+
+Examples:
+let users = KeyedSet{key: :id, items: [{id: 1, name: \"jack\"} {id: 2, name: \"john\"}]}
+
+users::has?({id: 2, name: \"john\"}) // true
+")
+fn KeyedSet(@key, @map) {}
+
+define Meta for KeyedSet = {
+  ["{}"]: fn(entries) {
+    let {key, items} = entries::into({})
+    let map = items::select(fn (item) = [item::at(key) item])
+      ::into(Map{})
+
+    return Reflect.construct(KeyedSet [key map])
+  }
+}
+
+impl Symbol.iterator for KeyedSet = fn = this.map::select(1)
+
+impl Collection for KeyedSet = {
+  fn at(object) = object::at(this.key)::pipe(this.map)
+  fn len() = this.map::len()
+  fn empty?() = this.map::empty?()
+  fn has?(object) = object::at(this.key)::pipe(this.map::has?)
+}
+
+fn subtype(Ctor, ParentCtor) {
+  define Meta for Ctor = {
+    ["[]"]: fn (...args) = Reflect.construct(ParentCtor, args, Ctor)
+  }
+  Ctor.prototype = Object.setPrototypeOf(Ctor, ParentCtor.prototype)
+  return Ctor
+}
