@@ -1,7 +1,6 @@
 import {component} from "@coil-lang/react"
 import * as ReactDOM from "react-dom/client"
 
-
 let select = map
 
 fn subtype(Ctor, ParentCtor) {
@@ -91,7 +90,7 @@ fn into(output) {
   }
 }
 
-fn User(@name @age) {}
+fn User(@name @age @friends) {}
 
 impl IntoCtors for User = {
   fn tr = :tr[:td[this.name] :td[this.age]]
@@ -101,10 +100,45 @@ define IntoCtors for User = {
   fn thead = :thead[:tr[:th["Name"] :th["Age"]]]
 }
 
+fn link-to(name) = :a{href: "#", children: name}
+
+let fields = :select[
+  :option["email"]
+  :option["name"]
+]
+
+let messages = :select[
+  :option["matches"]
+  :option["greater than"]
+]
+
 @component
-fn App({children}) = :table[
-  User::into(:thead)
-  :tbody[...children::map(_::into(:tr))]
+fn App({children}) = :div[
+  :h1["User Settings"]  
+  :nav[link-to("Model") "/" link-to("User") "/" "Settings"]
+  :h2["Rules:"]
+  :div.rule[:button["+"] fields]
+  :div.rule[
+    :button["-"]
+    :div.name["email"]
+    messages
+    :label["pattern:"]
+    :input[]
+  ]
+  :div.rule[
+    :button["-"]
+    :div.name["age"]
+    messages
+    :label["amount:"]
+    :input[]
+  ]
+  :h2["Expectations:"]
+  :button["Save!"]
+  :notice[
+    "You'll get a notification if the logic rules "
+    "validate with all the existing records... "
+    "This may take some time."
+  ]
 ]
 
 ReactDOM
