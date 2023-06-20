@@ -1,73 +1,76 @@
-import React from "react"
-import * as react_js from "./react.js"
-export * from "./react.js"
-let Atom = react_js.Atom
+import * as React from "react"
+
+export fn Atom(@val, @set_val) {}
+
+impl :update! for Atom = fn(...fns) = this.set_val(compose(...fns))
+impl :set! for Atom = fn(val) = this.set_val(val)
 
 impl Pipe for Atom = fn(...fns) = compose(...fns)(this.val)
 
-export protocol View
-impl View for Atom = fn = this.val::view(this)
-impl View for Object = fn = this
+export fn use_state(initial) {
+  let [val set_val] = React.useState(initial)
+  return Atom[val set_val]
+}
 
-export fn view(...args) = this&.[View](...args)
-view = def_call(view)
+export protocol ToReactChild
+impl ToReactChild for Atom = fn = this.val
+impl ToReactChild for Object = fn = this
+
+@def_call
+fn to_react_child() = this.[ToReactChild]()
 
 export fn Elem(@ctor, @attrs, @children) {}
+
+
 impl Into for Elem = fn(children) = 
-  new Elem(this.ctor, this.attrs, [...this.children, ...children])
-impl View for Elem = fn() {
+  Elem[this.ctor, this.attrs, this.children + children]
+
+impl ToReactChild for Elem = fn() {
   if this.children is Array {  
-    return React.createElement(this.ctor, this.attrs, ...this.children::map(view))
+    return React.createElement(this.ctor, this.attrs, ...this.children::map(to_react_child))
   } else {
-    return React.createElement(this.ctor, this.attrs, this.children::view())
+    return React.createElement(this.ctor, this.attrs, this.children::to_react_child())
   }
 }
 
-impl Vector for Keyword = fn(children) {
-  let str = this.value
-  let [elem_name, ...classes] = str.split(".")
-  return new Elem(elem_name, {className: classes.join(" ")}, children)
+// so that you can do a{href: "/users"}["User"]
+impl Meta for Elem = {
+  ["[]"]: fn (...children) =
+    Elem[this.ctor, this.attrs, (this.children || []) + children]
 }
 
-impl Record for Keyword = fn(attrs) {
-  attrs = attrs::map(fn([key, val]) {
-    // TODO: make this protocol based if we keep it.
-    if key::as_str().startsWith("data-") && val is Atom {
-      return [key, val.val]
-    } else {
-      return [key, val]
+impl Meta for Keyword = {
+  ["[]"]: fn (...children) {
+    let str = this.value
+    let [elem_name, ...classes] = str.split(".")
+    return Elem[elem_name, {className: classes.join(" ")}, children]
+  }
+  ["{}"]: fn (attrs) {
+    attrs = attrs::map(fn([key, val]) {
+      // TODO: make this protocol based if we keep it.
+      if key::as_str().startsWith("data-") && val is Atom {
+        return [key, val.val]
+      } else {
+        return [key, val]
+      }
+    })::into({})
+    let str = this.value
+    let [elem_name, className] = str.split(".")
+    return Elem[elem_name, {className, ...attrs}, attrs::at(:children)]
+  }
+}
+
+export fn component(Component) {
+  let ReactComponent = fn (...args) = Component(...args)::to_react_child()
+  define Meta for ReactComponent = {
+    ["[]"]: fn (...children) =
+      React.createElement(ReactComponent, null, ...children::map(to_react_child))
+    ["{}"]: fn (attrs) {
+      attrs = attrs::into({})
+      return React.createElement(ReactComponent, attrs, attrs::at(:children))
     }
-  })  
-  attrs = attrs::into({})  
-  let str = this.value
-  let [elem_name, className] = str.split(".")
-  return new Elem(elem_name, {className, ...attrs}, attrs::at(:children))
-}
-
-protocol ComponentOption
-
-export fn Css(@rules) {}
-define Vector for Css = fn(rules) = new Css(rules)
-
-impl ComponentOption for Css = fn() {
-  let sheet = document.styleSheets[0]
-  for rule of this.rules {
-    sheet.insertRule(rule)
   }
-}
-
-export fn component(Component, ...opts) {
-  for opt of opts {
-    opt[ComponentOption]()
-  }
-  let ReactComponent = fn(...args) = Component(...args)::view()
-  define Record for ReactComponent = fn(attrs) {
-    attrs = attrs::into({})
-    return React.createElement(ReactComponent, attrs, attrs::at(:children))
-  }
-  define Vector for ReactComponent = fn(children) =
-    React.createElement(ReactComponent, null, ...children::map(view))
   define Into for ReactComponent = fn(iterable) =
-    React.createElement(ReactComponent, null, [...iterable::map(view)])
+    React.createElement(ReactComponent, null, [...iterable::map(to_react_child)])
   return ReactComponent
 }

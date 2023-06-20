@@ -1,156 +1,107 @@
-import {component} from "@coil-lang/react"
+import {component, use_state} from "./react.coil"
 import * as ReactDOM from "react-dom/client"
 
-let select = map
+fn section(lang) =
+  :div[
+    :button.close{
+      onClick: fn (e) = e.preventDefault()
+      contentEditable: false
+    }["—"]
+    :pre.section{
+      suppressContentEditableWarning: true,
+      contentEditable: true,
+      "data-lang" => lang
+    }[]
+  ]
 
-fn subtype(Ctor, ParentCtor) {
-  define Meta for Ctor = {
-    ["[]"]: fn (...args) = Reflect.construct(ParentCtor, args, Ctor)
-  }
-  Ctor.prototype = Object.setPrototypeOf(Ctor, ParentCtor.prototype)
-  return Ctor
-}
+protocol SnippetView
 
-protocol IntoCtors
+@def-call
+fn snippet-view = this.kind.[SnippetView](this)
 
-impl Into for Keyword = fn (object) =
-  object.[IntoCtors].[this].call(object)
+define SnippetView for :h1 = fn({title}) = :h1{
+  suppressContentEditableWarning: true
+  contentEditable: true
+}[title]
 
-// into delegation
-
-// you may not go directly into a specific type, but an idea of a form
-// for example user::into(:tr) means I'm going into a table row
-// but I don't know how I'm going to get there
-// and in fact it may not even be a <tr> element, if I wanna do something funky
-// but I want to go into something that behaves like a <tr>
-// this seems like a useful concept
-
-// attempt 2
-
-// into delegation
-// sometimes you want to put data into a format, but 
-// the optimal format depends on the data.
-
-// lets take a look at example for going into a set
-[1 2 1 3]::into(Set[]) // Set[1 2 3] <- works great
-[{id: 1} {id: 1} {id: 2}]::into(Set[]) // Set[{id: 1} {id: 1} {id: 2}]
-// this is because the literal `Set` data type checks equality by `===` semantics
-// this is good for most usecases because its performant.
-// Now I could just create a more general Set data structure
-// that would hash the object & compare equality that way.
-// That's fine, though now you have a suboptimal Set implementation
-// for the `===` cases.
-// How do we get the best of both?
-// What if I did the following
-
-fn KeyedSet(@key, @map) {}
-
-define Meta for KeyedSet = {
-  ["{}"]: fn(entries) {
-    let {key, items} = entries::into({})
-    let map = items::select(fn (item) = [item::at(key) item])
-      ::into(Map{})
-
-    return Reflect.construct(KeyedSet [key map])
-  }
-}
-
-impl Symbol.iterator for KeyedSet = fn = this.map::select(1)
-
-impl Collection for KeyedSet = {
-  fn at(object) = object::at(this.key)::pipe(this.map)
-  fn len() = this.map::len()
-  fn empty?() = this.map::empty?()
-  fn has?(object) = object::at(this.key)::pipe(this.map::has?)
-}
-
-@subtype(Array)
-fn Users {}
-
-define IntoCtors for Users = {
-  fn Set() = KeyedSet{key: :id, items: this}
-}
-
-Users[{id: 1, name: "marcelle"} {id: 2, name: "jack"}]
-  ::into(:Set)
-  ::log()
-// first we create a subtype of Array, and then specify that
-// we want something that behaves like a set
-// so first we ask Users, what kind of Set do you prefer, and 
-// how should we construct it?
-// Users prefers a KeyedSet, and it has an implementation 
-// in `IntoCtors`
-
-fn into(output) {
-  // ehhhh
-  if this is Underscore {  
-    return this.insert(into output)
-  } else {  
-    return output.[Into](this)
-  }
-}
-
-fn User(@name @age @friends) {}
-
-impl IntoCtors for User = {
-  fn tr = :tr[:td[this.name] :td[this.age]]
-}
-
-define IntoCtors for User = {
-  fn thead = :thead[:tr[:th["Name"] :th["Age"]]]
-}
-
-fn link-to(name) = :a{href: "#", children: name}
-
-let fields = :select[
-  :option["email"]
-  :option["name"]
+define SnippetView for :section = fn({body}) = :div[
+  :button.close{
+    onClick: fn (e) = e.preventDefault()
+    contentEditable: false
+  }["—"]
+  :section{
+    suppressContentEditableWarning: true
+    contentEditable: true
+    autoFocus: true
+  }[body]
 ]
 
-let messages = :select[
-  :option["matches"]
-  :option["greater than"]
-]
+define SnippetView for :code = fn({lang}) =
+  section(lang)
 
 @component
-fn App({children}) = :div[
-  :h1["User Settings"]  
-  :nav[link-to("Model") "/" link-to("User") "/" "Settings"]
-  :h2["Rules:"]
-  :div.rule[:button["+"] fields]
-  :div.rule[
-    :button["-"]
-    :div.name["email"]
-    messages
-    :label["pattern:"]
-    :input[]
+fn CreateSnippet({select}) {
+  let show-modal = use_state(false)
+  fn select-option {
+    show-modal.set!(false)
+    this::select()
+  }
+
+  return :div[
+    :button.add{onClick: fn = show-modal.set!(true)}["+"]
+    show-modal.val && :dialog.col[
+      :p["Select one:"]
+      :div.row[
+        :button{onClick: :h1::select-option}["Header"]
+        :button{onClick: :section::select-option}["Paragraph"]
+        :button{onClick: :code::select-option}["Code"]
+      ]
+    ]
   ]
-  :div.rule[
-    :button["-"]
-    :div.name["age"]
-    messages
-    :label["amount:"]
-    :input[]
+}
+
+protocol EmptySection
+
+define EmptySection for :h1 = {kind: :h1, title: ""}
+define EmptySection for :section = {kind: :section, body: ""}
+define EmptySection for :code = {kind: :code, lang: "coil"}
+
+// imagine being able to do the following
+// let snippets = use_state([])
+// ...snippets::map(fn (entity, ops) {
+//   entity::view(ops.delete!)
+// })
+
+@component
+fn App({}) {
+  let snippets = use_state([
+    {kind: :h1, title: "Button:"}
+    {kind: :section, body: "this is how you make a button"}
+    {kind: :code, lang: "coil"}
+  ])
+
+  return :main[
+    ...snippets.val::map(snippet-view)
+    CreateSnippet{
+      select: fn {
+        snippets.update!(_::push(this.[EmptySection]))
+        // :)
+        setTimeout(::fn {
+          document.querySelector(str(this ":last-of-type"))
+            .focus()
+        })
+      }
+    }
   ]
-  :h2["Expectations:"]
-  :button["Save!"]
-  :notice[
-    "You'll get a notification if the logic rules "
-    "validate with all the existing records... "
-    "This may take some time."
-  ]
-]
+}
+
+// how could we do a reversed into, where you go into a list before
+// well the collection that's getting filled gets to decide
+// 
 
 ReactDOM
   .createRoot(document.getElementById("app"))
-  .render(App[User["marcelle" 25] User["john" 23] User["jack" 30]])
-
-impl Symbol.iterator for HTMLElement = fn =
-  this.children.[Symbol.iterator]()
-
-setTimeout(fn {
-  document.querySelector("tr")
-    ::map(:textContent)
-    ::into([])
-    ::log()
-})
+  .render(App[])
+// setTimeout(fn {
+//   document.querySelector("dialog").showModal()
+// })
