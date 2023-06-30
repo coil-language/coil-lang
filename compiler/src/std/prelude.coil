@@ -1411,3 +1411,35 @@ fn subtype(Ctor, ParentCtor) {
   Ctor.prototype = Object.setPrototypeOf(Ctor, ParentCtor.prototype)
   return Ctor
 }
+
+fn MethodCall(@args) {}
+
+fn mock(chain) = Proxy[{} {
+  fn get(_target prop) {
+    chain ||= []
+    if prop == Meta {
+      return {
+        ["[]"]: fn(...args) = mock([...chain MethodCall[args]])
+      }
+    } else if prop == Call {
+      return fn (obj) = chain::reduce(fn (res, val) {
+        if typeof(val) == "string" {
+          let next_res = res.[val]
+          if typeof(next_res) == "function" {
+            next_res = res::next_res
+          }
+          return next_res
+        } else if val is MethodCall {
+          return res(...val.args)
+        }
+      } obj)
+    } else {
+      return mock([...chain prop])
+    }
+  }
+}]
+
+let $ = mock([])
+// compiler can't handle last line of this file as an expression :/
+// semi-colon bs
+let __ = globalThis.$ = $
