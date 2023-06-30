@@ -13,8 +13,8 @@ let score->letter-grade = CondMap{
 
 let top-students =
   [{name: "marcelle", score: 53} {name: "jill", score: 80} {name: "john", score: 74}]
-    ::where(:score score->letter-grade Set[:A :B])
-    ::select(:name)
+    ::keep(:score score->letter-grade Set[:A :B])
+    ::map(:name)
     ::into(Set[]) // Set["jill" "john"]
 ```
 
