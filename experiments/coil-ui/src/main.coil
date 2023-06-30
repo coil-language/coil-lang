@@ -1,0 +1,124 @@
+fn Elem(@ctor, @attrs, @children) {}
+
+// so that you can do a{href: "/users"}["User"]
+impl Meta for Elem = {
+  ["[]"]: fn (...children) =
+    Elem[this.ctor, this.attrs, (this.children || []) + children]
+      // ::log(children)
+}
+
+impl Meta for Keyword = {
+  ["[]"]: fn (...children) {
+    let str = this.value
+    let [elem_name, ...classes] = str.split(".")
+    let attrs = {}
+    if classes::not_empty?() { attrs.["class"] = classes.join(" ") }
+
+    return Elem[elem_name, attrs, children]
+  }
+  ["{}"]: fn (attrs) {
+    attrs = attrs::map(fn([key, val]) {
+      // TODO: make this protocol based if we keep it.
+      if key::as_str().startsWith("data-") && val is Atom {
+        return [key, val.val]
+      } else {
+        return [key, val]
+      }
+    })::into({})
+    let str = this.value
+    let [elem_name, ...classes] = str.split(".")
+    if classes::not_empty?() { attrs.["class"] = classes.join(" ") }
+    return Elem[elem_name, attrs, attrs::at(:children) ?? []]
+  }
+}
+
+impl Into for Elem = fn(children) =
+  Elem[this.ctor, this.attrs, this.children + children]
+
+protocol Render
+
+impl Render for Elem = fn {
+  let {ctor, attrs, children} = this
+  let elem = document.createElement(ctor)
+  for [name val] of attrs {
+    if name.startsWith("on") {
+      elem.addEventListener(name.slice(2), val::call)
+    } else {
+      elem.setAttribute(name, val)
+    }
+  }
+  elem.append(...children::keep(_)::map(render))
+  return elem
+}
+
+impl Render for String = fn =
+  document.createTextNode(this)
+
+fn render(elem) = elem.[Render]()
+
+fn find_index(...callables) {
+  let f = compose(...callables)
+  for [elem, idx] of this::zip(0..) {
+    if f(elem) {
+      return idx
+    }
+  }
+}
+
+let Class = {
+  fn define(name, obj) = obj
+}
+
+let RenderConcern = {
+  fn render =
+    this.mount.replaceChildren(this.view()::pipe(render))
+}
+
+protocol DragDrop
+fn DragDropConcern(key, {dropped}) = {
+  [DragDrop]: {
+    fn dragstart(ev) {
+      ev.dataTransfer.setData("text/json", ev.target.id)
+      ev.dataTransfer.dropEffect = "move"
+    }
+
+    fn ondrop(ev) {
+      ev.preventDefault()
+      fn id_idx(id) = this.[key]::find_index(:id Set[id])
+
+      let start = ev.dataTransfer.getData("text/json")::pipe(JSON.parse this::id_idx)
+      let target = ev.target.id::pipe(Number this::id_idx)
+
+      let temp = this.[key].[target]
+      this.[key].[target] = this.[key].[start]
+      this.[key].[start] = temp
+      this::dropped::call()
+    }
+  },
+}
+
+fn dragstart(ev) = this.[DragDrop].dragstart.call(this, ev)
+fn ondrop(ev) = this.[DragDrop].ondrop.call(this, ev)
+
+let App = Class.define("App" {
+  mount: document.getElementById("app")
+  items: [
+    {id: 1, title: "first"}
+    {id: 2, title: "second"}
+    {id: 3, title: "third"}
+  ]
+
+  ...RenderConcern
+  ...DragDropConcern(:items {fn dropped = this.render()})
+
+  fn view = this.items
+    ::map(::fn ({id title}) =
+      :li{id: id, draggable: true, ondragstart: ::dragstart}[title])
+    ::into(:ul{
+      id: "drop-list",
+      ondrop: ::ondrop,
+      ondragover: $.preventDefault[]
+    })
+})
+
+App.render()
