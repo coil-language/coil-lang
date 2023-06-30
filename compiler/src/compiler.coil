@@ -124,6 +124,7 @@ let lexer = Lexer{
   /^\.\./ => :dot_dot
   /^\./ => :dot
   /^\/.*\/[a-z]?/ => :regex_lit
+  /^\>>/ => :double_pipe
   /^\>\=/ => :gt_eq
   /^\<\=/ => :lt_eq
   /^\>/ => :gt
@@ -380,6 +381,12 @@ fn parse-comparison-op(tokens lhs) = Parser[
   Then[parse-1-2-expr :rhs]
 ]::call(tokens)
 
+fn parse-compose-operator(tokens lhs) = Parser[
+  Init[{type: :compose, lhs}]
+  Chomp[:double_pipe]
+  Then[parse-1-2-expr :rhs]
+]::call(tokens)
+
 fn parse-third-expr-step(tokens, lhs) = ParseMap{
   :double_eq => parse-double-eq
   :triple_eq => parse-triple-eq
@@ -388,6 +395,7 @@ fn parse-third-expr-step(tokens, lhs) = ParseMap{
   :and_and => parse-and-and
   :or_or => parse-or-or
   :nullish => parse-nullish
+  :double_pipe => parse-compose-operator
   comparison-ops => parse-comparison-op
 }::call(tokens, lhs)
 
@@ -1401,6 +1409,16 @@ let eval-or-or =
 let eval-nullish =
   str.kw("nullish.call(" _[:lhs eval-expr] ", () => " _[:rhs eval-expr] ")")
 
+fn eval-compose({lhs, rhs}) {
+  let fns = [rhs]
+  while lhs.[:type] == :compose {
+    left.unshift(lhs.rhs)
+    lhs = lhs.lhs
+  }
+  return [lhs ...fns]::map(eval-expr)::join(", ")
+    ::pipe(str.kw("compose(" _ ")"))
+}
+
 fn eval-dynamic-access-assign({lhs, rhs}) {
   let {lhs: obj, exprs} = lhs
   let obj-js = eval-expr(obj)
@@ -1566,6 +1584,7 @@ fn eval-expr(node) = node::at(:type)::pipe(Map{
   :and_and => eval-and-and
   :or_or => eval-or-or
   :nullish => eval-nullish
+  :compose => eval-compose
   :snd_assign => eval-snd-assign
   :await => eval-await
   :yield => eval-yield
@@ -1714,6 +1733,8 @@ fn eval-statement(node) = node::at(:type)::pipe(Map{
 
 export fn eval-ast(ast) = ast::map-join(eval-statement "\n")
 
+export fn lex(string) = lexer::call(string)
+
 export fn lex-and-parse(string) = lexer::call(string)
   ::pipe(fn(tokens) = CollectionView[tokens, 0])
   ::pipe(parse)
@@ -1732,7 +1753,7 @@ fn compile-file-and-prelude(src-file-name, out-name, prelude-src) {
   let prelude = Deno.readTextFileSync("./src/std/js_prelude.js")
   prelude = prelude + compile(Deno.readTextFileSync(prelude_src))
   let src = Deno.readTextFileSync(src_file_name)
-  Deno.writeTextFile(out_name, prelude + compile(src))
+  Deno.writeTextFile(out-name, prelude + compile(src))
 }
 
 if globalThis.Deno && Deno.args::not_empty?() {

@@ -204,6 +204,7 @@ const Nullish = Symbol("Nullish");
 globalThis['Nullish'] = Nullish
 function nullish(thunk) {
 return js_nullish(this?.[Nullish](thunk), thunk);}
+globalThis['nullish'] = nullish
 Object.prototype[Nullish] = function (thunk) {
 return js_nullish(this, thunk);};
 let log_doc = def_global(function log_doc() {
@@ -273,6 +274,7 @@ Set.prototype[Keyword.for("bind")] = function (val) {
 return function () {
 return call.bind(this)(val);}.bind(this);};
 let nil__q = Object['freeze'](Set[Meta]['[]'].call(Set, undefined, null));
+globalThis['nil__q'] = nil__q
 const Pipe = Symbol("Pipe");
 globalThis['Pipe'] = Pipe
 Object.prototype[Pipe] = function (callable) {
@@ -1420,7 +1422,34 @@ function subtype(Ctor, ParentCtor) {
 Ctor[Meta] = new ObjectLiteral({["[]"]: function (...args) {
 return Reflect['construct'](ParentCtor, args, Ctor);}});
 Ctor['prototype'] = Object['setPrototypeOf'](Ctor, ParentCtor['prototype'])
-return Ctor;}str['kw'] = function (...args) {
+return Ctor;}
+function MethodCall(args) {
+this['args'] = args;
+}
+function mock(chain) {
+return Proxy[Meta]['[]'].call(Proxy, new ObjectLiteral({}), new ObjectLiteral({['get'](_target, prop) {
+chain = or.call(chain, () => [])
+if (truthy(equals__q.call(prop, Meta))) {
+return new ObjectLiteral({["[]"]: function (...args) {
+return mock([...chain, MethodCall[Meta]['[]'].call(MethodCall, args)]);}});
+} else if (equals__q.call(prop, Call)) {
+return function (obj) {
+return reduce.bind(chain)(function (res, val) {
+if (truthy(equals__q.call(typeof(val), "string"))) {
+let next_res = res[val];
+if (truthy(equals__q.call(typeof(next_res), "function"))) {
+next_res = next_res.bind(res)
+};
+return next_res;
+} else if (val instanceof MethodCall) {
+return res(...val['args']);
+};}, obj);};
+} else {
+return mock([...chain, prop]);
+};
+}}));}
+let $ = mock([]);
+let __ = globalThis['$'] = $;str['kw'] = function (...args) {
 return function (obj) {
 return into.bind(map.bind(args)(function (arg) {
 if (truthy(str__q.bind(arg)())) {
@@ -1495,7 +1524,7 @@ raise__b(Error[Meta]['[]'].call(Error, "No token matched."))
 };
 };
 return tokens;};
-let lexer = Lexer[Meta]['{}'].call(Lexer, [[/^\n/, newline], [/^\s+/, pass], [/^\/\/.*/, pass], [/^\,/, pass], [/^\;/, pass], [/^if\s/, Keyword.for("if")], [/^is\s/, Keyword.for("is")], [/^else\s/, Keyword.for("else")], [/^return\s/, Keyword.for("return")], [/^import\s/, Keyword.for("import")], [/^export\s/, Keyword.for("export")], [/^default\s/, Keyword.for("default")], [/^from\s/, Keyword.for("from")], [/^let\s/, Keyword.for("let")], [/^protocol\s/, Keyword.for("protocol")], [/^for\s/, Keyword.for("for")], [/^try\s/, Keyword.for("try")], [/^catch\s/, Keyword.for("catch")], [/^finally\s/, Keyword.for("finally")], [/^while\s/, Keyword.for("while")], [/^loop\s/, Keyword.for("loop")], [/^continue\s/, Keyword.for("continue")], [/^break\s/, Keyword.for("break")], [/^of\s/, Keyword.for("of")], [/^impl\s/, Keyword.for("impl")], [/^define\s/, Keyword.for("define")], [/^yield\s/, Keyword.for("yield")], [/^async\s/, Keyword.for("async")], [/^await\s/, Keyword.for("await")], [/^as\s/, Keyword.for("as")], [/^\=\>/, Keyword.for("arrow")], [/^\@/, Keyword.for("at")], [/^\&\&/, Keyword.for("and_and")], [/^\|\|/, Keyword.for("or_or")], [/^\?\?/, Keyword.for("nullish")], [/^\=\=\=/, Keyword.for("triple_eq")], [/^\!\=\=/, Keyword.for("triple_not_eq")], [/^\=\=/, Keyword.for("double_eq")], [/^\!\=/, Keyword.for("not_eq")], [/^\!/, Keyword.for("bang")], [/^\=/, Keyword.for("eq")], [/^fn\b/, Keyword.for("fn")], [/^\{/, Keyword.for("open_b")], [/^\}/, Keyword.for("close_b")], [/^\(/, Keyword.for("open_p")], [/^\)/, Keyword.for("close_p")], [/^[\-\+]?(\d*\.)?\d+[a-zA-Z]+/, Keyword.for("custom_number_literal")], [/^[\-\+]?(\d*\.)?\d+/, Keyword.for("num")], [/^\.\.\./, Keyword.for("dot_dot_dot")], [/^\.\./, Keyword.for("dot_dot")], [/^\./, Keyword.for("dot")], [/^\/.*\/[a-z]?/, Keyword.for("regex_lit")], [/^\>\=/, Keyword.for("gt_eq")], [/^\<\=/, Keyword.for("lt_eq")], [/^\>/, Keyword.for("gt")], [/^\</, Keyword.for("lt")], [/^\+/, Keyword.for("plus")], [/^\%/, Keyword.for("mod")], [/^\-/, Keyword.for("minus")], [/^\*\*/, Keyword.for("pow")], [/^\*/, Keyword.for("times")], [/^\&/, Keyword.for("single_and")], [/^\:\:/, Keyword.for("double_colon")], [/^\:[a-zA-Z_\?\!\$0-9\/\.]+/, Keyword.for("keyword")], [/^\:/, Keyword.for("colon")], [/^\//, Keyword.for("div")], [/^\[/, Keyword.for("open_sq")], [/^\]/, Keyword.for("close_sq")], [/^\"([^\\\"]|\\.)*\"/s, Keyword.for("string_lit")], [/^[a-zA-Z_\?\!\$0-9\>\-]+/, Keyword.for("id")]]);
+let lexer = Lexer[Meta]['{}'].call(Lexer, [[/^\n/, newline], [/^\s+/, pass], [/^\/\/.*/, pass], [/^\,/, pass], [/^\;/, pass], [/^if\s/, Keyword.for("if")], [/^is\s/, Keyword.for("is")], [/^else\s/, Keyword.for("else")], [/^return\s/, Keyword.for("return")], [/^import\s/, Keyword.for("import")], [/^export\s/, Keyword.for("export")], [/^default\s/, Keyword.for("default")], [/^from\s/, Keyword.for("from")], [/^let\s/, Keyword.for("let")], [/^protocol\s/, Keyword.for("protocol")], [/^for\s/, Keyword.for("for")], [/^try\s/, Keyword.for("try")], [/^catch\s/, Keyword.for("catch")], [/^finally\s/, Keyword.for("finally")], [/^while\s/, Keyword.for("while")], [/^loop\s/, Keyword.for("loop")], [/^continue\s/, Keyword.for("continue")], [/^break\s/, Keyword.for("break")], [/^of\s/, Keyword.for("of")], [/^impl\s/, Keyword.for("impl")], [/^define\s/, Keyword.for("define")], [/^yield\s/, Keyword.for("yield")], [/^async\s/, Keyword.for("async")], [/^await\s/, Keyword.for("await")], [/^as\s/, Keyword.for("as")], [/^\=\>/, Keyword.for("arrow")], [/^\@/, Keyword.for("at")], [/^\&\&/, Keyword.for("and_and")], [/^\|\|/, Keyword.for("or_or")], [/^\?\?/, Keyword.for("nullish")], [/^\=\=\=/, Keyword.for("triple_eq")], [/^\!\=\=/, Keyword.for("triple_not_eq")], [/^\=\=/, Keyword.for("double_eq")], [/^\!\=/, Keyword.for("not_eq")], [/^\!/, Keyword.for("bang")], [/^\=/, Keyword.for("eq")], [/^fn\b/, Keyword.for("fn")], [/^\{/, Keyword.for("open_b")], [/^\}/, Keyword.for("close_b")], [/^\(/, Keyword.for("open_p")], [/^\)/, Keyword.for("close_p")], [/^[\-\+]?(\d*\.)?\d+[a-zA-Z]+/, Keyword.for("custom_number_literal")], [/^[\-\+]?(\d*\.)?\d+/, Keyword.for("num")], [/^\.\.\./, Keyword.for("dot_dot_dot")], [/^\.\./, Keyword.for("dot_dot")], [/^\./, Keyword.for("dot")], [/^\/.*\/[a-z]?/, Keyword.for("regex_lit")], [/^\>>/, Keyword.for("double_pipe")], [/^\>\=/, Keyword.for("gt_eq")], [/^\<\=/, Keyword.for("lt_eq")], [/^\>/, Keyword.for("gt")], [/^\</, Keyword.for("lt")], [/^\+/, Keyword.for("plus")], [/^\%/, Keyword.for("mod")], [/^\-/, Keyword.for("minus")], [/^\*\*/, Keyword.for("pow")], [/^\*/, Keyword.for("times")], [/^\&/, Keyword.for("single_and")], [/^\:\:/, Keyword.for("double_colon")], [/^\:[a-zA-Z_\?\!\$0-9\/\.]+/, Keyword.for("keyword")], [/^\:/, Keyword.for("colon")], [/^\//, Keyword.for("div")], [/^\[/, Keyword.for("open_sq")], [/^\]/, Keyword.for("close_sq")], [/^\"([^\\\"]|\\.)*\"/s, Keyword.for("string_lit")], [/^[a-zA-Z_\?\!\$0-9\>\-]+/, Keyword.for("id")]]);
 function ParseError(expected_token_type, actual_token) {
 this['stack'] = Error[Meta]['[]'].call(Error, )['stack']
 this['message'] = str("Expected: ", expected_token_type, " got ", at.bind(actual_token)(Keyword.for("type")), " @ ", as_str.bind(at.bind(actual_token)(Keyword.for("line")))(), ":", as_str.bind(at.bind(actual_token)(Keyword.for("col")))())}
@@ -1699,8 +1728,10 @@ function parse_nullish(tokens, lhs) {
 return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("nullish"), 'lhs':lhs})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("nullish")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("rhs"))))(tokens);}
 function parse_comparison_op(tokens, lhs) {
 return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("math_op"), 'lhs':lhs})), Either[Meta]['[]'].call(Either, comparison_ops, Keyword.for("op")), Then[Meta]['[]'].call(Then, parse_1_2_expr, Keyword.for("rhs"))))(tokens);}
+function parse_compose_operator(tokens, lhs) {
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("compose"), 'lhs':lhs})), Chomp[Meta]['[]'].call(Chomp, Keyword.for("double_pipe")), Then[Meta]['[]'].call(Then, parse_1_2_expr, Keyword.for("rhs"))))(tokens);}
 function parse_third_expr_step(tokens, lhs) {
-return call.bind(ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("double_eq"), parse_double_eq], [Keyword.for("triple_eq"), parse_triple_eq], [Keyword.for("triple_not_eq"), parse_triple_not_eq], [Keyword.for("not_eq"), parse_not_eq], [Keyword.for("and_and"), parse_and_and], [Keyword.for("or_or"), parse_or_or], [Keyword.for("nullish"), parse_nullish], [comparison_ops, parse_comparison_op]]))(tokens, lhs);}
+return call.bind(ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("double_eq"), parse_double_eq], [Keyword.for("triple_eq"), parse_triple_eq], [Keyword.for("triple_not_eq"), parse_triple_not_eq], [Keyword.for("not_eq"), parse_not_eq], [Keyword.for("and_and"), parse_and_and], [Keyword.for("or_or"), parse_or_or], [Keyword.for("nullish"), parse_nullish], [Keyword.for("double_pipe"), parse_compose_operator], [comparison_ops, parse_comparison_op]]))(tokens, lhs);}
 function parse_third_expr([lhs, tokens]) {
 let __coil_while_let_temp = parse_third_expr_step(tokens, lhs);
 while (__coil_while_let_temp) {
@@ -2025,6 +2056,13 @@ let eval_is = str['kw'](_[Meta]['[]'].call(_, Keyword.for("lhs"), eval_expr), " 
 let eval_and_and = str['kw']("and.call(", _[Meta]['[]'].call(_, Keyword.for("lhs"), eval_expr), ", () => ", _[Meta]['[]'].call(_, Keyword.for("rhs"), eval_expr), ")");
 let eval_or_or = str['kw']("or.call(", _[Meta]['[]'].call(_, Keyword.for("lhs"), eval_expr), ", () => ", _[Meta]['[]'].call(_, Keyword.for("rhs"), eval_expr), ")");
 let eval_nullish = str['kw']("nullish.call(", _[Meta]['[]'].call(_, Keyword.for("lhs"), eval_expr), ", () => ", _[Meta]['[]'].call(_, Keyword.for("rhs"), eval_expr), ")");
+function eval_compose({'lhs': lhs, 'rhs': rhs}) {
+let fns = [rhs];
+while (equals__q.call(lhs[Keyword.for("type")], Keyword.for("compose"))) {
+left['unshift'](lhs['rhs'])
+lhs = lhs['lhs']
+};
+return pipe.bind(join.bind(map.bind([lhs, ...fns])(eval_expr))(", "))(str['kw']("compose(", _, ")"));}
 function eval_dynamic_access_assign({'lhs': lhs, 'rhs': rhs}) {
 let {'lhs': obj, 'exprs': exprs} = lhs;
 let obj_js = eval_expr(obj);
@@ -2106,7 +2144,7 @@ return str("new ERangeNoMin(", eval_expr(expr), ")");}
 function eval_raw_dynamic_access({'lhs': lhs, 'expr': expr}) {
 return str(eval_expr(lhs), "[", eval_expr(expr), "]");}
 function eval_expr(node) {
-return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("str"), eval_str], [Keyword.for("regex_lit"), eval_regex_lit], [Keyword.for("decorator"), eval_decorator], [Keyword.for("multi_decorator"), eval_multi_decorator], [Keyword.for("keyword"), eval_keyword], [Keyword.for("and_dot"), eval_and_dot], [Keyword.for("raw_dynamic_access"), eval_raw_dynamic_access], [Keyword.for("prefix_exclusive_range"), eval_prefix_exclusive_range], [Keyword.for("partial_fn_call"), eval_partial_fn_call], [Keyword.for("partial_obj_dyn_access"), eval_partial_obj_dyn_access], [Keyword.for("property_lookup"), eval_property_lookup], [Keyword.for("id_lookup"), eval_id_lookup], [Keyword.for("fn_call"), eval_fn_call], [Keyword.for("num"), eval_num], [Keyword.for("custom_number_literal"), eval_custom_number_literal], [Keyword.for("array"), eval_array], [Keyword.for("math_op"), eval_math_op], [Keyword.for("double_equals"), eval_double_equals], [Keyword.for("not_equals"), eval_not_equals], [Keyword.for("not"), eval_not], [Keyword.for("fn"), eval_fn], [Keyword.for("bind"), eval_bind], [Keyword.for("obj_lit"), eval_obj_lit], [Keyword.for("bind_this"), eval_bind_this], [Keyword.for("dynamic_access"), eval_dynamic_access], [Keyword.for("record_lookup"), eval_record_lookup], [Keyword.for("triple_equals"), eval_triple_equals], [Keyword.for("triple_not_equals"), eval_triple_not_equals], [Keyword.for("spread"), eval_spread], [Keyword.for("is"), eval_is], [Keyword.for("and_and"), eval_and_and], [Keyword.for("or_or"), eval_or_or], [Keyword.for("nullish"), eval_nullish], [Keyword.for("snd_assign"), eval_snd_assign], [Keyword.for("await"), eval_await], [Keyword.for("yield"), eval_yield], [Keyword.for("paren_expr"), eval_paren_expr], [Keyword.for("unapplied_math_op"), eval_unapplied_math_op], [Keyword.for("unapplied_and_and"), eval_unapplied_and_and], [Keyword.for("unapplied_or_or"), eval_unapplied_or_or], [Keyword.for("unapplied_nullish"), eval_unapplied_nullish], [Keyword.for("inclusive_range"), eval_inclusive_range], [Keyword.for("exclusive_range"), eval_exclusive_range], [Keyword.for("op_eq"), eval_op_eq]])))(node);}
+return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("str"), eval_str], [Keyword.for("regex_lit"), eval_regex_lit], [Keyword.for("decorator"), eval_decorator], [Keyword.for("multi_decorator"), eval_multi_decorator], [Keyword.for("keyword"), eval_keyword], [Keyword.for("and_dot"), eval_and_dot], [Keyword.for("raw_dynamic_access"), eval_raw_dynamic_access], [Keyword.for("prefix_exclusive_range"), eval_prefix_exclusive_range], [Keyword.for("partial_fn_call"), eval_partial_fn_call], [Keyword.for("partial_obj_dyn_access"), eval_partial_obj_dyn_access], [Keyword.for("property_lookup"), eval_property_lookup], [Keyword.for("id_lookup"), eval_id_lookup], [Keyword.for("fn_call"), eval_fn_call], [Keyword.for("num"), eval_num], [Keyword.for("custom_number_literal"), eval_custom_number_literal], [Keyword.for("array"), eval_array], [Keyword.for("math_op"), eval_math_op], [Keyword.for("double_equals"), eval_double_equals], [Keyword.for("not_equals"), eval_not_equals], [Keyword.for("not"), eval_not], [Keyword.for("fn"), eval_fn], [Keyword.for("bind"), eval_bind], [Keyword.for("obj_lit"), eval_obj_lit], [Keyword.for("bind_this"), eval_bind_this], [Keyword.for("dynamic_access"), eval_dynamic_access], [Keyword.for("record_lookup"), eval_record_lookup], [Keyword.for("triple_equals"), eval_triple_equals], [Keyword.for("triple_not_equals"), eval_triple_not_equals], [Keyword.for("spread"), eval_spread], [Keyword.for("is"), eval_is], [Keyword.for("and_and"), eval_and_and], [Keyword.for("or_or"), eval_or_or], [Keyword.for("nullish"), eval_nullish], [Keyword.for("compose"), eval_compose], [Keyword.for("snd_assign"), eval_snd_assign], [Keyword.for("await"), eval_await], [Keyword.for("yield"), eval_yield], [Keyword.for("paren_expr"), eval_paren_expr], [Keyword.for("unapplied_math_op"), eval_unapplied_math_op], [Keyword.for("unapplied_and_and"), eval_unapplied_and_and], [Keyword.for("unapplied_or_or"), eval_unapplied_or_or], [Keyword.for("unapplied_nullish"), eval_unapplied_nullish], [Keyword.for("inclusive_range"), eval_inclusive_range], [Keyword.for("exclusive_range"), eval_exclusive_range], [Keyword.for("op_eq"), eval_op_eq]])))(node);}
 function eval_return({'expr': expr}) {
 if (truthy(expr)) {
 return str("return ", eval_expr(expr));
@@ -2178,6 +2216,8 @@ return eval_expr;
 };}))(node);}
 export function eval_ast(ast) {
 return map_join.bind(ast)(eval_statement, "\n");};
+export function lex(string) {
+return call.bind(lexer)(string);};
 export function lex_and_parse(string) {
 return pipe.bind(pipe.bind(call.bind(lexer)(string))(function (tokens) {
 return CollectionView[Meta]['[]'].call(CollectionView, tokens, (0));}))(parse);};
