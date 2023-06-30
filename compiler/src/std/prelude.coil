@@ -57,6 +57,7 @@ protocol Nullish
 globalThis.Nullish = Nullish
 
 fn nullish(thunk) = js_nullish(this&.[Nullish](thunk), thunk)
+globalThis.nullish = nullish
 
 impl Nullish for Object = fn(thunk) = js_nullish(this, thunk)
 
@@ -136,6 +137,7 @@ fn call(...args) = this&.[Call](...args)
 impl :bind for Set = fn(val) = ::fn() = this::call(val)
 
 let nil? = Object.freeze(Set[undefined null])
+globalThis.nil__q = nil?
 
 protocol Pipe
 globalThis.Pipe = Pipe
