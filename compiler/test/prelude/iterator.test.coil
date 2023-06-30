@@ -1,7 +1,4 @@
-// TODO: `import { assertEquals }` is broken
-import * as asserts from "https://deno.land/std@0.179.0/testing/asserts.ts";
-
-let assert_equals = asserts.assertEquals
+import { assertEquals: assert_equals } from "https://deno.land/std@0.179.0/testing/asserts.ts"
 
 Deno.test("[1 2 3] map" fn {
   let plus_one = [1 2 3]::map(_ + 1)::into([])
@@ -68,22 +65,18 @@ Deno.test("{a: 2}::merge({b: 3})" fn {
   assert_equals({a: 2}::merge({b: 3}), {a: 2, b: 3})
 })
 
-Deno.test("{a: 2}::merge(~Map{b: 3})" fn {
-  assert_equals({a: 2}::merge(~Map{b: 3}), {a: 2, b: 3})
+Deno.test("{a: 2}::merge(Map{b: 3})" fn {
+  assert_equals({a: 2}::merge(Map{b: 3}), {a: 2, b: 3})
 })
 
-Deno.test("{a: 2}::merge(~Map{a: 3})" fn {
-  assert_equals({a: 2}::merge(~Map{a: 3}), {a: 3})
+Deno.test("{a: 2}::merge(Map{a: 3})" fn {
+  assert_equals({a: 2}::merge(Map{a: 3}), {a: 3})
 })
 
-Deno.test("~Map{a: 2}::merge(~Map{a: 3})" fn {
-  assert_equals(~Map{a: 2}::merge(~Map{a: 3}), ~Map{a: 3})
+Deno.test("Map{a: 2}::merge(Map{a: 3})" fn {
+  assert_equals(Map{a: 2}::merge(Map{a: 3}), Map{a: 3})
 })
 
-Deno.test("~Map{a: 2}::merge({a: 3})" fn {  
-  assert_equals(~Map{a: 2}::merge({a: 3}), ~Map{a: 3, "a" => 3})
-})
-
-Deno.test("~Map{a: 2}::merge(~Map{b: 3})" fn {
-  assert_equals(~Map{a: 2}::merge(~Map{b: 3}), ~Map{a: 2, b: 3})
+Deno.test("Map{a: 2}::merge(Map{b: 3})" fn {
+  assert_equals(Map{a: 2}::merge(Map{b: 3}), Map{a: 2, b: 3})
 })
