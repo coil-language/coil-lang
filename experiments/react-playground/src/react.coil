@@ -22,7 +22,7 @@ fn to_react_child() = this.[ToReactChild]()
 export fn Elem(@ctor, @attrs, @children) {}
 
 
-impl Into for Elem = fn(children) = 
+impl Into for Elem = fn(children) =
   Elem[this.ctor, this.attrs, this.children + children]
 
 impl ToReactChild for Elem = fn() {
@@ -56,7 +56,7 @@ impl Meta for Keyword = {
     })::into({})
     let str = this.value
     let [elem_name, className] = str.split(".")
-    return Elem[elem_name, {className, ...attrs}, attrs::at(:children)]
+    return Elem[elem_name, {className, ...attrs}, attrs::at(:children) ?? []]
   }
 }
 
