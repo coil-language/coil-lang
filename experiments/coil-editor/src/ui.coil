@@ -1,0 +1,50 @@
+export fn Elem(@ctor, @attrs, @children) {}
+
+// so that you can do a{href: "/users"}["User"]
+impl Meta for Elem = {
+  ["[]"]: fn (...children) =
+    Elem[this.ctor, this.attrs, (this.children || []) + children]
+      // ::log(children)
+}
+
+impl Meta for Keyword = {
+  ["[]"]: fn (...children) {
+    let str = this.value
+    let [elem_name, ...classes] = str.split(".")
+    let attrs = {}
+    if classes::not_empty?() { attrs.["class"] = classes.join(" ") }
+
+    return Elem[elem_name, attrs, children]
+  }
+  ["{}"]: fn (attrs) {
+    attrs = attrs::into({})
+    let str = this.value
+    let [elem_name, ...classes] = str.split(".")
+    if classes::not_empty?() { attrs.["class"] = classes.join(" ") }
+    return Elem[elem_name, attrs, attrs::at(:children) ?? []]
+  }
+}
+
+impl Into for Elem = fn(children) =
+  Elem[this.ctor, this.attrs, this.children + children]
+
+export protocol Render
+
+impl Render for Elem = fn {
+  let {ctor, attrs, children} = this
+  let elem = document.createElement(ctor)
+  for [name val] of attrs {
+    if name.startsWith("on") {
+      elem.addEventListener(name.slice(2), val::call)
+    } else {
+      elem.setAttribute(name, val)
+    }
+  }
+  elem.append(...children::keep(_)::map(render))
+  return elem
+}
+
+impl Render for String = fn =
+  document.createTextNode(this)
+
+export fn render(elem) = elem.[Render]()

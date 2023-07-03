@@ -1,0 +1,207 @@
+import {render, Render} from "./ui.coil"
+import {lex_and_parse, eval_ast} from "../../../compiler/src/compiler.coil"
+
+let Class = {fn define(name, obj) = obj}
+
+let RenderConcern = {fn render = this.mount.replaceChildren(this.view()::pipe(render))}
+
+document.querySelector("style").innerText += "
+body div.code_block {
+  font-family: \"Berkeley Mono\" !important;
+  background: #d3d3d378;
+  padding: 1em;
+}
+
+[data-kind] {
+  display: flex;
+  gap: 0.5em;
+}
+
+[data-kind=let] [data-attr=assign_expr] [data-kind=id_assign] [data-attr=name]::before {
+  content: \"let \";
+  color: blue;
+}
+
+[data-kind=let] [data-attr=assign_expr] [data-kind=id_assign] [data-attr=name]::after {
+  content: \" = \";
+  color: black;
+}
+
+[data-kind=let] [data-attr=assign_expr] [data-kind=id_assign] [data-attr=name] {
+  color: darkblue;
+}
+
+[data-kind=num] [data-attr=value] {
+  color: darkgreen;
+}
+
+[data-kind=str] [data-attr=value] {
+  color: darkgreen;
+}
+
+[data-kind=bind] {
+  gap: 0;
+}
+
+[data-kind=bind] [data-attr=expr] {
+  display: flex;
+}
+
+[data-kind=bind] [data-attr=expr] [data-kind=id_lookup] [data-attr=name] {
+  color: darkred;
+}
+
+[data-kind=fn_call] [data-attr=args]::before {
+  content: \"(\";
+}
+
+[data-kind=fn_call] {
+  gap: 0;
+}
+
+[data-kind=fn_call] [data-attr=args] {
+  display: flex;
+}
+
+* {
+  outline: none;
+}
+
+[data-attr]:hover {
+  outline: 1px solid black;
+}
+
+[data-attr]:focus {
+  border-bottom: 1px solid black;
+}
+
+[data-kind=fn_call] [data-attr=args]::after {
+  content: \")\";
+}
+
+[data-kind=bind] [data-attr=expr]::before {
+  content: \"::\";
+}
+
+[data-kind=array] {
+  gap: 0;
+}
+
+[data-kind=array data-show-commas] [data-attr=elements] > :not(:last-child) ::after {
+  content: \",\";
+  color: black;
+}
+
+[data-kind=array]::before {
+  content: \"[\";
+}
+
+[data-kind=array]::after {
+  content: \"]\";
+}
+
+[data-kind=array] [data-attr=elements] {
+  gap: 0.5em;
+  display: flex;
+}
+
+[data-kind=keyword] [data-attr=value] {
+  color: cadetblue;
+}
+"
+
+fn node-to-xml(node) {
+  let children = []
+  for [key val] of node {
+    if Set["type" "pos"]::has?(key) {
+      continue
+    }
+    if val is Array {
+      children.push(val::map(node-to-xml)::into(:div{"data-attr" => key}[]))
+    } else if typeof(val) == "object" {
+      children.push(:div{"data-attr" => key}[node-to-xml(val)])
+    } else {
+      children.push(:div{"data-attr" => key, "contenteditable" => true}[val])
+    }
+  }
+  return :div{"data-kind" => node.type::as_str()}[...children]
+}
+
+protocol ChildNodes
+
+impl ChildNodes for Keyword = Set[]
+define ChildNodes for :array = Set["elements"]
+
+fn html-to-ast(html_coll) {
+  let ast = []
+  for node of html_coll {
+    let ast_node = {type: node.getAttribute("data-kind")::as_keyword()}
+    for attr_node of node.children {
+      let attr_name = attr_node.getAttribute("data-attr")
+      if attr_node.children.length == 0 {
+        ast_node.[attr_name] = attr_node.textContent
+      } else {
+        let ast_children = html-to-ast(attr_node.children)
+        if ast_node.type.[ChildNodes]::has?(attr_name) {
+          ast_node.[attr_name] = ast_children
+        } else {
+          ast_node.[attr_name] = ast_children::first()
+        }
+      }
+    }
+    ast.push(ast_node)
+  }
+  return ast
+}
+
+let App = Class.define("App" {
+  mount: document.getElementById("app")
+  ...RenderConcern
+
+  fn view = :div[
+    "[1 2 3]"
+      ::pipe(lex_and_parse)
+      ::map(node-to-xml)
+      ::into(:div.code_block[])
+    :button{onclick: fn {
+      document.querySelector(".code_block").children
+        ::pipe(html-to-ast eval-ast eval log)
+    }}["eval"]
+  ]
+})
+
+document.addEventListener("keydown" fn (e) {  
+  if e.key == "Enter" && e.ctrlKey {
+    document.querySelector("button").click()
+  } else if e.key == "l" && e.ctrlKey {
+    console.clear()
+  } else if e.key == "Enter" {
+    e.preventDefault()
+  }
+})
+
+
+App.render()
+
+
+let elements = document.querySelector("[data-attr=elements]")
+
+elements.addEventListener("keydown" fn (e) {
+  if e.key == "Enter" {
+    e.preventDefault()
+    if e.target.textContent.trim() == "" { return }
+    let new_node = :div.plain_node{"contenteditable" => true}[].[Render]()
+    e.target.closest("[data-attr=elements]").appendChild(new_node)
+    new_node.addEventListener("blur" fn (e) {
+      let node = lex_and_parse(e.target.textContent).[0]::pipe(node-to-xml render)
+      e.target.outerHTML = node.outerHTML
+    })
+    new_node.focus()
+  } else if e.target.textContent.trim() == "" && e.key == "Backspace" {
+    let parent = e.target.closest("[data-attr=elements] > div")
+    parent.previousSibling.querySelector("[contenteditable]").focus()
+    parent.remove()
+  } else if e.key == "Backspace" && e.ctrlKey {
+    e.target.closest("[data-kind]").remove()
+  }
+})
