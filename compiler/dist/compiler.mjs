@@ -1960,7 +1960,7 @@ return name;}
 function eval_if_branch(branch) {
 if (truthy(nil__q.bind(branch)())) {
 return "";
-} else if (equals__q.call(call.call(Keyword.for("type"), branch), Keyword.for("else"))) {
+} else if (equals__q.call(branch['type'], Keyword.for("else"))) {
 return str(" else {\n", eval_ast(or.call(call.call(Keyword.for("body"), branch), () => [])), "\n}");
 } else {
 if (truthy(equals__q.call(call.call(Keyword.for("type"), branch), Keyword.for("else_if")))) {
@@ -1969,7 +1969,7 @@ return str(" else if (", eval_expr(at.bind(branch)(Keyword.for("expr"))), ") {\n
 raise__b(Error[Meta]['[]'].call(Error, "Expected else if"))
 };
 };}
-let eval_if = str['kw']("if (truthy(", _[Meta]['[]'].call(_, Keyword.for("expr"), eval_expr), ")) {\n", _[Meta]['[]'].call(_, Keyword.for("pass"), eval_ast), "\n", "}", _[Meta]['[]'].call(_, Keyword.for("fail"), eval_if_branch));
+let eval_if = str['kw']("if (truthy(", compose(Keyword.for("expr"), eval_expr), ")) {\n", compose(Keyword.for("pass"), eval_ast), "\n", "}", compose(Keyword.for("fail"), eval_if_branch));
 function eval_str({'value': value}) {
 value = value['slice']((1), (-1))
 if (truthy(value['includes']("\n"))) {
@@ -2000,7 +2000,7 @@ return str("'", name, "': ", resolve_name(name));}
 function eval_obj_entry_rename({'old_name': old_name, 'new_name': new_name}) {
 return str("'", old_name, "': ", resolve_name(new_name));}
 function eval_obj_deconstruction_entry(node) {
-return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("obj_reg_entry"), eval_obj_reg_entry], [Keyword.for("obj_entry_rename"), eval_obj_entry_rename], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("obj_str_rename_entry"), str['kw'](Keyword.for("old_name"), ": ", _[Meta]['[]'].call(_, Keyword.for("new_name"), resolve_name))]])))(node);}
+return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("obj_reg_entry"), eval_obj_reg_entry], [Keyword.for("obj_entry_rename"), eval_obj_entry_rename], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("obj_str_rename_entry"), str['kw'](Keyword.for("old_name"), ": ", compose(Keyword.for("new_name"), resolve_name))]])))(node);}
 function eval_object_deconstruction_names({'entries': entries}) {
 return str("{", map_join.bind(entries)(eval_obj_deconstruction_entry, ", "), "}");}
 function eval_this_assign({'name': name}) {
@@ -2011,15 +2011,14 @@ function eval_assign_all_as({'name': name}) {
 return str("* as ", name);}
 function eval_assign_expr(node) {
 return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("id_assign"), eval_id_assign_name], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("array_deconstruction"), eval_array_deconstruction_names], [Keyword.for("object_deconstruction"), eval_object_deconstruction_names], [Keyword.for("this_assign"), eval_this_assign], [Keyword.for("this_spread_assign"), eval_spread_assign]])))(node);}
-function eval_while_let_loop({'assign_expr': assign_expr, 'test_expr': test_expr, 'body': body}) {
-return str("let __coil_while_let_temp = ", eval_expr(test_expr), ";\n", "while (__coil_while_let_temp) {\n", "let ", eval_assign_expr(assign_expr), " = __coil_while_let_temp;\n", eval_ast(body), "\n", "__coil_while_let_temp = ", eval_expr(test_expr), ";\n", "}");}
-let eval_if_let = str['kw']("let __coil_if_let_temp = ", _[Meta]['[]'].call(_, Keyword.for("expr"), eval_expr), ";\n", "if (truthy(__coil_if_let_temp)) {\n", "let ", _[Meta]['[]'].call(_, Keyword.for("assign_expr"), eval_assign_expr), " = __coil_if_let_temp;\n", _[Meta]['[]'].call(_, Keyword.for("pass"), eval_ast), "\n", "}", _[Meta]['[]'].call(_, Keyword.for("fail"), eval_if_branch));
-let eval_spread = str['kw']("...", _[Meta]['[]'].call(_, Keyword.for("expr"), eval_expr));
-let eval_let = str['kw']("let ", _[Meta]['[]'].call(_, Keyword.for("assign_expr"), eval_assign_expr), " = ", _[Meta]['[]'].call(_, Keyword.for("rhs"), eval_expr));
+let eval_while_let_loop = str['kw']("let __coil_while_let_temp = ", compose(Keyword.for("test_expr"), eval_expr), ";\n", "while (__coil_while_let_temp) {\n", "let ", compose(Keyword.for("assign_expr"), eval_assign_expr), " = __coil_while_let_temp;\n", compose(Keyword.for("body"), eval_ast), "\n", "__coil_while_let_temp = ", compose(Keyword.for("test_expr"), eval_expr), ";\n", "}");
+let eval_if_let = str['kw']("let __coil_if_let_temp = ", compose(Keyword.for("expr"), eval_expr), ";\n", "if (truthy(__coil_if_let_temp)) {\n", "let ", compose(Keyword.for("assign_expr"), eval_assign_expr), " = __coil_if_let_temp;\n", compose(Keyword.for("pass"), eval_ast), "\n", "}", compose(Keyword.for("fail"), eval_if_branch));
+let eval_spread = str['kw']("...", compose(Keyword.for("expr"), eval_expr));
+let eval_let = str['kw']("let ", compose(Keyword.for("assign_expr"), eval_assign_expr), " = ", compose(Keyword.for("rhs"), eval_expr));
 function eval_array({'elements': elements}) {
 return str("[", map_join.bind(elements)(eval_expr, ", "), "]");}
 let math_op_to_method = Map[Meta]['{}'].call(Map, [[">", "greater_than"], ["<", "less_than"], [">=", "greater_than_eq"], ["<=", "less_than_eq"], ["*", "times"], ["**", "exponent"], ["/", "divide_by"], ["+", "plus"], ["-", "minus"], ["%", "mod"]]);
-let eval_math_op = str['kw'](_[Meta]['[]'].call(_, Keyword.for("op"), math_op_to_method), ".call(", _[Meta]['[]'].call(_, Keyword.for("lhs"), eval_expr), ", ", _[Meta]['[]'].call(_, Keyword.for("rhs"), eval_expr), ")");
+let eval_math_op = str['kw'](compose(Keyword.for("op"), math_op_to_method), ".call(", compose(Keyword.for("lhs"), eval_expr), ", ", compose(Keyword.for("rhs"), eval_expr), ")");
 function eval_this_assignments(args) {
 return into.bind(map.bind(where.bind(args)(Keyword.for("type"), Set[Meta]['[]'].call(Set, Keyword.for("this_assign"), Keyword.for("this_spread_assign"))))(str['kw']("this['", Keyword.for("name"), "'] = ", _[Meta]['[]'].call(_, Keyword.for("name"), resolve_name), ";\n")))("");}
 function eval_fn({'is_async?': is_async__q, 'generator?': generator__q, 'name': name, 'args': args, 'body': body}) {

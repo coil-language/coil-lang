@@ -1197,7 +1197,7 @@ fn resolve-name(name) {
 fn eval-if-branch(branch) {
   if branch::nil?() {
     return ""
-  } else if branch |> :type == :else {
+  } else if branch.type == :else {
     return str(" else {\n"
       eval-ast(branch |> :body || [])
     "\n}")
@@ -1215,9 +1215,9 @@ fn eval-if-branch(branch) {
 }
 
 let eval-if = str.kw(
-  "if (truthy(" _[:expr eval-expr] ")) {\n"
-    _[:pass eval-ast] "\n"
-  "}" _[:fail eval-if-branch]
+  "if (truthy(" :expr >> eval-expr ")) {\n"
+    :pass >> eval-ast "\n"
+  "}" :fail >> eval-if-branch
 )
 
 fn eval-str({value}) {
@@ -1265,7 +1265,7 @@ fn eval-obj-deconstruction-entry(node) = node::at(:type)::pipe(Map{
   :obj_reg_entry => eval-obj-reg-entry
   :obj_entry_rename => eval-obj-entry-rename
   :spread_assign => eval-spread-assign
-  :obj_str_rename_entry => str.kw(:old_name ": " _[:new_name resolve-name])
+  :obj_str_rename_entry => str.kw(:old_name ": " :new_name >> resolve-name)
 })::call(node)
 
 fn eval-object-deconstruction-names({entries}) =
@@ -1287,26 +1287,26 @@ fn eval-assign-expr(node) = node::at(:type)::pipe(Map{
   :this_spread_assign => eval-spread-assign
 })::call(node)
 
-fn eval-while-let-loop({assign_expr test_expr body}) = str(
-  "let __coil_while_let_temp = " eval-expr(test_expr) ";\n"
+let eval-while-let-loop = str.kw(
+  "let __coil_while_let_temp = " :test_expr >> eval-expr ";\n"
   "while (__coil_while_let_temp) {\n"
-    "let " eval-assign-expr(assign_expr) " = __coil_while_let_temp;\n"
-    eval-ast(body) "\n"
-    "__coil_while_let_temp = " eval-expr(test_expr) ";\n"
+    "let " :assign_expr >> eval-assign-expr " = __coil_while_let_temp;\n"
+    :body >> eval-ast "\n"
+    "__coil_while_let_temp = " :test_expr >> eval-expr ";\n"
   "}")
 
 let eval-if-let = str.kw(
-  "let __coil_if_let_temp = " _[:expr eval_expr] ";\n"
+  "let __coil_if_let_temp = " :expr >> eval-expr ";\n"
   "if (truthy(__coil_if_let_temp)) {\n"
-    "let " _[:assign_expr eval-assign-expr] " = __coil_if_let_temp;\n"
-    _[:pass eval-ast] "\n"
-  "}" _[:fail eval-if-branch]
+    "let " :assign_expr >> eval-assign-expr " = __coil_if_let_temp;\n"
+    :pass >> eval-ast "\n"
+  "}" :fail >> eval-if-branch
 )
 
-let eval-spread = str.kw("..." _[:expr eval-expr])
+let eval-spread = str.kw("..." :expr >> eval-expr)
 
 let eval-let =
-  str.kw("let " _[:assign_expr eval-assign-expr] " = " _[:rhs eval-expr])
+  str.kw("let " :assign_expr >> eval-assign-expr " = " :rhs >> eval-expr)
 
 fn eval-array({elements}) =
   str("[" elements::map-join(eval-expr ", ") "]")
@@ -1325,11 +1325,11 @@ let math-op-to-method = Map{
 }
 
 let eval-math-op =
-  str.kw(_[:op math-op-to-method] ".call(" _[:lhs eval-expr] ", " _[:rhs eval-expr] ")")
+  str.kw(:op >> math-op-to-method ".call(" :lhs >> eval-expr ", " :rhs >> eval-expr ")")
 
 fn eval-this-assignments(args) = args
   ::where(:type Set[:this_assign :this_spread_assign])
-  ::map(str.kw("this['" :name "'] = " _[:name resolve-name] ";\n"))
+  ::map(str.kw("this['" :name "'] = " :name >> resolve-name ";\n"))
   ::into("")
 
 fn eval-fn({is_async? generator? name args body}) = str(
