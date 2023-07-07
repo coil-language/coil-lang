@@ -1,12 +1,17 @@
-import "./ui.coil"
+import {render, Render} from "./ui.coil"
 import {lex_and_parse, eval_ast} from "../../../compiler/src/compiler.coil"
 import "./css.coil"
 import {node_to_html, html_to_ast} from "./ast.coil"
 
 fn eval-node(node) =
-  node.children::pipe(html-to-ast eval-ast eval log)
+  node.children::pipe(html-to-ast eval-ast eval)
 
-"let a = [1 2 3]"
+"let str = this.value
+    let [elem_name, ...classes] = str.split(\".\")
+    let attrs = {}
+    if classes::not_empty?() { attrs.[\"class\"] = classes.join(\" \") }
+
+    return Elem[elem_name, attrs, children]"
   ::pipe(lex_and_parse)
   ::map(node-to-html)
   ::into(:div.code_block{"tabindex" => 0}[])
@@ -50,6 +55,7 @@ impl TextNodes for Keyword = Set[]
 define TextNodes for :id_assign = Set["name"]
 define TextNodes for :property_lookup = Set["name"]
 define TextNodes for :math_op = Set["op"]
+define TextNodes for :spread_assign = Set["name"]
 
 fn register_eval(root) {
   root.querySelectorAll("[data-attr]:not(:has([data-attr]))")::each(fn (elem) {
