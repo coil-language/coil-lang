@@ -8,7 +8,7 @@ Coil is a language trying to make web programming fun & accessible.
 
 Coil aims to be an all-in-one solution for all of your web development needs. This includes a language, an editor, and a full stack framework.
 
-The goal of Coil is to enable a team of 1-4 develop apps that rival that of 100s.
+The goal of Coil is to enable a team of 1-4 to develop apps that rival that of 100s.
 
 Status
 - [x] coil-lang (pre-alpha)
