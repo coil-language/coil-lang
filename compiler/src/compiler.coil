@@ -1342,14 +1342,14 @@ fn eval-fn({is_async? generator? name args body}) = str(
     eval-ast(body)
   "}")
 
-let eval-bind = str.kw(_[:expr eval-expr] ".bind(" _[:lhs eval-expr] ")")
+let eval-bind = str.kw(:expr >> eval-expr ".bind(" :lhs >> eval-expr ")")
 
-let eval-reg-obj-entry = str.kw("'" :key "': " _[:value eval-expr])
+let eval-reg-obj-entry = str.kw("'" :key "': " :value >> eval-expr)
 
-let eval-obj-shorthand-entry = str.kw("'" :id "':" _[:id resolve-name])
+let eval-obj-shorthand-entry = str.kw("'" :id "':" :id >> resolve-name)
 
 let eval-dynamic-obj-entry =
-  str.kw("[" _[:key_expr eval-expr] "]: " _[:value eval-expr])
+  str.kw("[" :key_expr >> eval-expr "]: " :value >> eval-expr)
 
 fn eval-obj-fn({name generator? is_async? args body}) =
   str((is_async? && "async ")
@@ -1369,9 +1369,9 @@ fn eval-obj-lit({entries}) =
   str("new ObjectLiteral({"
       entries::map-join(eval-obj-entry ", ") "})")
 
-let eval-bind-this = str.kw(_[:expr eval-expr] ".bind(this)")
+let eval-bind-this = str.kw(:expr >> eval-expr ".bind(this)")
 
-let eval-id-lookup = _[:name resolve-name]
+let eval-id-lookup = :name >> resolve-name
 
 let eval-num = str.kw("(" :value ")")
 
@@ -1382,12 +1382,12 @@ fn eval-custom-number-literal({value}) {
 }
 
 let eval-double-equals = str.kw(
-  resolve-name("equals?") ".call(" _[:lhs eval-expr] ", " _[:rhs eval-expr] ")"
+  resolve-name("equals?") ".call(" :lhs >> eval-expr ", " :rhs >> eval-expr ")"
 )
 
 fn eval-not-equals(node) = str("negate.call(" eval-double-equals(node) ")")
 
-let eval-not = str.kw("negate.call(" _[:expr eval-expr] ")")
+let eval-not = str.kw("negate.call(" :expr >> eval-expr ")")
 
 fn eval-dynamic-access({lhs exprs}) {
   let lhs-js = eval-expr(lhs)

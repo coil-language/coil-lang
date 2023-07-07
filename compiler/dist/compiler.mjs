@@ -2020,30 +2020,30 @@ return str("[", map_join.bind(elements)(eval_expr, ", "), "]");}
 let math_op_to_method = Map[Meta]['{}'].call(Map, [[">", "greater_than"], ["<", "less_than"], [">=", "greater_than_eq"], ["<=", "less_than_eq"], ["*", "times"], ["**", "exponent"], ["/", "divide_by"], ["+", "plus"], ["-", "minus"], ["%", "mod"]]);
 let eval_math_op = str['kw'](compose(Keyword.for("op"), math_op_to_method), ".call(", compose(Keyword.for("lhs"), eval_expr), ", ", compose(Keyword.for("rhs"), eval_expr), ")");
 function eval_this_assignments(args) {
-return into.bind(map.bind(where.bind(args)(Keyword.for("type"), Set[Meta]['[]'].call(Set, Keyword.for("this_assign"), Keyword.for("this_spread_assign"))))(str['kw']("this['", Keyword.for("name"), "'] = ", _[Meta]['[]'].call(_, Keyword.for("name"), resolve_name), ";\n")))("");}
+return into.bind(map.bind(where.bind(args)(Keyword.for("type"), Set[Meta]['[]'].call(Set, Keyword.for("this_assign"), Keyword.for("this_spread_assign"))))(str['kw']("this['", Keyword.for("name"), "'] = ", compose(Keyword.for("name"), resolve_name), ";\n")))("");}
 function eval_fn({'is_async?': is_async__q, 'generator?': generator__q, 'name': name, 'args': args, 'body': body}) {
 return str((and.call(is_async__q, () => "async ")), "function ", (and.call(generator__q, () => "*")), resolve_name(name), "(", map_join.bind(args)(eval_assign_expr, ", "), ") {\n", eval_this_assignments(args), eval_ast(body), "}");}
-let eval_bind = str['kw'](_[Meta]['[]'].call(_, Keyword.for("expr"), eval_expr), ".bind(", _[Meta]['[]'].call(_, Keyword.for("lhs"), eval_expr), ")");
-let eval_reg_obj_entry = str['kw']("'", Keyword.for("key"), "': ", _[Meta]['[]'].call(_, Keyword.for("value"), eval_expr));
-let eval_obj_shorthand_entry = str['kw']("'", Keyword.for("id"), "':", _[Meta]['[]'].call(_, Keyword.for("id"), resolve_name));
-let eval_dynamic_obj_entry = str['kw']("[", _[Meta]['[]'].call(_, Keyword.for("key_expr"), eval_expr), "]: ", _[Meta]['[]'].call(_, Keyword.for("value"), eval_expr));
+let eval_bind = str['kw'](compose(Keyword.for("expr"), eval_expr), ".bind(", compose(Keyword.for("lhs"), eval_expr), ")");
+let eval_reg_obj_entry = str['kw']("'", Keyword.for("key"), "': ", compose(Keyword.for("value"), eval_expr));
+let eval_obj_shorthand_entry = str['kw']("'", Keyword.for("id"), "':", compose(Keyword.for("id"), resolve_name));
+let eval_dynamic_obj_entry = str['kw']("[", compose(Keyword.for("key_expr"), eval_expr), "]: ", compose(Keyword.for("value"), eval_expr));
 function eval_obj_fn({'name': name, 'generator?': generator__q, 'is_async?': is_async__q, 'args': args, 'body': body}) {
 return str((and.call(is_async__q, () => "async ")), (and.call(generator__q, () => "*")), "['", name, "'](", map_join.bind(args)(eval_assign_expr, ", "), ") {\n", eval_ast(body), "\n}");}
 function eval_obj_entry(node) {
 return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("reg_obj_entry"), eval_reg_obj_entry], [Keyword.for("obj_shorthand_entry"), eval_obj_shorthand_entry], [Keyword.for("dynamic_obj_entry"), eval_dynamic_obj_entry], [Keyword.for("spread_obj_entry"), eval_spread], [Keyword.for("fn"), eval_obj_fn]])))(node);}
 function eval_obj_lit({'entries': entries}) {
 return str("new ObjectLiteral({", map_join.bind(entries)(eval_obj_entry, ", "), "})");}
-let eval_bind_this = str['kw'](_[Meta]['[]'].call(_, Keyword.for("expr"), eval_expr), ".bind(this)");
-let eval_id_lookup = _[Meta]['[]'].call(_, Keyword.for("name"), resolve_name);
+let eval_bind_this = str['kw'](compose(Keyword.for("expr"), eval_expr), ".bind(this)");
+let eval_id_lookup = compose(Keyword.for("name"), resolve_name);
 let eval_num = str['kw']("(", Keyword.for("value"), ")");
 function eval_custom_number_literal({'value': value}) {
 let [num] = value['split'](/[a-zA-Z]+/);
 let modifier = value['slice'](num['length']);
 return str("Keyword.for(\"custom_number_literal/", modifier, "\")[CustomNumberLiteral](", num, ")");}
-let eval_double_equals = str['kw'](resolve_name("equals?"), ".call(", _[Meta]['[]'].call(_, Keyword.for("lhs"), eval_expr), ", ", _[Meta]['[]'].call(_, Keyword.for("rhs"), eval_expr), ")");
+let eval_double_equals = str['kw'](resolve_name("equals?"), ".call(", compose(Keyword.for("lhs"), eval_expr), ", ", compose(Keyword.for("rhs"), eval_expr), ")");
 function eval_not_equals(node) {
 return str("negate.call(", eval_double_equals(node), ")");}
-let eval_not = str['kw']("negate.call(", _[Meta]['[]'].call(_, Keyword.for("expr"), eval_expr), ")");
+let eval_not = str['kw']("negate.call(", compose(Keyword.for("expr"), eval_expr), ")");
 function eval_dynamic_access({'lhs': lhs, 'exprs': exprs}) {
 let lhs_js = eval_expr(lhs);
 return str(lhs_js, "[Meta]['[]'].call(", lhs_js, ", ", map_join.bind(exprs)(eval_expr, ", "), ")");}
