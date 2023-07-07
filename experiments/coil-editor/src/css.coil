@@ -238,6 +238,15 @@ body div.code_block {
   display: flex;
   gap: 0.5em;
 }
+[data-kind=paren_expr] {
+  gap: 0;
+}
+[data-kind=paren_expr]::before {
+  content: \"(\";
+}
+[data-kind=paren_expr]::after {
+  content: \")\";
+}
 
 [data-kind=or_or] > [data-attr=lhs]::after {
   content: \"||\";
