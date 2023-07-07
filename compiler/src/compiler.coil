@@ -125,6 +125,7 @@ let lexer = Lexer{
   /^\./ => :dot
   /^\/.*\/[a-z]?/ => :regex_lit
   /^\>>/ => :double_pipe
+  /^\|>/ => :fn_pipe
   /^\>\=/ => :gt_eq
   /^\<\=/ => :lt_eq
   /^\>/ => :gt
@@ -387,6 +388,12 @@ fn parse-compose-operator(tokens lhs) = Parser[
   Then[parse-1-2-expr :rhs]
 ]::call(tokens)
 
+fn parse-pipe-to-operator(tokens lhs) = Parser[
+  Init[{type: :pipe_to, lhs}]
+  Chomp[:fn_pipe]
+  Then[parse-1-2-expr :rhs]
+]::call(tokens)
+
 fn parse-third-expr-step(tokens, lhs) = ParseMap{
   :double_eq => parse-double-eq
   :triple_eq => parse-triple-eq
@@ -396,6 +403,7 @@ fn parse-third-expr-step(tokens, lhs) = ParseMap{
   :or_or => parse-or-or
   :nullish => parse-nullish
   :double_pipe => parse-compose-operator
+  :fn_pipe => parse-pipe-to-operator
   comparison-ops => parse-comparison-op
 }::call(tokens, lhs)
 
@@ -1189,12 +1197,12 @@ fn resolve-name(name) {
 fn eval-if-branch(branch) {
   if branch::nil?() {
     return ""
-  } else if branch::at(:type) == :else {
+  } else if branch |> :type == :else {
     return str(" else {\n"
-      eval-ast(branch::at(:body) || [])
+      eval-ast(branch |> :body || [])
     "\n}")
   } else {
-    if branch::at(:type) == :else_if {
+    if branch |> :type == :else_if {
       return str(
         " else if (" eval-expr(branch::at(:expr)) ") {\n"
           eval-ast(branch::at(:pass) || [])
@@ -1419,6 +1427,9 @@ fn eval-compose({lhs, rhs}) {
     ::pipe(str.kw("compose(" _ ")"))
 }
 
+let eval-pipe-to =
+  str.kw("call.call(" :rhs >> eval-expr ", " :lhs >> eval-expr ")")
+
 fn eval-dynamic-access-assign({lhs, rhs}) {
   let {lhs: obj, exprs} = lhs
   let obj-js = eval-expr(obj)
@@ -1585,6 +1596,7 @@ fn eval-expr(node) = node::at(:type)::pipe(Map{
   :or_or => eval-or-or
   :nullish => eval-nullish
   :compose => eval-compose
+  :pipe_to => eval-pipe-to
   :snd_assign => eval-snd-assign
   :await => eval-await
   :yield => eval-yield
