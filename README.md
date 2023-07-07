@@ -19,5 +19,5 @@ Status
   - limited shortcuts
   - limited code navigation
   - limited eval
-- [ ] coil-web
-  - idea phase
+- [ ] coil-web (prototyping)
+  - idea/prototyping phase
