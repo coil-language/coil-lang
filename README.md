@@ -1,16 +1,14 @@
 # Coil-Lang
 
-Coil is a language trying to make web programming fun & accessible.
+Coil aims to make web programming simple, expressive, and powerful.
 
 ```
 :h1["Hello Friends"]::into(document.body)
 ```
 
-Coil aims to be an all-in-one solution for all of your web development needs. This includes a language, an editor, and a full stack framework.
+Coil is an all-in-one solution for all of your web development needs. This includes a language, an editor, and a full stack framework.
 
-The goal of Coil is to enable a team of 1-4 to develop apps that rival that of 100s.
-
-Status
+## Status
 - [x] coil-lang (pre-alpha)
   - stable compiler
   - stable prelude
