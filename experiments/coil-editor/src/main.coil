@@ -1,513 +1,28 @@
-import {render, Render} from "./ui.coil"
+import "./ui.coil"
 import {lex_and_parse, eval_ast} from "../../../compiler/src/compiler.coil"
-
-let Class = {fn define(name, obj) = obj}
-
-let RenderConcern = {fn render = this.mount.replaceChildren(this.view()::pipe(render))}
-
-document.querySelector("style").innerText += "
-body div.code_block {
-  font-family: monospace;
-  font-size: 24px;
-  background: #d3d3d378;
-  padding: 1em;
-}
-
-.copy {
-  border: none;
-  background: none;
-  position: fixed;
-  top: 1em;
-  right: 1em;
-}
-.copy:hover {
-  cursor: pointer;
-}
-.copy::before {
-  content: \"📋\";
-}
-
-[data-kind] {
-  display: flex;
-  gap: 0.5em;
-}
-
-[data-kind=snd_assign] > [data-attr=lhs]::after {
-  content: \" = \";
-}
-
-[data-kind=snd_assign] > [data-attr=lhs] {
-  display: flex;
-  gap: 0.5em;
-}
-
-[data-attr=assign_expr] [data-kind*=_deconstruction] [data-attr=entries] {
-  gap: 0;
-}
-
-[data-attr=assign_expr] [data-kind*=_deconstruction] [data-attr=entries]::before {
-  content: \"let \";
-  color: blue;
-}
-
-[data-attr=assign_expr] [data-kind=object_deconstruction] [data-kind=obj_reg_entry] {
-  color: darkblue;
-}
-
-[data-attr=assign_expr] [data-kind*=_deconstruction] [data-attr=entries] {
-  display: flex;
-  gap: 0.5em;
-}
-
-[data-attr=assign_expr] [data-kind=object_deconstruction] [data-attr=entries] > :first-child::before {
-  content: \"{\";
-  color: black;
-}
-
-[data-attr=assign_expr] [data-kind=object_deconstruction] [data-attr=entries] > :last-child::after {
-  content: \"} =\";
-  color: black;
-}
-
-[data-attr=assign_expr] [data-kind*=_deconstruction] [data-attr=entries]::before {
-  content: \"let \";
-  color: blue;
-}
-
-[data-attr=assign_expr] [data-kind=array_deconstruction] [data-attr=entries] > :first-child::before {
-  content: \"[\";
-  color: black;
-}
-
-[data-attr=assign_expr] [data-kind=array_deconstruction] [data-attr=entries] [data-kind=id_assign] {
-  gap: 0;
-}
-
-[data-attr=assign_expr] [data-kind=array_deconstruction] [data-attr=entries] > :last-child::after {
-  content: \"] =\";
-  color: black;
-}
-
-[data-attr=assign_expr] > [data-kind=id_assign] [data-attr=name]::before {
-  content: \"let \";
-  color: blue;
-}
-
-[data-attr=assign_expr] > [data-kind=id_assign] [data-attr=name]::after {
-  content: \" = \";
-  color: black;
-}
-
-[data-kind=let] [data-attr=assign_expr] [data-kind=id_assign] [data-attr=name] {
-  color: darkblue;
-}
-
-[data-kind=num] [data-attr=value] {
-  color: darkgreen;
-}
-
-[data-kind=str] [data-attr=value] {
-  color: darkgreen;
-}
-
-[data-kind=bind] {
-  gap: 0;
-}
-
-
-[data-kind=bind] [data-attr=expr] {
-  display: flex;
-}
-
-[data-kind=id_lookup] [data-attr=name] {
-  color: darkblue;
-}
-
-[data-kind=fn_call] [data-attr=lhs] > [data-kind=id_lookup] [data-attr=name],
-[data-kind=fn] > [data-attr=name] {
-  color: darkred;
-}
-
-[data-kind=fn_call] > [data-attr=args]::before,
-[data-kind=fn] > [data-attr=args]::before {
-  content: \"(\";
-}
-
-[data-kind=fn_call] [data-attr=args]::after,
-[data-kind=fn] > [data-attr=args]::after  {
-  content: \")\";
-  margin-left: -0.5em;
-}
-
-[data-kind=fn_call] > [data-attr=args]:has([data-kind])::before,
-[data-kind=fn] > [data-attr=args]:has([data-kind])::before {
-  margin-right: -0.5em;
-}
-
-[data-kind=fn_call] [data-attr=args]:has([data-kind])::after,
-[data-kind=fn] > [data-attr=args]:has([data-kind])::after  {
-  margin-left: -0.5em;
-}
-
-[data-kind=fn_call] > [data-attr=args], [data-kind=fn] > [data-attr=args] {
-  display: flex;
-}
-
-[data-kind=fn_call] > [data-attr=args] [data-kind],
-[data-kind=fn] > [data-attr=args] [data-kind] {
-  gap: 0;
-}
-
-[data-kind=fn_call] > [data-attr=args],
-[data-kind=fn] > [data-attr=args] {
-  gap: 0.5em;
-}
-
-
-[data-kind=fn_call] > [data-attr=args] [data-kind=array]:not(:last-child)::after,
-[data-kind=fn] > [data-attr=args] [data-kind=array]:not(:last-child)::after {
-  content: \"],\";
-}
-
-[data-kind=fn_call], [data-kind=fn] {
-  gap: 0;
-}
-
-[data-kind=fn]::before {
-  content: \"fn\";
-  color: blue;
-  margin-right: 0.5em;
-}
-
-[data-kind=fn]:has(> [data-attr=body] > [data-kind=return]:first-child) > [data-attr=args]::after {
-  width: 2em;
-  content: \") =\";
-}
-
-[data-kind=fn] > [data-attr=args]::after {
-  width: 2em;
-  content: \") {\";
-}
-
-[data-kind=fn] > [data-attr=body]::after {
-  content: \"}\";
-  margin-left: -1em;
-}
-
-[data-kind=if]::before {
-  content: \"if \";
-  color: blue;
-}
-
-[data-kind=if] > [data-attr=pass] {
-  display: flex;
-  gap: 0.5em;
-}
-
-[data-kind=return]::before {
-  color: blue;  
-  content: \"return \";
-}
-
-[data-kind=if] > [data-attr=pass]::before {
-  content: \"{\";
-}
-
-[data-kind=not_equals] > [data-attr=lhs] {
-  display: flex;
-  gap: 0.5em;
-}
-
-[data-kind=dynamic_access] {
-  gap: 0;
-}
-
-[data-kind=dynamic_access] > [data-attr=exprs] {
-  display: flex;
-}
-
-[data-kind=dynamic_access] > [data-attr=exprs]::before {
-  content: \"[\";
-}
-
-[data-kind=dynamic_access] > [data-attr=exprs]::after {
-  content: \"]\";
-}
-
-[data-kind=not_equals] > [data-attr=lhs]::after {
-  content: \" != \";
-}
-
-[data-kind=if] > [data-attr=pass]::after {
-  content: \"}\";
-}
-
-[data-kind=not]::before {
-  content: \"!\";
-  margin-right: -0.5em;
-}
-
-[data-kind=or_or] > [data-attr=lhs] {
-  display: flex;
-  gap: 0.5em;
-}
-
-[data-kind=or_or] > [data-attr=lhs]::after {
-  content: \"||\";
-}
-
-[data-kind=fn] > [data-attr=body] {
-  display: flex;
-  flex-direction: column;
-}
-
-[data-kind=fn] > [data-attr=args] {
-  margin-right: 0.5em;
-}
-
-[data-kind=fn] > [data-attr=args] > [data-kind] {
-  display: flex;
-}
-
-* {
-  outline: none;
-}
-
-[data-attr]:hover {
-  outline: 1px solid black;
-}
-
-[data-attr]:focus {
-  // border-bottom: 1px solid black;
-}
-
-
-[data-kind=bind] [data-attr=expr]::before {
-  content: \"::\";
-}
-
-[data-kind=array] {
-  gap: 0;
-}
-
-[data-kind=property_lookup] {
-  gap: 0;
-}
-
-[data-kind=op_eq] [data-attr=op]::after {
-  content: \"=\";
-}
-
-[data-kind=property_lookup] [data-attr=property]::before {
-  content: \".\";
-  color: black;
-}
-
-[data-kind=property_lookup] [data-attr=property] {
-  color: purple;
-}
-
-[data-kind=array data-show-commas] [data-attr=elements] > :not(:last-child) ::after {
-  content: \",\";
-  color: black;
-}
-
-[data-kind=array]::before {
-  content: \"[\";
-}
-
-[data-kind=array]::after {
-  content: \"]\";
-}
-
-[data-kind=array] [data-attr=elements] {
-  gap: 0.5em;
-  display: flex;
-}
-
-[data-kind=keyword] [data-attr=value] {
-  color: cadetblue;
-}
-
-[data-kind=obj_lit] [data-attr=entries] {
-  display: flex;
-  gap: 0.5em;
-}
-
-.error {
-  border-bottom: 1px dashed red;
-}
-
-[data-kind=obj_lit]::before {
-  content: \"{\";
-}
-
-[data-kind=obj_lit]::after {
-  content: \"}\";
-}
-
-[data-kind=obj_lit][data-folded]::before {
-  content: \"{}\";
-  border: 2px dashed gray;
-}
-
-[data-kind=obj_lit][data-folded] {
-  width: 1.5em;
-  contain: content;
-}
-
-[data-kind=obj_lit] [data-kind=reg_obj_entry] [data-attr=key] {
-  color: darkblue;
-}
-[data-kind=obj_lit] [data-kind=reg_obj_entry] [data-attr=key]::after {
-  content: \":\";
-  color: black;
-}
-
-*:focus {
-  outline: 1px solid #0000ff4f;
-}
-"
-
-fn node-to-xml(node) {
-  let children = []
-  for [key val] of node {
-    if Set["type" "pos"]::has?(key) {
-      continue
-    }
-    if val is Array {
-      children.push(val::map(node-to-xml)::into(:div{"data-attr" => key}[]))
-    } else if typeof(val) == "object" {
-      children.push(:div{"data-attr" => key}[node-to-xml(val)])
-    } else {
-      children.push(:div{"data-attr" => key, "contenteditable" => true}[val])
-    }
-  }
-  return :div{"data-kind" => node.type::as_str()}[...children]
-}
-
-
-protocol ChildNodes
-
-impl ChildNodes for Keyword = Set[]
-define ChildNodes for :array = Set["elements"]
-define ChildNodes for :obj_lit = Set["entries"]
-define ChildNodes for :object_deconstruction = Set["entries"]
-
-fn html-to-ast(html_coll) {
-  let ast = []
-  for node of html_coll {
-    if node.getAttribute("data-kind")::nil?() {
-      continue
-    }
-    let ast_node = {type: node.getAttribute("data-kind")::as_keyword()}
-    for attr_node of node.children {
-      let attr_name = attr_node.getAttribute("data-attr")
-      if attr_node.children.length == 0 {
-        ast_node.[attr_name] = attr_node.textContent
-      } else {
-        let ast_children = html-to-ast(attr_node.children)
-        if ast_node.type.[ChildNodes]::has?(attr_name) {
-          ast_node.[attr_name] = ast_children
-        } else {
-          ast_node.[attr_name] = ast_children::first()
-        }
-      }
-    }
-    ast.push(ast_node)
-  }
-  return ast
-}
-
-fn copy(root) {
-  fn get_content(dir) {
-    let {content} = window.getComputedStyle(this dir)
-    if content == "none" {
-      return ""
-    } else {
-      return content.replaceAll("\"" "")
-    }
-  }
-
-  root ||= block
-  let text = ""
-
-  for elem of root.childNodes ?? [] {
-    if elem.nodeName == "BUTTON" {
-      continue
-    } else if elem.nodeName == "#text" {
-      text += elem.textContent
-    } else {
-      text += elem::get_content(":before")
-      text += copy(elem)
-      text += elem::get_content(":after")
-    }
-    text += "\n"
-  }
-  return text
-}
-
-let App = Class.define("App" {
-  mount: document.getElementById("app")
-  ...RenderConcern
-
-  fn view = :div[
-    "fn scan() {
-      let result = rest-of-string().match(this)
-      if !result || result.index != 0 { return false }
-      index += result[0].length
-      return result[0]
-    }"
-      ::pipe(lex_and_parse)
-      ::map(node-to-xml)
-      ::into(:div.code_block{"tabindex" => 0}[:button.copy{onclick: fn = copy()}[]])
-    :button.eval{style: "display: none;" onclick: fn {
-      document.querySelector(".code_block").children
-        ::pipe(html-to-ast eval-ast eval log)
-    }}["eval"]
-  ]
-})
-
-document.addEventListener("click" fn (e) {
-  if e.metaKey && e.target.getAttribute("data-kind") == "obj_lit" {
-    console.log("here" e.target.dataset.["folded"])
-    if e.target.dataset.["folded"] {
-      e.target.removeAttribute("data-folded")
-    } else {
-      e.target.setAttribute("data-folded", "true")
-    }
-  }
-})
+import "./css.coil"
+import {node_to_html, html_to_ast} from "./ast.coil"
+
+fn eval-node(node) =
+  node.children::pipe(html-to-ast eval-ast eval log)
+
+"let a = [1 2 3]"
+  ::pipe(lex_and_parse)
+  ::map(node-to-html)
+  ::into(:div.code_block{"tabindex" => 0}[])
+  ::into(document.body)
+
+let block = document.querySelector(".code_block")
 
 document.addEventListener("keydown" fn (e) {  
   if e.key == "Enter" && e.ctrlKey {
-    document.querySelector("button.eval").click()
+    eval-node(document.querySelector(".code_block"))
   } else if e.key == "l" && e.ctrlKey {
     console.clear()
   } else if e.key == "Enter" {
     e.preventDefault()
   }
 })
-
-
-App.render()
-
-let elements = document.querySelector("[data-attr=elements]")
-
-let object_entries = document.querySelector("[data-kind=obj_lit] [data-attr=entries]")
-
-object_entries&.addEventListener("keydown" fn (e) {
-
-})
-
-document.addEventListener("keydown" fn (e) {
-  if e.key == "d" && e.metaKey {
-    e.preventDefault()
-    e.stopPropagation()
-  }
-})
-
-let block = document.querySelector(".code_block")
 
 let last_key = null
 window.addEventListener("keydown" fn (e) {
@@ -518,58 +33,39 @@ window.addEventListener("keydown" fn (e) {
   last_key = e.key
 })
 
-// polymorphic delete
-
-protocol DeleteRootNode
-
 fn handle_delete(e) {
   if Set[e.key last_key] == Set["Backspace"] && e.target.textContent.trim() == "" {
     let closest_node_root = e.target.closest("[data-kind]")
     if closest_node_root.parentNode.childNodes.length == 1 {
       closest_node_root.parentNode.closest("[data-kind]").remove()
     } else {
-      
       closest_node_root.remove()
-
     }
   }
 }
 
-protocol ReplaceSelf
+protocol TextNodes
 
-impl ReplaceSelf for Keyword = fn (elem) {
-  let out = elem.textContent::pipe(lex_and_parse).[0]::pipe(node-to-xml render)
-  let out_target = elem.closest("[data-kind]")
-  register_eval(out)
-  out_target.replaceWith(out)
-}
-
-define ReplaceSelf for :property_lookup = fn (elem) {
-  if elem.getAttribute("data-attr") == "name" {
-    return
-  } else {
-    raise!("Wtf")
-  }
-}
-
-define ReplaceSelf for :math_op = fn (elem) {
-  if elem.getAttribute("data-attr") == "op" {
-    return
-  } else {
-    raise!("oh no")
-  }
-}
+impl TextNodes for Keyword = Set[]
+define TextNodes for :id_assign = Set["name"]
+define TextNodes for :property_lookup = Set["name"]
+define TextNodes for :math_op = Set["op"]
 
 fn register_eval(root) {
-  root.querySelectorAll("[data-attr]:not(:has([data-attr]))")
-    ::each(fn (elem) {
-      elem.addEventListener("blur" fn (e) {
-        e.target.closest("[data-kind]").getAttribute("data-kind")::as_keyword()
-          ::log()
-          .[ReplaceSelf](e.target)
-        
-      })
+  root.querySelectorAll("[data-attr]:not(:has([data-attr]))")::each(fn (elem) {
+    elem.addEventListener("blur" fn (e) {
+      let parent = e.target.closest("[data-kind]")
+      let kind = parent.dataset.kind::as_keyword()
+      if e.target.dataset.attr |> kind.[TextNodes] {
+        return
+      } else {
+        let out = elem.textContent::pipe(lex_and_parse).[0]::pipe(node-to-html render)
+        let out_target = elem.closest("[data-kind]")
+        register_eval(out)
+        out_target.replaceWith(out)
+      }        
     })
+  })
 }
 register_eval(document)
 
@@ -594,7 +90,7 @@ block.addEventListener("keydown" fn (e) {
   block.appendChild(new_node)
   fn reify(e) {
     try {
-      let node = lex_and_parse(e.target.textContent).[0]::pipe(node-to-xml render)
+      let node = lex_and_parse(e.target.textContent).[0]::pipe(node-to-html render)
       e.target.outerHTML = node.outerHTML
     } catch err {
       console.log("there's been an error" err)
@@ -611,29 +107,4 @@ block.addEventListener("keydown" fn (e) {
     }
   })
   new_node.focus()
-})
-
-elements&.addEventListener("keydown" fn (e) {
-  if e.key == "Enter" && !e.ctrlKey {
-    e.preventDefault()
-    if e.target.textContent.trim() == "" { return }
-    let new_node = :div.plain_node{"contenteditable" => true}[].[Render]()
-    e.target.closest("[data-attr=elements]").appendChild(new_node)
-    new_node.addEventListener("blur" fn (e) {
-      try {  
-        let node = lex_and_parse(e.target.textContent).[0]::pipe(node-to-xml render)
-        new_node.outerHTML = node.outerHTML
-      } catch err {
-        console.log("there's been an error")
-        new_node::log("err").style.border = "2px dashed red;"
-      }
-    })
-    new_node.focus()
-  } else if e.target.textContent.trim() == "" && e.key == "Backspace" {
-    let parent = e.target.closest("[data-attr=elements] > div")
-    parent.previousSibling.querySelector("[contenteditable]").focus()
-    parent.remove()
-  } else if e.key == "Backspace" && e.ctrlKey {
-    e.target.closest("[data-kind]").remove()
-  }
 })

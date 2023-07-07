@@ -1,0 +1,350 @@
+
+document.querySelector("style").innerText += "
+body div.code_block {
+  font-family: Berkeley Mono;
+  font-size: 24px;
+  background: #d3d3d378;
+  padding: 1em;
+}
+
+[data-kind] {
+  display: flex;
+  gap: 0.5em;
+}
+
+[data-kind=snd_assign] > [data-attr=lhs]::after {
+  content: \" = \";
+}
+
+[data-kind=snd_assign] > [data-attr=lhs] {
+  display: flex;
+  gap: 0.5em;
+}
+
+[data-attr=assign_expr] [data-kind*=_deconstruction] [data-attr=entries] {
+  gap: 0;
+}
+
+[data-attr=assign_expr] [data-kind*=_deconstruction] [data-attr=entries]::before {
+  content: \"let \";
+  color: blue;
+}
+
+[data-attr=assign_expr] [data-kind=object_deconstruction] [data-kind=obj_reg_entry] {
+  color: darkblue;
+}
+
+[data-attr=assign_expr] [data-kind*=_deconstruction] [data-attr=entries] {
+  display: flex;
+  gap: 0.5em;
+}
+
+[data-attr=assign_expr] [data-kind=object_deconstruction] [data-attr=entries] > :first-child::before {
+  content: \"{\";
+  color: black;
+}
+
+[data-attr=assign_expr] [data-kind=object_deconstruction] [data-attr=entries] > :last-child::after {
+  content: \"} =\";
+  color: black;
+}
+
+[data-attr=assign_expr] [data-kind*=_deconstruction] [data-attr=entries]::before {
+  content: \"let \";
+  color: blue;
+}
+
+[data-attr=assign_expr] [data-kind=array_deconstruction] [data-attr=entries] > :first-child::before {
+  content: \"[\";
+  color: black;
+}
+
+[data-attr=assign_expr] [data-kind=array_deconstruction] [data-attr=entries] [data-kind=id_assign] {
+  gap: 0;
+}
+
+[data-attr=assign_expr] [data-kind=array_deconstruction] [data-attr=entries] > :last-child::after {
+  content: \"] =\";
+  color: black;
+}
+
+[data-attr=assign_expr] > [data-kind=id_assign] [data-attr=name]::before {
+  content: \"let \";
+  color: blue;
+}
+
+[data-attr=assign_expr] > [data-kind=id_assign] [data-attr=name]::after {
+  content: \" = \";
+  color: black;
+}
+
+[data-kind=let] [data-attr=assign_expr] [data-kind=id_assign] [data-attr=name] {
+  color: darkblue;
+}
+
+[data-kind=num] [data-attr=value] {
+  color: darkgreen;
+}
+
+[data-kind=str] [data-attr=value] {
+  color: darkgreen;
+}
+
+[data-kind=bind] {
+  gap: 0;
+}
+
+
+[data-kind=bind] [data-attr=expr] {
+  display: flex;
+}
+
+[data-kind=id_lookup] [data-attr=name] {
+  color: darkblue;
+}
+
+[data-kind=fn_call] [data-attr=lhs] > [data-kind=id_lookup] [data-attr=name],
+[data-kind=fn] > [data-attr=name] {
+  color: darkred;
+}
+
+[data-kind=fn_call] > [data-attr=args]::before,
+[data-kind=fn] > [data-attr=args]::before {
+  content: \"(\";
+}
+
+[data-kind=fn_call] [data-attr=args]::after,
+[data-kind=fn] > [data-attr=args]::after  {
+  content: \")\";
+  margin-left: -0.5em;
+}
+
+[data-kind=fn_call] > [data-attr=args]:has([data-kind])::before,
+[data-kind=fn] > [data-attr=args]:has([data-kind])::before {
+  margin-right: -0.5em;
+}
+
+[data-kind=fn_call] [data-attr=args]:has([data-kind])::after,
+[data-kind=fn] > [data-attr=args]:has([data-kind])::after  {
+  margin-left: -0.5em;
+}
+
+[data-kind=fn_call] > [data-attr=args], [data-kind=fn] > [data-attr=args] {
+  display: flex;
+}
+
+[data-kind=fn_call] > [data-attr=args] [data-kind],
+[data-kind=fn] > [data-attr=args] [data-kind] {
+  gap: 0;
+}
+
+[data-kind=fn_call] > [data-attr=args],
+[data-kind=fn] > [data-attr=args] {
+  gap: 0.5em;
+}
+
+
+[data-kind=fn_call] > [data-attr=args] [data-kind=array]:not(:last-child)::after,
+[data-kind=fn] > [data-attr=args] [data-kind=array]:not(:last-child)::after {
+  content: \"],\";
+}
+
+[data-kind=fn_call], [data-kind=fn] {
+  gap: 0;
+}
+
+[data-kind=fn]::before {
+  content: \"fn\";
+  color: blue;
+  margin-right: 0.5em;
+}
+
+[data-kind=fn]:has(> [data-attr=body] > [data-kind=return]:first-child) > [data-attr=args]::after {
+  width: 2em;
+  content: \") =\";
+}
+
+[data-kind=fn] > [data-attr=args]::after {
+  width: 2em;
+  content: \") {\";
+}
+
+[data-kind=fn] > [data-attr=body]::after {
+  content: \"}\";
+  margin-left: -1em;
+}
+
+[data-kind=if]::before {
+  content: \"if \";
+  color: blue;
+}
+
+[data-kind=if] > [data-attr=pass] {
+  display: flex;
+  gap: 0.5em;
+}
+
+[data-kind=return]::before {
+  color: blue;  
+  content: \"return \";
+}
+
+[data-kind=if] > [data-attr=pass]::before {
+  content: \"{\";
+}
+
+[data-kind=not_equals] > [data-attr=lhs] {
+  display: flex;
+  gap: 0.5em;
+}
+
+[data-kind=dynamic_access] {
+  gap: 0;
+}
+
+[data-kind=dynamic_access] > [data-attr=exprs] {
+  display: flex;
+}
+
+[data-kind=dynamic_access] > [data-attr=exprs]::before {
+  content: \"[\";
+}
+
+[data-kind=dynamic_access] > [data-attr=exprs]::after {
+  content: \"]\";
+}
+
+[data-kind=not_equals] > [data-attr=lhs]::after {
+  content: \" != \";
+}
+
+[data-kind=if] > [data-attr=pass]::after {
+  content: \"}\";
+}
+
+[data-kind=not]::before {
+  content: \"!\";
+  margin-right: -0.5em;
+}
+
+[data-kind=or_or] > [data-attr=lhs] {
+  display: flex;
+  gap: 0.5em;
+}
+
+[data-kind=or_or] > [data-attr=lhs]::after {
+  content: \"||\";
+}
+
+[data-kind=fn] > [data-attr=body] {
+  display: flex;
+  flex-direction: column;
+}
+
+[data-kind=fn] > [data-attr=args] {
+  margin-right: 0.5em;
+}
+
+[data-kind=fn] > [data-attr=args] > [data-kind] {
+  display: flex;
+}
+
+* {
+  outline: none;
+}
+
+[data-attr]:hover {
+  outline: 1px solid black;
+}
+
+[data-attr]:focus {
+  // border-bottom: 1px solid black;
+}
+
+
+[data-kind=bind] [data-attr=expr]::before {
+  content: \"::\";
+}
+
+[data-kind=array] {
+  gap: 0;
+}
+
+[data-kind=property_lookup] {
+  gap: 0;
+}
+
+[data-kind=op_eq] [data-attr=op]::after {
+  content: \"=\";
+}
+
+[data-kind=property_lookup] [data-attr=property]::before {
+  content: \".\";
+  color: black;
+}
+
+[data-kind=property_lookup] [data-attr=property] {
+  color: purple;
+}
+
+[data-kind=array data-show-commas] [data-attr=elements] > :not(:last-child) ::after {
+  content: \",\";
+  color: black;
+}
+
+[data-kind=array]::before {
+  content: \"[\";
+}
+
+[data-kind=array]::after {
+  content: \"]\";
+}
+
+[data-kind=array] [data-attr=elements] {
+  gap: 0.5em;
+  display: flex;
+}
+
+[data-kind=keyword] [data-attr=value] {
+  color: cadetblue;
+}
+
+[data-kind=obj_lit] [data-attr=entries] {
+  display: flex;
+  gap: 0.5em;
+}
+
+.error {
+  border-bottom: 1px dashed red;
+}
+
+[data-kind=obj_lit]::before {
+  content: \"{\";
+}
+
+[data-kind=obj_lit]::after {
+  content: \"}\";
+}
+
+[data-kind=obj_lit][data-folded]::before {
+  content: \"{}\";
+  border: 2px dashed gray;
+}
+
+[data-kind=obj_lit][data-folded] {
+  width: 1.5em;
+  contain: content;
+}
+
+[data-kind=obj_lit] [data-kind=reg_obj_entry] [data-attr=key] {
+  color: darkblue;
+}
+[data-kind=obj_lit] [data-kind=reg_obj_entry] [data-attr=key]::after {
+  content: \":\";
+  color: black;
+}
+
+*:focus {
+  outline: 1px solid #0000ff4f;
+}
+"

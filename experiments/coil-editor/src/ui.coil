@@ -28,6 +28,8 @@ impl Meta for Keyword = {
 impl Into for Elem = fn(children) =
   Elem[this.ctor, this.attrs, this.children + children]
 
+impl Into for HTMLElement = fn(elem) = this.appendChild(elem.[Render]())
+
 export protocol Render
 
 impl Render for Elem = fn {
