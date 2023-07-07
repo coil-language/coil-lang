@@ -213,11 +213,17 @@ body div.code_block {
 
 [data-kind=dynamic_access] > [data-attr=exprs]::before {
   content: \"[\";
-  margin-right: -0.5em;
 }
 
 [data-kind=dynamic_access] > [data-attr=exprs]::after {
   content: \"]\";
+}
+
+[data-kind=dynamic_access] > [data-attr=exprs]:has(> [data-kind])::before {
+  margin-right: -0.5em;
+}
+
+[data-kind=dynamic_access] > [data-attr=exprs]:has(> [data-kind])::after {
   margin-left: -0.5em;
 }
 
@@ -383,5 +389,12 @@ body div.code_block {
 }
 [data-kind=raw_dynamic_access]::after {
   content: \"]\";
+}
+[data-kind=pipe_to] > [data-attr=lhs] {
+  display: flex;
+  gap: 0.5em;
+}
+[data-kind=pipe_to] > [data-attr=lhs]::after {
+  content: \"|>\";
 }
 "
