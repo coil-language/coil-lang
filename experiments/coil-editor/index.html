@@ -6,7 +6,6 @@
     <title>Vite App</title>
   </head>
   <body>
-    <div id="app"></div>
     <script type="module" src="./main.js"></script>
   </body>
   <style>
@@ -34,8 +33,54 @@
       padding: 10em;
       padding-top: 5em;
     }
-    ul li {
-      list-style: url("https://i.lospec.com/pyim.png");
+    .legend {
+      position: absolute;
+      left: 1em;
+      top: 4.5em;
+      padding: 1em;
+      font-family: "Fira Sans Condensed";
+      background: #ffff0059;
+    }
+    .legend li .shortcut {
+      font-style: italic;
+    }
+    .legend button {
+      text-align: center;
+      border: none;
+      font-family: "Fira Sans Condensed";
+      width: 100%;
+      background-color: black;
+      color: white;
+      margin-top: 1em;
+      outline: none;
+    }
+    .legend button:hover {
+      background-color: rgba(0, 0, 0, 0.48);
+      cursor: pointer;
+    }
+    header {
+      position: absolute;
+      top: 1em;
+      width: 100%;
+    }
+
+    .legend button:active {
+      background-color: rgba(0, 0, 0, 0.712);
+      cursor: pointer;
+    }
+
+    a.github {
+      position: absolute;
+      top: 2em;
+      left: 1em;
+      font-family: "Fira Sans Condensed";
+      background: black;
+      color: white;
+      padding: 1em;
+      padding-top: 0.5em;
+      padding-bottom: 0.5em;
+      width: 6em;
+      text-align: center;
     }
   </style>
 </html>

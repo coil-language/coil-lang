@@ -6,11 +6,27 @@ import {node_to_html, html_to_ast} from "./ast.coil"
 fn eval-node(node) =
   node.children::pipe(html-to-ast eval-ast eval)
 
-":p[\"Hello Friends\"]::into(document.body)"
-  ::pipe(lex_and_parse)
-  ::map(node-to-html)
-  ::into(:div.code_block{"tabindex" => 0}[])
+let editor = 
+  ":p[\"Hello Friends\"]::into(document.body)"
+    ::pipe(lex_and_parse)
+    ::map(node-to-html)
+    ::into(:div.code_block{"tabindex" => 0}[])
+
+:div[
+  :header[:h1["Coil-Lang Structural Editor (WIP)"]]
+  :a.github{href: "https://github.com/coil-language/coil-lang"}["Github"]
+  :ul.legend[  
+    :li["Eval:" :div.shortcut["Ctrl+Enter"]]
+    :li["Next Node:" :div.shortcut["Tab"]]
+    :li["Previous Node:" :div.shortcut["Shift+Tab"]]
+    :li["Nav Up:" :div.shortcut["Ctrl+p"]]
+    :li["Nav Down:" :div.shortcut["Ctrl+n"]]
+    :button{onclick: fn = eval-node(document.querySelector(".code_block")) }["Eval"]
+  ]
+  editor
+]
   ::into(document.body)
+
 
 let block = document.querySelector(".code_block")
 
