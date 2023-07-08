@@ -188,9 +188,8 @@ function inherit(f, ...Ctors) {
 f['prototype'] = Object['assign'](f['prototype'], ...map.bind(Ctors)(function (x) {
 return x['prototype'];}))
 return f;}
-function def_global(f) {
-let resolved_name = f['name']['replaceAll']("?", "__q")['replaceAll']("!", "__b")['replaceAll'](">", "_lt_")['replaceAll']("-", "_");
-globalThis[resolved_name] = f
+function def_global(f, name) {
+globalThis[name] = f
 return f;}
 const CustomNumberLiteral = Symbol("CustomNumberLiteral");
 globalThis['CustomNumberLiteral'] = CustomNumberLiteral
@@ -199,7 +198,7 @@ const Doc = Symbol("Doc");
 globalThis['Doc'] = Doc
 let doc = def_global(function doc(f, doc_str) {
 f[Doc] = doc_str['trim']();
-return f;});
+return f;}, Keyword.for("doc"));
 const Nullish = Symbol("Nullish");
 globalThis['Nullish'] = Nullish
 function nullish(thunk) {
@@ -212,7 +211,7 @@ if (truthy(this['name'])) {
 console['log'](str("# ", this['name']))
 };
 console['log'](this[Doc])
-return this;});
+return this;}, Keyword.for("log_doc"));
 const Call = Symbol("Call");
 globalThis['Call'] = Call
 function compose(first_fn, ...fns) {
@@ -222,7 +221,7 @@ for  (let f of fns) {
 result = f?.[Call](result)
 };
 return result;};}
-compose = def_global(compose)
+compose = def_global(compose, Keyword.for("compose"))
 compose = doc(compose, `
 composes a list of [[Call]] objects into a single function
 
@@ -261,7 +260,7 @@ return call.bind(collection)(this);
 } else {
 return collection[Meta]['[]'].call(collection, this);
 };};
-let call = compose(def_global, F => doc(F, `
+let call = compose(F => def_global(F, Keyword.for("call")), F => doc(F, `
 Invokes [[Call]] on 'this'
 
 
@@ -279,7 +278,7 @@ const Pipe = Symbol("Pipe");
 globalThis['Pipe'] = Pipe
 Object.prototype[Pipe] = function (callable) {
 return call.bind(callable)(this);};
-let pipe = compose(def_global, F => doc(F, `
+let pipe = compose(F => def_global(F, Keyword.for("pipe")), F => doc(F, `
 invokes [[Pipe]] protocol
 
 args:
@@ -300,7 +299,7 @@ return f(this);
 } else {
 return this?.[Pipe](f);
 };})
-let def_call = compose(def_global, F => doc(F, `
+let def_call = compose(F => def_global(F, Keyword.for("def_call")), F => doc(F, `
 decorator to define [[Call]]
 
 takes f, and applies first argument as the 'this' arg.
@@ -438,7 +437,7 @@ yield elem
 }});
 function iterator_impl() {
 return or.call(this?.[Iterator], () => fallback_iterator_impl);}
-let skip = compose(def_global, F => doc(F, `
+let skip = compose(F => def_global(F, Keyword.for("skip")), F => doc(F, `
 lazily skips 'n' elements for an iterator
 
 Examples:
@@ -446,7 +445,7 @@ Examples:
   [1 2 3]::skip(20)::into([]) // -> []
 `))(function skip(n) {
 return iterator_impl.bind(this)()['skip']['call'](iter.bind(this)(), n);})
-let take = compose(def_global, F => doc(F, `
+let take = compose(F => def_global(F, Keyword.for("take")), F => doc(F, `
 lazily takes 'n' elements for an iterator
 
 Examples:
@@ -454,7 +453,7 @@ Examples:
   [1 2 3]::take(200)::into([]) // -> [1 2 3]
 `))(function take(n) {
 return iterator_impl.bind(this)()['take']['call'](iter.bind(this)(), n);})
-let each = compose(def_global, F => doc(F, `
+let each = compose(F => def_global(F, Keyword.for("each")), F => doc(F, `
 eagerly consumes an iterator by calling 'f' on each elem
 
 Examples:
@@ -462,7 +461,7 @@ Examples:
     ::each(:name log) // prints 'bob' and 'jill'
 `))(function each(...fns) {
 return iterator_impl.bind(this)()['each']['call'](iter.bind(this)(), compose(...fns));})
-let until = compose(def_global, F => doc(F, `
+let until = compose(F => def_global(F, Keyword.for("until")), F => doc(F, `
 lazily defines an end point for an iterator
 
 Examples:
@@ -471,7 +470,7 @@ Examples:
     ::into([]) // [1 2 3]
 `))(function until(...fns) {
 return iterator_impl.bind(this)()['until']['call'](iter.bind(this)(), compose(...fns));})
-let zip = compose(def_global, F => doc(F, `
+let zip = compose(F => def_global(F, Keyword.for("zip")), F => doc(F, `
 lazily zips together a number of iterators
 
 Examples:
@@ -481,7 +480,7 @@ Examples:
   // -> Map{axe: 3, hammer: 1, pickaxe: 4}
 `))(function zip(...iterables) {
 return iterator_impl.bind(this)()['zip']['call'](iter.bind(this)(), ...iterables);})
-let map = compose(def_global, F => doc(F, `
+let map = compose(F => def_global(F, Keyword.for("map")), F => doc(F, `
 lazily maps functions over an iterator
 
 Examples:
@@ -492,7 +491,7 @@ Examples:
 return iterator_impl.bind(this)()['map']['call'](iter.bind(this)(), compose(...fns));})
 let select = map;
 globalThis['select'] = select
-let flat_map = compose(def_global, F => doc(F, `
+let flat_map = compose(F => def_global(F, Keyword.for("flat_map")), F => doc(F, `
 lazily flat maps functions over an iterator
 
 Examples:
@@ -501,7 +500,7 @@ Examples:
     ::into([]) // [1 2 3 4 5 6 7 8 9 10]
 `))(function flat_map(...fns) {
 return iterator_impl.bind(this)()['flat-map']['call'](iter.bind(this)(), compose(...fns));})
-let find = compose(def_global, F => doc(F, `
+let find = compose(F => def_global(F, Keyword.for("find")), F => doc(F, `
 eagerly finds a value in an iterator
 
 Examples:
@@ -509,7 +508,7 @@ Examples:
     ::find(Set[4 5]) // 4
 `))(function find(...fns) {
 return iterator_impl.bind(this)()['find']['call'](iter.bind(this)(), compose(...fns));})
-let keep = compose(def_global, F => doc(F, `
+let keep = compose(F => def_global(F, Keyword.for("keep")), F => doc(F, `
 lazily keeps values based off a condition
 
 Examples:
@@ -520,7 +519,7 @@ Examples:
 return iterator_impl.bind(this)()['keep']['call'](iter.bind(this)(), compose(...fns));})
 let where = keep;
 globalThis['where'] = where
-let reject = compose(def_global, F => doc(F, `
+let reject = compose(F => def_global(F, Keyword.for("reject")), F => doc(F, `
 lazily rejects values based of a condition
 
 Examples:
@@ -529,28 +528,28 @@ Examples:
     ::into([]) // [{admin: false, name: \"jill\"}]
 `))(function reject(...fns) {
 return keep.bind(this)(...fns, negate.call(_));})
-let any__q = compose(def_global, F => doc(F, `
+let any__q = compose(F => def_global(F, Keyword.for("any__q")), F => doc(F, `
 eagerly finds out if an element matches the condition
 
 Examples:
   [1 2 3 4 5]::any?(Set[3]) // true
 `))(function any__q(...fns) {
 return iterator_impl.bind(this)()['any?']['call'](iter.bind(this)(), compose(...fns));})
-let all__q = compose(def_global, F => doc(F, `
+let all__q = compose(F => def_global(F, Keyword.for("all__q")), F => doc(F, `
 eagerly finds out all elements matches the condition
 
 Examples:
   [1 2 3 4 5]::all?(_ > 0) // true
 `))(function all__q(...fns) {
 return iterator_impl.bind(this)()['all?']['call'](iter.bind(this)(), compose(...fns));})
-let reduce = compose(def_global, F => doc(F, `
+let reduce = compose(F => def_global(F, Keyword.for("reduce")), F => doc(F, `
 eagerly reduces an iterator
 
 Examples:
   [1 2 3 4 5]::reduce(+ 0) // 15
 `))(function reduce(f, start) {
 return iterator_impl.bind(this)()['reduce']['call'](iter.bind(this)(), call.bind(f), start);})
-let split = compose(def_global, F => doc(F, `
+let split = compose(F => def_global(F, Keyword.for("split")), F => doc(F, `
 lazily splits an iterator
 
 Examples:
@@ -560,7 +559,7 @@ Examples:
     ::into([]) // [\"hey\" \"there\"]
 `))(function split(...fns) {
 return iterator_impl.bind(this)()['split']['call'](iter.bind(this)(), compose(...fns));})
-let compact = compose(def_global, F => doc(F, `
+let compact = compose(F => def_global(F, Keyword.for("compact")), F => doc(F, `
 lazily compacts an iterator
 
 Examples:
@@ -570,7 +569,7 @@ Examples:
     ::into([]) // [:great :broken]
 `))(function compact() {
 return iterator_impl.bind(this)()['compact']['call'](iter.bind(this)());})
-let join = compose(def_global, F => doc(F, `
+let join = compose(F => def_global(F, Keyword.for("join")), F => doc(F, `
 eagerly joins an iterator
 
 Examples:
@@ -597,7 +596,7 @@ String.prototype[Into] = function (iterable) {
 return plus.call(this, reduce.bind(iterable)(plus, ""));};
 Object[Into] = function (iterable) {
 return Object['fromEntries'](iterable);};
-let into = compose(def_global, F => doc(F, `
+let into = compose(F => def_global(F, Keyword.for("into")), F => doc(F, `
 converts 'this' iterator into 'output', prepending existing values in 'output'
 
 Examples:
@@ -659,7 +658,7 @@ return this['size'] === (0);
 }, ['has?'](val) {
 return this['has'](val);
 }});
-let len = compose(def_call, def_global, F => doc(F, `
+let len = compose(def_call, F => def_global(F, Keyword.for("len")), F => doc(F, `
 gets length of a collection
 
 Examples:
@@ -669,7 +668,7 @@ Examples:
   Map{a: :a, b: :b}::len() // 2
 `))(function len() {
 return this[Collection]['len']['call'](this);})
-let empty__q = compose(def_call, def_global, F => doc(F, `
+let empty__q = compose(def_call, F => def_global(F, Keyword.for("empty__q")), F => doc(F, `
 determines if a collection is empty
 
 Examples:
@@ -680,7 +679,7 @@ Examples:
 `))(function empty__q() {
 return js_nullish(this?.[Collection]['empty?']['call'](this), function () {
 return true;});})
-let not_empty__q = compose(def_call, def_global, F => doc(F, `
+let not_empty__q = compose(def_call, F => def_global(F, Keyword.for("not_empty__q")), F => doc(F, `
 determines if a collection is not empty
 
 Examples:
@@ -689,7 +688,7 @@ Examples:
   null::not-empty?() // false
 `))(function not_empty__q() {
 return negate.call(empty__q.bind(this)());})
-let at = compose(def_global, F => doc(F, `
+let at = compose(F => def_global(F, Keyword.for("at")), F => doc(F, `
 extracts value from collection based on a key or index
 
 Examples:
@@ -704,7 +703,7 @@ Examples:
   Map{a: 10}::at(\"a\") // undefined
 `))(function at(key_or_idx) {
 return this[Collection]['at']['call'](this, key_or_idx);})
-let has__q = compose(def_global, F => doc(F, `
+let has__q = compose(F => def_global(F, Keyword.for("has__q")), F => doc(F, `
 determines if a collection has a value
 
 Examples:
@@ -713,7 +712,7 @@ Examples:
   {a: 10}::has?(:a) // true
 `))(function has__q(val) {
 return this[Collection]['has?']['call'](this, val);})
-let in__q = compose(def_global, F => doc(F, "Inverse of ::has?"))(function in__q(coll) {
+let in__q = compose(F => def_global(F, Keyword.for("in__q")), F => doc(F, "Inverse of ::has?"))(function in__q(coll) {
 return has__q.bind(coll)(this);})
 const Record = Symbol("Record");
 globalThis['Record'] = Record
@@ -735,7 +734,7 @@ return this['keys']();
 }, ['values']() {
 return this['values']();
 }});
-let keys = compose(def_call, def_global, F => doc(F, `
+let keys = compose(def_call, F => def_global(F, Keyword.for("keys")), F => doc(F, `
 Get keys of a record as an iterator OR a collection
 
 Example:
@@ -743,7 +742,7 @@ Example:
   Map{a: 10}::keys()::into(Set[]) // Set[:a]
 `))(function keys() {
 return this[Record]['keys']['call'](this);})
-let values = compose(def_call, def_global, F => doc(F, `
+let values = compose(def_call, F => def_global(F, Keyword.for("values")), F => doc(F, `
 Get values of a record as an iterator OR a collection
 
 Example:
@@ -751,7 +750,7 @@ Example:
   Map{a: 10}::values()::into(Set[]) // Set[10]
 `))(function values() {
 return this[Record]['values']['call'](this);})
-let insert = compose(def_global, F => doc(F, `
+let insert = compose(F => def_global(F, Keyword.for("insert")), F => doc(F, `
 Insert key & value into a record
 
 Example:
@@ -759,7 +758,7 @@ Example:
   Map{a: 10}::insert(:b 20) // Map{a: 10, b: 20}
 `))(function insert(key, value) {
 return this[Record]['insert']['call'](this, key, value);})
-let merge = compose(def_global, F => doc(F, `
+let merge = compose(F => def_global(F, Keyword.for("merge")), F => doc(F, `
 Merge 2 records together
 
 Note that since all object literal keys are strings, merging a
@@ -776,7 +775,7 @@ Example:
   Map{a: 10}::merge({a: 20}) // Map{a: 10, \"a\" => 20}
 `))(function merge(other) {
 return this[Record]['merge']['call'](this, other);})
-let record__q = compose(def_global, F => doc(F, `
+let record__q = compose(F => def_global(F, Keyword.for("record__q")), F => doc(F, `
 Determines if 'this' is a record
 
 Examples:
@@ -787,7 +786,7 @@ Examples:
 return exists__q.bind(this[Record])();})
 const Bag = Symbol("Bag");
 globalThis['Bag'] = Bag
-let bag__q = compose(def_global, F => doc(F, `
+let bag__q = compose(F => def_global(F, Keyword.for("bag__q")), F => doc(F, `
 Determines if 'this' conforms to the 'Bag' protocol
 
 Examples:
@@ -825,7 +824,7 @@ return this['replaceAll'](old_substr, new_substr);
 }, ['concat'](other) {
 return plus.call(this, other);
 }});
-let push = compose(def_global, F => doc(F, `
+let push = compose(F => def_global(F, Keyword.for("push")), F => doc(F, `
 push a value onto a bag
 
 Examples:
@@ -834,7 +833,7 @@ Examples:
   Set[1 2]::push(3) // Set[3 1 2]
 `))(function push(val) {
 return this[Bag]['push']['call'](this, val);})
-let replace = compose(def_global, F => doc(F, `
+let replace = compose(F => def_global(F, Keyword.for("replace")), F => doc(F, `
 replace a value in a bag
 
 Examples:
@@ -842,7 +841,7 @@ Examples:
   Set[1 2 3]::replace(2 3) // Set[1 3]
 `))(function replace(old_val, new_val) {
 return this[Bag]['replace']['call'](this, old_val, new_val);})
-let concat = compose(def_global, F => doc(F, `
+let concat = compose(F => def_global(F, Keyword.for("concat")), F => doc(F, `
 concat two bags by swallowing the second one into the first
 
 Examples:
@@ -878,35 +877,35 @@ return this[(0)];
 }, ['last']() {
 return this['at']((-1));
 }});
-let prepend = compose(def_global, F => doc(F, `
+let prepend = compose(F => def_global(F, Keyword.for("prepend")), F => doc(F, `
 inserts element at beginning of collection
 
 Examples:
   [1 2 3]::prepend(0) // [0 1 2 3]
 `))(function prepend(val) {
 return this[OrderedSequence]['prepend']['call'](this, val);})
-let update_at = compose(def_global, F => doc(F, `
+let update_at = compose(F => def_global(F, Keyword.for("update_at")), F => doc(F, `
 updates element at given index
 
 Examples:
   [1 2 3]::update-at(1 as_keyword) // [1 :2 3]
 `))(function update_at(idx, ...fns) {
 return this[OrderedSequence]['update-at']['call'](this, idx, compose(...fns));})
-let insert_at = compose(def_global, F => doc(F, `
+let insert_at = compose(F => def_global(F, Keyword.for("insert_at")), F => doc(F, `
 inserts element at given index
 
 Examples:
   [1 2 4]::insert-at(1 3) // [1 2 3 4]
 `))(function insert_at(idx, val) {
 return this[OrderedSequence]['insert-at']['call'](this, idx, val);})
-let first = compose(def_call, def_global, F => doc(F, `
+let first = compose(def_call, F => def_global(F, Keyword.for("first")), F => doc(F, `
 gets first element of collection
 
 Examples:
   [1 2 3]::first() // 1
 `))(function first() {
 return this[OrderedSequence]['first']['call'](this);})
-let last = compose(def_call, def_global, F => doc(F, `
+let last = compose(def_call, F => def_global(F, Keyword.for("last")), F => doc(F, `
 gets last element of collection
 
 Examples:
@@ -915,7 +914,7 @@ Examples:
 return this[OrderedSequence]['last']['call'](this);})
 const Equal = Symbol("Equal");
 globalThis['Equal'] = Equal
-let impl_equal = compose(def_global, F => doc(F, `
+let impl_equal = compose(F => def_global(F, Keyword.for("impl_equal")), F => doc(F, `
 implement [[Equal]] for a generic constructor by
 specifying the keys to measure equality by
 
@@ -964,7 +963,7 @@ return equals__q.call(at.bind(other)(key), value);});
 };}, "determine if 2 records of any kind are equal");
 Map.prototype[Equal] = record_equals__q;
 ObjectLiteral.prototype[Equal] = record_equals__q;
-let equals__q = compose(def_call, def_global, F => doc(F, `
+let equals__q = compose(def_call, F => def_global(F, Keyword.for("equals__q")), F => doc(F, `
 [[Equal]] invocation
 
 Examples:
@@ -1093,14 +1092,14 @@ return js_greater_than(this, other);
 expect_primitive_type__b.bind(other)("string")
 return js_less_than(this, other);
 }});
-let plus = compose(def_call, def_global, F => doc(F, `
+let plus = compose(def_call, F => def_global(F, Keyword.for("plus")), F => doc(F, `
 [[Plus]] method for '+' infix operator
 
 Examples:
   1::plus(2) == 1 + 2
 `))(function plus(other) {
 return this[Plus](other);})
-let negate = compose(def_call, def_global, F => doc(F, `
+let negate = compose(def_call, F => def_global(F, Keyword.for("negate")), F => doc(F, `
 [[Negate]] method for '!' prefix operator
 
 Examples:
@@ -1108,107 +1107,107 @@ Examples:
 `))(function negate() {
 return js_nullish(this?.[Negate](), function () {
 return true;});})
-let minus = compose(def_global, F => doc(F, `
+let minus = compose(F => def_global(F, Keyword.for("minus")), F => doc(F, `
 [[Minus]] method for '-' infix operator
 
 Examples:
   1::minus(2) == 1 - 2
 `))(function minus(other) {
 return this[Minus](other);})
-let times = compose(def_global, F => doc(F, `
+let times = compose(F => def_global(F, Keyword.for("times")), F => doc(F, `
 [[Times]] method for '*' infix operator
 
 Examples:
   2::times(3) == 2 * 3
 `))(function times(other) {
 return this[Times](other);})
-let divide_by = compose(def_global, F => doc(F, `
+let divide_by = compose(F => def_global(F, Keyword.for("divide_by")), F => doc(F, `
 [[Divide]] method for '/' infix operator
 
 Examples:
   2::divide_by(3) == 2 / 3
 `))(function divide_by(other) {
 return this[Divide](other);})
-let exponent = compose(def_global, F => doc(F, `
+let exponent = compose(F => def_global(F, Keyword.for("exponent")), F => doc(F, `
 [[Exponent]] method for '**' infix operator
 
 Examples:
   2::exponent(3) == 2 ** 3
 `))(function exponent(other) {
 return this[Exponent](other);})
-let mod = compose(def_global, F => doc(F, `
+let mod = compose(F => def_global(F, Keyword.for("mod")), F => doc(F, `
 [[Mod]] method for '%' infix operator
 
 Examples:
   11::mod(2) == 11 % 2
 `))(function mod(other) {
 return this[Mod](other);})
-let greater_than = compose(def_global, F => doc(F, `
+let greater_than = compose(F => def_global(F, Keyword.for("greater_than")), F => doc(F, `
 [[Comparable]].greater_than method for '>' infix operator
 
 Examples:
   2::greater_than(1) == 2 > 1
 `))(function greater_than(other) {
 return this[Comparable]['greater_than']['call'](this, other);})
-let greater_than_eq = compose(def_global, F => doc(F, `
+let greater_than_eq = compose(F => def_global(F, Keyword.for("greater_than_eq")), F => doc(F, `
 [[Comparable]].greater_than_eq method for '>=' infix operator
 
 Examples:
   2::greater_than_eq(2) == 2 >= 2
 `))(function greater_than_eq(other) {
 return this[Comparable]['greater_than_eq']['call'](this, other);})
-let less_than = compose(def_global, F => doc(F, `
+let less_than = compose(F => def_global(F, Keyword.for("less_than")), F => doc(F, `
 [[Comparable]].less_than method for '<' infix operator
 
 Examples:
   2::less_than(3) == 2 < 3
 `))(function less_than(other) {
 return this[Comparable]['less_than']['call'](this, other);})
-let less_than_eq = compose(def_global, F => doc(F, `
+let less_than_eq = compose(F => def_global(F, Keyword.for("less_than_eq")), F => doc(F, `
 [[Comparable]].less_than_eq method for '<=' infix operator
 
 Examples:
   2::less_than_eq(2) == 2 <= 3
 `))(function less_than_eq(other) {
 return this[Comparable]['less_than_eq']['call'](this, other);})
-let and = compose(def_global, F => doc(F, `
+let and = compose(F => def_global(F, Keyword.for("and")), F => doc(F, `
 [[And]] method for '&&' infix operator
 
 Examples:
   true::and(fn = :val) == true && :val
 `))(function and(thunk) {
 return this?.[And](thunk);})
-let or = compose(def_global, F => doc(F, `
+let or = compose(F => def_global(F, Keyword.for("or")), F => doc(F, `
 [[Or]] method for '||' infix operator
 
 Examples:
   false::or(fn = :val) == false || :val
 `))(function or(thunk) {
 return js_or(this?.[Or](thunk), thunk);})
-let log = compose(def_global, def_call)(function log(...args) {
+let log = compose(F => def_global(F, Keyword.for("log")), def_call)(function log(...args) {
 console['log'](...args, this)
 return this;})
 let str = def_global(function str(...args) {
-return args['join']("");});
-let nan__q = compose(def_global, def_call)(function nan__q() {
+return args['join']("");}, Keyword.for("str"));
+let nan__q = compose(F => def_global(F, Keyword.for("nan__q")), def_call)(function nan__q() {
 return Number['isNaN'](this);})
-let num__q = compose(def_global, def_call)(function num__q() {
+let num__q = compose(F => def_global(F, Keyword.for("num__q")), def_call)(function num__q() {
 return equals__q.call(typeof(this), "number");})
-let bigint__q = compose(def_global, def_call)(function bigint__q() {
+let bigint__q = compose(F => def_global(F, Keyword.for("bigint__q")), def_call)(function bigint__q() {
 return equals__q.call(typeof(this), "bigint");})
-let str__q = compose(def_global, def_call)(function str__q() {
+let str__q = compose(F => def_global(F, Keyword.for("str__q")), def_call)(function str__q() {
 return equals__q.call(typeof(this), "string");})
-let as_keyword = compose(def_global, def_call)(function as_keyword() {
+let as_keyword = compose(F => def_global(F, Keyword.for("as_keyword")), def_call)(function as_keyword() {
 return Keyword["for"](this['toString']());})
-let as_num = compose(def_global, def_call)(function as_num() {
+let as_num = compose(F => def_global(F, Keyword.for("as_num")), def_call)(function as_num() {
 return Number(this);})
-let as_str = compose(def_global, def_call)(function as_str() {
+let as_str = compose(F => def_global(F, Keyword.for("as_str")), def_call)(function as_str() {
 return js_or(this?.toString(), function () {
 return "";});})
-let exists__q = compose(def_global, def_call)(function exists__q() {
+let exists__q = compose(F => def_global(F, Keyword.for("exists__q")), def_call)(function exists__q() {
 return negate.call(nil__q.bind(this)());})
 let Underscore = def_global(function Underscore(...transforms) {
-this['transforms'] = transforms});
+this['transforms'] = transforms}, Keyword.for("Underscore"));
 Underscore.prototype[Meta] = new ObjectLiteral({["[]"]: function (...keys) {
 return this['insert'](pipe, ...keys);}});
 const UnderscoreInterpreter = Symbol("UnderscoreInterpreter");
@@ -1311,23 +1310,23 @@ BigInt.prototype[Inc] = function () {
 return plus.call(this, Keyword.for("custom_number_literal/n")[CustomNumberLiteral](1));};
 String.prototype[Inc] = function () {
 return String['fromCharCode'](plus.call(this['charCodeAt']((0)), (1)));};
-let inc = compose(def_call, def_global)(function inc() {
+let inc = compose(def_call, F => def_global(F, Keyword.for("int")))(function inc() {
 return this[Inc]();})
-let IRange = compose(def_global, F => impl_equal(F, Keyword.for("start"), Keyword.for("end")))(function IRange(start, end) {
+let IRange = compose(F => def_global(F, Keyword.for("IRange")), F => impl_equal(F, Keyword.for("start"), Keyword.for("end")))(function IRange(start, end) {
 this['start'] = start;
 this['end'] = end;
 })
-let ERange = compose(def_global, F => impl_equal(F, Keyword.for("start"), Keyword.for("end")))(function ERange(start, end) {
+let ERange = compose(F => def_global(F, Keyword.for("ERange")), F => impl_equal(F, Keyword.for("start"), Keyword.for("end")))(function ERange(start, end) {
 this['start'] = start;
 this['end'] = end;
 })
-let IRangeNoMin = compose(def_global, F => impl_equal(F, Keyword.for("end")))(function IRangeNoMin(end) {
+let IRangeNoMin = compose(F => def_global(F, Keyword.for("IRangeNoMin")), F => impl_equal(F, Keyword.for("end")))(function IRangeNoMin(end) {
 this['end'] = end;
 })
-let ERangeNoMax = compose(def_global, F => impl_equal(F, Keyword.for("start")))(function ERangeNoMax(start) {
+let ERangeNoMax = compose(F => def_global(F, Keyword.for("ERangeNoMax")), F => impl_equal(F, Keyword.for("start")))(function ERangeNoMax(start) {
 this['start'] = start;
 })
-let ERangeNoMin = compose(def_global, F => impl_equal(F, Keyword.for("end")))(function ERangeNoMin(end) {
+let ERangeNoMin = compose(F => def_global(F, Keyword.for("ERangeNoMin")), F => impl_equal(F, Keyword.for("end")))(function ERangeNoMin(end) {
 this['end'] = end;
 })
 IRange.prototype[Collection] = new ObjectLiteral({['has?'](val) {
@@ -1379,13 +1378,13 @@ let char_alpha_numeric__q = plus.call(char_alpha__q, char_numeric__q);
 globalThis['char_alpha__q'] = char_alpha__q
 globalThis['char_numeric__q'] = char_numeric__q
 globalThis['char_alpha_numeric__q'] = char_alpha_numeric__q
-let alpha__q = compose(def_global, F => doc(F, "all characters in string are in a-z or A-Z"))(function alpha__q() {
+let alpha__q = compose(F => def_global(F, Keyword.for("alpha__q")), F => doc(F, "all characters in string are in a-z or A-Z"))(function alpha__q() {
 return all__q.bind(this)(char_alpha__q);})
-let alpha_numeric__q = compose(def_global, F => doc(F, "all characters in string are in a-z or A-Z or 0-9"))(function alpha_numeric__q() {
+let alpha_numeric__q = compose(F => def_global(F, Keyword.for("alpha_numeric__q")), F => doc(F, "all characters in string are in a-z or A-Z or 0-9"))(function alpha_numeric__q() {
 return all__q.bind(this)(char_alpha_numeric__q);})
 let CondMap = def_global(function CondMap(entries) {
 this['entries'] = entries;
-});
+}, Keyword.for("CondMap"));
 CondMap.prototype[Call] = function (value) {
 return pipe.bind(find.bind(this['entries'])(function ([callable, _]) {
 return call.bind(callable)(value);}))(function ([_, val]) {
