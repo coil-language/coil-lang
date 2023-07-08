@@ -397,4 +397,9 @@ body div.code_block {
 [data-kind=pipe_to] > [data-attr=lhs]::after {
   content: \"|>\";
 }
+
+[data-kind=if] > [data-attr=body] {
+  display: flex;
+  flex-direction: column;
+}
 "

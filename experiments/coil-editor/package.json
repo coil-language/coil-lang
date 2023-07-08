@@ -6,21 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "test": "vitest"
+    "preview": "vite preview"
   },
   "devDependencies": {
-    "@testing-library/react": "^14.0.0",
-    "@testing-library/user-event": "^14.4.3",
-    "global-jsdom": "^8.8.0",
-    "jsdom": "^21.1.1",
-    "vite": "^4.3.0-beta.2",
-    "vitest": "^0.30.1"
+    "vite": "^4.3.0-beta.2"
   },
   "dependencies": {
-    "@coil-lang/compiler": "0.0.15",
-    "react": "^18.2.0",
-    "@coil-lang/react": "0.0.6",
-    "react-dom": "^18.2.0"
+    "@coil-lang/compiler": "0.0.15"
   }
 }

@@ -6,12 +6,7 @@ import {node_to_html, html_to_ast} from "./ast.coil"
 fn eval-node(node) =
   node.children::pipe(html-to-ast eval-ast eval)
 
-"let str = this.value
-    let [elem_name, ...classes] = str.split(\".\")
-    let attrs = {}
-    if classes::not_empty?() { attrs.[\"class\"] = classes.join(\" \") }
-
-    return Elem[elem_name, attrs, children]"
+":p[\"Hello Friends\"]::into(document.body)"
   ::pipe(lex_and_parse)
   ::map(node-to-html)
   ::into(:div.code_block{"tabindex" => 0}[])
@@ -20,7 +15,7 @@ fn eval-node(node) =
 let block = document.querySelector(".code_block")
 
 document.addEventListener("keydown" fn (e) {  
-  if e.key == "Enter" && e.ctrlKey {
+  if e.key == "Enter" && (e.ctrlKey || e.metaKey) {
     eval-node(document.querySelector(".code_block"))
   } else if e.key == "l" && e.ctrlKey {
     console.clear()
