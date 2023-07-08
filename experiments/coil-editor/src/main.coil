@@ -1,5 +1,6 @@
+import {lex_and_parse, eval_ast} from "@coil-lang/compiler/src/compiler.coil"
 import {render, Render} from "./ui.coil"
-import {lex_and_parse, eval_ast} from "../../../compiler/src/compiler.coil"
+
 import "./css.coil"
 import {node_to_html, html_to_ast} from "./ast.coil"
 
@@ -21,6 +22,7 @@ let editor =
     :li["Previous Node:" :div.shortcut["Shift+Tab"]]
     :li["Nav Up:" :div.shortcut["Ctrl+p"]]
     :li["Nav Down:" :div.shortcut["Ctrl+n"]]
+    :li["New Node:" :div.shortcut["Esc,Esc,Enter"]]
     :button{onclick: fn = eval-node(document.querySelector(".code_block")) }["Eval"]
   ]
   editor

@@ -1,4 +1,4 @@
-import * as coil_lang from "../../compiler/dist/compiler.mjs";
+import * as coil_lang from "@coil-lang/compiler/dist/compiler.mjs";
 const fileRegex = /\.(coil)$/;
 
 export default function coil() {
