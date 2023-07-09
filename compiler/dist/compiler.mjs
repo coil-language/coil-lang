@@ -1502,7 +1502,7 @@ let col = (1);
 while (negate.call(equals__q.call(rest_of_string(), ""))) {
 let found = false;
 for  (let [pattern, type] of this['entries']) {
-let __coil_if_let_temp = scan.bind(pattern)();
+var __coil_if_let_temp = scan.bind(pattern)();
 if (truthy(__coil_if_let_temp)) {
 let value = __coil_if_let_temp;
 if (truthy(equals__q.call(type, newline))) {
@@ -1633,7 +1633,7 @@ this['parse_map'] = parse_map;
 this['kw'] = kw;
 }
 Case.prototype[ParseInstruction] = function ([expr, tokens]) {
-let __coil_if_let_temp = call.bind(this['parse_map'])(tokens);
+var __coil_if_let_temp = call.bind(this['parse_map'])(tokens);
 if (truthy(__coil_if_let_temp)) {
 let [new_expr, new_tokens] = __coil_if_let_temp;
 if (truthy(this['kw'])) {
@@ -1691,7 +1691,7 @@ return call.bind(parser)(tokens, ...args);
 } else if (and.call(pattern instanceof Set, () => call.bind(pattern)(at.bind(first.bind(tokens)())(Keyword.for("type"))))) {
 return call.bind(parser)(tokens, ...args);
 } else if (and.call(pattern instanceof Array, () => all__q.bind(zip.bind(pattern)(tokens))(function ([p, token]) {
-let __coil_if_let_temp = token;
+var __coil_if_let_temp = token;
 if (truthy(__coil_if_let_temp)) {
 let {'type': type} = __coil_if_let_temp;
 if (truthy(p instanceof Keyword)) {
@@ -1734,7 +1734,7 @@ return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new
 function parse_third_expr_step(tokens, lhs) {
 return call.bind(ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("double_eq"), parse_double_eq], [Keyword.for("triple_eq"), parse_triple_eq], [Keyword.for("triple_not_eq"), parse_triple_not_eq], [Keyword.for("not_eq"), parse_not_eq], [Keyword.for("and_and"), parse_and_and], [Keyword.for("or_or"), parse_or_or], [Keyword.for("nullish"), parse_nullish], [Keyword.for("double_pipe"), parse_compose_operator], [Keyword.for("fn_pipe"), parse_pipe_to_operator], [comparison_ops, parse_comparison_op]]))(tokens, lhs);}
 function parse_third_expr([lhs, tokens]) {
-let __coil_while_let_temp = parse_third_expr_step(tokens, lhs);
+var __coil_while_let_temp = parse_third_expr_step(tokens, lhs);
 while (__coil_while_let_temp) {
 let [new_lhs, rest] = __coil_while_let_temp;
 lhs = new_lhs
@@ -1786,7 +1786,7 @@ return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new
 function parse_snd_expr_step(tokens, lhs) {
 return call.bind(ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("open_p"), parse_fn_call], [Keyword.for("double_colon"), parse_infix_bind], [Keyword.for("open_sq"), parse_dynamic_access], [Keyword.for("open_b"), parse_record_lookup], [Keyword.for("is"), parse_is], [Keyword.for("eq"), parse_snd_assign], [[Keyword.for("dot"), Keyword.for("open_sq")], parse_raw_dynamic_access], [Keyword.for("dot"), parse_dot], [[Keyword.for("single_and"), Keyword.for("dot")], parse_and_dot], [[Keyword.for("dot_dot"), Keyword.for("eq")], parse_inclusive_range], [Keyword.for("dot_dot"), parse_exclusive_range], [[assignable_ops, Keyword.for("eq")], parse_op_eq], [math_ops, parse_math_op]]))(tokens, lhs);}
 function parse_snd_expr([lhs, tokens]) {
-let __coil_while_let_temp = parse_snd_expr_step(tokens, lhs);
+var __coil_while_let_temp = parse_snd_expr_step(tokens, lhs);
 while (__coil_while_let_temp) {
 let [new_lhs, rest] = __coil_while_let_temp;
 lhs = new_lhs
@@ -1936,7 +1936,7 @@ function block(name) {
 return Parser[Meta]['[]'].call(Parser, Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_b")), Until[Meta]['[]'].call(Until, Keyword.for("close_b"), parse_statement, name), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_b")));}
 function parse(tokens) {
 let ast = [];
-let __coil_while_let_temp = call.bind(parse_statement)(tokens);
+var __coil_while_let_temp = call.bind(parse_statement)(tokens);
 while (__coil_while_let_temp) {
 let [statement_or_expr, rest] = __coil_while_let_temp;
 ast['push'](statement_or_expr)
@@ -2010,8 +2010,8 @@ function eval_assign_all_as({'name': name}) {
 return str("* as ", name);}
 function eval_assign_expr(node) {
 return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("id_assign"), eval_id_assign_name], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("array_deconstruction"), eval_array_deconstruction_names], [Keyword.for("object_deconstruction"), eval_object_deconstruction_names], [Keyword.for("this_assign"), eval_this_assign], [Keyword.for("this_spread_assign"), eval_spread_assign]])))(node);}
-let eval_while_let_loop = str['kw']("let __coil_while_let_temp = ", compose(Keyword.for("test_expr"), eval_expr), ";\n", "while (__coil_while_let_temp) {\n", "let ", compose(Keyword.for("assign_expr"), eval_assign_expr), " = __coil_while_let_temp;\n", compose(Keyword.for("body"), eval_ast), "\n", "__coil_while_let_temp = ", compose(Keyword.for("test_expr"), eval_expr), ";\n", "}");
-let eval_if_let = str['kw']("let __coil_if_let_temp = ", compose(Keyword.for("expr"), eval_expr), ";\n", "if (truthy(__coil_if_let_temp)) {\n", "let ", compose(Keyword.for("assign_expr"), eval_assign_expr), " = __coil_if_let_temp;\n", compose(Keyword.for("pass"), eval_ast), "\n", "}", compose(Keyword.for("fail"), eval_if_branch));
+let eval_while_let_loop = str['kw']("var __coil_while_let_temp = ", compose(Keyword.for("test_expr"), eval_expr), ";\n", "while (__coil_while_let_temp) {\n", "let ", compose(Keyword.for("assign_expr"), eval_assign_expr), " = __coil_while_let_temp;\n", compose(Keyword.for("body"), eval_ast), "\n", "__coil_while_let_temp = ", compose(Keyword.for("test_expr"), eval_expr), ";\n", "}");
+let eval_if_let = str['kw']("var __coil_if_let_temp = ", compose(Keyword.for("expr"), eval_expr), ";\n", "if (truthy(__coil_if_let_temp)) {\n", "let ", compose(Keyword.for("assign_expr"), eval_assign_expr), " = __coil_if_let_temp;\n", compose(Keyword.for("pass"), eval_ast), "\n", "}", compose(Keyword.for("fail"), eval_if_branch));
 let eval_spread = str['kw']("...", compose(Keyword.for("expr"), eval_expr));
 let eval_let = str['kw']("let ", compose(Keyword.for("assign_expr"), eval_assign_expr), " = ", compose(Keyword.for("rhs"), eval_expr));
 function eval_array({'elements': elements}) {
@@ -2050,12 +2050,12 @@ function eval_record_lookup({'lhs': lhs, 'entries': entries}) {
 let lhs_js = eval_expr(lhs);
 let entries_js = map_join.bind(entries)(eval_record_entry, ", ");
 return str(lhs_js, "[Meta]['{}'].call(", lhs_js, ", [", entries_js, "])");}
-let eval_triple_equals = str['kw'](_[Meta]['[]'].call(_, Keyword.for("lhs"), eval_expr), " === ", _[Meta]['[]'].call(_, Keyword.for("rhs"), eval_expr));
-let eval_triple_not_equals = str['kw'](_[Meta]['[]'].call(_, Keyword.for("lhs"), eval_expr), " !== ", _[Meta]['[]'].call(_, Keyword.for("rhs"), eval_expr));
-let eval_is = str['kw'](_[Meta]['[]'].call(_, Keyword.for("lhs"), eval_expr), " instanceof ", _[Meta]['[]'].call(_, Keyword.for("rhs"), eval_expr));
-let eval_and_and = str['kw']("and.call(", _[Meta]['[]'].call(_, Keyword.for("lhs"), eval_expr), ", () => ", _[Meta]['[]'].call(_, Keyword.for("rhs"), eval_expr), ")");
-let eval_or_or = str['kw']("or.call(", _[Meta]['[]'].call(_, Keyword.for("lhs"), eval_expr), ", () => ", _[Meta]['[]'].call(_, Keyword.for("rhs"), eval_expr), ")");
-let eval_nullish = str['kw']("nullish.call(", _[Meta]['[]'].call(_, Keyword.for("lhs"), eval_expr), ", () => ", _[Meta]['[]'].call(_, Keyword.for("rhs"), eval_expr), ")");
+let eval_triple_equals = str['kw'](compose(Keyword.for("lhs"), eval_expr), " === ", compose(Keyword.for("rhs"), eval_expr));
+let eval_triple_not_equals = str['kw'](compose(Keyword.for("lhs"), eval_expr), " !== ", compose(Keyword.for("rhs"), eval_expr));
+let eval_is = str['kw'](compose(Keyword.for("lhs"), eval_expr), " instanceof ", compose(Keyword.for("rhs"), eval_expr));
+let eval_and_and = str['kw']("and.call(", compose(Keyword.for("lhs"), eval_expr), ", () => ", compose(Keyword.for("rhs"), eval_expr), ")");
+let eval_or_or = str['kw']("or.call(", compose(Keyword.for("lhs"), eval_expr), ", () => ", compose(Keyword.for("rhs"), eval_expr), ")");
+let eval_nullish = str['kw']("nullish.call(", compose(Keyword.for("lhs"), eval_expr), ", () => ", compose(Keyword.for("rhs"), eval_expr), ")");
 function eval_compose({'lhs': lhs, 'rhs': rhs}) {
 let fns = [rhs];
 while (equals__q.call(lhs[Keyword.for("type")], Keyword.for("compose"))) {
@@ -2068,14 +2068,14 @@ function eval_dynamic_access_assign({'lhs': lhs, 'rhs': rhs}) {
 let {'lhs': obj, 'exprs': exprs} = lhs;
 let obj_js = eval_expr(obj);
 return str(obj_js, "[Meta]['[]='].call(", obj_js, ", [", map_join.bind(exprs)(eval_expr, ", "), "], ", eval_expr(rhs), ")");}
-let eval_general_snd_assign = str['kw'](_[Meta]['[]'].call(_, Keyword.for("lhs"), eval_expr), " = ", _[Meta]['[]'].call(_, Keyword.for("rhs"), eval_expr));
+let eval_general_snd_assign = str['kw'](compose(Keyword.for("lhs"), eval_expr), " = ", compose(Keyword.for("rhs"), eval_expr));
 function eval_snd_assign(node) {
 return call.bind(pipe.bind(node)(Keyword.for("lhs"), Keyword.for("type"), Map[Meta]['{}'].call(Map, [[Keyword.for("dynamic_access"), eval_dynamic_access_assign], [Keyword.for("id_lookup"), eval_general_snd_assign], [Keyword.for("property_lookup"), eval_general_snd_assign], [Keyword.for("raw_dynamic_access"), eval_general_snd_assign]])))(node);}
-let eval_await = str['kw']("await ", _[Meta]['[]'].call(_, Keyword.for("expr"), eval_expr));
+let eval_await = str['kw']("await ", compose(Keyword.for("expr"), eval_expr));
 function eval_yield({'star?': star__q, 'expr': expr}) {
 return str("yield", (and.call(star__q, () => "*")), " ", eval_expr(expr));}
-let eval_paren_expr = str['kw']("(", _[Meta]['[]'].call(_, Keyword.for("expr"), eval_expr), ")");
-let eval_unapplied_math_op = _[Meta]['[]'].call(_, Keyword.for("op"), math_op_to_method);
+let eval_paren_expr = str['kw']("(", compose(Keyword.for("expr"), eval_expr), ")");
+let eval_unapplied_math_op = compose(Keyword.for("op"), math_op_to_method);
 function eval_unapplied_and_and() {
 return "and";}
 function eval_unapplied_or_or() {
