@@ -2196,12 +2196,12 @@ export function eval_ast(ast) {
 return map_join.bind(ast)(eval_statement, "\n");};
 export function lex(string) {
 return call.bind(lexer)(string);};
+function coll_view(tokens) {
+return CollectionView[Meta]['[]'].call(CollectionView, tokens, (0));}
 export function lex_and_parse(string) {
-return pipe.bind(pipe.bind(call.bind(lexer)(string))(function (tokens) {
-return CollectionView[Meta]['[]'].call(CollectionView, tokens, (0));}))(parse);};
+return pipe.bind(string)(lexer, coll_view, parse);};
 export function compile(string) {
-return pipe.bind(pipe.bind(pipe.bind(call.bind(lexer)(string))(function (tokens) {
-return CollectionView[Meta]['[]'].call(CollectionView, tokens, (0));}))(parse))(eval_ast);};
+return pipe.bind(string)(lexer, coll_view, parse, eval_ast);};
 function compile_file(src_file_name, out_name) {
 let src = Deno['readTextFileSync'](src_file_name);
 Deno['writeTextFile'](out_name, compile(src))}

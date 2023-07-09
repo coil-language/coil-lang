@@ -1731,14 +1731,11 @@ export fn eval-ast(ast) = ast::map-join(eval-statement "\n")
 
 export fn lex(string) = lexer::call(string)
 
-export fn lex-and-parse(string) = lexer::call(string)
-  ::pipe(fn(tokens) = CollectionView[tokens, 0])
-  ::pipe(parse)
+fn coll-view(tokens) = CollectionView[tokens, 0]
 
-export fn compile(string) = lexer::call(string)
-  ::pipe(fn(tokens) = CollectionView[tokens, 0])
-  ::pipe(parse)
-  ::pipe(eval-ast)
+export fn lex-and-parse(string) = string::pipe(lexer coll-view parse)
+
+export fn compile(string) = string::pipe(lexer coll-view parse eval-ast)
 
 fn compile-file(src-file-name, out-name) {
   let src = Deno.readTextFileSync(src-file-name)
