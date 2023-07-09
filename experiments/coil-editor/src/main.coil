@@ -1,6 +1,5 @@
 import {lex_and_parse, eval_ast} from "@coil-lang/compiler/src/compiler.coil"
 import {render, Render} from "./ui.coil"
-
 import "./css.coil"
 import {node_to_html, html_to_ast} from "./ast.coil"
 
@@ -8,7 +7,7 @@ fn eval-node(node) =
   node.children::pipe(html-to-ast eval-ast eval)
 
 let editor = 
-  "let a = [1 :two \"three\" [4 4 4] {five: :six} 7 8]"
+  "let a = 1 let b = 2 let c = 3"
     ::pipe(lex_and_parse)
     ::map(node-to-html)
     ::into(:div.code_block{"tabindex" => 0}[])
@@ -99,26 +98,24 @@ register_eval(document)
 fn plain-node? =
   this.classList.contains("plain_node")
 
+// navigation
 block.addEventListener("keydown" fn (e) {
   fn most-recent-parent {
     if e.target::plain-node?() {
       return e.target
     } else {
-      return (e.target.closest("[data-kind=fn] > [data-attr=body] > [data-kind]") || e.target.closest(".code_block > [data-kind]"))
+      // TODO: how do we do this less ad-hoc?
+      return e.target.closest("[data-kind=fn] > [data-attr=body] > [data-kind]")
+        ?? e.target.closest(".code_block > [data-kind]")
     }
   }
+  fn focus = 
+    (this&.querySelector("[data-attr]:not(:has([data-attr]))") ?? this)
+      &.focus()
   if e.key == "p" && e.ctrlKey {
-    let prev-node = most-recent-parent()
-      &.previousSibling
-    let attr-node = prev-node
-      &.querySelector("[data-attr]:not(:has([data-attr]))")
-    (attr-node ?? prev-node)&.focus()
+    most-recent-parent()&.previousSibling::focus()
   } else if e.key == "n" && e.ctrlKey {
-    let next-node = most-recent-parent()
-      &.nextSibling
-    let attr-node = next-node
-      &.querySelector("[data-attr]:not(:has([data-attr]))")
-    (attr-node ?? next-node)&.focus()
+    most-recent-parent()&.nextSibling::focus()
   }
 })
 
@@ -155,6 +152,11 @@ fn register-new-node-listener(node) {
 
 // needed operations
 // [x] navigation (left right up down)
+//   - navigation within a body node
+//     - how do we do this without iterating through
+//       all body-ful nodes & seeing if we are in one.
+//       I don't imagine that will be very fast ^
+//       it also is a pain to maintain
 // [-] deletion (ask parent how to delete)
 // [ ] append node (ask parent where & how to insert)
 //    - look at insertAdjacentSibling - https://developer.mozilla.org/en-US/docs/Web/API/Element/insertAdjacentElement
