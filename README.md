@@ -1,4 +1,4 @@
-# Coil-Lang
+# Coil-Lang [WIP]
 
 Coil aims to make web programming simple, expressive, and powerful.
 
@@ -9,6 +9,7 @@ Coil aims to make web programming simple, expressive, and powerful.
 Coil is an all-in-one solution for all of your web development needs. This includes a language, an editor, and a full stack framework.
 
 ## Status
+
 - [x] coil-lang (pre-alpha)
   - stable compiler
   - stable prelude
