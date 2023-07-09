@@ -18,14 +18,14 @@ fn say_hi = "hello there"
 
 ## ::fn syntax
 
-There are times where you need to bind an anonmous function the local scope, for eg here's the implementation of :bind for set
+There are times where you need to bind an anonymous function the local scope, for eg here's the implementation of :bind for set
 
 ```
 impl :bind for Set = fn(val) = ::fn() = this::call(val)
 // #{10}.bind(10) // #{10}::fn() = this::call(10)
 ```
 
-## Constructors & dataclass syntax
+## Constructors
 
 Sometimes your function defines an object constructor, for example
 
