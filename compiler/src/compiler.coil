@@ -1618,15 +1618,14 @@ fn eval-return({expr}) {
   }
 }
 
-fn eval-protocol({name}) = str("const " resolve-name(name) " = Symbol(\"" name "\")")
+let eval-protocol = str.kw("const " :name >> resolve-name " = Symbol(\"" :name "\")")
 
-fn eval-impl-for({proto_expr constructor expr}) =
-  str(constructor ".prototype[" eval-expr(proto_expr) "] = " eval_expr(expr))
+let eval-impl-for = str.kw(:constructor ".prototype[" :proto_expr >> eval-expr "] = " :expr >> eval-expr)
 
-fn eval-impl-object({constructor expr}) = str(constructor ".prototype = " eval-expr(expr))
+let eval-impl-object = str.kw(:constructor ".prototype = " :expr >> eval-expr)
 
-fn eval-define-for({proto_expr src_expr expr}) =
-  str(eval-expr(src_expr) "[" eval-expr(proto_expr) "] = " eval-expr(expr))
+let eval-define-for =
+  str.kw(:src_expr >> eval-expr "[" :proto_expr >> eval-expr "] = " :expr >> eval-expr)
 
 fn eval-for-loop({is_await? assign_expr iterable_expr body}) = 
   str("for "
@@ -1636,22 +1635,16 @@ fn eval-for-loop({is_await? assign_expr iterable_expr body}) =
         eval-ast(body) "\n"
       "}")
 
-fn eval-id-assign({name, expr}) =
-  str(resolve-name(name) " = " eval-expr(expr))
+let eval-id-assign = str.kw(:name >> resolve-name " = " :expr >> eval-expr)
 
-fn eval-while-loop({test_expr body}) =
-  str("while (" eval-expr(test_expr) ") {\n"
-      eval-ast(body) "\n"
-      "}")
+let eval-while-loop = str.kw(
+  "while (" :test_expr >> eval-expr ") {\n" :body >> eval-ast "\n}")
 
-fn eval-loop({body}) =
-  str("while (true) {\n"
-      eval-ast(body) "\n"
-      "}")
+let eval-loop = str.kw("while (true) {\n" :body >> eval-ast "\n}")
 
-fn eval-continue() = "continue"
+fn eval-continue = "continue"
 
-fn eval-break() = "break"
+fn eval-break = "break"
 
 fn eval-try(node) {
   let body_js = node::at(:body)::pipe(eval_ast)
@@ -1680,9 +1673,8 @@ fn get-deconstructed-array-entry-name(node) =
     ::pipe(node)
 
 fn eval-import-deconstruction-entry(node) = node::pipe(:type Map{
-  :obj_reg_entry => _::pipe(:name resolve-name)
-  :obj_entry_rename => fn ({old_name new_name}) =
-    str(resolve-name(old_name) " as " resolve-name(new_name))
+  :obj_reg_entry => :name >> resolve-name
+  :obj_entry_rename => str.kw(:old_name >> resolve-name " as " :new_name >> resolve-name)
 })::call(node)
 
 fn eval-import-deconstruction-expr({entries}) =

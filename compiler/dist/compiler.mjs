@@ -2152,22 +2152,15 @@ return str("return ", eval_expr(expr));
 } else {
 return "return";
 };}
-function eval_protocol({'name': name}) {
-return str("const ", resolve_name(name), " = Symbol(\"", name, "\")");}
-function eval_impl_for({'proto_expr': proto_expr, 'constructor': constructor, 'expr': expr}) {
-return str(constructor, ".prototype[", eval_expr(proto_expr), "] = ", eval_expr(expr));}
-function eval_impl_object({'constructor': constructor, 'expr': expr}) {
-return str(constructor, ".prototype = ", eval_expr(expr));}
-function eval_define_for({'proto_expr': proto_expr, 'src_expr': src_expr, 'expr': expr}) {
-return str(eval_expr(src_expr), "[", eval_expr(proto_expr), "] = ", eval_expr(expr));}
+let eval_protocol = str['kw']("const ", compose(Keyword.for("name"), resolve_name), " = Symbol(\"", Keyword.for("name"), "\")");
+let eval_impl_for = str['kw'](Keyword.for("constructor"), ".prototype[", compose(Keyword.for("proto_expr"), eval_expr), "] = ", compose(Keyword.for("expr"), eval_expr));
+let eval_impl_object = str['kw'](Keyword.for("constructor"), ".prototype = ", compose(Keyword.for("expr"), eval_expr));
+let eval_define_for = str['kw'](compose(Keyword.for("src_expr"), eval_expr), "[", compose(Keyword.for("proto_expr"), eval_expr), "] = ", compose(Keyword.for("expr"), eval_expr));
 function eval_for_loop({'is_await?': is_await__q, 'assign_expr': assign_expr, 'iterable_expr': iterable_expr, 'body': body}) {
 return str("for ", (and.call(is_await__q, () => "await ")), " (let ", eval_assign_expr(assign_expr), " of ", eval_expr(iterable_expr), ") {\n", eval_ast(body), "\n", "}");}
-function eval_id_assign({'name': name, 'expr': expr}) {
-return str(resolve_name(name), " = ", eval_expr(expr));}
-function eval_while_loop({'test_expr': test_expr, 'body': body}) {
-return str("while (", eval_expr(test_expr), ") {\n", eval_ast(body), "\n", "}");}
-function eval_loop({'body': body}) {
-return str("while (true) {\n", eval_ast(body), "\n", "}");}
+let eval_id_assign = str['kw'](compose(Keyword.for("name"), resolve_name), " = ", compose(Keyword.for("expr"), eval_expr));
+let eval_while_loop = str['kw']("while (", compose(Keyword.for("test_expr"), eval_expr), ") {\n", compose(Keyword.for("body"), eval_ast), "\n}");
+let eval_loop = str['kw']("while (true) {\n", compose(Keyword.for("body"), eval_ast), "\n}");
 function eval_continue() {
 return "continue";}
 function eval_break() {
@@ -2190,8 +2183,7 @@ return pipe.bind(at.bind(Map[Meta]['{}'].call(Map, [[Keyword.for("obj_reg_entry"
 function get_deconstructed_array_entry_name(node) {
 return pipe.bind(at.bind(Map[Meta]['{}'].call(Map, [[Keyword.for("id_assign"), Keyword.for("name")]]))(at.bind(node)(Keyword.for("type"))))(node);}
 function eval_import_deconstruction_entry(node) {
-return call.bind(pipe.bind(node)(Keyword.for("type"), Map[Meta]['{}'].call(Map, [[Keyword.for("obj_reg_entry"), pipe.bind(_)(Keyword.for("name"), resolve_name)], [Keyword.for("obj_entry_rename"), function ({'old_name': old_name, 'new_name': new_name}) {
-return str(resolve_name(old_name), " as ", resolve_name(new_name));}]])))(node);}
+return call.bind(pipe.bind(node)(Keyword.for("type"), Map[Meta]['{}'].call(Map, [[Keyword.for("obj_reg_entry"), compose(Keyword.for("name"), resolve_name)], [Keyword.for("obj_entry_rename"), str['kw'](compose(Keyword.for("old_name"), resolve_name), " as ", compose(Keyword.for("new_name"), resolve_name))]])))(node);}
 function eval_import_deconstruction_expr({'entries': entries}) {
 return str("{", map_join.bind(entries)(eval_import_deconstruction_entry, ", "), "}");}
 function eval_import_assign_exprs(node) {
