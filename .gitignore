@@ -6,5 +6,6 @@ example.js
 node_modules
 **/test/dist/**/*.js
 linter.js
-**/coil-editor/**/*.ttf
+editor/**/*.ttf
 experiments/**/dist
+editor/dist
