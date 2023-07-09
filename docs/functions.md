@@ -39,16 +39,3 @@ new Dog(:joe) // Dog { name: :joe }
 // dataclass syntax for the same result
 fn Dog(@name) {}
 ```
-
-## Short Functions
-
-There are cases where you need a syntax that's even more terse. 
-
-```
-let add_1 = #(& + 1)
-```
-
-These are a strange part of the language as these actual compile to [arrow function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions)
-which keep the parent binding of 'this'.
-
-Expect these to be deprecated.

@@ -1,7 +1,7 @@
 protocol Fmt
 
 @def_call
-fn fmt = this[Fmt]()
+fn fmt = this.[Fmt]()
 
 fn Color(@string, @css) {}
 
