@@ -9,7 +9,16 @@ body div.code_block {
 
 [data-kind] {
   display: flex;
+  transition: background-color 200ms;
   gap: 0.5em;
+}
+
+.code_block > [data-kind]:has(:focus) {
+  border-bottom: 2px dashed black;
+}
+
+[data-evaluated] {
+  background-color: #00800057;
 }
 
 *:focus {
@@ -98,9 +107,12 @@ body div.code_block {
   gap: 0;
 }
 
-
-[data-kind=bind] [data-attr=expr] {
+[data-kind=bind] > [data-attr=expr] {
   display: flex;
+}
+
+[data-kind=bind] > [data-attr=expr]::before {
+  content: \"::\";
 }
 
 [data-kind=id_lookup] [data-attr=name] {
@@ -279,15 +291,6 @@ body div.code_block {
   outline: 1px solid black;
 }
 
-[data-attr]:focus {
-  // border-bottom: 1px solid black;
-}
-
-
-[data-kind=bind] [data-attr=expr]::before {
-  content: \"::\";
-}
-
 [data-kind=array] {
   gap: 0;
 }
@@ -402,4 +405,29 @@ body div.code_block {
   display: flex;
   flex-direction: column;
 }
+
+[data-kind=record_lookup] {
+  gap: 0;
+}
+
+[data-kind=record_lookup] > [data-attr=lhs] {
+  display: flex;
+}
+
+[data-kind=record_lookup] > [data-attr=lhs]::after {
+  content: \"{\";
+}
+
+[data-kind=record_lookup] > [data-attr=entries] > [data-kind=keyword_record_entry] > [data-attr=name]::after {
+  content: \":\";
+}
+
+[data-kind=record_lookup] > [data-attr=entries] {
+  display: flex;
+}
+
+[data-kind=record_lookup] > [data-attr=entries]::after {
+  content: \"}\";
+}
+
 "

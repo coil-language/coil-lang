@@ -8,7 +8,7 @@ fn eval-node(node) =
   node.children::pipe(html-to-ast eval-ast eval)
 
 let editor = 
-  ":p[\"Hello Friends\"]::into(document.body)"
+  ":p{id: \"my_id\"}[\"Hello Friends\"]::into(document.body)"
     ::pipe(lex_and_parse)
     ::map(node-to-html)
     ::into(:div.code_block{"tabindex" => 0}[])
@@ -34,11 +34,18 @@ let block = document.querySelector(".code_block")
 
 document.addEventListener("keydown" fn (e) {  
   if e.key == "Enter" && (e.ctrlKey || e.metaKey) {
-    eval-node(document.querySelector(".code_block"))
+    let root = e.target.closest(".code_block > [data-kind]")
+    root.setAttribute("data-evaluated", true)
+    setTimeout(fn = root.removeAttribute("data-evaluated"), 1000)
+    eval-node({children: [root]})
   } else if e.key == "l" && e.ctrlKey {
     console.clear()
   } else if e.key == "Enter" {
     e.preventDefault()
+  } else if e.code == "KeyF" && e.altKey {
+    e.preventDefault()
+    // re-implementing TODO
+    e.target.parentNode.closest("[data-kind]")::log().focus()
   }
 })
 

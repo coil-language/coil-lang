@@ -69,8 +69,8 @@
     }
     a.github {
       position: absolute;
-      top: 2em;
-      left: 1em;
+      top: 2rem;
+      left: 1rem;
       font-family: "Fira Sans Condensed";
       background: black;
       color: white;
@@ -79,6 +79,50 @@
       padding-bottom: 0.5em;
       width: 6em;
       text-align: center;
+    }
+    @media only screen and (max-width: 600px) {
+      .legend li {
+        display: none;
+      }
+      .legend {
+        padding: 0em;
+        top: 3em;
+      }
+      .legend button {
+        margin: 0;
+        position: fixed;
+        width: 2rem;
+        top: 5px;
+        left: 3rem;
+        height: 15px;
+        font-size: 12px;
+      }
+      a.github {
+        width: 2rem;
+        font-size: 12px;
+        padding: 0;
+        top: 5px;
+        left: 5px;
+      }
+      body {
+        padding: 0;
+        padding-top: 5em;
+      }
+      h1 {
+        font-size: 20px;
+        display: flex;
+        flex-wrap: wrap;
+      }
+      body div.code_block div {
+        font-size: 14px;
+      }
+      header {
+        width: 18em;
+      }
+      body div.code_block[tabindex="0"] {
+        padding: 1px;
+        max-width: 100vw;
+      }
     }
   </style>
 </html>
