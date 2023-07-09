@@ -1986,28 +1986,21 @@ return str(lhs_js, "['", property, "']");
 };}
 function eval_fn_call({'lhs': lhs, 'args': args}) {
 return str(eval_expr(lhs), "(", map_join.bind(args)(eval_expr, ", "), ")");}
-function eval_id_assign_name({'name': name}) {
-return resolve_name(name);}
-function eval_spread_assign({'name': name}) {
-return str("...", resolve_name(name));}
+let eval_id_assign_name = compose(Keyword.for("name"), resolve_name);
+let eval_spread_assign = str['kw']("...", compose(Keyword.for("name"), resolve_name));
 function eval_array_deconstruction_entry(node) {
 return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("id_assign"), eval_id_assign_name], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("array_deconstruction"), eval_array_deconstruction_names]])))(node);}
 function eval_array_deconstruction_names({'entries': entries}) {
 return str("[", map_join.bind(entries)(eval_array_deconstruction_entry, ", "), "]");}
-function eval_obj_reg_entry({'name': name}) {
-return str("'", name, "': ", resolve_name(name));}
-function eval_obj_entry_rename({'old_name': old_name, 'new_name': new_name}) {
-return str("'", old_name, "': ", resolve_name(new_name));}
+let eval_obj_reg_entry = str['kw']("'", Keyword.for("name"), "': ", compose(Keyword.for("name"), resolve_name));
+let eval_obj_entry_rename = str['kw']("'", Keyword.for("old_name"), "': ", compose(Keyword.for("new_name"), resolve_name));
 function eval_obj_deconstruction_entry(node) {
 return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("obj_reg_entry"), eval_obj_reg_entry], [Keyword.for("obj_entry_rename"), eval_obj_entry_rename], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("obj_str_rename_entry"), str['kw'](Keyword.for("old_name"), ": ", compose(Keyword.for("new_name"), resolve_name))]])))(node);}
 function eval_object_deconstruction_names({'entries': entries}) {
 return str("{", map_join.bind(entries)(eval_obj_deconstruction_entry, ", "), "}");}
-function eval_this_assign({'name': name}) {
-return resolve_name(name);}
-function eval_this_spread_assign({'name': name}) {
-return str("...", resolve_name(name));}
-function eval_assign_all_as({'name': name}) {
-return str("* as ", name);}
+let eval_this_assign = compose(Keyword.for("name"), resolve_name);
+let eval_this_spread_assign = str['kw']("...", compose(Keyword.for("name"), resolve_name));
+let eval_assign_all_as = str['kw']("* as ", Keyword.for("name"));
 function eval_assign_expr(node) {
 return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("id_assign"), eval_id_assign_name], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("array_deconstruction"), eval_array_deconstruction_names], [Keyword.for("object_deconstruction"), eval_object_deconstruction_names], [Keyword.for("this_assign"), eval_this_assign], [Keyword.for("this_spread_assign"), eval_spread_assign]])))(node);}
 let eval_while_let_loop = str['kw']("var __coil_while_let_temp = ", compose(Keyword.for("test_expr"), eval_expr), ";\n", "while (__coil_while_let_temp) {\n", "let ", compose(Keyword.for("assign_expr"), eval_assign_expr), " = __coil_while_let_temp;\n", compose(Keyword.for("body"), eval_ast), "\n", "__coil_while_let_temp = ", compose(Keyword.for("test_expr"), eval_expr), ";\n", "}");
@@ -2040,8 +2033,7 @@ let [num] = value['split'](/[a-zA-Z]+/);
 let modifier = value['slice'](num['length']);
 return str("Keyword.for(\"custom_number_literal/", modifier, "\")[CustomNumberLiteral](", num, ")");}
 let eval_double_equals = str['kw'](resolve_name("equals?"), ".call(", compose(Keyword.for("lhs"), eval_expr), ", ", compose(Keyword.for("rhs"), eval_expr), ")");
-function eval_not_equals(node) {
-return str("negate.call(", eval_double_equals(node), ")");}
+let eval_not_equals = str['kw']("negate.call(", eval_double_equals, ")");
 let eval_not = str['kw']("negate.call(", compose(Keyword.for("expr"), eval_expr), ")");
 function eval_dynamic_access({'lhs': lhs, 'exprs': exprs}) {
 let lhs_js = eval_expr(lhs);
@@ -2082,10 +2074,8 @@ function eval_unapplied_or_or() {
 return "or";}
 function eval_unapplied_nullish() {
 return "nullish";}
-function eval_keyword({'value': value}) {
-return str("Keyword.for(\"", value['slice']((1)), "\")");}
-function eval_regular_record_entry({'key_expr': key_expr, 'value_expr': value_expr}) {
-return str("[", eval_expr(key_expr), ", ", eval_expr(value_expr), "]");}
+let eval_keyword = str['kw']("Keyword.for(\"", compose(Keyword.for("value"), $['slice'][Meta]['[]'].call($['slice'], (1))), "\")");
+let eval_regular_record_entry = str['kw']("[", compose(Keyword.for("key_expr"), eval_expr), ", ", compose(Keyword.for("value_expr"), eval_expr), "]");
 function eval_keyword_record_entry({'name': name, 'expr': expr}) {
 return str("[", eval_keyword(new ObjectLiteral({'value': str(":", name)})), ", ", eval_expr(expr), "]");}
 function eval_record_entry(node) {
@@ -2122,14 +2112,11 @@ return str("let ", fn_name, " = ", decorator_name, "(", fn_def_js, ");");
 } else {
 return str("let ", fn_name, " = ", decorator_name, "(", fn_def_js, ", ", map_join.bind(args)(eval_expr, ", "), ");");
 };}
-function eval_and_dot({'lhs': lhs, 'rhs': rhs}) {
-return str(eval_expr(lhs), "?.", eval_expr(rhs));}
+let eval_and_dot = str['kw'](compose(Keyword.for("lhs"), eval_expr), "?.", compose(Keyword.for("rhs"), eval_expr));
 function eval_partial_fn_call({'args': args}) {
 return str("(", map_join.bind(args)(eval_expr, ", "), ")");}
-function eval_partial_obj_dyn_access({'expr': expr}) {
-return str("[", eval_expr(expr), "]");}
-function eval_regex_lit({'value': value}) {
-return value;}
+let eval_partial_obj_dyn_access = str['kw']("[", compose(Keyword.for("expr"), eval_expr), "]");
+let eval_regex_lit = Keyword.for("value");
 let logic_ops = Map[Meta]['{}'].call(Map, [["||", "or"], ["&&", "and"]]);
 let all_ops_to_method = merge.bind(math_op_to_method)(logic_ops);
 function eval_rhs_based_on_op(op, rhs) {
@@ -2139,11 +2126,9 @@ return str("() => ", eval_expr(rhs));
 return eval_expr(rhs);
 };}
 function eval_op_eq({'lhs': lhs, 'op': op, 'rhs': rhs}) {
-return str(eval_expr(lhs), " = ", call.bind(all_ops_to_method)(op), ".call(", eval_expr(lhs), ", ", eval_rhs_based_on_op(op, rhs), ")");}
-function eval_prefix_exclusive_range({'expr': expr}) {
-return str("new ERangeNoMin(", eval_expr(expr), ")");}
-function eval_raw_dynamic_access({'lhs': lhs, 'expr': expr}) {
-return str(eval_expr(lhs), "[", eval_expr(expr), "]");}
+return str(eval_expr(lhs), " = ", call.call(all_ops_to_method, op), ".call(", eval_expr(lhs), ", ", eval_rhs_based_on_op(op, rhs), ")");}
+let eval_prefix_exclusive_range = str['kw']("new ERangeNoMin(", compose(Keyword.for("expr"), eval_expr), ")");
+let eval_raw_dynamic_access = str['kw'](compose(Keyword.for("lhs"), eval_expr), "[", compose(Keyword.for("expr"), eval_expr), "]");
 function eval_expr(node) {
 return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("str"), eval_str], [Keyword.for("regex_lit"), eval_regex_lit], [Keyword.for("decorator"), eval_decorator], [Keyword.for("multi_decorator"), eval_multi_decorator], [Keyword.for("keyword"), eval_keyword], [Keyword.for("and_dot"), eval_and_dot], [Keyword.for("raw_dynamic_access"), eval_raw_dynamic_access], [Keyword.for("prefix_exclusive_range"), eval_prefix_exclusive_range], [Keyword.for("partial_fn_call"), eval_partial_fn_call], [Keyword.for("partial_obj_dyn_access"), eval_partial_obj_dyn_access], [Keyword.for("property_lookup"), eval_property_lookup], [Keyword.for("id_lookup"), eval_id_lookup], [Keyword.for("fn_call"), eval_fn_call], [Keyword.for("num"), eval_num], [Keyword.for("custom_number_literal"), eval_custom_number_literal], [Keyword.for("array"), eval_array], [Keyword.for("math_op"), eval_math_op], [Keyword.for("double_equals"), eval_double_equals], [Keyword.for("not_equals"), eval_not_equals], [Keyword.for("not"), eval_not], [Keyword.for("fn"), eval_fn], [Keyword.for("bind"), eval_bind], [Keyword.for("obj_lit"), eval_obj_lit], [Keyword.for("bind_this"), eval_bind_this], [Keyword.for("dynamic_access"), eval_dynamic_access], [Keyword.for("record_lookup"), eval_record_lookup], [Keyword.for("triple_equals"), eval_triple_equals], [Keyword.for("triple_not_equals"), eval_triple_not_equals], [Keyword.for("spread"), eval_spread], [Keyword.for("is"), eval_is], [Keyword.for("and_and"), eval_and_and], [Keyword.for("or_or"), eval_or_or], [Keyword.for("nullish"), eval_nullish], [Keyword.for("compose"), eval_compose], [Keyword.for("pipe_to"), eval_pipe_to], [Keyword.for("snd_assign"), eval_snd_assign], [Keyword.for("await"), eval_await], [Keyword.for("yield"), eval_yield], [Keyword.for("paren_expr"), eval_paren_expr], [Keyword.for("unapplied_math_op"), eval_unapplied_math_op], [Keyword.for("unapplied_and_and"), eval_unapplied_and_and], [Keyword.for("unapplied_or_or"), eval_unapplied_or_or], [Keyword.for("unapplied_nullish"), eval_unapplied_nullish], [Keyword.for("inclusive_range"), eval_inclusive_range], [Keyword.for("exclusive_range"), eval_exclusive_range], [Keyword.for("op_eq"), eval_op_eq]])))(node);}
 function eval_return({'expr': expr}) {

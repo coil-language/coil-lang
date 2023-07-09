@@ -1243,9 +1243,9 @@ fn eval-property-lookup({lhs property}) {
 fn eval-fn-call({lhs args}) =
   str(eval-expr(lhs) "(" args::map-join(eval-expr, ", ") ")")
 
-fn eval-id-assign-name({name}) = resolve-name(name)
+let eval-id-assign-name = :name >> resolve-name
 
-fn eval-spread-assign({name}) = str("..." resolve-name(name))
+let eval-spread-assign = str.kw("..." :name >> resolve-name)
 
 fn eval-array-deconstruction-entry(node) = node::at(:type)::pipe(Map{
   :id_assign => eval-id-assign-name
@@ -1256,10 +1256,9 @@ fn eval-array-deconstruction-entry(node) = node::at(:type)::pipe(Map{
 fn eval-array-deconstruction-names({entries}) =
   str("[" entries::map-join(eval-array-deconstruction-entry ", ") "]")
 
-fn eval-obj-reg-entry({name}) = str("'" name "': " resolve-name(name))
+let eval-obj-reg-entry = str.kw("'" :name "': " :name >> resolve-name)
 
-fn eval-obj-entry-rename({old_name, new_name}) =
-  str("'" old_name "': " resolve-name(new_name))
+let eval-obj-entry-rename = str.kw("'" :old_name "': "  :new_name >> resolve-name)
 
 fn eval-obj-deconstruction-entry(node) = node::at(:type)::pipe(Map{
   :obj_reg_entry => eval-obj-reg-entry
@@ -1271,12 +1270,11 @@ fn eval-obj-deconstruction-entry(node) = node::at(:type)::pipe(Map{
 fn eval-object-deconstruction-names({entries}) =
   str("{" entries::map-join(eval-obj-deconstruction-entry ", ") "}")
 
-fn eval-this-assign({name}) = resolve-name(name)
+let eval-this-assign = :name >> resolve-name
 
-fn eval-this-spread-assign({name}) = str("..." resolve-name(name))
+let eval-this-spread-assign = str.kw("..." :name >> resolve-name)
 
-fn eval-assign-all-as({name}) =
-  str("* as " name)
+let eval-assign-all-as = str.kw("* as " :name)
 
 fn eval-assign-expr(node) = node::at(:type)::pipe(Map{
   :id_assign => eval-id-assign-name
@@ -1385,7 +1383,7 @@ let eval-double-equals = str.kw(
   resolve-name("equals?") ".call(" :lhs >> eval-expr ", " :rhs >> eval-expr ")"
 )
 
-fn eval-not-equals(node) = str("negate.call(" eval-double-equals(node) ")")
+let eval-not-equals = str.kw("negate.call(" eval-double-equals ")")
 
 let eval-not = str.kw("negate.call(" :expr >> eval-expr ")")
 
@@ -1454,16 +1452,15 @@ let eval-paren-expr = str.kw("(" :expr >> eval-expr ")")
 
 let eval-unapplied-math-op = :op >> math-op-to-method
 
-fn eval-unapplied-and-and() = "and"
+fn eval-unapplied-and-and = "and"
 
-fn eval-unapplied-or-or() = "or"
+fn eval-unapplied-or-or = "or"
 
-fn eval-unapplied-nullish() = "nullish"
+fn eval-unapplied-nullish = "nullish"
 
-fn eval-keyword({value}) = str("Keyword.for(\"" value.slice(1) "\")")
+let eval-keyword = str.kw("Keyword.for(\"" :value >> $.slice[1] "\")")
 
-fn eval-regular-record_entry({key_expr value_expr}) =
-  str("[" eval-expr(key_expr) ", " eval-expr(value_expr) "]")
+let eval-regular-record_entry = str.kw("[" :key_expr >> eval-expr ", " :value_expr >> eval-expr "]")
 
 fn eval-keyword-record-entry({name expr}) =
   str("[" eval-keyword({value: str(":" name)}) ", " eval-expr(expr) "]")
@@ -1526,18 +1523,15 @@ fn eval-decorator({name: decorator_name, fn_def args}) {
   }
 }
 
-fn eval-and-dot({lhs rhs}) = str(eval-expr(lhs) "?." eval-expr(rhs))
+let eval-and-dot = str.kw(:lhs >> eval-expr "?." :rhs >> eval-expr)
 
 fn eval-partial-fn-call({args}) = str("(" args::map-join(eval-expr ", ") ")")
 
-fn eval-partial-obj-dyn-access({expr}) = str("[" eval-expr(expr) "]")
+let eval-partial-obj-dyn-access = str.kw("[" :expr >> eval-expr "]")
 
-fn eval-regex-lit({value}) = value
+let eval-regex-lit = :value
 
-let logic-ops = Map{
-  "||" => "or",
-  "&&" => "and"
-}
+let logic-ops = Map{"||" => "or", "&&" => "and"}
 
 let all-ops-to-method = math-op-to-method::merge(logic-ops)
 
@@ -1550,16 +1544,14 @@ fn eval-rhs-based-on-op(op, rhs) {
 }
 
 fn eval-op-eq({ lhs, op, rhs }) = 
-  str(eval-expr(lhs) " = "
-    all-ops-to-method::call(op) ".call("
+  str(eval-expr(lhs) " = " op |> all-ops-to-method ".call("
       eval-expr(lhs) ", "
       eval-rhs-based-on-op(op rhs) ")")
 
-fn eval-prefix-exclusive-range({ expr }) =
-  str("new ERangeNoMin(" eval-expr(expr) ")") 
+let eval-prefix-exclusive-range = str.kw("new ERangeNoMin(" :expr >> eval-expr ")") 
 
-fn eval-raw-dynamic-access({lhs expr}) =
-  str(eval-expr(lhs) "[" eval-expr(expr) "]")
+
+let eval-raw-dynamic-access = str.kw(:lhs >> eval-expr "[" :expr >> eval-expr "]")
 
 fn eval-expr(node) = node::at(:type)::pipe(Map{
   :str => eval-str
@@ -1637,8 +1629,8 @@ fn eval-for-loop({is_await? assign_expr iterable_expr body}) =
 
 let eval-id-assign = str.kw(:name >> resolve-name " = " :expr >> eval-expr)
 
-let eval-while-loop = str.kw(
-  "while (" :test_expr >> eval-expr ") {\n" :body >> eval-ast "\n}")
+let eval-while-loop =
+  str.kw("while (" :test_expr >> eval-expr ") {\n" :body >> eval-ast "\n}")
 
 let eval-loop = str.kw("while (true) {\n" :body >> eval-ast "\n}")
 
