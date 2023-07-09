@@ -8,7 +8,7 @@ fn eval-node(node) =
   node.children::pipe(html-to-ast eval-ast eval)
 
 let editor = 
-  ":p{id: \"my_id\"}[\"Hello Friends\"]::into(document.body)"
+  "let a = [1 :two \"three\" [4 4 4] {five: :six} 7 8]"
     ::pipe(lex_and_parse)
     ::map(node-to-html)
     ::into(:div.code_block{"tabindex" => 0}[])
@@ -76,6 +76,7 @@ define TextNodes for :id_assign = Set["name"]
 define TextNodes for :property_lookup = Set["property"]
 define TextNodes for :math_op = Set["op"]
 define TextNodes for :spread_assign = Set["name"]
+define TextNodes for :keyword_record_entry = Set["name"]
 
 fn register_eval(root) {
   root.querySelectorAll("[data-attr]:not(:has([data-attr]))")::each(fn (elem) {
@@ -95,18 +96,29 @@ fn register_eval(root) {
 }
 register_eval(document)
 
+fn plain-node? =
+  this.classList.contains("plain_node")
+
 block.addEventListener("keydown" fn (e) {
-  fn most-recent-parent = (e.target.closest("[data-kind=fn] > [data-attr=body] > [data-kind]") || e.target.closest(".code_block > [data-kind]"))
+  fn most-recent-parent {
+    if e.target::plain-node?() {
+      return e.target
+    } else {
+      return (e.target.closest("[data-kind=fn] > [data-attr=body] > [data-kind]") || e.target.closest(".code_block > [data-kind]"))
+    }
+  }
   if e.key == "p" && e.ctrlKey {
-    most-recent-parent()
+    let prev-node = most-recent-parent()
       &.previousSibling
+    let attr-node = prev-node
       &.querySelector("[data-attr]:not(:has([data-attr]))")
-      &.focus()
+    (attr-node ?? prev-node)&.focus()
   } else if e.key == "n" && e.ctrlKey {
-    most-recent-parent()
+    let next-node = most-recent-parent()
       &.nextSibling
+    let attr-node = next-node
       &.querySelector("[data-attr]:not(:has([data-attr]))")
-      &.focus()
+    (attr-node ?? next-node)&.focus()
   }
 })
 
@@ -134,3 +146,23 @@ block.addEventListener("keydown" fn (e) {
   })
   new_node.focus()
 })
+
+fn register-new-node-listener(node) {
+  node.addEventListener("keydown" fn (e) {
+
+  })
+}
+
+// needed operations
+// [x] navigation (left right up down)
+// [-] deletion (ask parent how to delete)
+// [ ] append node (ask parent where & how to insert)
+//    - look at insertAdjacentSibling - https://developer.mozilla.org/en-US/docs/Web/API/Element/insertAdjacentElement
+// [ ] modify parent node with operator (::, +)
+//    - is this only operators?
+
+
+// UI
+// [x] displaying node information correctly
+// [x] display node information with formatting & color
+// [ ] change formatting when content is long / wrap

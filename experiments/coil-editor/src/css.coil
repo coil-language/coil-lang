@@ -7,14 +7,56 @@ body div.code_block {
   padding: 1em;
 }
 
+.code_block > [data-kind] {
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+[data-kind=array]:has(:nth-child(7)),
+[data-kind=array] > [data-attr=elements]:has(:nth-child(7)) {
+  flex-wrap: wrap;
+}
+
+[data-kind=array]:has(:nth-child(7)) > [data-attr=elements] {
+  position: relative;
+}
+
+[data-kind=array] >
+  [data-attr=elements]:has(:nth-child(7)) > [data-kind]::after {
+  margin-left: -0.5em;  
+  content: \",\";
+}
+
+[data-kind=array] >
+  [data-attr=elements]:has(:nth-child(7)) > [data-kind=array]::after {
+  margin-left: 0;
+  content: \"],\";
+}
+
+[data-kind=array] >
+  [data-attr=elements]:has(:nth-child(7)) > [data-kind=obj_lit]::after {
+  margin-left: 0;
+  content: \"},\";
+}
+
+
 [data-kind] {
   display: flex;
   transition: background-color 200ms;
+  width: min-content;
   gap: 0.5em;
+  justify-content: flex-start;
+}
+
+[data-kind] * {
+  display: flex;
+  width: min-content;
+  text-wrap: nowrap;
 }
 
 .code_block > [data-kind]:has(:focus) {
-  border-bottom: 2px dashed black;
+  border-bottom: 2px dashed #00000088;
+  margin-bottom: -2px;
 }
 
 [data-evaluated] {
@@ -22,7 +64,7 @@ body div.code_block {
 }
 
 *:focus {
-  outline: 1px solid #0000ff4f;
+  outline: 2px solid #0000ff4f;
 }
 
 [data-kind=snd_assign] > [data-attr=lhs]::after {
@@ -30,7 +72,6 @@ body div.code_block {
 }
 
 [data-kind=snd_assign] > [data-attr=lhs] {
-  display: flex;
   gap: 0.5em;
 }
 
@@ -48,7 +89,6 @@ body div.code_block {
 }
 
 [data-attr=assign_expr] [data-kind*=_deconstruction] [data-attr=entries] {
-  display: flex;
   gap: 0.5em;
 }
 
@@ -91,8 +131,9 @@ body div.code_block {
   color: black;
 }
 
-[data-kind=let] [data-attr=assign_expr] [data-kind=id_assign] [data-attr=name] {
+[data-kind=let] > [data-attr=assign_expr] > [data-kind=id_assign] > [data-attr=name] {
   color: darkblue;
+  gap: 0.5em;
 }
 
 [data-kind=num] [data-attr=value] {
@@ -105,10 +146,6 @@ body div.code_block {
 
 [data-kind=bind] {
   gap: 0;
-}
-
-[data-kind=bind] > [data-attr=expr] {
-  display: flex;
 }
 
 [data-kind=bind] > [data-attr=expr]::before {
@@ -143,10 +180,6 @@ body div.code_block {
 [data-kind=fn_call] [data-attr=args]:has([data-kind])::after,
 [data-kind=fn] > [data-attr=args]:has([data-kind])::after  {
   margin-left: -0.5em;
-}
-
-[data-kind=fn_call] > [data-attr=args], [data-kind=fn] > [data-attr=args] {
-  display: flex;
 }
 
 [data-kind=fn_call] > [data-attr=args] [data-kind],
@@ -196,7 +229,6 @@ body div.code_block {
 }
 
 [data-kind=if] > [data-attr=pass] {
-  display: flex;
   gap: 0.5em;
 }
 
@@ -210,7 +242,6 @@ body div.code_block {
 }
 
 [data-kind=not_equals] > [data-attr=lhs] {
-  display: flex;
   gap: 0.5em;
 }
 
@@ -219,7 +250,6 @@ body div.code_block {
 }
 
 [data-kind=dynamic_access] > [data-attr=exprs] {
-  display: flex;
   gap: 0.5em;
 }
 
@@ -253,7 +283,6 @@ body div.code_block {
 }
 
 [data-kind=or_or] > [data-attr=lhs] {
-  display: flex;
   gap: 0.5em;
 }
 [data-kind=paren_expr] {
@@ -271,16 +300,11 @@ body div.code_block {
 }
 
 [data-kind=fn] > [data-attr=body] {
-  display: flex;
   flex-direction: column;
 }
 
 [data-kind=fn] > [data-attr=args] {
   margin-right: 0.5em;
-}
-
-[data-kind=fn] > [data-attr=args] > [data-kind] {
-  display: flex;
 }
 
 * {
@@ -327,7 +351,6 @@ body div.code_block {
 
 [data-kind=array] [data-attr=elements] {
   gap: 0.5em;
-  display: flex;
 }
 
 [data-kind=keyword] [data-attr=value] {
@@ -335,7 +358,6 @@ body div.code_block {
 }
 
 [data-kind=obj_lit] [data-attr=entries] {
-  display: flex;
   gap: 0.5em;
 }
 
@@ -383,9 +405,6 @@ body div.code_block {
 [data-kind=raw_dynamic_access] {
   gap: 0;
 }
-[data-kind=raw_dynamic_access] > [data-attr=lhs] {
-  display: flex;
-}
 [data-kind=raw_dynamic_access] > [data-attr=lhs]::after {
   content: \".[\";
   width: 1.25em;
@@ -394,7 +413,6 @@ body div.code_block {
   content: \"]\";
 }
 [data-kind=pipe_to] > [data-attr=lhs] {
-  display: flex;
   gap: 0.5em;
 }
 [data-kind=pipe_to] > [data-attr=lhs]::after {
@@ -402,16 +420,11 @@ body div.code_block {
 }
 
 [data-kind=if] > [data-attr=body] {
-  display: flex;
   flex-direction: column;
 }
 
 [data-kind=record_lookup] {
   gap: 0;
-}
-
-[data-kind=record_lookup] > [data-attr=lhs] {
-  display: flex;
 }
 
 [data-kind=record_lookup] > [data-attr=lhs]::after {
@@ -420,10 +433,6 @@ body div.code_block {
 
 [data-kind=record_lookup] > [data-attr=entries] > [data-kind=keyword_record_entry] > [data-attr=name]::after {
   content: \":\";
-}
-
-[data-kind=record_lookup] > [data-attr=entries] {
-  display: flex;
 }
 
 [data-kind=record_lookup] > [data-attr=entries]::after {

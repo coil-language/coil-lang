@@ -32,6 +32,7 @@ define ChildNodes for :if_let = Set["pass"]
 define ChildNodes for :else = Set["body"]
 define ChildNodes for :else_if = Set["pass"]
 define ChildNodes for :try = Set["body"]
+define ChildNodes for :record_lookup = Set["entries"]
 
 export fn html-to-ast(html_coll) {
   let ast = []
