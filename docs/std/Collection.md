@@ -2,7 +2,7 @@
 
 The Collection prelude helps you deal with generic functions.
 
-So far they have 4 protocol methods. 
+So far they have 4 protocol methods.
 
 ## Methods
 
