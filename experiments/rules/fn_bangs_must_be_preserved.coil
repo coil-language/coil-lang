@@ -1,9 +1,0 @@
-export let query = ~Fn{name: _::last() != "!"}
-
-export fn check({body}) = body
-  ::has_no_nodes?(~FnCall{lhs: ~IdLookup{name: _::last() == "!"}})
-
-export let message = "
-Side effects must be propagated by convention of appending '!'
-to the name of functions that call effectful functions.
-"

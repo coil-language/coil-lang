@@ -1,9 +1,9 @@
 protocol Sample
 
-@def_call
+@def-call
 fn sample(...args) = this[Sample](...args)
 
-@def_call
+@def-call
 fn* sample_stream(...args) {
   loop {
     yield this::sample(...args)
@@ -36,7 +36,7 @@ define Sample for :first_name = fn() {
   return names::at((0..names::len())::sample())
 }
 
-~Fake{name: :first_name
+Fake{name: :first_name
       age: 0..100
       grade: Set[:A :B :C :D :F]}
   ::sample_stream()::take(5)::as_array()::log()
