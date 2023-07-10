@@ -1,0 +1,68 @@
+// TODO
+
+export fn node-to-html(node) {
+  // let children = []
+  // for [key val] of node {
+  //   if key |> Set["type" "pos"] {
+  //     continue
+  //   } else if val is Array {
+  //     children.push(val::map(node-to-html)::into(:div{"data-attr" => key}[]))
+  //   } else if typeof(val) == "object" {
+  //     children.push(:div{"data-attr" => key}[node-to-html(val)])
+  //   } else {
+  //     children.push(:div{"data-attr" => key, "contenteditable" => true}[val])
+  //   }
+  // }
+  // return :div{"data-kind" => node.type::as_str()}[...children]
+}
+
+protocol ChildNodes
+
+impl ChildNodes for Keyword = Set[]
+// define ChildNodes for :array = Set["elements"]
+// define ChildNodes for :obj_lit = Set["entries"]
+// define ChildNodes for :object_deconstruction = Set["entries"]
+// define ChildNodes for :fn = Set["body" "args"]
+// define ChildNodes for :fn_call = Set["args"]
+// define ChildNodes for :dynamic_access = Set["exprs"]
+// define ChildNodes for :for_loop = Set["body"]
+// define ChildNodes for :while_loop = Set["body"]
+// define ChildNodes for :while_let_loop = Set["body"]
+// define ChildNodes for :loop = Set["body"]
+// define ChildNodes for :if = Set["pass"]
+// define ChildNodes for :if_let = Set["pass"]
+// define ChildNodes for :else = Set["body"]
+// define ChildNodes for :else_if = Set["pass"]
+// define ChildNodes for :try = Set["body"]
+// define ChildNodes for :record_lookup = Set["entries"]
+
+export fn html-to-ast(html_coll) {
+  // let ast = []
+  // for node of html_coll {
+  //   let {kind} = node.dataset
+  //   if kind::nil?() {
+  //     continue
+  //   } else {
+  //     let ast_node = {type: kind::as_keyword()}
+  //     for attr_node of node.children {  
+  //       let {attr} = attr_node.dataset
+  //       if attr_node.children.length == 0 {
+  //         if attr |> ast_node.type.[ChildNodes] {
+  //           ast_node.[attr] = []
+  //         } else {
+  //           ast_node.[attr] = attr_node.textContent
+  //         }
+  //       } else {
+  //         let ast_children = html-to-ast(attr_node.children)
+  //         if attr |> ast_node.type.[ChildNodes] {
+  //           ast_node.[attr] = ast_children
+  //         } else {
+  //           ast_node.[attr] = ast_children::first()
+  //         }
+  //       }
+  //     }
+  //     ast.push(ast_node)
+  //   }
+  // }
+  // return ast
+}
