@@ -2138,7 +2138,7 @@ return str("return ", eval_expr(expr));
 return "return";
 };}
 let eval_protocol = str['kw']("const ", compose(Keyword.for("name"), resolve_name), " = Symbol(\"", Keyword.for("name"), "\")");
-let eval_impl_for = str['kw'](Keyword.for("constructor"), ".prototype[", compose(Keyword.for("proto_expr"), eval_expr), "] = ", compose(Keyword.for("expr"), eval_expr));
+let eval_impl_for = str['kw'](compose(Keyword.for("constructor"), resolve_name), ".prototype[", compose(Keyword.for("proto_expr"), eval_expr), "] = ", compose(Keyword.for("expr"), eval_expr));
 let eval_impl_object = str['kw'](Keyword.for("constructor"), ".prototype = ", compose(Keyword.for("expr"), eval_expr));
 let eval_define_for = str['kw'](compose(Keyword.for("src_expr"), eval_expr), "[", compose(Keyword.for("proto_expr"), eval_expr), "] = ", compose(Keyword.for("expr"), eval_expr));
 function eval_for_loop({'is_await?': is_await__q, 'assign_expr': assign_expr, 'iterable_expr': iterable_expr, 'body': body}) {

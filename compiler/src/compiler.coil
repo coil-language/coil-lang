@@ -1600,7 +1600,7 @@ fn eval-return({expr}) {
 
 let eval-protocol = str.kw("const " :name >> resolve-name " = Symbol(\"" :name "\")")
 
-let eval-impl-for = str.kw(:constructor ".prototype[" :proto_expr >> eval-expr "] = " :expr >> eval-expr)
+let eval-impl-for = str.kw(:constructor >> resolve-name ".prototype[" :proto_expr >> eval-expr "] = " :expr >> eval-expr)
 
 let eval-impl-object = str.kw(:constructor ".prototype = " :expr >> eval-expr)
 
