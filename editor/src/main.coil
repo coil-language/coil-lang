@@ -26,12 +26,20 @@ let editor =
     ::map(node-to-html)
     ::into(:div.code_block{"tabindex" => 0}[])
 
-fn un-resolve-name(str) =
-  str
-    .replaceAll("__q", "?")
-    .replaceAll("__b", "!")
-    .replaceAll("_lt_", ">")
-    .replaceAll("_", "-")
+fn un-resolve-name(str) {
+  if str == "_" {
+    return str
+  } else {
+    return str
+      .replaceAll("__q", "?")
+      .replaceAll("__b", "!")
+      .replaceAll("_lt_", ">")
+      .replaceAll("_", "-")
+  }
+}
+
+let global-vars = Object.keys(globalThis)::map(un-resolve-name)
+  ::into(["Set"])
 
 fn lint-unused-variables {
   document::query-selector-all("[data-warn]")
@@ -39,14 +47,13 @@ fn lint-unused-variables {
 
   let ids = document::query-selector-all("[data-kind=let] > [data-attr=assign_expr] [data-text]")
     ::map(:textContent)
-    ::into([]) + Object.keys(globalThis)
-      ::map(un-resolve-name)
+    ::into([]) + global-vars
 
   document::query-selector-all(
     "[data-kind=id_lookup] [data-text]"
       ids::map(str.kw(":not([data-text=\"" _ "\"])"))::into("")
   )
-    ::each($.setAttribute["data-warn", "possibly undefined variable"])
+    ::each($.setAttribute["data-warn", "possibly undefined"])
 }
 
 :div[
