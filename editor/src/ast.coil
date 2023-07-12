@@ -8,7 +8,7 @@ export fn node-to-html(node) {
     } else if typeof(val) == "object" {
       children.push(:div{"data-attr" => key}[node-to-html(val)])
     } else {
-      children.push(:div{"data-attr" => key, "contenteditable" => true}[val])
+      children.push(:div{"data-attr" => key, "contenteditable" => true, "data-text" => val}[val])
     }
   }
   return :div{"data-kind" => node.type::as_str()}[...children]

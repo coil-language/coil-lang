@@ -439,4 +439,22 @@ body div.code_block {
   content: \"}\";
 }
 
+[data-warn] {
+  border-bottom: 2px dashed #b00000b5;
+  margin-bottom: -2px;
+  font-style: italic;
+  z-index: 5;
+}
+
+[data-warn]:hover::after {
+  content: attr(data-warn);
+  position: relative;
+  font-size: 14px;
+  background: #b00000b5;
+  height: 1em;
+  padding: 5px;
+  color: white;
+  top: calc(2rem + 2px);
+}
+
 "

@@ -3,14 +3,51 @@ import {render, Render} from "./ui.coil"
 import "./css.coil"
 import {node_to_html, html_to_ast} from "./ast.coil"
 
+fn query-selector-all(...args) =
+  this.querySelectorAll(str(...args))
+
+fn query-selector(...args) =
+    this.querySelector(str(...args))
+
+
+str.kw = fn (...args) = fn (obj) = args
+  ::map(fn (arg) {
+    if arg::str?() { return arg }
+    else { return arg::call(obj) }
+  })
+  ::into("")
+
 fn eval-node(node) =
   node.children::pipe(html-to-ast eval-ast eval)
 
 let editor = 
-  "let a = 1 let b = 2 let c = 3"
+  "let a = 10 a += 20"
     ::pipe(lex_and_parse)
     ::map(node-to-html)
     ::into(:div.code_block{"tabindex" => 0}[])
+
+fn un-resolve-name(str) =
+  str
+    .replaceAll("__q", "?")
+    .replaceAll("__b", "!")
+    .replaceAll("_lt_", ">")
+    .replaceAll("_", "-")
+
+fn lint-unused-variables {
+  document::query-selector-all("[data-warn]")
+    ::each($.removeAttribute["data-warn"])
+
+  let ids = document::query-selector-all("[data-kind=let] > [data-attr=assign_expr] [data-text]")
+    ::map(:textContent)
+    ::into([]) + Object.keys(globalThis)
+      ::map(un-resolve-name)
+
+  document::query-selector-all(
+    "[data-kind=id_lookup] [data-text]"
+      ids::map(str.kw(":not([data-text=\"" _ "\"])"))::into("")
+  )
+    ::each($.setAttribute["data-warn", "possibly undefined variable"])
+}
 
 :div[
   :header[:h1["Coil-Lang Structural Editor (WIP)"]]
@@ -28,6 +65,7 @@ let editor =
 ]
   ::into(document.body)
 
+lint-unused-variables()
 
 let block = document.querySelector(".code_block")
 
@@ -74,8 +112,16 @@ impl TextNodes for Keyword = Set[]
 define TextNodes for :id_assign = Set["name"]
 define TextNodes for :property_lookup = Set["property"]
 define TextNodes for :math_op = Set["op"]
+define TextNodes for :op_eq = Set["op"]
 define TextNodes for :spread_assign = Set["name"]
 define TextNodes for :keyword_record_entry = Set["name"]
+
+fn resolve-name! {
+  this.dataset.text = this.dataset.text
+    .replaceAll("_", "-")
+  this.textContent = this.textContent
+    .replaceAll("_", "-")
+}
 
 fn register_eval(root) {
   root.querySelectorAll("[data-attr]:not(:has([data-attr]))")::each(fn (elem) {
@@ -83,12 +129,18 @@ fn register_eval(root) {
       let parent = e.target.closest("[data-kind]")
       let kind = parent.dataset.kind::as_keyword()
       if e.target.dataset.attr |> kind.[TextNodes] {
+        e.target::resolve-name!()
+        lint-unused-variables()
         return
       } else {
         let out = elem.textContent::pipe(lex_and_parse).[0]::pipe(node-to-html render)
+        if out.dataset.kind == "id_lookup" {
+          out.querySelector("[data-text]")::resolve-name!()
+        }
         let out_target = elem.closest("[data-kind]")
         register_eval(out)
         out_target.replaceWith(out)
+        lint-unused-variables()
       }        
     })
   })
