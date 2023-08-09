@@ -1,6 +1,0 @@
-fn Model(@entries) {}
-define "{}" for Model = fn(entries) = new Model(entries)
-
-export default Model{
-  name: 0..10
-}

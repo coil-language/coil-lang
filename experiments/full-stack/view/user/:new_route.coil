@@ -1,8 +1,0 @@
-export default fn ViewUser({name}) =  
-  :form[
-    :input{
-      type: "text",
-      defaultValue: name,
-      placeholder: "Enter a name..."
-    }
-  ]

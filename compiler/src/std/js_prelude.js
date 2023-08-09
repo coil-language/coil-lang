@@ -17,6 +17,10 @@ ObjectLiteral.prototype[Symbol.iterator] = function* () {
   }
 };
 
+function js_instanceof(lhs, rhs) {
+  return lhs instanceof rhs;
+}
+
 function js_set_property(obj, keys, expr) {
   let original_obj = obj;
   for (let key of keys.slice(0, -1)) {
@@ -165,7 +169,6 @@ Keyword.prototype.toString = function () {
 };
 
 function raise__b(err) {
-  console.log(err);
   throw err;
 }
 

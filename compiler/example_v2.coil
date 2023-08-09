@@ -1,0 +1,2 @@
+console.:log(_.inc().inc()(1))
+# 1.inc().log()

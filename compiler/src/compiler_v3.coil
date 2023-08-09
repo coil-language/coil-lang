@@ -1,68 +1,75 @@
-fn CollectionView(@collection, @idx) {}
+fn CollectionView(@collection, @idx) end
 
-// Its only partially implemented right now because most use-cases
-// don't require the complete collections api.
-impl Collection for CollectionView = {
-  fn len() = this.collection::len() - this.idx
-  fn empty?() = this::len() == 0
-  fn at(idx) = this.collection::at(this.idx + idx)
-}
+fn CollectionView:prototype.(Collection:len) =
+  this:collection.len() - this:idx
 
-impl OrderedSequence for CollectionView = {
-  fn first() = this.collection::at(this.idx)
-  fn last() = this.collection::last()
-}
+fn CollectionView:prototype.(Collection:empty?) =
+  this.len() == 0
 
-impl :skip for CollectionView = fn(n) =
-  CollectionView[this.collection, this.idx + n]
+fn CollectionView:prototype.(Collection:at)(idx) =
+  this:collection.at(this:idx + idx)
 
-impl Symbol.iterator for CollectionView = fn*() {
-  for i of this.idx..=this.collection::len() {
-    yield this.collection[i]
-  }
-}
+fn CollectionView:prototype.(OrderedSequence:first) =
+  this:collection.at(this:idx)
 
-fn Lexer(@entries) {}
+fn CollectionView:prototype.(OrderedSequence:last) =
+  this:collection.last()
 
-fn pass() {}
-fn newline() {}
+fn CollectionView:prototype:skip(n) =
+  CollectionView[this:collection, this:idx + n]
 
-impl Call for Lexer = fn(str) {
-  let tokens = []  
+fn* CollectionView:prototype.(Symbol:iterator)
+  for i of this:idx..=this:collection.len()
+    yield this:collection.i
+  end
+end
+
+fn Lexer(@entries) end
+
+fn pass() end
+fn newline() end
+
+fn Lexer:prototype.invoke(str)
+  let tokens = []
   let index = 0
-  fn rest_of_string() = str.slice(index)
+  fn rest_of_string() = str:slice(index)
 
-  fn scan() {
-    let result = rest_of_string().match(this)
-    if !result || result.index != 0 { return false }
-    index = index + result[0].length
-    return result[0]
-  }
+  fn scan(pattern)
+    let result = rest_of_string():match(pattern)
+    if !result or result:index != 0
+      return false
+    else
+      index = index + result.0.length
+      return result[0]
+    end
+  end
 
   let line = 1
   let col = 1
-  while rest_of_string() != "" {
+  while rest_of_string() != ""
     let found = false
-    for [pattern type] of this.entries {
-      if let value = pattern::scan() {
-        if type == newline {
+    for [pattern type] of this:entries
+      if let value = scan(pattern)
+        if type == newline
           line += 1
           col = 1
-        } else if type != pass {
-          tokens.push({type, value, line, col})
-          col += value::len()
-        } else {
-          col += value::len()
-        }
+        else if type != pass
+          tokens:push({type, value, line, col})
+          col += value.len()
+        else
+          col += value.len()
+        end
         found = true
         break
-      }
-    }
-    if !found { raise!(Error["No token matched."]) }
-  }
+      end
+    end
+    if !found
+      raise!(Error["No token matched."])
+    end
+  end
 
   return tokens
-}
+end
 
 let lexer = Lexer{
   /^\n/ => newline
@@ -129,203 +136,200 @@ let lexer = Lexer{
   /^[a-zA-Z_\?\!\$0-9]+/ => :id
 }
 
-fn ParseError(expected_token_type, actual_token) {
-  this.stack = Error[].stack
+fn ParseError(expected_token_type, actual_token)
+  this.stack = Error[]:stack
   this.message = str(
     "Expected: " expected_token_type
-    " got " actual_token::at(:type)
-    " @ " actual_token::at(:line)::as_str() ":" actual_token::at(:col)::as_str()
+    " got " actual_token.at(:type)
+    " @ " actual_token.at(:line).as_str() ":" actual_token.at(:col).as_str()
   )
+end
 
-}
+ParseError:prototype = Error[]
 
-ParseError.prototype = Error[]
+fn expect_token!(tokens, kw)
+  if tokens.first().at(:type) != kw
+    raise!(ParseError[kw, tokens.first()])
+  else
+    return tokens
+  end
+end
 
-fn expect_token!(kw) {
-  if this::first()::at(:type) != kw {
-    raise!(ParseError[kw, this::first()])
-  } else {
-    return this
-  }
-}
-
-fn verify_exists!(parser) {
-  if this::nil?() {
+fn verify_exists!(expr, parser)
+  if expr.nil?()
     raise!(Error["Parser Failed - Expected " + parser])
-  } else {
-    return this
-  }
-}
+  else
+    return expr
+  end
+end
 
-// PARSER MACHINE IMPL
+#  PARSER MACHINE IMPL
 
-protocol ParseInstruction
+protocol parse
 
 fn line_and_col({line, col}) = {line, col}
 
-fn Init(@expr) {}
-impl ParseInstruction for Init = fn([_expr, tokens]) =
-  [{...this.expr, pos: line_and_col(tokens::first())} tokens]
+fn Init(@expr) end
+fn Init:prototype.parse([_expr tokens]) =
+  [{...this:expr, pos: line_and_col(tokens.first())} tokens]
 
-fn One(@kw, @as) {}
-impl ParseInstruction for One = fn([expr tokens]) {
-  let {value, type} = tokens::expect_token!(this.kw)::first()
-  return [expr::merge({[this.as]: value}) tokens.skip(1)]
-}
+fn One(@kw, @as) end
+fn One:prototype.parse([expr tokens])
+  let {value, type} = expect_token!(tokens this.kw).first()
+  return [{...expr, this.as => value} tokens:skip(1)]
+end
 
 fn Optional(@set_or_kw, @parse_fn, @as) {}
-impl ParseInstruction for Optional = fn([expr tokens]) {  
-  if tokens::empty?() { return [expr tokens] }
-  // this is getting hairy, reimplementing ParseMap here..
-  fn check_set(type) =
-    ::any?(fn(val) {
-      if val == type {
-        return true
-      } else if val.[Bag] {
-        return val::has?(type)
-      }
-    })
-  let {type} = tokens::first()
-  if this.set_or_kw is Keyword && type == this.set_or_kw {
-    return Then[this.parse_fn, this.as]::parse_step([expr tokens])
-  } else if this.set_or_kw is Set && this.set_or_kw::check_set(type) {
-    return Then[this.parse_fn, this.as]::parse_step([expr tokens])
-  } else {
+fn Optional:prototype.parse([expr tokens])
+  if tokens.empty?()
     return [expr tokens]
-  }
-}
+  else
+    fn check_set(set, type) =
+      set.any?(fn (val)
+        if val == type
+          return true
+        else if val.Bag
+          return val.has?(type)
+        end
+      end)
+    let {type} = tokens.first()
+    if this:set_or_kw is Keyword and type == this:set_or_kw
+      return Then[this.:parse_fn, this.:as].parse([expr tokens])
+    else if this:set_or_kw is Set && check_set(this:set_or_kw, type)
+      return Then[this.parse_fn, this.as].parse([expr tokens])
+    else
+      return [expr tokens]
+    end
+  end
+end
 
-impl ParseInstruction for Function = fn([_expr tokens]) = this(tokens)
+fn Function:prototype.parse([_expr tokens]) = this(tokens)
 
-fn Chomp(...@kws) {}
-impl ParseInstruction for Chomp = fn([expr tokens]) {
-  // this.kws::zip(tokens)::all!(fn([a b]) = a == b)
-  // return [expr tokens::skip(this.kws::len())]
+fn Chomp(...@kws) end
+fn Chomp:prototype.parse([expr tokens]) =
   let i = 0
-  for kw of this.kws {
-    tokens.skip(i)::expect_token!(kw)
+  for kw of this.kws
+    expect_token!(tokens:skip(i), kw)
     i = i + 1
-  }
-  return [expr, tokens.skip(i)]
-}
+  end
+  return [expr, tokens:skip(i)]
+end
 
-fn Then(@parser, @kw) {}
-impl ParseInstruction for Then = fn([expr tokens]) {
-  let result = this.parser::call(tokens)
-  if result::nil?() { return [expr tokens] }
-  let [new_expr new_tokens] = result
-  if this.kw {
-    return [expr::merge({[this.kw]: new_expr}) new_tokens]
-  } else {
-    return [new_expr new_tokens]
-  }
-}
-
-fn FMap(@f) {}
-impl ParseInstruction for FMap = fn([expr tokens]) = [this.f::call(expr) tokens]
-
-fn Until(@end_kw, @parser, @kw) {}
-impl ParseInstruction for Until = fn([expr tokens]) {
-  let exprs = []  
-  while tokens::first()::at(:type) != this.end_kw {
-    let [expr new_tokens] = this.parser::call(tokens)
-      ::verify_exists!(this)
-    exprs.push(expr)
-    tokens = new_tokens
-  }
-  if this.kw {
-    return [expr::merge({[this.kw]: exprs}) tokens]
-  } else {
-    return [exprs, tokens]
-  }
-}
-
-fn UntilEither(@set, @parser, @kw) {}
-impl ParseInstruction for UntilEither = fn ([expr tokens]){
-  let exprs = []
-  while !tokens::first()::at(:type)::pipe(this.set) {
-    let [expr new_tokens] = this.parser::call(tokens)
-      ::verify_exists!(this)
-    exprs.push(expr)
-    tokens = new_tokens
-  }
-  return [{...expr, [this.kw]: exprs} tokens]
-}
-
-fn Case(@parse_map, @kw) {}
-impl ParseInstruction for Case = fn([expr tokens]) {
-  if let [new_expr, new_tokens] = this.parse_map::call(tokens) {
-    if this.kw {
-      return [expr::merge({[this.kw]: new_expr}), new_tokens]
-    } else {
+fn Then(@parser, @kw) end
+fn Then:prototype.parse([expr tokens])
+  let result = this:parser(tokens)
+  if result.nil?()
+    return [expr tokens]
+  else
+    let [new_expr new_tokens] = result
+    if this:kw
+      return [{...expr, this:kw => new_expr} new_tokens]
+    else
       return [new_expr new_tokens]
-    }
-  } else {
-    console.log(this.tokens::first(), this.parse_map)
+    end
+end
+
+fn FMap(@f) end
+fn FMap:prototype.parse([expr tokens]) = [this:f(expr) tokens]
+
+fn Until(@end_kw, @parser, @kw) end
+fn Until:prototype.parse([expr tokens])
+  let exprs = []
+  while tokens.first().at(:type) != this.end_kw
+    let [expr new_tokens] = verify_exists!(this:parser(tokens) this)
+    exprs.:push(expr)
+    tokens = new_tokens
+  end
+  if this.kw
+    return [{...expr this:kw => exprs} tokens]
+  else
+    return [exprs, tokens]
+  end
+end
+
+fn UntilEither(@set, @parser, @kw) end
+fn UntilEither:prototype.parse([expr tokens])
+  let exprs = []
+  while !tokens.first().at(:type).pipe(this:set)
+    let [expr new_tokens] = verify_exists!(this:parser(tokens) this)
+    exprs:push(expr)
+    tokens = new_tokens
+  end
+  return [{...expr, this.kw => exprs} tokens]
+end
+
+fn Case(@parse_map, @kw) end
+fn Case:prototype.parse([expr tokens])
+  if let [new_expr, new_tokens] = this:parse_map(tokens)
+    if this:kw
+      return [{...expr, this:kw => new_expr}, new_tokens]
+    else
+      return [new_expr new_tokens]
+    end
+  else
+    console.log(this:tokens.first(), this:parse_map)
     raise!(Error["Case Parse Failed"])
-  }
-}
+  end
+end
 
-fn Either(@set, @kw) {}
-impl ParseInstruction for Either = fn([expr tokens]) {
-  let op = this.set::call(tokens::first()::at(:type))::verify_exists!(this.set)
-  let [new_expr, rest] = [tokens::first(), tokens.skip(1)]
-  return [expr::merge({[this.kw]: new_expr::at(:value)}), rest]
-}
+fn Either(@set, @kw) end
+fn Either:prototype.parse([expr tokens])
+  let op = verify_exists!(this:set(tokens.first().at(:type)), this:set)
+  let [new_expr, rest] = [tokens.first(), tokens:skip(1)]
+  return [{...expr this:kw => new_expr.at(:value)}, rest]
+end
 
-fn parse_step(result) = this[ParseInstruction](result)
+fn Parser(...@instructions) end
+fn Parser:prototype.invoke(tokens) = this.parse([nil tokens])
 
-fn Parser(...@instructions) {}
+fn AbortIf(@cond_fn) end
 
-impl Call for Parser = fn(tokens) =
-  this::parse_step([null tokens])
-
-fn AbortIf(@cond_fn) {}
-
-impl ParseInstruction for Parser = fn(result) {
-  for instruction of this.instructions {
-    if instruction is AbortIf {
-      if instruction.cond_fn::call(result) {
+fn Parser:prototype.parse(result)
+  for instruction of this:instructions
+    if instruction.is_a?(AbortIf)
+      if instruction:cond_fn(result)
         return
-      } else {
+      else
         continue
-      }
-    }
-    result = instruction::parse_step(result)
-  }
+      end
+    end
+    result = instruction.parse(result)
+  end
   return result
-}
+end
 
-fn ParseMap(@entries) {}
+fn ParseMap(@entries) end
 
-impl Record for ParseMap = {
-  fn keys() = this.entries::map(first)::into(Set[])
-}
+fn ParseMap:prototype.(Record:keys) =
+  this:entries.map(|[pattern _]| pattern).into(Set[])
 
-impl Call for ParseMap = fn(tokens, ...args) {
-  if tokens::empty?() { return }
-
-  for [pattern parser] of this.entries {
-    if pattern == _ {
-      return parser::call(tokens, ...args)
-    } else if pattern is Set && pattern::call(tokens::first()::at(:type)) {
-      return parser::call(tokens, ...args)
-    } else if pattern is Array && pattern::zip(tokens)::all?(fn([p, token]) {
-      if let {type} = token {
-        if p is Keyword { return p == type }
-        if p is Set { return p::has?(type) }
-      } else {
-        return false
-      }
-    }) {
-      return parser::call(tokens, ...args)
-    } else if pattern is Keyword && pattern == tokens::first()::at(:type) {
-      return parser::call(tokens, ...args)
-    }
-  }
-}
-
-// COIL PARSER START
+fn ParseMap:prototype.invoke(tokens, ...args)
+  if tokens.empty?()
+    return
+  else
+    for [pattern parser] of this:entries
+      if pattern == _
+        return parser(tokens, ...args)
+      else if pattern.is_a?(Set) and pattern(tokens.first().at(:type))
+        return parser(tokens, ...args)
+      else if pattern.is_a?(Array) and pattern.zip(tokens).all?(fn ([p, token])
+        if let {type} = token
+          if p.is_a?(Keyword)
+            return p == type
+          else if p.is_a?(Set)
+            return p.has?(type)
+          end
+        else
+          return false
+        end
+      end)
+        return parser(tokens, ...args)
+      else if pattern.is_a?(Keyword) and pattern == tokens.first().at(:type)
+        return parser(tokens, ...args)
+      end
+    end
+  end
+end
 
 let algebra_ops = Set[:mod :plus :minus :times :pow :div :lt :gt :lt_eq :gt_eq]
 
@@ -333,41 +337,44 @@ fn parse_dot(tokens, lhs) = Parser[
   Init[{type: :dot, lhs}]
   Chomp[:dot]
   Then[parse_single_expr :rhs]
-]::call(tokens)
+](tokens)
 
 fn parse_keyword_lookup(tokens, lhs) = Parser[
   AbortIf[not_adjacent?]    
   Init[{type: :keyword_lookup, lhs}]
   Chomp[:colon]
   One[:id :property]
-]::call(tokens)
+](tokens)
 
-fn not_adjacent?([_expr tokens]) {
-  let current = tokens::first()
-  let previous = tokens.collection::at(tokens.idx - 1)
-  if current.line != previous.line { return true }
-  let end_of_prev_token = previous.col + previous.value.length
-  return (current.col - end_of_prev_token) >= 1
-}
+fn not_adjacent?([_expr tokens])
+  let current = tokens.first()
+  let previous = tokens:collection.at(tokens:idx - 1)
+  if current:line != previous:line
+    return true
+  else
+    let end_of_prev_token = previous:col + previous:value:length
+    return (current:col - end_of_prev_token) >= 1
+  end
+end
 
 fn parse_adjacent_expr(tokens) = Parser[
   AbortIf[not_adjacent?]
   Then[parse_expr]
-]::call(tokens)
+](tokens)
 
 fn parse_inclusive_range(tokens lhs) = Parser[
   AbortIf[not_adjacent?]
   Init[{type: :inclusive_range, lhs}]
   Chomp[:dot_dot :eq]
-  Optional[SINGLE_EXPR_PARSE_MAP::keys() parse_adjacent_expr :rhs]
-]::call(tokens)
+  Optional[SINGLE_EXPR_PARSE_MAP.keys() parse_adjacent_expr :rhs]
+](tokens)
 
 fn parse_exclusive_range(tokens lhs) = Parser[
   AbortIf[not_adjacent?]
   Init[{type: :exclusive_range, lhs}]
   Chomp[:dot_dot]
-  Optional[SINGLE_EXPR_PARSE_MAP::keys() parse_adjacent_expr :rhs]
-]::call(tokens)
+  Optional[SINGLE_EXPR_PARSE_MAP.keys() parse_adjacent_expr :rhs]
+](tokens)
 
 fn parse_fn_call(tokens lhs) = Parser[
   AbortIf[not_adjacent?]
@@ -375,7 +382,7 @@ fn parse_fn_call(tokens lhs) = Parser[
   Chomp[:open_p]
   Until[:close_p parse_expr :args]
   Chomp[:close_p]
-]::call(tokens)
+](tokens)
 
 fn parse_meta_from_entries(tokens lhs) = Parser[
   AbortIf[not_adjacent?]
@@ -383,7 +390,7 @@ fn parse_meta_from_entries(tokens lhs) = Parser[
   Chomp[:open_b]
   Until[:close_b parse_record_entry :entries]
   Chomp[:close_b]
-]::call(tokens lhs)
+](tokens lhs)
 
 fn parse_meta_create(tokens lhs) = Parser[
   AbortIf[not_adjacent?]
@@ -391,7 +398,7 @@ fn parse_meta_create(tokens lhs) = Parser[
   Chomp[:open_sq]
   Until[:close_sq parse_expr :entries]
   Chomp[:close_sq]
-]::call(tokens lhs)
+](tokens lhs)
 
 fn parse_snd_expr_step(tokens, lhs) = ParseMap{
   :open_p => parse_fn_call
@@ -401,76 +408,76 @@ fn parse_snd_expr_step(tokens, lhs) = ParseMap{
   :colon => parse_keyword_lookup
   [:dot_dot :eq] => parse_inclusive_range
   :dot_dot => parse_exclusive_range
-}::call(tokens, lhs)
+}(tokens, lhs)
 
-fn parse_snd_expr([lhs tokens]) {  
-  while let [new_lhs rest] = parse_snd_expr_step(tokens, lhs) {
+fn parse_snd_expr([lhs tokens])  
+  while let [new_lhs rest] = parse_snd_expr_step(tokens, lhs)
     lhs = new_lhs
     tokens = rest
-  }
+  end
   return [lhs tokens]
-}
+end
 
 fn parse_algebra_op(tokens, lhs) = Parser[
   Init[{type: :algebra_op, lhs}]
   Either[algebra_ops :op]
   Then[parse_1_2_expr :rhs]
-]::call(tokens)
+](tokens)
 
 fn parse_third_expr_step(tokens, lhs) = ParseMap{
   algebra_ops => parse_algebra_op  
-}::call(tokens, lhs)
+}(tokens, lhs)
 
-fn parse_third_expr([lhs tokens]) {
-   while let [new_lhs rest] = parse_third_expr_step(tokens, lhs) {
+fn parse_third_expr([lhs tokens])
+   while let [new_lhs rest] = parse_third_expr_step(tokens, lhs)
     lhs = new_lhs
     tokens = rest
-  }
+  end
   return [lhs tokens]
-}
+end
 
 fn parse_eq_op(tokens, lhs) = Parser[
   Init[{type: :equality_op, lhs}]
   Either[Set[:double_eq :not_eq] :op]
   Then[parse_1_2_3_expr :rhs]
-]::call(tokens)
+](tokens)
 
 fn parse_fourth_expr_step(tokens, lhs) = ParseMap{
   Set[:double_eq :not_eq] => parse_eq_op
-}::call(tokens, lhs)
+}(tokens, lhs)
 
-fn parse_fourth_expr([lhs tokens]) {
-   while let [new_lhs rest] = parse_fourth_expr_step(tokens, lhs) {
+fn parse_fourth_expr([lhs tokens])
+   while let [new_lhs rest] = parse_fourth_expr_step(tokens, lhs)
     lhs = new_lhs
     tokens = rest
-  }
+  end
   return [lhs tokens]
-}
+end
 
 fn parse_and(tokens lhs) = Parser[
   Init[{type: :and, lhs}]
   Chomp[:and]
   Then[parse_1_2_3_4_expr :rhs]
-]::call(tokens)
+](tokens)
 
 fn parse_or(tokens lhs) = Parser[
   Init[{type: :or, lhs}]
   Chomp[:or]
   Then[parse_1_2_3_4_expr :rhs]
-]::call(tokens)
+](tokens)
 
 fn parse_fifth_expr_step(tokens, lhs) = ParseMap{
   :and => parse_and
   :or => parse_or
-}::call(tokens, lhs)
+}(tokens, lhs)
 
-fn parse_fifth_expr([lhs tokens]) {
-   while let [new_lhs rest] = parse_fifth_expr_step(tokens, lhs) {
+fn parse_fifth_expr([lhs tokens])
+   while let [new_lhs rest] = parse_fifth_expr_step(tokens, lhs)
     lhs = new_lhs
     tokens = rest
-  }
+  end
   return [lhs tokens]
-}
+end
 
 let parse_regex = Parser[
   Init[{type: :regex_lit}]
@@ -486,7 +493,7 @@ let valid_ids_in_all_contexts = Set[:id :from]
 
 let parse_id = Parser[
   Init[{type: :id_lookup}]
-  Either[valid_ids_in_all_contexts::push(:import) :name]
+  Either[valid_ids_in_all_contexts.push(:import) :name]
 ]
 
 fn parse_obj(tokens) = Parser[
@@ -494,7 +501,7 @@ fn parse_obj(tokens) = Parser[
   Chomp[:open_b]
   Until[:close_b parse_record_entry :entries]
   Chomp[:close_b]
-]::call(tokens)
+](tokens)
 
 let parse_spread_assign = Parser[
   Init[{type: :spread_assign}]
@@ -512,7 +519,7 @@ fn parse_assign_array(tokens) = Parser[
   Chomp[:open_sq]
   Until[:close_sq parse_assign_expr :entries]
   Chomp[:close_sq]
-]::call(tokens)
+](tokens)
 
 let parse_obj_entry_rename = Parser[
   Init[{type: :obj_entry_rename}]
@@ -531,7 +538,7 @@ fn parse_obj_entry_destructure(tokens) = Parser[
   One[valid_ids_in_all_contexts :property]
   Chomp[:colon]
   Then[parse_assign_expr :assign_expr]
-]::call(tokens)
+](tokens)
 
 let parse_obj_assign_entry = ParseMap{
   [:id :colon :id] => parse_obj_entry_rename
@@ -573,20 +580,20 @@ fn parse_paren_expr(tokens) = Parser[
   Chomp[:open_p]
   Then[parse_expr :expr]
   Chomp[:close_p]
-]::call(tokens)
+](tokens)
 
 fn parse_yield(tokens) = Parser[
   Init[{type: :yield}]
   Chomp[:yield]
   Optional[:times parse_gen_modifier :star?]
   Then[parse_expr :expr]
-]::call(tokens)
+](tokens)
 
 fn parse_await(tokens) = Parser[
   Init[{type: :await}]
   Chomp[:await]
   Then[parse_expr :expr]
-]::call(tokens)
+](tokens)
 
 let parse_num = Parser[Init[{type: :num}] One[:num :value]]
 
@@ -595,24 +602,23 @@ fn parse_array(tokens) = Parser[
   Chomp[:open_sq]
   Until[:close_sq parse_expr :elements]
   Chomp[:close_sq]
-]::call(tokens)
+](tokens)
 
 fn parse_spread(tokens) = Parser[
   Init[{type: :spread}]
   Chomp[:dot_dot_dot]
   Then[parse_expr :expr]
-]::call(tokens)
+](tokens)
 
 fn parse_not(tokens) = Parser[
   Init[{type: :not}]
   Chomp[:bang]
   Then[parse_expr :expr]
-]::call(tokens)
+](tokens)
 
 fn parse_num_raw(tokens) =
-  parse_num
-    ::call(tokens)
-    ::pipe(fn([expr, tokens]) = [expr::at(:value)::as_num(), tokens])
+  parse_num(tokens)
+    .pipe(|[expr, tokens]| [expr.at(:value).as_num(), tokens])
 
 let parse_adjacent_num_raw = Parser[
   AbortIf[not_adjacent?]
@@ -633,14 +639,14 @@ fn parse_fn_expr_body(tokens) = Parser[
   Init[{type: :return}]
   Chomp[:eq]
   Then[parse_expr :expr]
-  FMap[fn(node) = [node]]
-]::call(tokens)
+  FMap[|node| [node]]
+](tokens)
 
 fn parse_args_def(tokens) = Parser[
   Chomp[:open_p]
   Until[:close_p parse_assign_expr]
   Chomp[:close_p]
-]::call(tokens)
+](tokens)
 
 fn parse_fn(tokens) = Parser[
   Init[{type: :fn}]
@@ -653,26 +659,26 @@ fn parse_fn(tokens) = Parser[
     :eq => parse_fn_expr_body,
     _ => block()
   } :body]
-]::call(tokens)
+](tokens)
 
 fn parse_keyword_record_entry(tokens) = Parser[
   Init[{type: :keyword_record_entry}]
   One[:id :name]
   Chomp[:colon]
   Then[parse_expr :expr]
-]::call(tokens)
+](tokens)
 
 fn parse_regular_record_entry(tokens) = Parser[
   Init[{type: :regular_record_entry}]
   Then[parse_expr :key_expr]
   Chomp[:arrow]
   Then[parse_expr :value_expr]
-]::call(tokens)
+](tokens)
 
 fn parse_id_shorthand_record_entry(tokens) = Parser[
   Init[{type: :id_shorthand_record_entry}]
   One[:id :name]
-]::call(tokens)
+](tokens)
 
 fn parse_record_entry(tokens) = ParseMap{
   :dot_dot_dot => parse_spread
@@ -682,19 +688,13 @@ fn parse_record_entry(tokens) = ParseMap{
   :fn => parse_fn
   [:async :fn] => parse_fn
   _ => parse_regular_record_entry
-}::call(tokens)
-
-fn parse_prefix_inclusive_range(tokens) = Parser[
-  Init[{type: :prefix_inclusive_range}]
-  Chomp[:dot_dot :eq]
-  Then[parse_expr :expr]
-]::call(tokens)
+}(tokens)
 
 fn parse_prefix_exclusive_range(tokens) = Parser[
   Init[{type: :prefix_exclusive_range}]
   Chomp[:dot_dot]
   Then[parse_expr :expr]
-]::call(tokens)
+](tokens)
 
 let parse_keyword = Parser[
   Init[{type: :keyword}]
@@ -723,15 +723,14 @@ let SINGLE_EXPR_PARSE_MAP = ParseMap{
   :bang => parse_not
   :open_b => parse_obj
   :pipe_bar => parse_anon_fn
-  [:dot_dot :eq] => parse_prefix_inclusive_range
   :dot_dot => parse_prefix_exclusive_range
-  valid_ids_in_all_contexts::push(:import) => parse_id
+  valid_ids_in_all_contexts.push(:import) => parse_id
   [:async :fn] => parse_fn
   :fn => parse_fn
   [:colon :id] => parse_keyword
 }
 
-fn parse_single_expr(tokens) = SINGLE_EXPR_PARSE_MAP::call(tokens)
+fn parse_single_expr(tokens) = SINGLE_EXPR_PARSE_MAP(tokens)
 
 fn parse_expr(tokens) = parse_fifth_expr(parse_fourth_expr(parse_third_expr(parse_snd_expr(parse_single_expr(tokens)))))
 
@@ -745,7 +744,7 @@ fn parse_else_branch(tokens) = Parser[
   Init[{type: :else}]  
   Chomp[:else]
   UntilEither[Set[:else :end] parse_statement :body]
-]::call(tokens)
+](tokens)
 
 fn parse_else_if_branch(tokens) = Parser[
   Init[{type: :else_if}]  
@@ -753,7 +752,7 @@ fn parse_else_if_branch(tokens) = Parser[
   Then[parse_expr :expr]
   UntilEither[Set[:else :end] parse_statement :pass]
   Optional[:else parse_if_branch :fail]
-]::call(tokens)
+](tokens)
 
 let parse_if_branch = ParseMap{
   [:else :if] => parse_else_if_branch
@@ -767,7 +766,7 @@ fn parse_if(tokens) = Parser[
   UntilEither[Set[:else :end] parse_statement :pass]
   Optional[:else parse_if_branch :fail]
   Chomp[:end]
-]::call(tokens)
+](tokens)
 
 let parse_let = Parser[
   Init[{type: :let}]
@@ -786,7 +785,7 @@ fn parse_if_let(tokens) = Parser[
   UntilEither[Set[:else :end] parse_statement :pass]
   Optional[:else parse_else_branch :fail]
   Chomp[:end]
-]::call(tokens)
+](tokens)
 
 let parse_protocol_methods = Parser[
   Init[{type: :protocol_method}]  
@@ -805,7 +804,7 @@ let parse_protocol = Parser[
 let parse_return = Parser[
   Init[{type: :return}]
   Chomp[:return]
-  Optional[SINGLE_EXPR_PARSE_MAP::keys() parse_expr :expr]
+  Optional[SINGLE_EXPR_PARSE_MAP.keys() parse_expr :expr]
 ]
 
 let parse_await_modifier = Parser[
@@ -821,20 +820,20 @@ fn parse_for_loop(tokens) = Parser[
   Chomp[:of]
   Then[parse_expr :iterable_expr]
   block(:body)
-]::call(tokens)
+](tokens)
 
 fn parse_loop(tokens) = Parser[
   Init[{type: :loop}]
   Chomp[:loop]
   block(:body)
-]::call(tokens)
+](tokens)
 
 fn parse_while_loop(tokens) = Parser[
   Init[{type: :while_loop}]
   Chomp[:while]
   Then[parse_expr :test_expr]
   block(:body)
-]::call(tokens)
+](tokens)
 
 fn parse_while_let_loop(tokens) = Parser[
   Init[{type: :while_let_loop}]
@@ -843,30 +842,30 @@ fn parse_while_let_loop(tokens) = Parser[
   Chomp[:eq]
   Then[parse_expr :test_expr]
   block(:body)
-]::call(tokens)
+](tokens)
 
 fn parse_continue(tokens) = Parser[
   Init[{type: :continue}]
   Chomp[:continue]
-]::call(tokens)
+](tokens)
 
 fn parse_break(tokens) = Parser[
   Init[{type: :break}]
   Chomp[:break]
-]::call(tokens)
+](tokens)
 
 fn parse_catch(tokens) = Parser[
   Init[{type: :catch}]
   Chomp[:catch]
   One[:id :name]
   block(:body)
-]::call(tokens)
+](tokens)
 
 fn parse_finally(tokens) = Parser[
   Init[{type: :finally}]
   Chomp[:finally]
   block(:body)
-]::call(tokens)
+](tokens)
 
 fn parse_try(tokens) = Parser[
   Init[{type: :try}]
@@ -874,7 +873,7 @@ fn parse_try(tokens) = Parser[
   block(:body)
   Optional[:catch parse_catch :catch]
   Optional[:finally parse_finally :finally]
-]::call(tokens)
+](tokens)
 
 fn parse_import(tokens) = Parser[
   Init[{type: :import}]
@@ -882,19 +881,19 @@ fn parse_import(tokens) = Parser[
   Then[parse_assign_expr :assign_exprs]
   Chomp[:from]
   Then[parse_str :path]
-]::call(tokens)
+](tokens)
 
 fn parse_export(tokens) = Parser[
   Init[{type: :export}]
   Chomp[:export]
   Then[parse_statement :statement]
-]::call(tokens)
+](tokens)
 
 fn parse_export_default(tokens) = Parser[
   Init[{type: :export_default}]
   Chomp[:export :default]
   Then[parse_expr :expr]
-]::call(tokens)
+](tokens)
 
 let parse_direct_import = Parser[
   Init[{type: :direct_import}]
@@ -920,62 +919,55 @@ fn parse_statement(tokens) = ParseMap{
   [:if :let] => parse_if_let
   :if => parse_if
   _ => parse_expr
-}::call(tokens)
+}(tokens)
 
 fn block(name) = Parser[
   Until[:end parse_statement name]
   Chomp[:end]
 ]
 
-fn parse(tokens) {
+fn parse(tokens)
   let ast = []
-  while let [statement_or_expr, rest] = parse_statement::call(tokens) {
-    ast.push(statement_or_expr)
+  while let [statement_or_expr, rest] = parse_statement(tokens)
+    ast:push(statement_or_expr)
     tokens = rest
-  }
+  end
   return ast
-}
+end
 
-// END OF PARSING
+# END OF PARSING
 
-// START OF EVAL
+# START OF EVAL
 
-fn map_join(f, separator) =
-  this::map(f)::reduce(fn(acc, cur) {
-    if acc::empty?() { return cur }
-    else { return acc + separator + cur }
-  }, "")
-
-fn resolve_name(name) {
-  if name {
+fn resolve_name(name)
+  if name
     return name
-      .replaceAll("?", "__q")
-      .replaceAll("!", "__b")
-      .replaceAll(">", "_lt_")
-      .replaceAll("-", "_")
-  }
-  return name
-}
+      .:replaceAll("?", "__q")
+      .:replaceAll("!", "__b")
+      .:replaceAll(">", "_lt_")
+      .:replaceAll("-", "_")
+  else
+    return name
+  end
+end
 
-fn eval_if_branch(branch) {
-  if branch::nil?() {
+fn eval_if_branch(branch)
+  if branch.nil?()
     return ""
-  } else if branch.type == :else {
-    return str(" else {\n"
-      eval_ast(branch |> :body || [])
-    "\n}")
-  } else {
-    if branch |> :type == :else_if {
+  else if branch.:type == :else
+    return str(" else {\n" eval_ast(branch.:body or []) "\n}")
+  else
+    if branch.:type == :else_if
       return str(
-        " else if (" eval_expr(branch::at(:expr)) ") {\n"
-          eval_ast(branch::at(:pass) || [])
-        "\n}" eval_if_branch(branch::at(:fail))
+        " else if (" eval_expr(branch.at(:expr)) ") {\n"
+          eval_ast(branch.at(:pass) or [])
+        "\n}" eval_if_branch(branch.at(:fail))
       )
-    } else {
+    else
       raise!(Error["Expected else if"])
-    }
-  }
-}
+    end
+  end
+end
 
 fn eval_if({expr, pass, fail}) = str(
   "if (" eval_expr(expr) "[Meta.as_bool]()) {\n"
@@ -983,57 +975,59 @@ fn eval_if({expr, pass, fail}) = str(
   "}" eval_if_branch(fail)
 )
 
-fn eval_str({value}) {
-  value = value.slice(1, -1)
-  if value.includes("\n") {
+fn eval_str({value})
+  value = value.:slice(1, -1)
+  if value.:includes("\n")
     return str("`" value "`")
-  } else {
+  else
     return str("\"" value "\"")
-  }
-}
+  end
+end
 
 fn eval_fn_call({lhs args}) = 
-  str(eval_expr(lhs) "[invoke](" args::map_join(eval_expr, ", ") ")")
+  str(eval_expr(lhs) "[invoke](" args.map_join(eval_expr, ", ") ")")
 
 fn eval_id_assign_name({name}) = resolve_name(name)
 
 fn eval_spread_assign({name}) = str("..." resolve_name(name))
 
-fn eval_array_deconstruction_entry(node) = node::at(:type)::pipe(Map{
+fn eval_array_deconstruction_entry(node) = node.at(:type).pipe(Map{
   :id_assign => eval_id_assign_name
   :spread_assign => eval_spread_assign
   :array_deconstruction => eval_array_deconstruction_names
-})::call(node)
+})(node)
 
 fn eval_array_deconstruction_names({entries}) =
-  str("[" entries::map_join(eval_array_deconstruction_entry ", ") "]")
+  str("[" entries.map_join(eval_array_deconstruction_entry ", ") "]")
 
 fn eval_obj_reg_entry({name}) = str("'" name "': " resolve_name(name))
 
-fn eval_obj_entry_rename({old_name, new_name}) = str("'" old_name "': " resolve_name(new_name))
+fn eval_obj_entry_rename({old_name, new_name}) = str("'" old_name "': "  :new_name >> resolve_name)
 
-fn eval_obj_deconstruction_entry(node) = node::at(:type)::pipe(Map{
+fn eval_obj_deconstruction_entry(node) = node.at(:type).pipe(Map{
   :obj_reg_entry => eval_obj_reg_entry
   :obj_entry_rename => eval_obj_entry_rename
   :spread_assign => eval_spread_assign
-  :obj_str_rename_entry => fn ({old_name, new_name}) = str(old_name ": " resolve_name(new_name))
-})::call(node)
+  :obj_str_rename_entry => str(:old_name ": " :new_name >> resolve_name)
+})(node)
 
 fn eval_object_deconstruction_names({entries}) =
-  str("{" entries::map_join(eval_obj_deconstruction_entry ", ") "}")
+  str("{" entries.map_join(eval_obj_deconstruction_entry ", ") "}")
 
-let eval_this_assign = :name >> resolve_name
+fn eval_this_assign({name}) = resolve_name(name)
 
 fn eval_this_spread_assign({name}) = str("..." resolve_name(name))
 
-fn eval_assign_expr(node) = node::at(:type)::pipe(Map{
+fn eval_assign_all_as({name}) = str("* as " name)
+
+fn eval_assign_expr(node) = node.at(:type).pipe(Map{
   :id_assign => eval_id_assign_name
   :spread_assign => eval_spread_assign
   :array_deconstruction => eval_array_deconstruction_names
   :object_deconstruction => eval_object_deconstruction_names
   :this_assign => eval_this_assign
   :this_spread_assign => eval_spread_assign
-})::call(node)
+})(node)
 
 fn eval_while_let_loop({test_expr, assign_expr, body}) = str(
   "var __coil_while_let_temp = " eval_expr(test_expr) ";\n"
@@ -1045,7 +1039,7 @@ fn eval_while_let_loop({test_expr, assign_expr, body}) = str(
 
 fn eval_if_let({expr, assign_expr, pass, fail}) = str(
   "var __coil_if_let_temp = " eval_expr(expr) ";\n"
-  "if (__coil_if_let_temp[Meta.as_bool]()) {\n"
+  "if (truthy(__coil_if_let_temp)) {\n"
     "let " eval_assign_expr(assign_expr) " = __coil_if_let_temp;\n"
     eval_ast(pass) "\n"
   "}" eval_if_branch(fail)
@@ -1053,68 +1047,72 @@ fn eval_if_let({expr, assign_expr, pass, fail}) = str(
 
 fn eval_spread({expr}) = str("..." eval_expr(expr))
 
-fn eval_let({assign_expr, rhs}) = str("let " eval_assign_expr(assign_expr) " = " eval_expr(rhs))
+fn eval_let({assign_expr, rhs}) =
+  str("let " eval_assign_expr(assign_expr) " = " eval_expr(rhs))
 
-fn eval_array({elements}) = str("[" elements::map_join(eval_expr ", ") "]")
+fn eval_array({elements}) = str("[" elements.map(eval_expr).join(", ") "]")
 
 fn eval_this_assignments(args) = args
-  ::keep(:type Set[:this_assign :this_spread_assign])
-  ::map(fn ({name}) = str("this['" name "'] = " resolve_name(name) ";\n"))
-  ::into("")
+  .filter(:type Set[:this_assign :this_spread_assign])
+  .map(|{name}| str("this['" name "'] = " resolve_name(name) ";\n"))
+  .into("")
 
-fn eval_name_expr(node) = node::at(:type)::pipe(Map{
-  dot: fn ({lhs, rhs}) = str(eval_name_expr(lhs) "[" eval_name_expr(rhs) "]")
-  keyword_lookup: fn ({lhs, property}) = str(eval_name_expr(lhs) "['" property  "']")
+fn eval_name_expr(node) = node.at(:type).pipe(Map{
+  dot: |{lhs rhs}| str(eval_name_expr(lhs) "[" eval_name_expr(rhs) "]")
+  keyword_lookup: |{lhs, property}| str(eval_name_expr(lhs) "['" property  "']")
 } _ || eval_expr)(node)
 
-fn eval_fn({is_async? generator? name_expr args body}) = str(
-  eval_name_expr(name_expr) " = "
-  (is_async? && "async ")
-  "function "
-    (generator? && "*")
-    "(" args::map_join(eval_assign_expr ", ") ") {\n"
-    eval_this_assignments(args)
-    eval_ast(body)
-  "}")
+fn eval_fn({is_async? generator? name_expr args body})
+  let out = ""
+  out = str(out eval_name_expr(name_expr) " = ")
+  if is_async?
+    out = str(out "async ")
+  out.:push_if(is_async? "async ")
+  out.:push("function ")
+  out.:push_if(generator? "*")
+  out.:push("(" args.map(eval_assign_expr).join(", ") ") {\n"
+      eval_this_assignments(args)
+      eval_ast(body)
+    "}")
+  return out.:value
+end
 
 fn eval_obj_fn({name generator? is_async? args body}) =
   str((is_async? && "async ")
       (generator? && "*")
-      "['" name "'](" args::map_join(eval_assign_expr ", ") ") {\n"
+      "['" name "'](" args.map_join(eval_assign_expr ", ") ") {\n"
       eval_ast(body) "\n}")
 
-fn eval_id_lookup({name}) = resolve_name(name)
+let eval_id_lookup = :name >> resolve_name
 
-fn eval_num({value}) = str("(" value ")")
+let eval_num = str("(" :value ")")
 
-fn eval_double_equals({lhs, rhs}) =
-  str(eval_expr(lhs) "[Equal['==']](" eval_expr(rhs) ")")
+let eval_double_equals =
+  str(:lhs >> eval_expr "[Equal['==']](" :rhs >> eval_expr ")")
 
-fn eval_not_equals({lhs, rhs}) =
-  str(eval_expr(lhs) "[Equal['!=']](" eval_expr(rhs) ")")
+let eval_not_equals = str(:lhs >> eval_expr "[Equal['!=']](" :rhs >> eval_expr ")")
 
-fn eval_not({expr}) = str(eval_expr(expr) "[Bool.negate]]()")
+let eval_not = str(:expr >> eval_expr "[Bool.negate]]()")
 
 fn eval_meta_from_entries({lhs entries}) {
   let lhs_js = eval_expr(lhs)
-  let entries_js = entries::map_join(eval_record_entry ", ")
+  let entries_js = entries.map_join(eval_record_entry ", ")
   return str(lhs_js "[Meta.from_entries]([" entries_js "])")
 }
 
 fn eval_meta_create({lhs, entries}) =
-  str(eval_expr(lhs) "[Meta.create]([" entries::map_join(eval_expr ", ") "])")
+  str(eval_expr(lhs) "[Meta.create]([" entries.map_join(eval_expr ", ") "])")
 
-fn eval_await({expr}) = str("await " eval_expr(expr))
+let eval_await = str("await " :expr >> eval_expr)
 
 fn eval_yield({star? expr}) =
   str("yield" (star? && "*") " " eval_expr(expr))
 
-fn eval_paren_expr({expr}) = str("(" eval_expr(expr) ")")
+let eval_paren_expr = str("(" :expr >> eval_expr ")")
 
-fn eval_keyword({value}) = str("Keyword.for(\"" value  "\")")
+let eval_keyword = str("Keyword.for(\"" :value  "\")")
 
-fn eval_regular_record_entry({key_expr, value_expr}) =
-  str("[" eval_expr(key_expr) ", " eval_expr(value_expr) "]")
+let eval_regular_record_entry = str("[" :key_expr >> eval_expr ", " :value_expr >> eval_expr "]")
 
 fn eval_keyword_record_entry({name expr}) =
   str("[" eval_keyword({value: name}) ", " eval_expr(expr) "]")
@@ -1122,48 +1120,46 @@ fn eval_keyword_record_entry({name expr}) =
 fn eval_id_shorthand_record_entry({name}) =
   str("[" eval_keyword({value: name}) ", " name "]")
 
-fn eval_record_entry(node) = node::at(:type)::pipe(Map{
+fn eval_record_entry(node) = node.at(:type).pipe(Map{
   :regular_record_entry => eval_regular_record_entry
   :keyword_record_entry => eval_keyword_record_entry
   :spread => eval_spread
   :id_shorthand_record_entry => eval_id_shorthand_record_entry
-})::call(node)
+})(node)
 
 fn eval_inclusive_range({lhs, rhs}) {
   if rhs {
-    return str("new InclusiveRange(" eval_expr(lhs) ", " eval_expr(rhs) ")")
+    return str("new IRange(" eval_expr(lhs) ", " eval_expr(rhs) ")")
   } else {
-    return str("new InclusiveRangeNoMaximum(" eval_expr(lhs) ")")
+    return str("new IRangeNoMax(" eval_expr(lhs) ")")
   }
 }
 
 fn eval_exclusive_range({lhs, rhs}) {
   if rhs {
-    return str("new ExclusiveRange(" eval_expr(lhs) ", " eval_expr(rhs) ")")
+    return str("new ERange(" eval_expr(lhs) ", " eval_expr(rhs) ")")
   } else {
-    return str("new ExclusiveRangeNoMaximum(" eval_expr(lhs) ")")
+    return str("new ERangeNoMax(" eval_expr(lhs) ")")
   }
 }
 
 let eval_regex_lit = :value
 
-fn eval_prefix_exclusive_range({expr}) = str("new ExclusiveRangeNoMinimum(" eval_expr(expr) ")") 
+let eval_prefix_exclusive_range = str("new ERangeNoMin(" :expr >> eval_expr ")") 
 
-fn eval_prefix_inclusive_range({expr}) = str("new InclusiveRangeNoMinimum(" eval_expr(expr) ")")
-
-fn eval_dot({lhs, rhs}) = str("dot(" eval_expr(lhs) ", " eval_expr(rhs) ")")
+let eval_dot = str("dot(" :lhs >> eval_expr ", " :rhs >> eval_expr ")")
 
 fn eval_keyword_lookup({lhs property}) =
   str("dot(" eval_expr(lhs) ", '" property "')")
 
 fn eval_object_literal({entries}) = str(
   "ObjectLiteral[Meta.from_entries](["
-    entries::map_join(eval_record_entry ", ")
+    entries.map_join(eval_record_entry ", ")
   "])"
 )
 
 fn eval_anon_fn({args, return_expr}) = str(
-  "(" args::map_join(eval_assign_expr ", ") ") => " eval_expr(return_expr)
+  "(" args.map_join(eval_assign_expr ", ") ") => " eval_expr(return_expr)
 )
 
 fn eval_algebra_op({lhs, op, rhs}) = str(
@@ -1175,16 +1171,14 @@ fn eval_equality_op({lhs, op, rhs}) = str(
 )
 
 fn eval_and({lhs, rhs}) = str(
-  "(__coil_temp = {left: " eval_expr(lhs) ", right: " eval_expr(rhs) "}"
-  ", __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : __coil_temp.right[Meta.as_bool]() === true ? __coil_temp.right : __coil_temp.left)"
+  "(" eval_expr(lhs) ")[Meta.as_bool]() && (" eval_expr(rhs) ")[Meta.as_bool]()"
 )
 
 fn eval_or({lhs, rhs}) = str(
-  "(__coil_temp = {left: " eval_expr(lhs) ", right: " eval_expr(rhs) "}"
-  ", __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : __coil_temp.right)"
+  "(" eval_expr(lhs) ")[Meta.as_bool]() || (" eval_expr(rhs) ")[Meta.as_bool]()"
 )
 
-fn eval_expr(node) = node::at(:type)::pipe(Map{
+fn eval_expr(node) = node.at(:type).pipe(Map{
   :algebra_op => eval_algebra_op
   :equality_op => eval_equality_op
   :and => eval_and
@@ -1196,7 +1190,6 @@ fn eval_expr(node) = node::at(:type)::pipe(Map{
   :regex_lit => eval_regex_lit
   :keyword => eval_keyword
   :prefix_exclusive_range => eval_prefix_exclusive_range
-  :prefix_inclusive_range => eval_prefix_inclusive_range
   :id_lookup => eval_id_lookup
   :fn_call => eval_fn_call
   :num => eval_num
@@ -1214,7 +1207,7 @@ fn eval_expr(node) = node::at(:type)::pipe(Map{
   :inclusive_range => eval_inclusive_range
   :exclusive_range => eval_exclusive_range
   :anon_fn => eval_anon_fn
-})::call(node)
+})(node)
 
 fn eval_return({expr}) {
   if expr {  
@@ -1228,8 +1221,8 @@ fn eval_protocol({name, methods}) {
   if methods {
     return str(
       "const " name " = Object.freeze({"
-        methods.names::map_join(
-          fn (entry) = str("\"" entry.name "\": Symbol(\"" name ":" entry.name "\")"),
+        methods.names.map_join(
+          str("\"" :name "\": Symbol(\"" name ":" :name "\")"),
           ",\n"
         )
       "})"
@@ -1247,43 +1240,72 @@ fn eval_for_loop({is_await? assign_expr iterable_expr body}) =
         eval_ast(body) "\n"
       "}")
 
-fn eval_id_assign({name, expr}) = str(resolve_name(name) " = " eval_expr(expr))
+let eval_id_assign = str(:name >> resolve_name " = " :expr >> eval_expr)
 
-fn eval_while_loop({test_expr, body}) =
-  str("while (" eval_expr(test_expr) "[Meta.as_bool]()) {\n" eval_ast(body) "\n}")
+let eval_while_loop =
+  str("while (" :test_expr >> eval_expr "[Meta.as_bool]()) {\n" :body >> eval_ast "\n}")
 
-fn eval_loop({body}) = str("while (true) {\n" eval_ast(body) "\n}")
+let eval_loop = str("while (true) {\n" :body >> eval_ast "\n}")
 
 fn eval_continue = "continue"
 
 fn eval_break = "break"
 
 fn eval_try(node) {
-  let body_js = node::at(:body)::pipe(eval_ast)
+  let body_js = node.at(:body).pipe(eval_ast)
   let catch_js = ""
   let finally_js = ""
-  if node::has?(:catch) {
-    let {name, body} = node::at(:catch)
+  if node.has?(:catch) {
+    let {name, body} = node.at(:catch)
     catch_js = str(" catch (" name ") {\n" eval_ast(body) "\n}")
   }
-  if node::has?(:finally) {
-    let {body} = node::at(:finally)
+  if node.has?(:finally) {
+    let {body} = node.at(:finally)
     finally_js = str(" finally {\n" eval_ast(body) "\n}")
   }
   return str("try {\n" body_js "\n" "}" catch_js finally_js)
 }
 
+fn get_deconstructed_obj_entry_name(node) =
+  Map{:obj_reg_entry => :name
+      :obj_entry_rename => :old_name}
+    .at(node.at(:type))
+    .pipe(node)
+
+fn get_deconstructed_array_entry_name(node) =
+  Map{:id_assign => :name}
+    .at(node.at(:type))
+    .pipe(node)
+
+fn eval_import_deconstruction_entry(node) = node.pipe(:type Map{
+  :obj_reg_entry => :name >> resolve_name
+  :obj_entry_rename => str(:old_name >> resolve_name " as " :new_name >> resolve_name)
+})(node)
+
+fn eval_import_deconstruction_expr({entries}) =
+  str("{" entries.map_join(eval_import_deconstruction_entry ", ") "}")
+
+fn eval_import_assign_exprs(node) = node.pipe(:type Map{
+  :id_assign => eval_id_assign_name
+  :object_deconstruction => eval_import_deconstruction_expr
+  :assign_all_as => eval_assign_all_as
+})(node)
+
 fn eval_import({assign_exprs, path}) =
-  str("import * as __coil_temp from \"" path.value.slice(1, -1) "\";\n"
-    "let {" assign_exprs::map_join(eval_assign_expr ", ") "} = __coil_temp")
+  str("import "
+    assign_exprs.map_join(eval_import_assign_exprs, ", ")
+    " from \"" path.value.slice(1, -1) "\"")
 
-fn eval_export({statement}) = str("export " eval_statement(statement))
+fn eval_export({statement}) =
+  str("export " eval_statement(statement))
 
-fn eval_export_default({expr}) = str("export default " eval_expr(expr))
+fn eval_export_default({expr}) =
+  str("export default " eval_expr(expr))
 
-fn eval_direct_import({path}) = str("import " path)
+fn eval_direct_import({path}) =
+  str("import " path)
 
-fn eval_statement(node) = node::at(:type)::pipe(Map{
+fn eval_statement(node) = node.at(:type).pipe(Map{
   :if => eval_if
   :direct_import => eval_direct_import
   :import => eval_import
@@ -1302,20 +1324,20 @@ fn eval_statement(node) = node::at(:type)::pipe(Map{
   :break => eval_break
   :try => eval_try
 })
-  ::pipe(fn(f) {
+  .pipe(fn(f) {
     if f { return compose(f _ + ";") }
     else { return eval_expr }
-  })::call(node)
+  })(node)
 
-export fn eval_ast(ast) = str("let __coil_temp;\n" ast::map_join(eval_statement "\n"))
+export fn eval_ast(ast) = ast.map_join(eval_statement "\n")
 
-export fn lex(string) = lexer::call(string)
+export fn lex(string) = lexer(string)
 
 fn coll_view(tokens) = CollectionView[tokens, 0]
 
-export fn lex_and_parse(string) = string::pipe(lexer coll_view parse)
+export fn lex_and_parse(string) = string.pipe(lexer coll_view parse)
 
-export fn compile(string) = string::pipe(lexer coll_view parse eval_ast)
+export fn compile(string) = string.pipe(lexer coll_view parse eval_ast)
 
 let [src_file_name, out_name] = Deno.args
 let prelude = Deno.readTextFileSync("./src/std/js_prelude_v2.js")

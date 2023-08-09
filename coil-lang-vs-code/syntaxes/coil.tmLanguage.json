@@ -15,10 +15,7 @@
       "include": "#regex"
     },
     {
-      "include": "#properties"
-    },
-    {
-      "include": "#bind"
+      "include": "#functions"
     },
     {
       "include": "#record_constructor"
@@ -37,8 +34,8 @@
     "comments": {
       "patterns": [
         {
-          "name": "comment.line.peacock",
-          "begin": "(\\/\\/).*",
+          "name": "comment.line.coil",
+          "begin": "(\\#).*",
           "end": "\n"
         }
       ]
@@ -47,51 +44,7 @@
       "patterns": [
         {
           "name": "keyword.control.coil",
-          "match": "\\s(if|while|loop|try|catch|finally|else|yield|return|assert|continue|break|export|default|import|from|as)\\s"
-        },
-        {
-          "match": "(impl)\\b(.*)\\b(for)\\b",
-          "captures": {
-            "1": {
-              "name": "keyword.other"
-            },
-            "2": {
-              "name": "entity.name.type"
-            },
-            "3": {
-              "name": "keyword.other"
-            }
-          }
-        },
-        {
-          "match": "(define)\\b(.*)\\b(for)\\b",
-          "captures": {
-            "1": {
-              "name": "keyword.other"
-            },
-            "2": {
-              "name": "entity.name.type"
-            },
-            "3": {
-              "name": "keyword.other"
-            }
-          }
-        },
-        {
-          "name": "keyword.control",
-          "match": "\\b(for)\\b"
-        },
-        {
-          "name": "keyword.other",
-          "match": "\\b(async|fn|keyof|of|impl|define|let|protocol)\\b"
-        },
-        {
-          "name": "keyword",
-          "match": "\\b(is|typeof|await)\\b"
-        },
-        {
-          "match": "\\bnew\\b",
-          "name": "keyword.operator.new"
+          "match": "(await|async|or|and|keyof|of|impl|define|let|protocol|do|end|if|fn|while|loop|try|catch|finally|else|yield|return|continue|break|export|default|import|from|for)\\b"
         }
       ]
     },
@@ -104,50 +57,30 @@
         {
           "match": "\\b([a-z][a-zA-Z0-9_\\-\\!\\?]*)\\b",
           "name": "variable.name"
-        },
-        {
-          "name": "variable",
-          "match": "&"
         }
       ]
     },
     "lang_constants": {
       "patterns": [
         {
-          "match": "\\b(true|false|null|undefined|this)\\b",
+          "match": "\\b(true|false|nil|this)\\b",
           "name": "constant.language"
         },
         {
-          "match": "(:[a-zA-Z_?!$0-9/\\.]+)",
+          "match": "(:[a-zA-Z_?!$0-9/]+)",
           "name": "constant.language"
         }
       ]
     },
-    "properties": {
+    "functions": {
       "patterns": [
         {
-          "match": "\\.([a-zA-Z][a-zA-Z0-9_\\-\\!\\?]*)\\(\\b",
+          "match": "\\.([a-zA-Z][a-zA-Z0-9_\\!\\?]+)\\(",
           "name": "entity.name.function"
-        }
-      ]
-    },
-    "bind": {
-      "patterns": [
-        {
-          "match": "::([a-zA-Z][a-zA-Z0-9_\\-\\!\\?]*)\\b",
-          "captures": {
-            "1": {
-              "name": "entity.name.function"
-            }
-          }
         },
         {
-          "match": "([a-zA-Z][a-zA-Z0-9_\\-\\!\\?]*)\\(",
-          "captures": {
-            "1": {
-              "name": "entity.name.function"
-            }
-          }
+          "match": "([a-zA-Z][a-zA-Z0-9_\\!\\?]+)\\(",
+          "name": "entity.name.function"
         }
       ]
     },
