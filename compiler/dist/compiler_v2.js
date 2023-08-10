@@ -1991,7 +1991,7 @@ return pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [
 return str(eval_name_expr(lhs), "[", eval_name_expr(rhs), "]");}], [Keyword.for("keyword_lookup"), function ({'lhs': lhs, 'property': property}) {
 return str(eval_name_expr(lhs), "['", property, "']");}]]), or.call(_, () => eval_expr))(node);}
 function eval_fn({'is_async?': is_async__q, 'generator?': generator__q, 'name_expr': name_expr, 'args': args, 'body': body}) {
-return str(eval_name_expr(name_expr), " = ", (and.call(is_async__q, () => "async ")), "function ", (and.call(generator__q, () => "*")), "(", map_join.bind(args)(eval_assign_expr, ", "), ") {\n", eval_this_assignments(args), eval_ast(body), "}");}
+return str((and.call(equals__q.call(name_expr['type'], Keyword.for("id_lookup")), () => "let ")), eval_name_expr(name_expr), " = ", (and.call(is_async__q, () => "async ")), "function ", (and.call(generator__q, () => "*")), "(", map_join.bind(args)(eval_assign_expr, ", "), ") {\n", eval_this_assignments(args), eval_ast(body), "}");}
 function eval_obj_fn({'name': name, 'generator?': generator__q, 'is_async?': is_async__q, 'args': args, 'body': body}) {
 return str((and.call(is_async__q, () => "async ")), (and.call(generator__q, () => "*")), "['", name, "'](", map_join.bind(args)(eval_assign_expr, ", "), ") {\n", eval_ast(body), "\n}");}
 function eval_id_lookup({'name': name}) {

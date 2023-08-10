@@ -78,7 +78,7 @@ Number.prototype[invoke] = function (collection) {
 Keyword.prototype[invoke] = function (collection) {
   if (collection instanceof Keyword || typeof collection === "string") {
     throw new TypeError("Can't 'invoke' a keyword with" + collection.str());
-  } else if (invoke in collection) {
+  } else if (typeof collection[invoke] !== "undefined") {
     return collection[invoke](this) ?? nil;
   } else {
     return collection[this] ?? nil;
