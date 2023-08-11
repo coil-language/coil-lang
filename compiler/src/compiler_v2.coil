@@ -642,12 +642,26 @@ fn parse_args_def(tokens) = Parser[
   Chomp[:close_p]
 ]::call(tokens)
 
+fn parse_name_expr(tokens) {
+  if let [expr tokens] = parse_single_expr(tokens) {
+    let parse_map = ParseMap{
+      :dot => parse_dot
+      :colon => parse_keyword_lookup
+    }
+    while let [new_expr new_tokens] = parse_map::call(tokens expr) {
+      expr = new_expr
+      tokens = new_tokens
+    }
+    return [expr tokens]
+  }
+}
+
 fn parse_fn(tokens) = Parser[
   Init[{type: :fn}]
   Optional[:async parse_async_modifier :is_async?]
   Chomp[:fn]
   Optional[:times parse_gen_modifier :generator?]
-  Then[parse_expr :name_expr]
+  Then[parse_name_expr :name_expr]
   Optional[:open_p parse_args_def :args]
   Case[ParseMap{
     :eq => parse_fn_expr_body,

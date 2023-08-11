@@ -1686,6 +1686,16 @@ return result;};
 function ParseMap(entries) {
 this['entries'] = entries;
 }
+ParseMap.prototype[Keyword.for("delete")] = function (key) {
+let entries = [];
+for  (let [key_, val] of this['entries']) {
+if (truthy(equals__q.call(key_, key))) {
+continue;
+} else {
+entries['push']([key, val])
+};
+};
+return ParseMap[Meta]['[]'].call(ParseMap, entries);};
 ParseMap.prototype[Record] = new ObjectLiteral({['keys']() {
 return into.bind(map.bind(this['entries'])(first))(Set[Meta]['[]'].call(Set, ));
 }});
@@ -1836,8 +1846,22 @@ return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new
 return [node];})))(tokens);}
 function parse_args_def(tokens) {
 return call.bind(Parser[Meta]['[]'].call(Parser, Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_p")), Until[Meta]['[]'].call(Until, Keyword.for("close_p"), parse_assign_expr), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_p"))))(tokens);}
+function parse_name_exprs(tokens) {
+var __coil_if_let_temp = parse_single_expr(tokens);
+if (truthy(__coil_if_let_temp)) {
+let [expr, tokens] = __coil_if_let_temp;
+let parse_map = ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("dot"), parse_dot], [Keyword.for("colon"), parse_keyword_lookup]]);
+var __coil_while_let_temp = call.bind(parse_map)(tokens, expr);
+while (__coil_while_let_temp) {
+let [new_expr, new_tokens] = __coil_while_let_temp;
+expr = new_expr
+tokens = new_tokens
+__coil_while_let_temp = call.bind(parse_map)(tokens, expr);
+};
+return [expr, tokens];
+};}
 function parse_fn(tokens) {
-return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("fn")})), Optional[Meta]['[]'].call(Optional, Keyword.for("async"), parse_async_modifier, Keyword.for("is_async?")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("fn")), Optional[Meta]['[]'].call(Optional, Keyword.for("times"), parse_gen_modifier, Keyword.for("generator?")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("name_expr")), Optional[Meta]['[]'].call(Optional, Keyword.for("open_p"), parse_args_def, Keyword.for("args")), Case[Meta]['[]'].call(Case, ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("eq"), parse_fn_expr_body], [_, block()]]), Keyword.for("body"))))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("fn")})), Optional[Meta]['[]'].call(Optional, Keyword.for("async"), parse_async_modifier, Keyword.for("is_async?")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("fn")), Optional[Meta]['[]'].call(Optional, Keyword.for("times"), parse_gen_modifier, Keyword.for("generator?")), Then[Meta]['[]'].call(Then, parse_name_exprs, Keyword.for("name_expr")), Optional[Meta]['[]'].call(Optional, Keyword.for("open_p"), parse_args_def, Keyword.for("args")), Case[Meta]['[]'].call(Case, ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("eq"), parse_fn_expr_body], [_, block()]]), Keyword.for("body"))))(tokens);}
 function parse_keyword_record_entry(tokens) {
 return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("keyword_record_entry")})), One[Meta]['[]'].call(One, Keyword.for("id"), Keyword.for("name")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("colon")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr"))))(tokens);}
 function parse_regular_record_entry(tokens) {

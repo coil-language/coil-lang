@@ -1,2 +1,3 @@
-console.:log(_.inc().inc()(1))
-# 1.inc().log()
+fn add(a, b) = a + b
+
+add(1, 2).log()
