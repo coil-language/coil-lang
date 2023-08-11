@@ -1686,16 +1686,6 @@ return result;};
 function ParseMap(entries) {
 this['entries'] = entries;
 }
-ParseMap.prototype[Keyword.for("delete")] = function (key) {
-let entries = [];
-for  (let [key_, val] of this['entries']) {
-if (truthy(equals__q.call(key_, key))) {
-continue;
-} else {
-entries['push']([key, val])
-};
-};
-return ParseMap[Meta]['[]'].call(ParseMap, entries);};
 ParseMap.prototype[Record] = new ObjectLiteral({['keys']() {
 return into.bind(map.bind(this['entries'])(first))(Set[Meta]['[]'].call(Set, ));
 }});
@@ -1846,7 +1836,7 @@ return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new
 return [node];})))(tokens);}
 function parse_args_def(tokens) {
 return call.bind(Parser[Meta]['[]'].call(Parser, Chomp[Meta]['[]'].call(Chomp, Keyword.for("open_p")), Until[Meta]['[]'].call(Until, Keyword.for("close_p"), parse_assign_expr), Chomp[Meta]['[]'].call(Chomp, Keyword.for("close_p"))))(tokens);}
-function parse_name_exprs(tokens) {
+function parse_name_expr(tokens) {
 var __coil_if_let_temp = parse_single_expr(tokens);
 if (truthy(__coil_if_let_temp)) {
 let [expr, tokens] = __coil_if_let_temp;
@@ -1861,7 +1851,7 @@ __coil_while_let_temp = call.bind(parse_map)(tokens, expr);
 return [expr, tokens];
 };}
 function parse_fn(tokens) {
-return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("fn")})), Optional[Meta]['[]'].call(Optional, Keyword.for("async"), parse_async_modifier, Keyword.for("is_async?")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("fn")), Optional[Meta]['[]'].call(Optional, Keyword.for("times"), parse_gen_modifier, Keyword.for("generator?")), Then[Meta]['[]'].call(Then, parse_name_exprs, Keyword.for("name_expr")), Optional[Meta]['[]'].call(Optional, Keyword.for("open_p"), parse_args_def, Keyword.for("args")), Case[Meta]['[]'].call(Case, ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("eq"), parse_fn_expr_body], [_, block()]]), Keyword.for("body"))))(tokens);}
+return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("fn")})), Optional[Meta]['[]'].call(Optional, Keyword.for("async"), parse_async_modifier, Keyword.for("is_async?")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("fn")), Optional[Meta]['[]'].call(Optional, Keyword.for("times"), parse_gen_modifier, Keyword.for("generator?")), Then[Meta]['[]'].call(Then, parse_name_expr, Keyword.for("name_expr")), Optional[Meta]['[]'].call(Optional, Keyword.for("open_p"), parse_args_def, Keyword.for("args")), Case[Meta]['[]'].call(Case, ParseMap[Meta]['{}'].call(ParseMap, [[Keyword.for("eq"), parse_fn_expr_body], [_, block()]]), Keyword.for("body"))))(tokens);}
 function parse_keyword_record_entry(tokens) {
 return call.bind(Parser[Meta]['[]'].call(Parser, Init[Meta]['[]'].call(Init, new ObjectLiteral({'type': Keyword.for("keyword_record_entry")})), One[Meta]['[]'].call(One, Keyword.for("id"), Keyword.for("name")), Chomp[Meta]['[]'].call(Chomp, Keyword.for("colon")), Then[Meta]['[]'].call(Then, parse_expr, Keyword.for("expr"))))(tokens);}
 function parse_regular_record_entry(tokens) {
@@ -2015,7 +2005,7 @@ return pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [
 return str(eval_name_expr(lhs), "[", eval_name_expr(rhs), "]");}], [Keyword.for("keyword_lookup"), function ({'lhs': lhs, 'property': property}) {
 return str(eval_name_expr(lhs), "['", property, "']");}]]), or.call(_, () => eval_expr))(node);}
 function eval_fn({'is_async?': is_async__q, 'generator?': generator__q, 'name_expr': name_expr, 'args': args, 'body': body}) {
-return str((and.call(equals__q.call(name_expr['type'], Keyword.for("id_lookup")), () => "let ")), eval_name_expr(name_expr), " = ", (and.call(is_async__q, () => "async ")), "function ", (and.call(generator__q, () => "*")), "(", map_join.bind(args)(eval_assign_expr, ", "), ") {\n", eval_this_assignments(args), eval_ast(body), "}");}
+return str(or.call((and.call(equals__q.call(name_expr['type'], Keyword.for("id_lookup")), () => "let ")), () => ""), eval_name_expr(name_expr), " = ", (and.call(is_async__q, () => "async ")), "function ", (and.call(generator__q, () => "*")), "(", map_join.bind(args)(eval_assign_expr, ", "), ") {\n", eval_this_assignments(args), eval_ast(body), "}");}
 function eval_obj_fn({'name': name, 'generator?': generator__q, 'is_async?': is_async__q, 'args': args, 'body': body}) {
 return str((and.call(is_async__q, () => "async ")), (and.call(generator__q, () => "*")), "['", name, "'](", map_join.bind(args)(eval_assign_expr, ", "), ") {\n", eval_ast(body), "\n}");}
 function eval_id_lookup({'name': name}) {

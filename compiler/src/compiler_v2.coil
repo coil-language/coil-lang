@@ -1082,7 +1082,7 @@ fn eval_name_expr(node) = node::at(:type)::pipe(Map{
 } _ || eval_expr)(node)
 
 fn eval_fn({is_async? generator? name_expr args body}) = str(
-  (name_expr.type == :id_lookup && "let ")
+  (name_expr.type == :id_lookup && "let ") || ""
   eval_name_expr(name_expr) " = "
   (is_async? && "async ")
   "function "
