@@ -59,6 +59,10 @@ BigInt.prototype[Meta["=="]] = function (other) {
   return this === other;
 };
 
+Keyword.prototype[Meta["=="]] = function (other) {
+  return this === other;
+};
+
 Set.prototype[Meta["=="]] = function (other) {
   if (!(other instanceof Set)) {
     throw new TypeError("Expected Set");
