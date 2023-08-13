@@ -1,5 +1,15 @@
 import Meta from "../meta.js";
 
+function compose(...fns) {
+  return (arg) => {
+    let out = arg;
+    for (let f of fns) {
+      out = f[Meta.invoke](out);
+    }
+    return out ?? nil;
+  };
+}
+
 const Iter = Object.freeze({
   take: Symbol("coil-lang@0.1.0/std/iter/Iter:take"),
   until: Symbol("coil-lang@0.1.0/std/iter/Iter:until"),
@@ -32,9 +42,10 @@ Object.prototype[Iter.take] = function* (n) {
   }
 };
 
-Object.prototype[Iter.until] = function* (f) {
+Object.prototype[Iter.until] = function* (...fns) {
+  let f = compose(...fns);
   for (let elem of this) {
-    if (f[Meta.invoke](elem)[Meta.as_bool]()) {
+    if (f(elem)[Meta.as_bool]()) {
       break;
     } else {
       yield elem;
@@ -53,9 +64,10 @@ Object.prototype[Iter.skip] = function* (n) {
   }
 };
 
-Object.prototype[Iter.find] = function (f) {
+Object.prototype[Iter.find] = function (...fns) {
+  let f = compose(...fns);
   for (let elem of this) {
-    if (f[Meta.invoke](elem)[Meta.as_bool]()) {
+    if (f(elem)[Meta.as_bool]()) {
       return elem;
     }
   }
@@ -83,62 +95,70 @@ Object.prototype[Iter.reduce] = function (f, start) {
   return accumulator;
 };
 
-Object.prototype[Iter.map] = function* (f) {
+Object.prototype[Iter.map] = function* (...fns) {
+  let f = compose(...fns);
   for (let elem of this) {
-    yield f[Meta.invoke](elem);
+    yield f(elem);
   }
 };
 
-Object.prototype[Iter.flat_map] = function* (f) {
+Object.prototype[Iter.flat_map] = function* (...fns) {
+  let f = compose(...fns);
   for (let elem of this) {
-    yield* f[Meta.invoke](elem);
+    yield* f(elem);
   }
 };
 
-Object.prototype[Iter.each] = function (f) {
+Object.prototype[Iter.each] = function (...fns) {
+  let f = compose(...fns);
   for (let elem of this) {
-    f[Meta.invoke](elem);
+    f(elem);
   }
 };
 
-Object.prototype[Iter.filter] = function* (f) {
+Object.prototype[Iter.filter] = function* (...fns) {
+  let f = compose(...fns);
   for (let elem of this) {
-    if (f[Meta.invoke](elem)[Meta.as_bool]()) {
+    if (f(elem)[Meta.as_bool]()) {
       yield elem;
     }
   }
 };
 
-Object.prototype[Iter.reject] = function* (f) {
+Object.prototype[Iter.reject] = function* (...fns) {
+  let f = compose(...fns);
   for (let elem of this) {
-    if (!f[Meta.invoke](elem)[Meta.as_bool]()) {
+    if (!f(elem)[Meta.as_bool]()) {
       yield elem;
     }
   }
 };
 
-Object.prototype[Iter["all?"]] = function (f) {
+Object.prototype[Iter["all?"]] = function (...fns) {
+  let f = compose(...fns);
   for (let elem of this) {
-    if (!f[invoke](elem)) {
+    if (!f(elem)) {
       return false;
     }
   }
   return true;
 };
 
-Object.prototype[Iter["any?"]] = function (f) {
+Object.prototype[Iter["any?"]] = function (...fns) {
+  let f = compose(...fns);
   for (let elem of this) {
-    if (f[invoke](elem)) {
+    if (f(elem)) {
       return true;
     }
   }
   return false;
 };
 
-Object.prototype[Iter.split] = function* (f) {
+Object.prototype[Iter.split] = function* (...fns) {
+  let f = compose(...fns);
   let chunk = [];
   for (let elem of this) {
-    if (f[invoke](elem)) {
+    if (f(elem)) {
       yield chunk;
       chunk = [];
     } else {

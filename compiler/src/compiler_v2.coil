@@ -1360,6 +1360,7 @@ import {
 } from './src/std/range.js';
 import Record, { keys, values } from './src/std/record.js';
 import Underscore, { _ } from './src/std/underscore.js';
+import CondMap from './src/std/cond_map.js'
 "
 
 Deno.writeTextFile(out_name, imports + compile(src) + "\n")
