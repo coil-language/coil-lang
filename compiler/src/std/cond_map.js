@@ -14,6 +14,10 @@ class CondMap {
     }
   }
 
+  get [Symbol.toStringTag]() {
+    return this.entries.length.toString();
+  }
+
   [Symbol.iterator]() {
     return this.entries[Symbol.iterator]();
   }

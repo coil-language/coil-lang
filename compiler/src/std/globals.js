@@ -38,7 +38,7 @@ export class Keyword {
   constructor(value) {
     this.value = value;
   }
-  toString() {
+  [Symbol.toPrimitive]() {
     return this.value;
   }
 }

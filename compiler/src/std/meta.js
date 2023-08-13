@@ -2,6 +2,7 @@ import { ObjectLiteral, Keyword, Nil, nil } from "./globals.js";
 
 const Meta = Object.freeze({
   "nil?": Symbol("coil-lang/std/meta@0.1.0/Meta:nil?"),
+  // look into using `Symbol.hasInstance`
   "is_a?": Symbol("coil-lang/std/meta@0.1.0/Meta:is_a?"),
   create: Symbol("coil-lang/std/meta@0.1.0/Meta:create"),
   from_entries: Symbol("coil-lang/std/meta@0.1.0/Meta:from_entries"),
