@@ -18,6 +18,7 @@ const Iter = Object.freeze({
   compact: Symbol("coil-lang@0.1.0/std/iter/Iter:compact"),
   join: Symbol("coil-lang@0.1.0/std/iter/Iter:join"),
   into: Symbol("coil-lang@0.1.0/std/iter/into"),
+  collect: Symbol("coil-lang@0.1.0/std/iter/collect"),
 });
 
 Object.prototype[Iter.take] = function* (n) {
@@ -171,19 +172,23 @@ Object.prototype[Iter.join] = function* (separator) {
   }
 };
 
-Array.prototype[Iter.into] = function (iterable) {
+Object.prototype[Iter.into] = function (collector) {
+  return collector[Iter.collect](this);
+};
+
+Array.prototype[Iter.collect] = function (iterable) {
   return [...this, ...iterable];
 };
 
-Map.prototype[Iter.into] = function (iterable) {
+Map.prototype[Iter.collect] = function (iterable) {
   return new Map([...this, ...iterable]);
 };
 
-Set.prototype[Iter.into] = function (iterable) {
+Set.prototype[Iter.collect] = function (iterable) {
   return new Set([...this, ...iterable]);
 };
 
-String.prototype[Iter.into] = function (iterable) {
+String.prototype[Iter.collect] = function (iterable) {
   return this[Algebra["+"]](
     iterable[reduce]((acc, cur) => acc[Algebra["+"]](cur), "")
   );
