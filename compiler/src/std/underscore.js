@@ -7,6 +7,7 @@ import Algebra from "./algebra.js";
 import Record from "./record.js";
 import Bool from "./bool.js";
 import { inc } from "./range.js";
+import { dot } from "./globals.js";
 
 export default class Underscore {
   constructor(transforms) {
@@ -20,7 +21,7 @@ export default class Underscore {
   [Meta.invoke](data) {
     let result = data;
     for (let { symbol, args } of this.transforms) {
-      result = dot(result, symbol)[Meta.invoke](args);
+      result = dot(result, symbol)[Meta.invoke](...args);
     }
     return result;
   }
@@ -38,9 +39,13 @@ for (let sym of [
 ]
   .flatMap(Object.values)
   .concat([inc])) {
-  Underscore.prototype[sym] = function (...args) {
-    return this.insert(sym, ...args);
-  };
+  if (sym === Meta.invoke) {
+    continue;
+  } else {
+    Underscore.prototype[sym] = function (...args) {
+      return this.insert(sym, ...args);
+    };
+  }
 }
 
 export let _ = new Underscore([]);
