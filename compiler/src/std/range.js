@@ -1,4 +1,5 @@
 import Meta from "./meta.js";
+import Algebra from "./algebra.js";
 
 export const inc = Symbol("coil-lang@0.1.0/std/range/inc");
 
