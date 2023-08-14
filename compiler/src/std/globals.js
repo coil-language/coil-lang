@@ -10,7 +10,11 @@ ObjectLiteral.prototype[Symbol.iterator] = function* () {
   }
 };
 
-export function Nil() {}
+export class Nil {
+  toString() {
+    return "";
+  }
+}
 
 export let nil = new Proxy(new Nil(), {
   get(target, property, _receiver) {

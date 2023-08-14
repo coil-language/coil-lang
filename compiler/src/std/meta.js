@@ -48,6 +48,10 @@ Object.prototype[Meta["!="]] = function (other) {
   return !this[Meta["=="]](other);
 };
 
+Function.prototype[Meta["=="]] = function (other) {
+  return this === other;
+};
+
 Number.prototype[Meta["=="]] = function (other) {
   return this === other;
 };

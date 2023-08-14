@@ -92,4 +92,4 @@ Set.prototype[Collection["has?"]] = function (value) {
 
 export default Collection;
 
-export const { at, len, empty__q, has__q } = Collection;
+export const { at, len, "empty?": empty__q, "has?": has__q } = Collection;

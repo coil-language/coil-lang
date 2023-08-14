@@ -1,7 +1,7 @@
 import Algebra from "../algebra.js";
 import Meta from "../meta.js";
 
-function compose(...fns) {
+export function compose(...fns) {
   return (arg) => {
     let out = arg;
     for (let f of fns) {

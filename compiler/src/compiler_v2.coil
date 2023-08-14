@@ -1019,6 +1019,7 @@ fn eval_array_deconstruction_entry(node) = node::at(:type)::pipe(Map{
   :id_assign => eval_id_assign_name
   :spread_assign => eval_spread_assign
   :array_deconstruction => eval_array_deconstruction_names
+  :object_deconstruction => eval_object_deconstruction_names
 })::call(node)
 
 fn eval_array_deconstruction_names({entries}) =
@@ -1052,15 +1053,15 @@ fn eval_assign_expr(node) = node::at(:type)::pipe(Map{
 })::call(node)
 
 fn eval_while_let_loop({test_expr, assign_expr, body}) = str(
-  "var __coil_while_let_temp = " eval_expr(test_expr) ";\n"
-  "while (__coil_while_let_temp) {\n"
+  "var __coil_while_let_temp = " eval_expr(test_expr) " ?? nil;\n"
+  "while (__coil_while_let_temp[Meta.as_bool]()) {\n"
     "let " eval_assign_expr(assign_expr) " = __coil_while_let_temp;\n"
     eval_ast(body) "\n"
     "__coil_while_let_temp = " eval_expr(test_expr) ";\n"
   "}")
 
 fn eval_if_let({expr, assign_expr, pass, fail}) = str(
-  "var __coil_if_let_temp = " eval_expr(expr) ";\n"
+  "var __coil_if_let_temp = " eval_expr(expr) " ?? nil;\n"
   "if (__coil_if_let_temp[Meta.as_bool]()) {\n"
     "let " eval_assign_expr(assign_expr) " = __coil_if_let_temp;\n"
     eval_ast(pass) "\n"
@@ -1083,6 +1084,32 @@ fn eval_name_expr(node) = node::at(:type)::pipe(Map{
   keyword_lookup: fn ({lhs, property}) = str(eval_name_expr(lhs) "['" property  "']")
 } _ || eval_expr)(node)
 
+fn entries_arg_names({entries}) =
+  entries.flatMap(arg_names)
+
+fn arg_names(node) = node::at(:type)::pipe(Map{
+  :array_deconstruction => entries_arg_names
+  :id_assign => fn ({name}) = [name]
+  :object_deconstruction => entries_arg_names
+  :obj_reg_entry => fn ({name}) = [name]
+  :obj_entry_rename => fn ({new_name}) = [new_name]
+  :spread_assign => fn ({name}) = [name]
+  :obj_str_rename_entry => fn ({new_name}) = [new_name]
+  :this_assign => fn ({name}) = [name]
+  :this_spread_assign => fn ({name}) = [name]
+})::call(node)
+
+fn eval_nil_destructure_args(args) {
+  if args {  
+    return args
+      .flatMap(arg_names)
+      ::map(fn (name) = str(resolve_name(name) " = " resolve_name(name) " ?? nil;"))
+      ::join("\n")
+  } else {
+    return ""
+  }
+}
+
 fn eval_fn({is_async? generator? name_expr args body}) = str(
   (name_expr.type == :id_lookup && "let ") || ""
   eval_name_expr(name_expr) " = "
@@ -1091,6 +1118,7 @@ fn eval_fn({is_async? generator? name_expr args body}) = str(
     (generator? && "*")
     "(" args::map_join(eval_assign_expr ", ") ") {\n"
     eval_this_assignments(args)
+    eval_nil_destructure_args(args)
     eval_ast(body)
   "}")
 
@@ -1192,17 +1220,17 @@ fn eval_equality_op({lhs, op, rhs}) = str(
 )
 
 fn eval_and({lhs, rhs}) = str(
-  "(__coil_temp = {left: " eval_expr(lhs) ", right: " eval_expr(rhs) "}"
-  ", __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : __coil_temp.right[Meta.as_bool]() === true ? __coil_temp.right : __coil_temp.left)"
+  "(__coil_temp = {left: " eval_expr(lhs) "}"
+  ", __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = " eval_expr(rhs) ", __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left)"
 )
 
 fn eval_or({lhs, rhs}) = str(
-  "(__coil_temp = {left: " eval_expr(lhs) ", right: " eval_expr(rhs) "}"
-  ", __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : __coil_temp.right)"
+  "(__coil_temp = {left: " eval_expr(lhs) "}"
+  ", __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : " eval_expr(rhs) ")"
 )
 
 fn eval_reassign({name, expr}) =
-  str("(" resolve_name(name) " = " eval_expr(expr) ")")
+  str(resolve_name(name) " = " eval_expr(expr))
 
 fn eval_expr(node) = node::at(:type)::pipe(Map{
   :algebra_op => eval_algebra_op
@@ -1349,7 +1377,7 @@ import Meta, {
 } from './src/std/meta.js';
 import Iter, {
   take, until, skip, find, zip, reduce, map, flat_map, each,
-  filter, reject, all__q, any__q, split, compact, join, into
+  filter, reject, all__q, any__q, split, compact, join, into, compose
 } from './src/std/iter/index.js';
 import Algebra, {
   __plus__, __minus__, __divide__,

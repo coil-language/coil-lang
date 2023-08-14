@@ -1,3 +1,5 @@
+fn str(...args) = args.map(|arg| arg:toString()).join("")
+
 fn CollectionView(@collection, @idx) end
 
 fn CollectionView:prototype.(Collection:len) =
@@ -36,7 +38,7 @@ fn Lexer:prototype.invoke(str)
 
   fn scan(pattern)
     let result = rest_of_string().:match(pattern)
-    if !result or result:index != 0
+    if result.nil?() or result:index != 0
       return false
     else
       index = index + result.0.:length
@@ -176,7 +178,7 @@ fn Init:prototype.parse([_expr tokens]) =
 
 fn One(@kw, @as) end
 fn One:prototype.parse([expr tokens])
-  let {value, type} = expect_token!(tokens this.kw).first()
+  let {value, type} = expect_token!(tokens this:kw).first()
   return [{...expr, this:as => value} tokens:skip(1)]
 end
 
@@ -233,7 +235,7 @@ fn FMap:prototype.parse([expr tokens]) = [this:f(expr) tokens]
 fn Until(@end_kw, @parser, @kw) end
 fn Until:prototype.parse([expr tokens])
   let exprs = []
-  while tokens.first().at(:type) != this.end_kw
+  while tokens.first().at(:type) != this:end_kw
     let [expr new_tokens] = verify_exists!(this:parser(tokens) this)
     exprs.:push(expr)
     tokens = new_tokens
@@ -475,7 +477,7 @@ let valid_ids_in_all_contexts = Set[:id :from]
 
 let parse_id = Parser[
   Init[{type: :id_lookup}]
-  Either[valid_ids_in_all_contexts.push(:import) :name]
+  Either[Set[...valid_ids_in_all_contexts :import] :name]
 ]
 
 fn parse_obj(tokens) = Parser[
@@ -698,13 +700,13 @@ fn parse_keyword(tokens) = Parser[
   FMap[|{type, value}| {type: type, value: value:slice(1)}]
 ](tokens)
 
-let parse_anon_fn = Parser[
+fn parse_anon_fn(tokens) = Parser[
   Init[{type: :anon_fn}]
   Chomp[:pipe_bar]
   Until[:pipe_bar parse_assign_expr :args]
   Chomp[:pipe_bar]
   Then[parse_expr :return_expr]
-]
+](tokens)
 
 fn parse_reassign(tokens) = Parser[
   Init[{type: :reassign}]
@@ -729,7 +731,7 @@ let SINGLE_EXPR_PARSE_MAP = ParseMap{
   [:id :eq] => parse_reassign
   [:dot_dot :eq] => parse_prefix_inclusive_range
   :dot_dot => parse_prefix_exclusive_range
-  valid_ids_in_all_contexts.push(:import) => parse_id
+  Set[...valid_ids_in_all_contexts :import] => parse_id
   [:async :fn] => parse_fn
   :fn => parse_fn
 }
@@ -997,6 +999,7 @@ fn eval_array_deconstruction_entry(node) = node.at(:type).pipe(Map{
   :id_assign => eval_id_assign_name
   :spread_assign => eval_spread_assign
   :array_deconstruction => eval_array_deconstruction_names
+  :object_deconstruction => eval_object_deconstruction_names
 })(node)
 
 fn eval_array_deconstruction_names({entries}) =
@@ -1011,6 +1014,7 @@ fn eval_obj_deconstruction_entry(node) = node.at(:type).pipe(Map{
   :obj_reg_entry => eval_obj_reg_entry
   :obj_entry_rename => eval_obj_entry_rename
   :spread_assign => eval_spread_assign
+  :object_deconstruction => eval_object_deconstruction_names
 })(node)
 
 fn eval_object_deconstruction_names({entries}) =
@@ -1032,16 +1036,16 @@ fn eval_assign_expr(node) = node.at(:type).pipe(Map{
 })(node)
 
 fn eval_while_let_loop({test_expr, assign_expr, body}) = str(
-  "var __coil_while_let_temp = " eval_expr(test_expr) ";\n"
-  "while (__coil_while_let_temp) {\n"
+  "var __coil_while_let_temp = " eval_expr(test_expr) " ?? nil;\n"
+  "while (__coil_while_let_temp[Meta.as_bool]()) {\n"
     "let " eval_assign_expr(assign_expr) " = __coil_while_let_temp;\n"
     eval_ast(body) "\n"
     "__coil_while_let_temp = " eval_expr(test_expr) ";\n"
   "}")
 
 fn eval_if_let({expr, assign_expr, pass, fail}) = str(
-  "var __coil_if_let_temp = " eval_expr(expr) ";\n"
-  "if (truthy(__coil_if_let_temp)) {\n"
+  "var __coil_if_let_temp = " eval_expr(expr) " ?? nil;\n"
+  "if (__coil_if_let_temp[Meta.as_bool]()) {\n"
     "let " eval_assign_expr(assign_expr) " = __coil_if_let_temp;\n"
     eval_ast(pass) "\n"
   "}" eval_if_branch(fail)
@@ -1064,14 +1068,40 @@ fn eval_name_expr(node) = node.at(:type).pipe(Map{
   keyword_lookup: |{lhs, property}| str(eval_name_expr(lhs) "['" property  "']")
 } _ || eval_expr)(node)
 
+fn entries_arg_names({entries}) =
+  entries:flatMap(arg_names)
+
+fn arg_names(node) = node.at(:type).pipe(Map{
+  :array_deconstruction => entries_arg_names
+  :id_assign => |{name}| [name]
+  :object_deconstruction => entries_arg_names
+  :obj_reg_entry => |{name}| [name]
+  :obj_entry_rename => |{new_name}| [new_name]
+  :spread_assign => |{name}| [name]
+  :obj_str_rename_entry => |{new_name}| [new_name]
+  :this_assign => |{name}| [name]
+  :this_spread_assign => |{name}| [name]
+})(node)
+
+fn eval_nil_destructure_args(args)
+  if args
+    return args:flatMap(arg_names)
+      .map(|name| str(resolve_name(name) " = " resolve_name(name) " ?? nil;"))
+      .join("\n")
+  else
+    return ""
+  end
+end
+
 fn eval_fn({is_async? generator? name_expr args body}) = str(
-  (name_expr.type == :id_lookup and "let ") or ""
+  (name_expr:type == :id_lookup and "let ") or ""
   eval_name_expr(name_expr) " = "
   (is_async? and "async ")
   "function "
     (generator? and "*")
     "(" args.map(eval_assign_expr).join(", ") ") {\n"
     eval_this_assignments(args)
+    eval_nil_destructure_args(args)
     eval_ast(body)
   "}")
 
@@ -1168,17 +1198,17 @@ fn eval_equality_op({lhs, op, rhs}) = str(
 )
 
 fn eval_and({lhs, rhs}) = str(
-  "(__coil_temp = {left: " eval_expr(lhs) ", right: " eval_expr(rhs) "}"
-  ", __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : __coil_temp.right[Meta.as_bool]() === true ? __coil_temp.right : __coil_temp.left)"
+  "(__coil_temp = {left: " eval_expr(lhs) "}"
+  ", __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = " eval_expr(rhs) ", __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left)"
 )
 
 fn eval_or({lhs, rhs}) = str(
-  "(__coil_temp = {left: " eval_expr(lhs) ", right: " eval_expr(rhs) "}"
-  ", __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : __coil_temp.right)"
+  "(__coil_temp = {left: " eval_expr(lhs) "}"
+  ", __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : " eval_expr(rhs) ")"
 )
 
 fn eval_reassign({name, expr}) =
-  str("(" resolve_name(name) " = " eval_expr(expr) ")")
+  str(resolve_name(name) " = " eval_expr(expr))
 
 fn eval_expr(node) = node.at(:type).pipe(Map{
   :algebra_op => eval_algebra_op
@@ -1358,7 +1388,7 @@ import Meta, {
 } from './src/std/meta.js';
 import Iter, {
   take, until, skip, find, zip, reduce, map, flat_map, each,
-  filter, reject, all__q, any__q, split, compact, join, into
+  filter, reject, all__q, any__q, split, compact, join, into, compose
 } from './src/std/iter/index.js';
 import Algebra, {
   __plus__, __minus__, __divide__,
