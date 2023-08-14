@@ -116,7 +116,7 @@ raise__b[invoke](Error[Meta.create](["No token matched."]))
 };
 };
 return tokens;}
-let lexer = Lexer[Meta.from_entries]([[/^\n/, newline], [/^\s+/, pass], [/^\#.*/, pass], [/^\,/, pass], [/^\;/, pass], [/^if\s/, Keyword.for("if")], [/^else\s/, Keyword.for("else")], [/^return\s/, Keyword.for("return")], [/^import\s/, Keyword.for("import")], [/^export\s/, Keyword.for("export")], [/^default\s/, Keyword.for("default")], [/^from\s/, Keyword.for("from")], [/^let\s/, Keyword.for("let")], [/^protocol\s/, Keyword.for("protocol")], [/^for\s/, Keyword.for("for")], [/^try\s/, Keyword.for("try")], [/^catch\s/, Keyword.for("catch")], [/^finally\s/, Keyword.for("finally")], [/^end\s/, Keyword.for("end")], [/^while\s/, Keyword.for("while")], [/^loop\s/, Keyword.for("loop")], [/^and\s/, Keyword.for("and")], [/^or\s/, Keyword.for("or")], [/^continue\s/, Keyword.for("continue")], [/^break\s/, Keyword.for("break")], [/^of\s/, Keyword.for("of")], [/^yield\s/, Keyword.for("yield")], [/^async\s/, Keyword.for("async")], [/^await\s/, Keyword.for("await")], [/^\=\>/, Keyword.for("arrow")], [/^\@/, Keyword.for("at")], [/^\=\=/, Keyword.for("double_eq")], [/^\!\=/, Keyword.for("not_eq")], [/^\!/, Keyword.for("bang")], [/^\=/, Keyword.for("eq")], [/^fn\b/, Keyword.for("fn")], [/^\{/, Keyword.for("open_b")], [/^\}/, Keyword.for("close_b")], [/^\(/, Keyword.for("open_p")], [/^\)/, Keyword.for("close_p")], [/^\|/, Keyword.for("pipe_bar")], [/^[\-\+]?(\d+\.)?\d+n/, Keyword.for("bigint")], [/^[\-\+]?(\d+\.)?\d+/, Keyword.for("num")], [/^\.\.\./, Keyword.for("dot_dot_dot")], [/^\.\./, Keyword.for("dot_dot")], [/^\./, Keyword.for("dot")], [/^\/.*\/[a-z]?/, Keyword.for("regex_lit")], [/^\>\=/, Keyword.for("gt_eq")], [/^\<\=/, Keyword.for("lt_eq")], [/^\>/, Keyword.for("gt")], [/^\</, Keyword.for("lt")], [/^\+/, Keyword.for("plus")], [/^\%/, Keyword.for("mod")], [/^\-/, Keyword.for("minus")], [/^\*\*/, Keyword.for("pow")], [/^\*/, Keyword.for("times")], [/^\:/, Keyword.for("colon")], [/^\//, Keyword.for("div")], [/^\[/, Keyword.for("open_sq")], [/^\]/, Keyword.for("close_sq")], [/^\"([^\\\"]|\\.)*\"/s, Keyword.for("string_lit")], [/^[a-zA-Z_\?\!\$0-9]+/, Keyword.for("id")]]);
+let lexer = Lexer[Meta.from_entries]([[/^\n/, newline], [/^\s+/, pass], [/^\#.*/, pass], [/^\,/, pass], [/^\;/, pass], [/^if\s/, Keyword.for("if")], [/^else\s/, Keyword.for("else")], [/^return\s/, Keyword.for("return")], [/^import\s/, Keyword.for("import")], [/^export\s/, Keyword.for("export")], [/^default\s/, Keyword.for("default")], [/^from\s/, Keyword.for("from")], [/^let\s/, Keyword.for("let")], [/^protocol\s/, Keyword.for("protocol")], [/^for\s/, Keyword.for("for")], [/^try\s/, Keyword.for("try")], [/^catch\s/, Keyword.for("catch")], [/^finally\s/, Keyword.for("finally")], [/^end\s/, Keyword.for("end")], [/^while\s/, Keyword.for("while")], [/^loop\s/, Keyword.for("loop")], [/^and\s/, Keyword.for("and")], [/^or\s/, Keyword.for("or")], [/^continue\s/, Keyword.for("continue")], [/^break\s/, Keyword.for("break")], [/^of\s/, Keyword.for("of")], [/^yield\s/, Keyword.for("yield")], [/^async\s/, Keyword.for("async")], [/^await\s/, Keyword.for("await")], [/^\=\>/, Keyword.for("arrow")], [/^\@/, Keyword.for("at")], [/^\=\=/, Keyword.for("double_eq")], [/^\!\=/, Keyword.for("not_eq")], [/^\!/, Keyword.for("bang")], [/^\=/, Keyword.for("eq")], [/^fn\b/, Keyword.for("fn")], [/^\{/, Keyword.for("open_b")], [/^\}/, Keyword.for("close_b")], [/^\(/, Keyword.for("open_p")], [/^\)/, Keyword.for("close_p")], [/^\|/, Keyword.for("pipe_bar")], [/^[\-\+]?(\d+\.)?\d+n/, Keyword.for("bigint")], [/^[\-\+]?(\d+\.)?\d+/, Keyword.for("num")], [/^\.\.\./, Keyword.for("dot_dot_dot")], [/^\.\./, Keyword.for("dot_dot")], [/^\./, Keyword.for("dot")], [/^\/.*\/[a-z]?/, Keyword.for("regex_lit")], [/^\>\=/, Keyword.for("gt_eq")], [/^\<\=/, Keyword.for("lt_eq")], [/^\>/, Keyword.for("gt")], [/^\</, Keyword.for("lt")], [/^\+/, Keyword.for("plus")], [/^\%/, Keyword.for("mod")], [/^\-/, Keyword.for("minus")], [/^\*\*/, Keyword.for("pow")], [/^\*/, Keyword.for("times")], [/^\//, Keyword.for("div")], [/^\[/, Keyword.for("open_sq")], [/^\]/, Keyword.for("close_sq")], [/^\"([^\\\"]|\\.)*\"/s, Keyword.for("string_lit")], [/^[a-zA-Z_\?\!\$0-9]+/, Keyword.for("id")], [/^\:[a-zA-Z_\?\!\$0-9]+/, Keyword.for("keyword")], [/^\:/, Keyword.for("colon")]]);
 let expect_token__b = function (tokens, kw) {
 let __coil_temp;
 if (dot(dot(tokens, first)[invoke](), at)[invoke](Keyword.for("type"))[Meta["!="]](kw)[Meta.as_bool]()) {
@@ -358,7 +358,7 @@ let __coil_temp;
 return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("dot")], [Keyword.for("lhs"), lhs]])]), Chomp[Meta.create]([Keyword.for("dot")]), Then[Meta.create]([parse_single_expr, Keyword.for("rhs")])])[invoke](tokens);}
 let parse_keyword_lookup = function (tokens, lhs) {
 let __coil_temp;
-return Parser[Meta.create]([AbortIf[Meta.create]([not_adjacent__q]), Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("keyword_lookup")], [Keyword.for("lhs"), lhs]])]), Chomp[Meta.create]([Keyword.for("colon")]), One[Meta.create]([Keyword.for("id"), Keyword.for("property")])])[invoke](tokens);}
+return Parser[Meta.create]([AbortIf[Meta.create]([not_adjacent__q]), Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("keyword_lookup")], [Keyword.for("lhs"), lhs]])]), Chomp[Meta.create]([Keyword.for("keyword"), Keyword.for("property")]), FMap[Meta.create]([({'lhs': lhs, 'type': type, 'property': property}) => ObjectLiteral[Meta.from_entries]([[Keyword.for("lhs"), lhs], [Keyword.for("type"), type], [Keyword.for("property"), dot(property, 'slice')[invoke]((1))]])])])[invoke](tokens);}
 let not_adjacent__q = function ([_expr, tokens]) {
 let __coil_temp;
 let current = dot(tokens, first)[invoke]();
@@ -391,7 +391,7 @@ let __coil_temp;
 return Parser[Meta.create]([AbortIf[Meta.create]([not_adjacent__q]), Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("meta_create")], [Keyword.for("lhs"), lhs]])]), Chomp[Meta.create]([Keyword.for("open_sq")]), Until[Meta.create]([Keyword.for("close_sq"), parse_expr, Keyword.for("entries")]), Chomp[Meta.create]([Keyword.for("close_sq")])])[invoke](tokens, lhs);}
 let parse_snd_expr_step = function (tokens, lhs) {
 let __coil_temp;
-return ParseMap[Meta.from_entries]([[Keyword.for("open_p"), parse_fn_call], [Keyword.for("open_b"), parse_meta_from_entries], [Keyword.for("open_sq"), parse_meta_create], [Keyword.for("dot"), parse_dot], [Keyword.for("colon"), parse_keyword_lookup], [[Keyword.for("dot_dot"), Keyword.for("eq")], parse_inclusive_range], [Keyword.for("dot_dot"), parse_exclusive_range]])[invoke](tokens, lhs);}
+return ParseMap[Meta.from_entries]([[Keyword.for("open_p"), parse_fn_call], [Keyword.for("open_b"), parse_meta_from_entries], [Keyword.for("open_sq"), parse_meta_create], [Keyword.for("dot"), parse_dot], [Keyword.for("keyword"), parse_keyword_lookup], [[Keyword.for("dot_dot"), Keyword.for("eq")], parse_inclusive_range], [Keyword.for("dot_dot"), parse_exclusive_range]])[invoke](tokens, lhs);}
 let parse_snd_expr = function ([lhs, tokens]) {
 let __coil_temp;
 var __coil_while_let_temp = parse_snd_expr_step[invoke](tokens, lhs);
@@ -510,27 +510,49 @@ return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries](
 let parse_args_def = function (tokens) {
 let __coil_temp;
 return Parser[Meta.create]([Chomp[Meta.create]([Keyword.for("open_p")]), Until[Meta.create]([Keyword.for("close_p"), parse_assign_expr]), Chomp[Meta.create]([Keyword.for("close_p")])])[invoke](tokens);}
+let parse_name_expr = function (tokens) {
+let __coil_temp;
+var __coil_if_let_temp = parse_single_expr[invoke](tokens);
+if (__coil_if_let_temp[Meta.as_bool]()) {
+let [expr, tokens] = __coil_if_let_temp;
+let __coil_temp;
+let parse_map = ParseMap[Meta.from_entries]([[Keyword.for("dot"), parse_dot], [Keyword.for("keyword"), parse_keyword_lookup]]);
+var __coil_while_let_temp = parse_map[invoke](tokens, expr);
+while (__coil_while_let_temp) {
+let [new_expr, new_tokens] = __coil_while_let_temp;
+let __coil_temp;
+(expr = new_expr)
+(tokens = new_tokens)
+__coil_while_let_temp = parse_map[invoke](tokens, expr);
+};
+return [expr, tokens];
+};}
 let parse_fn = function (tokens) {
 let __coil_temp;
-return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("fn")]])]), Optional[Meta.create]([Keyword.for("async"), parse_async_modifier, Keyword.for("is_async?")]), Chomp[Meta.create]([Keyword.for("fn")]), Optional[Meta.create]([Keyword.for("times"), parse_gen_modifier, Keyword.for("generator?")]), Then[Meta.create]([parse_expr, Keyword.for("name_expr")]), Optional[Meta.create]([Keyword.for("open_p"), parse_args_def, Keyword.for("args")]), Case[Meta.create]([ParseMap[Meta.from_entries]([[Keyword.for("eq"), parse_fn_expr_body], [_, block[invoke]()]]), Keyword.for("body")])])[invoke](tokens);}
+return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("fn")]])]), Optional[Meta.create]([Keyword.for("async"), parse_async_modifier, Keyword.for("is_async?")]), Chomp[Meta.create]([Keyword.for("fn")]), Optional[Meta.create]([Keyword.for("times"), parse_gen_modifier, Keyword.for("generator?")]), Then[Meta.create]([parse_name_expr, Keyword.for("name_expr")]), Optional[Meta.create]([Keyword.for("open_p"), parse_args_def, Keyword.for("args")]), Case[Meta.create]([ParseMap[Meta.from_entries]([[Keyword.for("eq"), parse_fn_expr_body], [_, block[invoke]()]]), Keyword.for("body")])])[invoke](tokens);}
 let parse_keyword_record_entry = function (tokens) {
 let __coil_temp;
 return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("keyword_record_entry")]])]), One[Meta.create]([Keyword.for("id"), Keyword.for("name")]), Chomp[Meta.create]([Keyword.for("colon")]), Then[Meta.create]([parse_expr, Keyword.for("expr")])])[invoke](tokens);}
 let parse_regular_record_entry = function (tokens) {
 let __coil_temp;
 return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("regular_record_entry")]])]), Then[Meta.create]([parse_expr, Keyword.for("key_expr")]), Chomp[Meta.create]([Keyword.for("arrow")]), Then[Meta.create]([parse_expr, Keyword.for("value_expr")])])[invoke](tokens);}
-let parse_id_shorthand_record_entry = function (tokens) {
-let __coil_temp;
-return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("id_shorthand_record_entry")]])]), One[Meta.create]([Keyword.for("id"), Keyword.for("name")])])[invoke](tokens);}
 let parse_record_entry = function (tokens) {
 let __coil_temp;
-return ParseMap[Meta.from_entries]([[Keyword.for("dot_dot_dot"), parse_spread], [[Keyword.for("id"), Keyword.for("colon")], parse_keyword_record_entry], [[Keyword.for("id"), Keyword.for("arrow")], parse_regular_record_entry], [Keyword.for("id"), parse_id_shorthand_record_entry], [Keyword.for("fn"), parse_fn], [[Keyword.for("async"), Keyword.for("fn")], parse_fn], [_, parse_regular_record_entry]])[invoke](tokens);}
+return ParseMap[Meta.from_entries]([[Keyword.for("dot_dot_dot"), parse_spread], [[Keyword.for("id"), Keyword.for("colon")], parse_keyword_record_entry], [[Keyword.for("id"), Keyword.for("arrow")], parse_regular_record_entry], [Keyword.for("fn"), parse_fn], [[Keyword.for("async"), Keyword.for("fn")], parse_fn], [_, parse_regular_record_entry]])[invoke](tokens);}
+let parse_prefix_inclusive_range = function (tokens) {
+let __coil_temp;
+return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("prefix_inclusive_range")]])]), Chomp[Meta.create]([Keyword.for("dot_dot"), Keyword.for("eq")]), Then[Meta.create]([parse_expr, Keyword.for("expr")])])[invoke](tokens);}
 let parse_prefix_exclusive_range = function (tokens) {
 let __coil_temp;
 return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("prefix_exclusive_range")]])]), Chomp[Meta.create]([Keyword.for("dot_dot")]), Then[Meta.create]([parse_expr, Keyword.for("expr")])])[invoke](tokens);}
-let parse_keyword = Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("keyword")]])]), Chomp[Meta.create]([Keyword.for("colon")]), One[Meta.create]([Keyword.for("id"), Keyword.for("value")])]);
+let parse_keyword = function (tokens) {
+let __coil_temp;
+return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("keyword")]])]), One[Meta.create]([Keyword.for("keyword"), Keyword.for("value")]), FMap[Meta.create]([({'type': type, 'value': value}) => ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), type], [Keyword.for("value"), dot(value, 'slice')[invoke]((1))]])])])[invoke](tokens);}
 let parse_anon_fn = Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("anon_fn")]])]), Chomp[Meta.create]([Keyword.for("pipe_bar")]), Until[Meta.create]([Keyword.for("pipe_bar"), parse_assign_expr, Keyword.for("args")]), Chomp[Meta.create]([Keyword.for("pipe_bar")]), Then[Meta.create]([parse_expr, Keyword.for("return_expr")])]);
-let SINGLE_EXPR_PARSE_MAP = ParseMap[Meta.from_entries]([[Keyword.for("string_lit"), parse_str], [Keyword.for("regex_lit"), parse_regex], [Keyword.for("keyword"), parse_keyword], [Keyword.for("open_p"), parse_paren_expr], [Keyword.for("yield"), parse_yield], [Keyword.for("await"), parse_await], [Keyword.for("num"), parse_num], [Keyword.for("open_sq"), parse_array], [Keyword.for("dot_dot_dot"), parse_spread], [Keyword.for("bang"), parse_not], [Keyword.for("open_b"), parse_obj], [Keyword.for("pipe_bar"), parse_anon_fn], [Keyword.for("dot_dot"), parse_prefix_exclusive_range], [dot(valid_ids_in_all_contexts, push)[invoke](Keyword.for("import")), parse_id], [[Keyword.for("async"), Keyword.for("fn")], parse_fn], [Keyword.for("fn"), parse_fn], [[Keyword.for("colon"), Keyword.for("id")], parse_keyword]]);
+let parse_reassign = function (tokens) {
+let __coil_temp;
+return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("reassign")]])]), One[Meta.create]([Keyword.for("id"), Keyword.for("name")]), Chomp[Meta.create]([Keyword.for("eq")]), Then[Meta.create]([parse_expr, Keyword.for("expr")])])[invoke](tokens);}
+let SINGLE_EXPR_PARSE_MAP = ParseMap[Meta.from_entries]([[Keyword.for("string_lit"), parse_str], [Keyword.for("regex_lit"), parse_regex], [Keyword.for("keyword"), parse_keyword], [Keyword.for("open_p"), parse_paren_expr], [Keyword.for("yield"), parse_yield], [Keyword.for("await"), parse_await], [Keyword.for("num"), parse_num], [Keyword.for("open_sq"), parse_array], [Keyword.for("dot_dot_dot"), parse_spread], [Keyword.for("bang"), parse_not], [Keyword.for("open_b"), parse_obj], [Keyword.for("pipe_bar"), parse_anon_fn], [[Keyword.for("id"), Keyword.for("eq")], parse_reassign], [[Keyword.for("dot_dot"), Keyword.for("eq")], parse_prefix_inclusive_range], [Keyword.for("dot_dot"), parse_prefix_exclusive_range], [dot(valid_ids_in_all_contexts, push)[invoke](Keyword.for("import")), parse_id], [[Keyword.for("async"), Keyword.for("fn")], parse_fn], [Keyword.for("fn"), parse_fn]]);
 let parse_single_expr = function (tokens) {
 let __coil_temp;
 return SINGLE_EXPR_PARSE_MAP[invoke](tokens);}
@@ -736,7 +758,7 @@ let __coil_temp;
 return str[invoke](eval_expr[invoke](lhs), "[Equal['!=']](", eval_expr[invoke](rhs), ")");}
 let eval_not = function ({'expr': expr}) {
 let __coil_temp;
-return str[invoke](eval_expr[invoke](expr), "[Bool.negate]]()");}
+return str[invoke](eval_expr[invoke](expr), "[Bool.negate]()");}
 let eval_meta_from_entries = function ({'lhs': lhs, 'entries': entries}) {
 let __coil_temp;
 return str[invoke](eval_expr[invoke](lhs), "[Meta.from_entries]([", dot(dot(entries, map)[invoke](eval_record_entry), join)[invoke](", "), "])");}
@@ -761,36 +783,36 @@ return str[invoke]("[", eval_expr[invoke](key_expr), ", ", eval_expr[invoke](val
 let eval_keyword_record_entry = function ({'name': name, 'expr': expr}) {
 let __coil_temp;
 return str[invoke]("[", eval_keyword[invoke](ObjectLiteral[Meta.from_entries]([[Keyword.for("value"), name]])), ", ", eval_expr[invoke](expr), "]");}
-let eval_id_shorthand_record_entry = function ({'name': name}) {
-let __coil_temp;
-return str[invoke]("[", eval_keyword[invoke](ObjectLiteral[Meta.from_entries]([[Keyword.for("value"), name]])), ", ", name, "]");}
 let eval_record_entry = function (node) {
 let __coil_temp;
-return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("regular_record_entry"), eval_regular_record_entry], [Keyword.for("keyword_record_entry"), eval_keyword_record_entry], [Keyword.for("spread"), eval_spread], [Keyword.for("id_shorthand_record_entry"), eval_id_shorthand_record_entry]]))[invoke](node);}
+return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("regular_record_entry"), eval_regular_record_entry], [Keyword.for("keyword_record_entry"), eval_keyword_record_entry], [Keyword.for("spread"), eval_spread]]))[invoke](node);}
 let eval_inclusive_range = function ({'lhs': lhs, 'rhs': rhs}) {
 let __coil_temp;
 if (rhs[Meta.as_bool]()) {
 let __coil_temp;
-return str[invoke]("new IRange(", eval_expr[invoke](lhs), ", ", eval_expr[invoke](rhs), ")");
+return str[invoke]("new InclusiveRange(", eval_expr[invoke](lhs), ", ", eval_expr[invoke](rhs), ")");
 } else {
 let __coil_temp;
-return str[invoke]("new IRangeNoMax(", eval_expr[invoke](lhs), ")");
+return str[invoke]("new InclusiveRangeNoMaximum(", eval_expr[invoke](lhs), ")");
 };}
 let eval_exclusive_range = function ({'lhs': lhs, 'rhs': rhs}) {
 let __coil_temp;
 if (rhs[Meta.as_bool]()) {
 let __coil_temp;
-return str[invoke]("new ERange(", eval_expr[invoke](lhs), ", ", eval_expr[invoke](rhs), ")");
+return str[invoke]("new ExclusiveRange(", eval_expr[invoke](lhs), ", ", eval_expr[invoke](rhs), ")");
 } else {
 let __coil_temp;
-return str[invoke]("new ERangeNoMax(", eval_expr[invoke](lhs), ")");
+return str[invoke]("new ExclusiveRangeNoMaximum(", eval_expr[invoke](lhs), ")");
 };}
 let eval_regex_lit = function ({'value': value}) {
 let __coil_temp;
 return value;}
 let eval_prefix_exclusive_range = function ({'expr': expr}) {
 let __coil_temp;
-return str[invoke]("new ERangeNoMin(", eval_expr[invoke](expr), ")");}
+return str[invoke]("new ExclusiveRangeNoMinimum(", eval_expr[invoke](expr), ")");}
+let eval_prefix_inclusive_range = function ({'expr': expr}) {
+let __coil_temp;
+return str[invoke]("new InclusiveRangeNoMinimum(", eval_expr[invoke](expr), ")");}
 let eval_dot = function ({'lhs': lhs, 'rhs': rhs}) {
 let __coil_temp;
 return str[invoke]("dot(", eval_expr[invoke](lhs), ", ", eval_expr[invoke](rhs), ")");}
@@ -811,13 +833,16 @@ let __coil_temp;
 return str[invoke](eval_expr[invoke](lhs), "[Meta[\"", op, "\"]](", eval_expr[invoke](rhs), ")");}
 let eval_and = function ({'lhs': lhs, 'rhs': rhs}) {
 let __coil_temp;
-return str[invoke]("(", eval_expr[invoke](lhs), ")[Meta.as_bool]() && (", eval_expr[invoke](rhs), ")[Meta.as_bool]()");}
+return str[invoke]("(__coil_temp = {left: ", eval_expr[invoke](lhs), ", right: ", eval_expr[invoke](rhs), "}", ", __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : __coil_temp.right[Meta.as_bool]() === true ? __coil_temp.right : __coil_temp.left)");}
 let eval_or = function ({'lhs': lhs, 'rhs': rhs}) {
 let __coil_temp;
-return str[invoke]("(", eval_expr[invoke](lhs), ")[Meta.as_bool]() || (", eval_expr[invoke](rhs), ")[Meta.as_bool]()");}
+return str[invoke]("(__coil_temp = {left: ", eval_expr[invoke](lhs), ", right: ", eval_expr[invoke](rhs), "}", ", __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : __coil_temp.right)");}
+let eval_reassign = function ({'name': name, 'expr': expr}) {
+let __coil_temp;
+return str[invoke]("(", resolve_name[invoke](name), " = ", eval_expr[invoke](expr), ")");}
 let eval_expr = function (node) {
 let __coil_temp;
-return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("algebra_op"), eval_algebra_op], [Keyword.for("equality_op"), eval_equality_op], [Keyword.for("and"), eval_and], [Keyword.for("or"), eval_or], [Keyword.for("str"), eval_str], [Keyword.for("dot"), eval_dot], [Keyword.for("keyword_lookup"), eval_keyword_lookup], [Keyword.for("object_literal"), eval_object_literal], [Keyword.for("regex_lit"), eval_regex_lit], [Keyword.for("keyword"), eval_keyword], [Keyword.for("prefix_exclusive_range"), eval_prefix_exclusive_range], [Keyword.for("id_lookup"), eval_id_lookup], [Keyword.for("fn_call"), eval_fn_call], [Keyword.for("num"), eval_num], [Keyword.for("array"), eval_array], [Keyword.for("double_equals"), eval_double_equals], [Keyword.for("not_equals"), eval_not_equals], [Keyword.for("not"), eval_not], [Keyword.for("fn"), eval_fn], [Keyword.for("meta_from_entries"), eval_meta_from_entries], [Keyword.for("meta_create"), eval_meta_create], [Keyword.for("spread"), eval_spread], [Keyword.for("await"), eval_await], [Keyword.for("yield"), eval_yield], [Keyword.for("paren_expr"), eval_paren_expr], [Keyword.for("inclusive_range"), eval_inclusive_range], [Keyword.for("exclusive_range"), eval_exclusive_range], [Keyword.for("anon_fn"), eval_anon_fn]]))[invoke](node);}
+return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("algebra_op"), eval_algebra_op], [Keyword.for("equality_op"), eval_equality_op], [Keyword.for("and"), eval_and], [Keyword.for("or"), eval_or], [Keyword.for("str"), eval_str], [Keyword.for("dot"), eval_dot], [Keyword.for("reassign"), eval_reassign], [Keyword.for("keyword_lookup"), eval_keyword_lookup], [Keyword.for("object_literal"), eval_object_literal], [Keyword.for("regex_lit"), eval_regex_lit], [Keyword.for("keyword"), eval_keyword], [Keyword.for("prefix_exclusive_range"), eval_prefix_exclusive_range], [Keyword.for("prefix_inclusive_range"), eval_prefix_inclusive_range], [Keyword.for("id_lookup"), eval_id_lookup], [Keyword.for("fn_call"), eval_fn_call], [Keyword.for("num"), eval_num], [Keyword.for("array"), eval_array], [Keyword.for("double_equals"), eval_double_equals], [Keyword.for("not_equals"), eval_not_equals], [Keyword.for("not"), eval_not], [Keyword.for("fn"), eval_fn], [Keyword.for("meta_from_entries"), eval_meta_from_entries], [Keyword.for("meta_create"), eval_meta_create], [Keyword.for("spread"), eval_spread], [Keyword.for("await"), eval_await], [Keyword.for("yield"), eval_yield], [Keyword.for("paren_expr"), eval_paren_expr], [Keyword.for("inclusive_range"), eval_inclusive_range], [Keyword.for("exclusive_range"), eval_exclusive_range], [Keyword.for("anon_fn"), eval_anon_fn]]))[invoke](node);}
 let eval_return = function ({'expr': expr}) {
 let __coil_temp;
 if (expr[Meta.as_bool]()) {
@@ -839,7 +864,7 @@ return str[invoke]("const ", resolve_name[invoke](name), " = Symbol(\"", name, "
 let eval_for_loop = function ({'is_await?': is_await__q, 'assign_expr': assign_expr, 'iterable_expr': iterable_expr, 'body': body}) {
 let __coil_temp;
 return str[invoke]("for ", ((__coil_temp = {left: is_await__q, right: "await "}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : __coil_temp.right[Meta.as_bool]() === true ? __coil_temp.right : __coil_temp.left)), " (let ", eval_assign_expr[invoke](assign_expr), " of ", eval_expr[invoke](iterable_expr), ") {\n", eval_ast[invoke](body), "\n", "}");}
-let eval_id_assign = function ({'name': name}) {
+let eval_id_assign = function ({'name': name, 'expr': expr}) {
 let __coil_temp;
 return str[invoke](resolve_name[invoke](name), " = ", eval_expr[invoke](expr));}
 let eval_while_loop = function ({'test_expr': test_expr, 'body': body}) {

@@ -128,12 +128,13 @@ let lexer = Lexer{
   /^\-/ => :minus
   /^\*\*/ => :pow
   /^\*/ => :times
-  /^\:/ => :colon
   /^\// => :div
   /^\[/ => :open_sq
   /^\]/ => :close_sq
   /^\"([^\\\"]|\\.)*\"/s => :string_lit
   /^[a-zA-Z_\?\!\$0-9]+/ => :id
+  /^\:[a-zA-Z_\?\!\$0-9]+/ => :keyword
+  /^\:/ => :colon
 }
 
 # fn ParseError(expected_token_type, actual_token)
@@ -323,8 +324,8 @@ fn parse_dot(tokens, lhs) = Parser[
 fn parse_keyword_lookup(tokens, lhs) = Parser[
   AbortIf[not_adjacent?]    
   Init[{type: :keyword_lookup, lhs: lhs}]
-  Chomp[:colon]
-  One[:id :property]
+  Chomp[:keyword :property]
+  FMap[|{lhs, type, property}| {lhs: lhs, type: type, property: property:slice(1)}]
 ](tokens)
 
 fn not_adjacent?([_expr tokens])
@@ -386,7 +387,7 @@ fn parse_snd_expr_step(tokens, lhs) = ParseMap{
   :open_b => parse_meta_from_entries
   :open_sq => parse_meta_create
   :dot => parse_dot
-  :colon => parse_keyword_lookup
+  :keyword => parse_keyword_lookup
   [:dot_dot :eq] => parse_inclusive_range
   :dot_dot => parse_exclusive_range
 }(tokens, lhs)
@@ -629,12 +630,26 @@ fn parse_args_def(tokens) = Parser[
   Chomp[:close_p]
 ](tokens)
 
+fn parse_name_expr(tokens)
+  if let [expr tokens] = parse_single_expr(tokens)
+    let parse_map = ParseMap{
+      :dot => parse_dot
+      :keyword => parse_keyword_lookup
+    }
+    while let [new_expr new_tokens] = parse_map(tokens expr)
+      expr = new_expr
+      tokens = new_tokens
+    end
+    return [expr tokens]
+  end
+end
+
 fn parse_fn(tokens) = Parser[
   Init[{type: :fn}]
   Optional[:async parse_async_modifier :is_async?]
   Chomp[:fn]
   Optional[:times parse_gen_modifier :generator?]
-  Then[parse_expr :name_expr]
+  Then[parse_name_expr :name_expr]
   Optional[:open_p parse_args_def :args]
   Case[ParseMap{
     :eq => parse_fn_expr_body,
@@ -656,20 +671,20 @@ fn parse_regular_record_entry(tokens) = Parser[
   Then[parse_expr :value_expr]
 ](tokens)
 
-fn parse_id_shorthand_record_entry(tokens) = Parser[
-  Init[{type: :id_shorthand_record_entry}]
-  One[:id :name]
-](tokens)
-
 fn parse_record_entry(tokens) = ParseMap{
   :dot_dot_dot => parse_spread
   [:id :colon] => parse_keyword_record_entry
   [:id :arrow] => parse_regular_record_entry
-  :id => parse_id_shorthand_record_entry
   :fn => parse_fn
   [:async :fn] => parse_fn
   _ => parse_regular_record_entry
 }(tokens)
+
+fn parse_prefix_inclusive_range(tokens) = Parser[
+  Init[{type: :prefix_inclusive_range}]
+  Chomp[:dot_dot :eq]
+  Then[parse_expr :expr]
+](tokens)
 
 fn parse_prefix_exclusive_range(tokens) = Parser[
   Init[{type: :prefix_exclusive_range}]
@@ -677,11 +692,11 @@ fn parse_prefix_exclusive_range(tokens) = Parser[
   Then[parse_expr :expr]
 ](tokens)
 
-let parse_keyword = Parser[
+fn parse_keyword(tokens) = Parser[
   Init[{type: :keyword}]
-  Chomp[:colon]
-  One[:id :value]
-]
+  One[:keyword :value]
+  FMap[|{type, value}| {type: type, value: value:slice(1)}]
+](tokens)
 
 let parse_anon_fn = Parser[
   Init[{type: :anon_fn}]
@@ -690,6 +705,13 @@ let parse_anon_fn = Parser[
   Chomp[:pipe_bar]
   Then[parse_expr :return_expr]
 ]
+
+fn parse_reassign(tokens) = Parser[
+  Init[{type: :reassign}]
+  One[:id :name]
+  Chomp[:eq]
+  Then[parse_expr :expr]
+](tokens)
 
 let SINGLE_EXPR_PARSE_MAP = ParseMap{
   :string_lit => parse_str
@@ -704,11 +726,12 @@ let SINGLE_EXPR_PARSE_MAP = ParseMap{
   :bang => parse_not
   :open_b => parse_obj
   :pipe_bar => parse_anon_fn
+  [:id :eq] => parse_reassign
+  [:dot_dot :eq] => parse_prefix_inclusive_range
   :dot_dot => parse_prefix_exclusive_range
   valid_ids_in_all_contexts.push(:import) => parse_id
   [:async :fn] => parse_fn
   :fn => parse_fn
-  [:colon :id] => parse_keyword
 }
 
 fn parse_single_expr(tokens) = SINGLE_EXPR_PARSE_MAP(tokens)
@@ -1068,7 +1091,7 @@ fn eval_double_equals({lhs, rhs}) =
 fn eval_not_equals({lhs, rhs}) =
   str(eval_expr(lhs) "[Equal['!=']](" eval_expr(rhs) ")")
 
-fn eval_not({expr}) = str(eval_expr(expr) "[Bool.negate]]()")
+fn eval_not({expr}) = str(eval_expr(expr) "[Bool.negate]()")
 
 fn eval_meta_from_entries({lhs entries}) = 
   str(eval_expr(lhs) "[Meta.from_entries](["
@@ -1092,35 +1115,33 @@ fn eval_regular_record_entry({key_expr value_expr}) =
 fn eval_keyword_record_entry({name expr}) =
   str("[" eval_keyword({value: name}) ", " eval_expr(expr) "]")
 
-fn eval_id_shorthand_record_entry({name}) =
-  str("[" eval_keyword({value: name}) ", " name "]")
-
 fn eval_record_entry(node) = node.at(:type).pipe(Map{
   :regular_record_entry => eval_regular_record_entry
   :keyword_record_entry => eval_keyword_record_entry
   :spread => eval_spread
-  :id_shorthand_record_entry => eval_id_shorthand_record_entry
 })(node)
 
 fn eval_inclusive_range({lhs, rhs})
   if rhs
-    return str("new IRange(" eval_expr(lhs) ", " eval_expr(rhs) ")")
+    return str("new InclusiveRange(" eval_expr(lhs) ", " eval_expr(rhs) ")")
   else
-    return str("new IRangeNoMax(" eval_expr(lhs) ")")
+    return str("new InclusiveRangeNoMaximum(" eval_expr(lhs) ")")
   end
 end
 
 fn eval_exclusive_range({lhs, rhs})
   if rhs
-    return str("new ERange(" eval_expr(lhs) ", " eval_expr(rhs) ")")
+    return str("new ExclusiveRange(" eval_expr(lhs) ", " eval_expr(rhs) ")")
   else
-    return str("new ERangeNoMax(" eval_expr(lhs) ")")
+    return str("new ExclusiveRangeNoMaximum(" eval_expr(lhs) ")")
   end
 end
 
 fn eval_regex_lit({value}) = value
 
-fn eval_prefix_exclusive_range({expr}) = str("new ERangeNoMin(" eval_expr(expr) ")") 
+fn eval_prefix_exclusive_range({expr}) = str("new ExclusiveRangeNoMinimum(" eval_expr(expr) ")") 
+
+fn eval_prefix_inclusive_range({expr}) = str("new InclusiveRangeNoMinimum(" eval_expr(expr) ")")
 
 fn eval_dot({lhs, rhs}) =
   str("dot(" eval_expr(lhs) ", " eval_expr(rhs) ")")
@@ -1147,12 +1168,17 @@ fn eval_equality_op({lhs, op, rhs}) = str(
 )
 
 fn eval_and({lhs, rhs}) = str(
-  "(" eval_expr(lhs) ")[Meta.as_bool]() && (" eval_expr(rhs) ")[Meta.as_bool]()"
+  "(__coil_temp = {left: " eval_expr(lhs) ", right: " eval_expr(rhs) "}"
+  ", __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : __coil_temp.right[Meta.as_bool]() === true ? __coil_temp.right : __coil_temp.left)"
 )
 
 fn eval_or({lhs, rhs}) = str(
-  "(" eval_expr(lhs) ")[Meta.as_bool]() || (" eval_expr(rhs) ")[Meta.as_bool]()"
+  "(__coil_temp = {left: " eval_expr(lhs) ", right: " eval_expr(rhs) "}"
+  ", __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : __coil_temp.right)"
 )
+
+fn eval_reassign({name, expr}) =
+  str("(" resolve_name(name) " = " eval_expr(expr) ")")
 
 fn eval_expr(node) = node.at(:type).pipe(Map{
   :algebra_op => eval_algebra_op
@@ -1161,11 +1187,13 @@ fn eval_expr(node) = node.at(:type).pipe(Map{
   :or => eval_or
   :str => eval_str
   :dot => eval_dot
+  :reassign => eval_reassign
   :keyword_lookup => eval_keyword_lookup
   :object_literal => eval_object_literal
   :regex_lit => eval_regex_lit
   :keyword => eval_keyword
   :prefix_exclusive_range => eval_prefix_exclusive_range
+  :prefix_inclusive_range => eval_prefix_inclusive_range
   :id_lookup => eval_id_lookup
   :fn_call => eval_fn_call
   :num => eval_num
@@ -1215,7 +1243,7 @@ fn eval_for_loop({is_await? assign_expr iterable_expr body}) =
         eval_ast(body) "\n"
       "}")
 
-fn eval_id_assign({name}) = str(resolve_name(name) " = " eval_expr(expr))
+fn eval_id_assign({name, expr}) = str(resolve_name(name) " = " eval_expr(expr))
 
 fn eval_while_loop({test_expr, body}) =
   str("while (" eval_expr(test_expr) "[Meta.as_bool]()) {\n" eval_ast(body) "\n}")
