@@ -1,3 +1,4 @@
+import Algebra from "../algebra.js";
 import Meta from "../meta.js";
 
 function compose(...fns) {
@@ -178,18 +179,13 @@ Object.prototype[Iter.compact] = function* () {
   }
 };
 
-Object.prototype[Iter.join] = function* (separator) {
+Object.prototype[Iter.join] = function (separator) {
   let iter = this[Symbol.iterator]();
-  let { value, done } = iter.next();
-  if (done) {
-    return this;
-  } else {
-    yield value;
-    for (let elem of iter) {
-      yield separator;
-      yield elem;
-    }
+  let out = iter.next().value;
+  for (let elem of iter) {
+    out = out[Algebra["+"]](separator)[Algebra["+"]](elem);
   }
+  return out;
 };
 
 Object.prototype[Iter.into] = function (collector) {

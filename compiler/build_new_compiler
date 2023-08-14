@@ -1,0 +1,2 @@
+#!sh
+deno run --allow-read --allow-write ./dist/compiler_v2.js ./src/compiler_v3.coil ./dist/compiler_v3.js -no-prelude

@@ -17,7 +17,7 @@ impl :skip for CollectionView = fn(n) =
   CollectionView[this.collection, this.idx + n]
 
 impl Symbol.iterator for CollectionView = fn*() {
-  for i of this.idx..=this.collection::len() {
+  for i of this.idx..this.collection::len() {
     yield this.collection[i]
   }
 }
@@ -121,12 +121,13 @@ let lexer = Lexer{
   /^\-/ => :minus
   /^\*\*/ => :pow
   /^\*/ => :times
-  /^\:/ => :colon
   /^\// => :div
   /^\[/ => :open_sq
   /^\]/ => :close_sq
   /^\"([^\\\"]|\\.)*\"/s => :string_lit
   /^[a-zA-Z_\?\!\$0-9]+/ => :id
+  /^\:[a-zA-Z_\?\!\$0-9]+/ => :keyword
+  /^\:/ => :colon
 }
 
 fn ParseError(expected_token_type, actual_token) {
@@ -338,8 +339,8 @@ fn parse_dot(tokens, lhs) = Parser[
 fn parse_keyword_lookup(tokens, lhs) = Parser[
   AbortIf[not_adjacent?]    
   Init[{type: :keyword_lookup, lhs}]
-  Chomp[:colon]
-  One[:id :property]
+  One[:keyword :property]
+  FMap[fn({lhs, type, property}) = {lhs, type, property: property.slice(1)}]
 ]::call(tokens)
 
 fn not_adjacent?([_expr tokens]) {
@@ -398,7 +399,7 @@ fn parse_snd_expr_step(tokens, lhs) = ParseMap{
   :open_b => parse_meta_from_entries
   :open_sq => parse_meta_create
   :dot => parse_dot
-  :colon => parse_keyword_lookup
+  :keyword => parse_keyword_lookup
   [:dot_dot :eq] => parse_inclusive_range
   :dot_dot => parse_exclusive_range
 }::call(tokens, lhs)
@@ -646,7 +647,7 @@ fn parse_name_expr(tokens) {
   if let [expr tokens] = parse_single_expr(tokens) {
     let parse_map = ParseMap{
       :dot => parse_dot
-      :colon => parse_keyword_lookup
+      :keyword => parse_keyword_lookup
     }
     while let [new_expr new_tokens] = parse_map::call(tokens expr) {
       expr = new_expr
@@ -683,16 +684,10 @@ fn parse_regular_record_entry(tokens) = Parser[
   Then[parse_expr :value_expr]
 ]::call(tokens)
 
-fn parse_id_shorthand_record_entry(tokens) = Parser[
-  Init[{type: :id_shorthand_record_entry}]
-  One[:id :name]
-]::call(tokens)
-
 fn parse_record_entry(tokens) = ParseMap{
   :dot_dot_dot => parse_spread
   [:id :colon] => parse_keyword_record_entry
   [:id :arrow] => parse_regular_record_entry
-  :id => parse_id_shorthand_record_entry
   :fn => parse_fn
   [:async :fn] => parse_fn
   _ => parse_regular_record_entry
@@ -710,11 +705,11 @@ fn parse_prefix_exclusive_range(tokens) = Parser[
   Then[parse_expr :expr]
 ]::call(tokens)
 
-let parse_keyword = Parser[
+fn parse_keyword(tokens) = Parser[
   Init[{type: :keyword}]
-  Chomp[:colon]
-  One[:id :value]
-]
+  One[:keyword :value]
+  FMap[fn({type, value}) = {type, value: value.slice(1)}]
+]::call(tokens)
 
 let parse_anon_fn = Parser[
   Init[{type: :anon_fn}]
@@ -723,6 +718,13 @@ let parse_anon_fn = Parser[
   Chomp[:pipe_bar]
   Then[parse_expr :return_expr]
 ]
+
+fn parse_reassign(tokens) = Parser[
+  Init[{type: :reassign}]
+  One[:id :name]
+  Chomp[:eq]
+  Then[parse_expr :expr]
+]::call(tokens)
 
 let SINGLE_EXPR_PARSE_MAP = ParseMap{
   :string_lit => parse_str
@@ -737,12 +739,12 @@ let SINGLE_EXPR_PARSE_MAP = ParseMap{
   :bang => parse_not
   :open_b => parse_obj
   :pipe_bar => parse_anon_fn
+  [:id :eq] => parse_reassign
   [:dot_dot :eq] => parse_prefix_inclusive_range
   :dot_dot => parse_prefix_exclusive_range
   valid_ids_in_all_contexts::push(:import) => parse_id
   [:async :fn] => parse_fn
   :fn => parse_fn
-  [:colon :id] => parse_keyword
 }
 
 fn parse_single_expr(tokens) = SINGLE_EXPR_PARSE_MAP::call(tokens)
@@ -1108,7 +1110,7 @@ fn eval_double_equals({lhs, rhs}) =
 fn eval_not_equals({lhs, rhs}) =
   str(eval_expr(lhs) "[Equal['!=']](" eval_expr(rhs) ")")
 
-fn eval_not({expr}) = str(eval_expr(expr) "[Bool.negate]]()")
+fn eval_not({expr}) = str(eval_expr(expr) "[Bool.negate]()")
 
 fn eval_meta_from_entries({lhs entries}) {
   let lhs_js = eval_expr(lhs)
@@ -1199,6 +1201,9 @@ fn eval_or({lhs, rhs}) = str(
   ", __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : __coil_temp.right)"
 )
 
+fn eval_reassign({name, expr}) =
+  str("(" resolve_name(name) " = " eval_expr(expr) ")")
+
 fn eval_expr(node) = node::at(:type)::pipe(Map{
   :algebra_op => eval_algebra_op
   :equality_op => eval_equality_op
@@ -1206,6 +1211,7 @@ fn eval_expr(node) = node::at(:type)::pipe(Map{
   :or => eval_or
   :str => eval_str
   :dot => eval_dot
+  :reassign => eval_reassign
   :keyword_lookup => eval_keyword_lookup
   :object_literal => eval_object_literal
   :regex_lit => eval_regex_lit
