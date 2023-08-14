@@ -935,7 +935,7 @@ return eval_expr;
 };})[invoke](node);}
 export let eval_ast = function (ast) {
 let __coil_temp;
-return dot(dot(ast, map)[invoke](eval_statement), join)[invoke]("\n");};
+return "let __coil_temp;\n"[Algebra["+"]](dot(dot(ast, map)[invoke](eval_statement), join)[invoke]("\n"));};
 export let lex = function (string) {
 let __coil_temp;
 return lexer[invoke](string);};
@@ -949,6 +949,33 @@ export let compile = function (string) {
 let __coil_temp;
 return dot(string, pipe)[invoke](lexer, coll_view, parse_tokens, eval_ast);};
 let [src_file_name, out_name] = dot(Deno, 'args');
-let prelude = dot(Deno, 'readTextFileSync')[invoke]("./src/std/js_prelude_v2.js");
 let src = dot(Deno, 'readTextFileSync')[invoke](src_file_name);
-dot(Deno, 'writeTextFile')[invoke](out_name, prelude[Algebra["+"]](compile[invoke](src))[Algebra["+"]]("\n"))
+let imports = `
+\"use strict\";
+import { ObjectLiteral, Nil, nil, Keyword, dot } from './src/std/globals.js'
+import Meta, {
+  nil__q, is_a__q, create, from_entries, __equals__,
+  __not_equals__, exists__q, as_bool, log, invoke, pipe
+} from './src/std/meta.js';
+import Iter, {
+  take, until, skip, find, zip, reduce, map, flat_map, each,
+  filter, reject, all__q, any__q, split, compact, join, into
+} from './src/std/iter/index.js';
+import Algebra, {
+  __plus__, __minus__, __divide__,
+  __multiply__, __exponent__, __modulo__,
+  __greater_than__, __greater_than_or_equal_to__,
+  __less_than__, __less_than_or_equal_to__,
+} from './src/std/algebra.js';
+import Bool, { negate } from './src/std/bool.js';
+import Collection, { at, len, empty__q, has__q } from './src/std/collection.js';
+import OrderedSequence, { first, last } from './src/std/ordered_sequence.js';
+import {
+  inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum,
+  InclusiveRangeNoMinimum, ExclusiveRangeNoMaximum, ExclusiveRangeNoMinimum
+} from './src/std/range.js';
+import Record, { keys, values } from './src/std/record.js';
+import Underscore, { _ } from './src/std/underscore.js';
+import CondMap from './src/std/cond_map.js'
+`;
+dot(Deno, 'writeTextFile')[invoke](out_name, imports[Algebra["+"]](compile[invoke](src))[Algebra["+"]]("\n"))
