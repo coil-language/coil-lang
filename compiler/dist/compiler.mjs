@@ -2,7 +2,7 @@
 "use strict";
 import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b } from '../src/std/globals.js'
 import Meta, {
-  nil__q, is_a__q, create, from_entries, __equals__,
+  nil__q, is_a__q, create, from_entries, __equals__, as_num,
   __not_equals__, exists__q, as_bool, log, invoke, pipe
 } from '../src/std/meta.js';
 import Iter, {
@@ -538,7 +538,7 @@ let parse_obj_entry_rename = Parser[Meta.create]([Init[Meta.create]([ObjectLiter
 let parse_regular_obj_assign_entry = Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("obj_reg_entry")]])]), Either[Meta.create]([valid_ids_in_all_contexts, Keyword.for("name")])]);
 let parse_obj_entry_destructure = function (tokens) {
 tokens ??= nil;let __coil_temp;
-return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("obj_assign_expr")]])]), One[Meta.create]([valid_ids_in_all_contexts, Keyword.for("property")]), Chomp[Meta.create]([Keyword.for("colon")]), Then[Meta.create]([parse_assign_expr, Keyword.for("assign_expr")])])[invoke](tokens);}
+return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("obj_assign_expr")]])]), Either[Meta.create]([valid_ids_in_all_contexts, Keyword.for("property")]), Chomp[Meta.create]([Keyword.for("colon")]), Then[Meta.create]([parse_assign_expr, Keyword.for("assign_expr")])])[invoke](tokens);}
 let parse_obj_assign_entry = ParseMap[Meta.from_entries]([[[Keyword.for("id"), Keyword.for("colon"), Keyword.for("id")], parse_obj_entry_rename], [[Keyword.for("id"), Keyword.for("colon")], parse_obj_entry_destructure], [Keyword.for("id"), parse_regular_obj_assign_entry], [Keyword.for("dot_dot_dot"), parse_spread_assign]]);
 let parse_assign_obj = Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("object_deconstruction")]])]), Chomp[Meta.create]([Keyword.for("open_b")]), Until[Meta.create]([Keyword.for("close_b"), parse_obj_assign_entry, Keyword.for("entries")]), Chomp[Meta.create]([Keyword.for("close_b")])]);
 let parse_this_assign = Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("this_assign")]])]), Chomp[Meta.create]([Keyword.for("at")]), Either[Meta.create]([valid_ids_in_all_contexts, Keyword.for("name")])]);
@@ -563,12 +563,6 @@ return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries](
 let parse_not = function (tokens) {
 tokens ??= nil;let __coil_temp;
 return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("not")]])]), Chomp[Meta.create]([Keyword.for("bang")]), Then[Meta.create]([parse_expr, Keyword.for("expr")])])[invoke](tokens);}
-let parse_num_raw = function (tokens) {
-tokens ??= nil;let __coil_temp;
-return dot(parse_num[invoke](tokens), pipe)[invoke](([expr, tokens]) => {
-expr ??= nil;
-tokens ??= nil;return [dot(dot(expr, at)[invoke](Keyword.for("value")), as_num)[invoke](), tokens];});}
-let parse_adjacent_num_raw = Parser[Meta.create]([AbortIf[Meta.create]([not_adjacent__q]), Then[Meta.create]([parse_num_raw])]);
 let parse_async_modifier = Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([])]), Chomp[Meta.create]([Keyword.for("async")])]);
 let parse_gen_modifier = Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([])]), Chomp[Meta.create]([Keyword.for("times")])]);
 let parse_fn_expr_body = function (tokens) {
@@ -775,9 +769,13 @@ let eval_obj_entry_rename = function ({'old_name': old_name, 'new_name': new_nam
 old_name ??= nil;
 new_name ??= nil;let __coil_temp;
 return str[invoke]("'", old_name, "': ", resolve_name[invoke](new_name));}
+let eval_obj_assign_expr = function ({'property': property, 'assign_expr': assign_expr}) {
+property ??= nil;
+assign_expr ??= nil;let __coil_temp;
+return str[invoke]("'", property, "': ", eval_assign_expr[invoke](assign_expr));}
 let eval_obj_deconstruction_entry = function (node) {
 node ??= nil;let __coil_temp;
-return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("obj_reg_entry"), eval_obj_reg_entry], [Keyword.for("obj_entry_rename"), eval_obj_entry_rename], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("object_deconstruction"), eval_object_deconstruction_names]]))[invoke](node);}
+return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("obj_reg_entry"), eval_obj_reg_entry], [Keyword.for("obj_assign_expr"), eval_obj_assign_expr], [Keyword.for("obj_entry_rename"), eval_obj_entry_rename], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("object_deconstruction"), eval_object_deconstruction_names]]))[invoke](node);}
 let eval_object_deconstruction_names = function ({'entries': entries}) {
 entries ??= nil;let __coil_temp;
 return str[invoke]("{", dot(dot(entries, map)[invoke](eval_obj_deconstruction_entry), join)[invoke](", "), "}");}
@@ -820,11 +818,13 @@ return dot(dot(dot(args, filter)[invoke](Keyword.for("type"), Set[Meta.create]([
 name ??= nil;return str[invoke]("this['", name, "'] = ", resolve_name[invoke](name), ";\n");}), into)[invoke]("");}
 let eval_name_expr = function (node) {
 node ??= nil;let __coil_temp;
-return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("dot"), ({'lhs': lhs, 'rhs': rhs}) => {
+return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("dot"), function ({'lhs': lhs, 'rhs': rhs}) {
 lhs ??= nil;
-rhs ??= nil;return str[invoke](eval_name_expr[invoke](lhs), "[", eval_name_expr[invoke](rhs), "]");}], [Keyword.for("keyword_lookup"), ({'lhs': lhs, 'property': property}) => {
+rhs ??= nil;let __coil_temp;
+return str[invoke](eval_name_expr[invoke](lhs), "[", eval_name_expr[invoke](rhs), "]");}], [Keyword.for("keyword_lookup"), function ({'lhs': lhs, 'property': property}) {
 lhs ??= nil;
-property ??= nil;return str[invoke](eval_name_expr[invoke](lhs), "['", property, "']");}]]), (eval_fn) => {
+property ??= nil;let __coil_temp;
+return str[invoke](eval_name_expr[invoke](lhs), "['", property, "']");}]]), (eval_fn) => {
 eval_fn ??= nil;return (__coil_temp = {left: eval_fn}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : eval_expr);})[invoke](node);}
 let entries_arg_names = function ({'entries': entries}) {
 entries ??= nil;let __coil_temp;
@@ -1123,7 +1123,7 @@ let imports = str[invoke](`
 \"use strict\";
 import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b } from '`, std_prefix, `/src/std/globals.js'
 import Meta, {
-  nil__q, is_a__q, create, from_entries, __equals__,
+  nil__q, is_a__q, create, from_entries, __equals__, as_num,
   __not_equals__, exists__q, as_bool, log, invoke, pipe
 } from '`, std_prefix, `/src/std/meta.js';
 import Iter, {

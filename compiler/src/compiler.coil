@@ -516,7 +516,7 @@ let parse_regular_obj_assign_entry = Parser[
 
 fn parse_obj_entry_destructure(tokens) = Parser[
   Init[{type: :obj_assign_expr}]
-  One[valid_ids_in_all_contexts :property]
+  Either[valid_ids_in_all_contexts :property]
   Chomp[:colon]
   Then[parse_assign_expr :assign_expr]
 ](tokens)
@@ -596,15 +596,6 @@ fn parse_not(tokens) = Parser[
   Chomp[:bang]
   Then[parse_expr :expr]
 ](tokens)
-
-fn parse_num_raw(tokens) =
-  parse_num(tokens)
-    .pipe(|[expr, tokens]| [expr.at(:value).as_num(), tokens])
-
-let parse_adjacent_num_raw = Parser[
-  AbortIf[not_adjacent?]
-  Then[parse_num_raw]
-]
 
 let parse_async_modifier = Parser[
   Init[{}]
@@ -1007,8 +998,12 @@ fn eval_obj_reg_entry({name}) = str("'" name "': " resolve_name(name))
 fn eval_obj_entry_rename({old_name, new_name}) =
   str("'" old_name "': " resolve_name(new_name))
 
+fn eval_obj_assign_expr({property, assign_expr}) =
+  str("'" property "': " eval_assign_expr(assign_expr))
+
 fn eval_obj_deconstruction_entry(node) = node.at(:type).pipe(Map{
   :obj_reg_entry => eval_obj_reg_entry
+  :obj_assign_expr => eval_obj_assign_expr
   :obj_entry_rename => eval_obj_entry_rename
   :spread_assign => eval_spread_assign
   :object_deconstruction => eval_object_deconstruction_names
@@ -1061,8 +1056,8 @@ fn eval_this_assignments(args) = args
   .into("")
 
 fn eval_name_expr(node) = node.at(:type).pipe(Map{
-  dot: |{lhs rhs}| str(eval_name_expr(lhs) "[" eval_name_expr(rhs) "]")
-  keyword_lookup: |{lhs, property}| str(eval_name_expr(lhs) "['" property  "']")
+  fn :dot({lhs rhs}) = str(eval_name_expr(lhs) "[" eval_name_expr(rhs) "]")
+  fn :keyword_lookup({lhs, property}) = str(eval_name_expr(lhs) "['" property  "']")
 } |eval_fn| eval_fn or eval_expr)(node)
 
 fn entries_arg_names({entries}) =
@@ -1119,8 +1114,7 @@ fn eval_num({value}) = str("(" value ")")
 fn eval_double_equals({lhs, rhs}) =
   str(eval_expr(lhs) "[Equal['==']](" eval_expr(rhs) ")")
 
-fn eval_not_equals({lhs, rhs}) =
-  str(eval_expr(lhs) "[Equal['!=']](" eval_expr(rhs) ")")
+fn eval_not_equals({lhs, rhs}) = str(eval_expr(lhs) "[Equal['!=']](" eval_expr(rhs) ")")
 
 fn eval_not({expr}) = str(eval_expr(expr) "[Bool.negate]()")
 
@@ -1133,8 +1127,7 @@ fn eval_meta_create({lhs, entries}) =
 
 fn eval_await({expr}) = str("await " eval_expr(expr))
 
-fn eval_yield({star? expr}) =
-  str("yield" (star? and "*") " " eval_expr(expr))
+fn eval_yield({star? expr}) = str("yield" (star? and "*") " " eval_expr(expr))
 
 fn eval_paren_expr({expr}) = str("(" eval_expr(expr) ")")
 
@@ -1178,8 +1171,7 @@ fn eval_prefix_exclusive_range({expr}) = str("new ExclusiveRangeNoMinimum(" eval
 
 fn eval_prefix_inclusive_range({expr}) = str("new InclusiveRangeNoMinimum(" eval_expr(expr) ")")
 
-fn eval_dot({lhs, rhs}) =
-  str("dot(" eval_expr(lhs) ", " eval_expr(rhs) ")")
+fn eval_dot({lhs, rhs}) = str("dot(" eval_expr(lhs) ", " eval_expr(rhs) ")")
 
 fn eval_keyword_lookup({lhs property}) =
   str("dot(" eval_expr(lhs) ", '" property "')")
@@ -1215,8 +1207,7 @@ fn eval_or({lhs, rhs}) = str(
   ", __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : " eval_expr(rhs) ")"
 )
 
-fn eval_reassign({name, expr}) =
-  str(resolve_name(name) " = " eval_expr(expr))
+fn eval_reassign({name, expr}) = str(resolve_name(name) " = " eval_expr(expr))
 
 fn eval_expr(node) = node.at(:type).pipe(Map{
   :algebra_op => eval_algebra_op
@@ -1314,9 +1305,7 @@ fn get_deconstructed_obj_entry_name(node) =
     .pipe(node)
 
 fn get_deconstructed_array_entry_name(node) =
-  Map{:id_assign => :name}
-    .at(node.at(:type))
-    .pipe(node)
+  Map{:id_assign => :name}.at(node.at(:type)).pipe(node)
 
 fn eval_import_deconstruction_entry(node) = node.pipe(:type Map{
   fn :obj_reg_entry({name}) = resolve_name(name)
@@ -1338,14 +1327,11 @@ fn eval_import({assign_expr, path}) =
     eval_import_assign_exprs(assign_expr)
     " from \"" path:value:slice(1, -1) "\"")
 
-fn eval_export({statement}) =
-  str("export " eval_statement(statement))
+fn eval_export({statement}) = str("export " eval_statement(statement))
 
-fn eval_export_default({expr}) =
-  str("export default " eval_expr(expr))
+fn eval_export_default({expr}) = str("export default " eval_expr(expr))
 
-fn eval_direct_import({path}) =
-  str("import " path)
+fn eval_direct_import({path}) = str("import " path)
 
 fn eval_statement(node)
   let eval_fn = node.at(:type).pipe(Map{
@@ -1398,7 +1384,7 @@ let imports = str("
 \"use strict\";
 import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b } from '" std_prefix "/src/std/globals.js'
 import Meta, {
-  nil__q, is_a__q, create, from_entries, __equals__,
+  nil__q, is_a__q, create, from_entries, __equals__, as_num,
   __not_equals__, exists__q, as_bool, log, invoke, pipe
 } from '" std_prefix "/src/std/meta.js';
 import Iter, {
