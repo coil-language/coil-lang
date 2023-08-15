@@ -831,14 +831,21 @@ entries ??= nil;let __coil_temp;
 return dot(entries, 'flatMap')[invoke](arg_names);}
 let arg_names = function (node) {
 node ??= nil;let __coil_temp;
-return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("array_deconstruction"), entries_arg_names], [Keyword.for("id_assign"), ({'name': name}) => {
-name ??= nil;return [name];}], [Keyword.for("object_deconstruction"), entries_arg_names], [Keyword.for("obj_reg_entry"), ({'name': name}) => {
-name ??= nil;return [name];}], [Keyword.for("obj_entry_rename"), ({'new_name': new_name}) => {
-new_name ??= nil;return [new_name];}], [Keyword.for("spread_assign"), ({'name': name}) => {
-name ??= nil;return [name];}], [Keyword.for("obj_str_rename_entry"), ({'new_name': new_name}) => {
-new_name ??= nil;return [new_name];}], [Keyword.for("this_assign"), ({'name': name}) => {
-name ??= nil;return [name];}], [Keyword.for("this_spread_assign"), ({'name': name}) => {
-name ??= nil;return [name];}]]))[invoke](node);}
+return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("array_deconstruction"), entries_arg_names], [Keyword.for("object_deconstruction"), entries_arg_names], [Keyword.for("id_assign"), function ({'name': name}) {
+name ??= nil;let __coil_temp;
+return [name];}], [Keyword.for("obj_reg_entry"), function ({'name': name}) {
+name ??= nil;let __coil_temp;
+return [name];}], [Keyword.for("obj_entry_rename"), function ({'new_name': new_name}) {
+new_name ??= nil;let __coil_temp;
+return [new_name];}], [Keyword.for("spread_assign"), function ({'name': name}) {
+name ??= nil;let __coil_temp;
+return [name];}], [Keyword.for("obj_str_rename_entry"), function ({'new_name': new_name}) {
+new_name ??= nil;let __coil_temp;
+return [new_name];}], [Keyword.for("this_assign"), function ({'name': name}) {
+name ??= nil;let __coil_temp;
+return [name];}], [Keyword.for("this_spread_assign"), function ({'name': name}) {
+name ??= nil;let __coil_temp;
+return [name];}]]))[invoke](node);}
 let eval_nil_destructure_args = function (args) {
 args ??= nil;let __coil_temp;
 if (args[Meta.as_bool]()) {
@@ -849,13 +856,15 @@ name ??= nil;return str[invoke](resolve_name[invoke](name), " ??= nil;");}), joi
 let __coil_temp;
 return "";
 };}
-let eval_fn = function ({'is_async?': is_async__q, 'generator?': generator__q, 'name_expr': name_expr, 'args': args, 'body': body}) {
+let eval_fn_expr = function ({'is_async?': is_async__q, 'generator?': generator__q, 'args': args, 'body': body}) {
 is_async__q ??= nil;
 generator__q ??= nil;
-name_expr ??= nil;
 args ??= nil;
 body ??= nil;let __coil_temp;
-return str[invoke]((__coil_temp = {left: ((__coil_temp = {left: dot(name_expr, 'type')[Meta["=="]](Keyword.for("id_lookup"))}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "let ", __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left))}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : ""), eval_name_expr[invoke](name_expr), " = ", ((__coil_temp = {left: is_async__q}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "async ", __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left)), "function ", ((__coil_temp = {left: generator__q}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "*", __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left)), "(", dot(dot(((__coil_temp = {left: args}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), map)[invoke](eval_assign_expr), join)[invoke](", "), ") {\n", eval_this_assignments[invoke]((__coil_temp = {left: args}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), eval_nil_destructure_args[invoke]((__coil_temp = {left: args}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), eval_ast[invoke](body), "}");}
+return str[invoke](((__coil_temp = {left: is_async__q}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "async ", __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left)), "function ", ((__coil_temp = {left: generator__q}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "*", __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left)), "(", dot(dot(((__coil_temp = {left: args}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), map)[invoke](eval_assign_expr), join)[invoke](", "), ") {\n", eval_this_assignments[invoke]((__coil_temp = {left: args}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), eval_nil_destructure_args[invoke]((__coil_temp = {left: args}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), eval_ast[invoke](body), "}");}
+let eval_fn = function (node) {
+node ??= nil;let __coil_temp;
+return str[invoke]((__coil_temp = {left: ((__coil_temp = {left: dot(dot(node, 'name_expr'), 'type')[Meta["=="]](Keyword.for("id_lookup"))}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "let ", __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left))}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : ""), eval_name_expr[invoke](dot(node, 'name_expr')), " = ", eval_fn_expr[invoke](node));}
 let eval_obj_fn = function ({'name': name, 'generator?': generator__q, 'is_async?': is_async__q, 'args': args, 'body': body}) {
 name ??= nil;
 generator__q ??= nil;
@@ -909,9 +918,12 @@ let eval_keyword_record_entry = function ({'name': name, 'expr': expr}) {
 name ??= nil;
 expr ??= nil;let __coil_temp;
 return str[invoke]("[", eval_keyword[invoke](ObjectLiteral[Meta.from_entries]([[Keyword.for("value"), name]])), ", ", eval_expr[invoke](expr), "]");}
+let eval_fn_record_entry = function (fn_node) {
+fn_node ??= nil;let __coil_temp;
+return str[invoke]("[", eval_expr[invoke](dot(fn_node, 'name_expr')), ", ", eval_fn_expr[invoke](fn_node), "]");}
 let eval_record_entry = function (node) {
 node ??= nil;let __coil_temp;
-return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("regular_record_entry"), eval_regular_record_entry], [Keyword.for("keyword_record_entry"), eval_keyword_record_entry], [Keyword.for("spread"), eval_spread]]))[invoke](node);}
+return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("regular_record_entry"), eval_regular_record_entry], [Keyword.for("keyword_record_entry"), eval_keyword_record_entry], [Keyword.for("spread"), eval_spread], [Keyword.for("fn"), eval_fn_record_entry]]))[invoke](node);}
 let eval_inclusive_range = function ({'lhs': lhs, 'rhs': rhs}) {
 lhs ??= nil;
 rhs ??= nil;let __coil_temp;
@@ -1048,10 +1060,12 @@ node ??= nil;let __coil_temp;
 return dot(dot(Map[Meta.from_entries]([[Keyword.for("id_assign"), Keyword.for("name")]]), at)[invoke](dot(node, at)[invoke](Keyword.for("type"))), pipe)[invoke](node);}
 let eval_import_deconstruction_entry = function (node) {
 node ??= nil;let __coil_temp;
-return dot(node, pipe)[invoke](Keyword.for("type"), Map[Meta.from_entries]([[Keyword.for("obj_reg_entry"), ({'name': name}) => {
-name ??= nil;return resolve_name[invoke](name);}], [Keyword.for("obj_entry_rename"), ({'old_name': old_name, 'new_name': new_name}) => {
+return dot(node, pipe)[invoke](Keyword.for("type"), Map[Meta.from_entries]([[Keyword.for("obj_reg_entry"), function ({'name': name}) {
+name ??= nil;let __coil_temp;
+return resolve_name[invoke](name);}], [Keyword.for("obj_entry_rename"), function ({'old_name': old_name, 'new_name': new_name}) {
 old_name ??= nil;
-new_name ??= nil;return str[invoke](resolve_name[invoke](old_name), " as ", resolve_name[invoke](new_name));}]]))[invoke](node);}
+new_name ??= nil;let __coil_temp;
+return str[invoke](resolve_name[invoke](old_name), " as ", resolve_name[invoke](new_name));}]]))[invoke](node);}
 let eval_import_deconstruction_expr = function ({'entries': entries}) {
 entries ??= nil;let __coil_temp;
 return str[invoke]("{", dot(dot(entries, map)[invoke](eval_import_deconstruction_entry), join)[invoke](", "), "}");}

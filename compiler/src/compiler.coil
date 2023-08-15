@@ -1070,14 +1070,14 @@ fn entries_arg_names({entries}) =
 
 fn arg_names(node) = node.at(:type).pipe(Map{
   :array_deconstruction => entries_arg_names
-  :id_assign => |{name}| [name]
   :object_deconstruction => entries_arg_names
-  :obj_reg_entry => |{name}| [name]
-  :obj_entry_rename => |{new_name}| [new_name]
-  :spread_assign => |{name}| [name]
-  :obj_str_rename_entry => |{new_name}| [new_name]
-  :this_assign => |{name}| [name]
-  :this_spread_assign => |{name}| [name]
+  fn :id_assign({name}) = [name]
+  fn :obj_reg_entry({name}) = [name]
+  fn :obj_entry_rename({new_name}) = [new_name]
+  fn :spread_assign({name}) = [name]
+  fn :obj_str_rename_entry({new_name}) = [new_name]
+  fn :this_assign({name}) = [name]
+  fn :this_spread_assign({name}) = [name]
 })(node)
 
 fn eval_nil_destructure_args(args)
@@ -1090,9 +1090,7 @@ fn eval_nil_destructure_args(args)
   end
 end
 
-fn eval_fn({is_async? generator? name_expr args body}) = str(
-  (name_expr:type == :id_lookup and "let ") or ""
-  eval_name_expr(name_expr) " = "
+fn eval_fn_expr({is_async? generator? args body}) = str(
   (is_async? and "async ")
   "function "
     (generator? and "*")
@@ -1101,6 +1099,12 @@ fn eval_fn({is_async? generator? name_expr args body}) = str(
     eval_nil_destructure_args(args or [])
     eval_ast(body)
   "}")
+
+fn eval_fn(node) = str(
+  (node:name_expr:type == :id_lookup and "let ") or ""
+  eval_name_expr(node:name_expr) " = "
+  eval_fn_expr(node)
+)
 
 fn eval_obj_fn({name generator? is_async? args body}) =
   str((is_async? and "async ")
@@ -1142,10 +1146,14 @@ fn eval_regular_record_entry({key_expr value_expr}) =
 fn eval_keyword_record_entry({name expr}) =
   str("[" eval_keyword({value: name}) ", " eval_expr(expr) "]")
 
+fn eval_fn_record_entry(fn_node) =
+  str("[" eval_expr(fn_node:name_expr) ", " eval_fn_expr(fn_node) "]")
+
 fn eval_record_entry(node) = node.at(:type).pipe(Map{
   :regular_record_entry => eval_regular_record_entry
   :keyword_record_entry => eval_keyword_record_entry
   :spread => eval_spread
+  :fn => eval_fn_record_entry
 })(node)
 
 fn eval_inclusive_range({lhs, rhs})
@@ -1311,8 +1319,8 @@ fn get_deconstructed_array_entry_name(node) =
     .pipe(node)
 
 fn eval_import_deconstruction_entry(node) = node.pipe(:type Map{
-  :obj_reg_entry => |{name}| resolve_name(name)
-  :obj_entry_rename => |{old_name, new_name}|
+  fn :obj_reg_entry({name}) = resolve_name(name)
+  fn :obj_entry_rename({old_name, new_name}) =
     str(resolve_name(old_name) " as " resolve_name(new_name))
 })(node)
 
