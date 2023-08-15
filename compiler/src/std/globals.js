@@ -58,5 +58,6 @@ export function dot(lhs, rhs) {
 }
 
 export function raise__b(error) {
+  console.error(error.stack);
   throw error;
 }

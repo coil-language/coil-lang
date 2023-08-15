@@ -3,9 +3,7 @@
   "version": "0.1.0",
   "description": "Compiler for the coil programming language",
   "main": "dist/compiler.mjs",
-  "scripts": {
-    "rebuild": "bash rebuild_compiler"
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/marcellerusu/coil-lang.git"
