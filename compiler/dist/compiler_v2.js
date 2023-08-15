@@ -1991,7 +1991,7 @@ return str("...", resolve_name(name));}
 function eval_assign_expr(node) {
 return call.bind(pipe.bind(at.bind(node)(Keyword.for("type")))(Map[Meta]['{}'].call(Map, [[Keyword.for("id_assign"), eval_id_assign_name], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("array_deconstruction"), eval_array_deconstruction_names], [Keyword.for("object_deconstruction"), eval_object_deconstruction_names], [Keyword.for("this_assign"), eval_this_assign], [Keyword.for("this_spread_assign"), eval_spread_assign]])))(node);}
 function eval_while_let_loop({'test_expr': test_expr, 'assign_expr': assign_expr, 'body': body}) {
-return str("var __coil_while_let_temp = ", eval_expr(test_expr), " ?? nil;\n", "while (__coil_while_let_temp[Meta.as_bool]()) {\n", "let ", eval_assign_expr(assign_expr), " = __coil_while_let_temp;\n", eval_ast(body), "\n", "__coil_while_let_temp = ", eval_expr(test_expr), ";\n", "}");}
+return str("var __coil_while_let_temp = ", eval_expr(test_expr), " ?? nil;\n", "while (__coil_while_let_temp[Meta.as_bool]()) {\n", "let ", eval_assign_expr(assign_expr), " = __coil_while_let_temp;\n", eval_ast(body), "\n", "__coil_while_let_temp = ", eval_expr(test_expr), " ?? nil;\n", "}");}
 function eval_if_let({'expr': expr, 'assign_expr': assign_expr, 'pass': pass, 'fail': fail}) {
 return str("var __coil_if_let_temp = ", eval_expr(expr), " ?? nil;\n", "if (__coil_if_let_temp[Meta.as_bool]()) {\n", "let ", eval_assign_expr(assign_expr), " = __coil_if_let_temp;\n", eval_ast(pass), "\n", "}", eval_if_branch(fail));}
 function eval_spread({'expr': expr}) {
@@ -2021,7 +2021,7 @@ return [name];}]])))(node);}
 function eval_nil_destructure_args(args) {
 if (truthy(args)) {
 return join.bind(map.bind(args['flatMap'](arg_names))(function (name) {
-return str(resolve_name(name), " = ", resolve_name(name), " ?? nil;");}))("\n");
+return str(resolve_name(name), " ??= nil;");}))("\n");
 } else {
 return "";
 };}
@@ -2137,7 +2137,9 @@ finally_js = str(" finally {\n", eval_ast(body), "\n}")
 };
 return str("try {\n", body_js, "\n", "}", catch_js, finally_js);}
 function eval_import({'assign_exprs': assign_exprs, 'path': path}) {
-return str("import * as __coil_temp from \"", path['value']['slice']((1), (-1)), "\";\n", "let {", map_join.bind(assign_exprs)(eval_assign_expr, ", "), "} = __coil_temp");}
+let pathname = path['value']['slice']((1), (-1));
+let temp_var_name = pathname['replaceAll']("/", "_slash_")['replaceAll'](".", "_dot_")['replaceAll']("-", "_dash_")['replaceAll']("~", "_tilde_");
+return str("import * as ", temp_var_name, " from \"", pathname, "\";\n", "let {", map_join.bind(assign_exprs)(eval_assign_expr, ", "), "} = ", temp_var_name);}
 function eval_export({'statement': statement}) {
 return str("export ", eval_statement(statement));}
 function eval_export_default({'expr': expr}) {
@@ -2165,30 +2167,30 @@ let [src_file_name, out_name] = Deno['args'];
 let src = Deno['readTextFileSync'](src_file_name);
 let imports = `
 \"use strict\";
-import { ObjectLiteral, Nil, nil, Keyword, dot } from './src/std/globals.js'
+import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b } from '../src/std/globals.js'
 import Meta, {
   nil__q, is_a__q, create, from_entries, __equals__,
   __not_equals__, exists__q, as_bool, log, invoke, pipe
-} from './src/std/meta.js';
+} from '../src/std/meta.js';
 import Iter, {
   take, until, skip, find, zip, reduce, map, flat_map, each,
   filter, reject, all__q, any__q, split, compact, join, into, compose
-} from './src/std/iter/index.js';
+} from '../src/std/iter/index.js';
 import Algebra, {
   __plus__, __minus__, __divide__,
   __multiply__, __exponent__, __modulo__,
   __greater_than__, __greater_than_or_equal_to__,
   __less_than__, __less_than_or_equal_to__,
-} from './src/std/algebra.js';
-import Bool, { negate } from './src/std/bool.js';
-import Collection, { at, len, empty__q, has__q } from './src/std/collection.js';
-import OrderedSequence, { first, last } from './src/std/ordered_sequence.js';
+} from '../src/std/algebra.js';
+import Bool, { negate } from '../src/std/bool.js';
+import Collection, { at, len, empty__q, has__q } from '../src/std/collection.js';
+import OrderedSequence, { first, last } from '../src/std/ordered_sequence.js';
 import {
   inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum,
   InclusiveRangeNoMinimum, ExclusiveRangeNoMaximum, ExclusiveRangeNoMinimum
-} from './src/std/range.js';
-import Record, { keys, values } from './src/std/record.js';
-import Underscore, { _ } from './src/std/underscore.js';
-import CondMap from './src/std/cond_map.js'
+} from '../src/std/range.js';
+import Record, { keys, values } from '../src/std/record.js';
+import Underscore, { _ } from '../src/std/underscore.js';
+import CondMap from '../src/std/cond_map.js'
 `;
 Deno['writeTextFile'](out_name, plus.call(imports, plus.call(compile(src), "\n")))

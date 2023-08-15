@@ -1,3 +1,5 @@
+import { ParseError } from "./parse_error.js"
+
 fn str(...args) = args.map(|arg| arg:toString()).join("")
 
 fn CollectionView(@collection, @idx) end
@@ -138,17 +140,6 @@ let lexer = Lexer{
   /^\:[a-zA-Z_\?\!\$0-9]+/ => :keyword
   /^\:/ => :colon
 }
-
-# fn ParseError(expected_token_type, actual_token)
-#   this:stack = Error[]:stack
-#   this:message = str(
-#     "Expected: " expected_token_type
-#     " got " actual_token.at(:type)
-#     " @ " actual_token.at(:line).as_str() ":" actual_token.at(:col).as_str()
-#   )
-# end
-
-# ParseError:prototype = Error[]
 
 fn expect_token!(tokens, kw)
   if tokens.first().at(:type) != kw
@@ -326,7 +317,7 @@ fn parse_dot(tokens, lhs) = Parser[
 fn parse_keyword_lookup(tokens, lhs) = Parser[
   AbortIf[not_adjacent?]    
   Init[{type: :keyword_lookup, lhs: lhs}]
-  Chomp[:keyword :property]
+  One[:keyword :property]
   FMap[|{lhs, type, property}| {lhs: lhs, type: type, property: property:slice(1)}]
 ](tokens)
 
@@ -610,12 +601,12 @@ let parse_adjacent_num_raw = Parser[
 ]
 
 let parse_async_modifier = Parser[
-  Init[true]
+  Init[{}]
   Chomp[:async]
 ]
 
 let parse_gen_modifier = Parser[
-  Init[true]
+  Init[{}]
   Chomp[:times]
 ]
 
@@ -884,7 +875,7 @@ fn parse_try(tokens) = Parser[
 fn parse_import(tokens) = Parser[
   Init[{type: :import}]
   Chomp[:import]
-  Then[parse_assign_expr :assign_exprs]
+  Then[parse_assign_expr :assign_expr]
   Chomp[:from]
   Then[parse_str :path]
 ](tokens)
@@ -1040,7 +1031,7 @@ fn eval_while_let_loop({test_expr, assign_expr, body}) = str(
   "while (__coil_while_let_temp[Meta.as_bool]()) {\n"
     "let " eval_assign_expr(assign_expr) " = __coil_while_let_temp;\n"
     eval_ast(body) "\n"
-    "__coil_while_let_temp = " eval_expr(test_expr) ";\n"
+    "__coil_while_let_temp = " eval_expr(test_expr) " ?? nil;\n"
   "}")
 
 fn eval_if_let({expr, assign_expr, pass, fail}) = str(
@@ -1066,7 +1057,7 @@ fn eval_this_assignments(args) = args
 fn eval_name_expr(node) = node.at(:type).pipe(Map{
   dot: |{lhs rhs}| str(eval_name_expr(lhs) "[" eval_name_expr(rhs) "]")
   keyword_lookup: |{lhs, property}| str(eval_name_expr(lhs) "['" property  "']")
-} _ || eval_expr)(node)
+} |eval_fn| eval_fn or eval_expr)(node)
 
 fn entries_arg_names({entries}) =
   entries:flatMap(arg_names)
@@ -1086,7 +1077,7 @@ fn arg_names(node) = node.at(:type).pipe(Map{
 fn eval_nil_destructure_args(args)
   if args
     return args:flatMap(arg_names)
-      .map(|name| str(resolve_name(name) " = " resolve_name(name) " ?? nil;"))
+      .map(|name| str(resolve_name(name) " ??= nil;"))
       .join("\n")
   else
     return ""
@@ -1099,9 +1090,9 @@ fn eval_fn({is_async? generator? name_expr args body}) = str(
   (is_async? and "async ")
   "function "
     (generator? and "*")
-    "(" args.map(eval_assign_expr).join(", ") ") {\n"
-    eval_this_assignments(args)
-    eval_nil_destructure_args(args)
+    "(" (args or []).map(eval_assign_expr).join(", ") ") {\n"
+    eval_this_assignments(args or [])
+    eval_nil_destructure_args(args or [])
     eval_ast(body)
   "}")
 
@@ -1186,7 +1177,10 @@ fn eval_object_literal({entries}) = str(
 )
 
 fn eval_anon_fn({args, return_expr}) = str(
-  "(" args.map(eval_assign_expr).join(", ") ") => " eval_expr(return_expr)
+  "(" args.map(eval_assign_expr).join(", ") ") => {\n"
+    eval_nil_destructure_args(args)
+    "return " eval_expr(return_expr) ";"
+  "}"
 )
 
 fn eval_algebra_op({lhs, op, rhs}) = str(
@@ -1325,10 +1319,10 @@ fn eval_import_assign_exprs(node) = node.pipe(:type Map{
   :assign_all_as => eval_assign_all_as
 })(node)
 
-fn eval_import({assign_exprs, path}) =
+fn eval_import({assign_expr, path}) =
   str("import "
-    assign_exprs.map(eval_import_assign_exprs).join(", ")
-    " from \"" path.value.slice(1, -1) "\"")
+    eval_import_assign_exprs(assign_expr).join(", ")
+    " from \"" path:value:slice(1, -1) "\"")
 
 fn eval_export({statement}) =
   str("export " eval_statement(statement))
@@ -1339,35 +1333,36 @@ fn eval_export_default({expr}) =
 fn eval_direct_import({path}) =
   str("import " path)
 
-fn eval_statement(node) = node.at(:type).pipe(Map{
-  :if => eval_if
-  :direct_import => eval_direct_import
-  :import => eval_import
-  :export => eval_export
-  :export_default => eval_export_default
-  :let => eval_let
-  :if_let => eval_if_let
-  :return => eval_return
-  :protocol_def => eval_protocol
-  :for_loop => eval_for_loop
-  :id_assign => eval_id_assign
-  :while_loop => eval_while_loop
-  :loop => eval_loop
-  :while_let_loop => eval_while_let_loop
-  :continue => eval_continue
-  :break => eval_break
-  :try => eval_try
-})
-  .pipe(fn (f)
-    if f
-      return compose(f _ + ";")
-    else
-      return eval_expr
-    end
-  end )(node)
+fn eval_statement(node)
+  let eval_fn = node.at(:type).pipe(Map{
+    :if => eval_if
+    :direct_import => eval_direct_import
+    :import => eval_import
+    :export => eval_export
+    :export_default => eval_export_default
+    :let => eval_let
+    :if_let => eval_if_let
+    :return => eval_return
+    :protocol_def => eval_protocol
+    :for_loop => eval_for_loop
+    :id_assign => eval_id_assign
+    :while_loop => eval_while_loop
+    :loop => eval_loop
+    :while_let_loop => eval_while_let_loop
+    :continue => eval_continue
+    :break => eval_break
+    :try => eval_try
+  })
+
+  if eval_fn
+    return eval_fn(node) + ";"
+  else
+    return eval_expr(node)
+  end
+end
 
 export fn eval_ast(ast) =
-  "let __coil_temp;\n" + ast.map(eval_statement).join("\n")
+  str("let __coil_temp;\n" ast.map(eval_statement).join("\n"))
 
 export fn lex(string) = lexer(string)
 
@@ -1377,34 +1372,40 @@ export fn lex_and_parse(string) = string.pipe(lexer coll_view parse_tokens)
 
 export fn compile(string) = string.pipe(lexer coll_view parse_tokens eval_ast)
 
-let [src_file_name, out_name] = Deno:args
+let [src_file_name, out_name, ...args] = Deno:args
 let src = Deno:readTextFileSync(src_file_name)
-let imports = "
+
+let std_prefix = "."
+if let arg = args.find(_.has?("--std-prefix"))
+  std_prefix = arg:split("--std-prefix=").last()
+end
+
+let imports = str("
 \"use strict\";
-import { ObjectLiteral, Nil, nil, Keyword, dot } from './src/std/globals.js'
+import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b } from '" std_prefix "/src/std/globals.js'
 import Meta, {
   nil__q, is_a__q, create, from_entries, __equals__,
   __not_equals__, exists__q, as_bool, log, invoke, pipe
-} from './src/std/meta.js';
+} from '" std_prefix "/src/std/meta.js';
 import Iter, {
   take, until, skip, find, zip, reduce, map, flat_map, each,
   filter, reject, all__q, any__q, split, compact, join, into, compose
-} from './src/std/iter/index.js';
+} from '" std_prefix "/src/std/iter/index.js';
 import Algebra, {
   __plus__, __minus__, __divide__,
   __multiply__, __exponent__, __modulo__,
   __greater_than__, __greater_than_or_equal_to__,
   __less_than__, __less_than_or_equal_to__,
-} from './src/std/algebra.js';
-import Bool, { negate } from './src/std/bool.js';
-import Collection, { at, len, empty__q, has__q } from './src/std/collection.js';
-import OrderedSequence, { first, last } from './src/std/ordered_sequence.js';
+} from '" std_prefix "/src/std/algebra.js';
+import Bool, { negate } from '" std_prefix "/src/std/bool.js';
+import Collection, { at, len, empty__q, has__q } from '" std_prefix "/src/std/collection.js';
+import OrderedSequence, { first, last } from '" std_prefix "/src/std/ordered_sequence.js';
 import {
   inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum,
   InclusiveRangeNoMinimum, ExclusiveRangeNoMaximum, ExclusiveRangeNoMinimum
-} from './src/std/range.js';
-import Record, { keys, values } from './src/std/record.js';
-import Underscore, { _ } from './src/std/underscore.js';
-import CondMap from './src/std/cond_map.js'
-"
+} from '" std_prefix "/src/std/range.js';
+import Record, { keys, values } from '" std_prefix "/src/std/record.js';
+import Underscore, { _ } from '" std_prefix "/src/std/underscore.js';
+import CondMap from '" std_prefix "/src/std/cond_map.js'
+")
 Deno:writeTextFile(out_name, imports + compile(src) + "\n")

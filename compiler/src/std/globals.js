@@ -1,14 +1,15 @@
 "use strict";
 
-export function ObjectLiteral(entries) {
-  Object.assign(this, Object.fromEntries(entries));
-}
-
-ObjectLiteral.prototype[Symbol.iterator] = function* () {
-  for (let key in this) {
-    yield [key, this[key]];
+export class ObjectLiteral {
+  constructor(entries) {
+    Object.assign(this, Object.fromEntries(entries));
   }
-};
+  *[Symbol.iterator]() {
+    for (let key in this) {
+      yield [key, this[key]];
+    }
+  }
+}
 
 export class Nil {
   toString() {
@@ -54,4 +55,8 @@ export function dot(lhs, rhs) {
   } else {
     return result ?? nil;
   }
+}
+
+export function raise__b(error) {
+  throw error;
 }

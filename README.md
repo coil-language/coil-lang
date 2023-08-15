@@ -9,8 +9,8 @@ Coil is an all-in-one solution for all of your web development needs. This inclu
 ## Status
 
 - [x] coil-lang (pre-alpha)
-  - functional-first dynamic programming language
-  - safe extensible primitives via protocols
+  - dynamic functional programming language
+  - highly compatible with JavaScript
 - [ ] coil-editor (proof of concept)
   - structural editor
   - limited shortcuts

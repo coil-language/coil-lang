@@ -1,5 +1,12 @@
 "use strict";
-import { ObjectLiteral, Nil, nil, Keyword, dot } from "../src/std/globals.js";
+import {
+  ObjectLiteral,
+  Nil,
+  nil,
+  Keyword,
+  dot,
+  raise__b,
+} from "../src/std/globals.js";
 import Meta, {
   nil__q,
   is_a__q,
@@ -66,8 +73,10 @@ import Record, { keys, values } from "../src/std/record.js";
 import Underscore, { _ } from "../src/std/underscore.js";
 import CondMap from "../src/std/cond_map.js";
 let __coil_temp;
+import * as _dot__slash_parse_error_dot_js from "./parse_error.js";
+let {} = _dot__slash_parse_error_dot_js;
 let str = function (...args) {
-  args = args ?? nil;
+  args ??= nil;
   let __coil_temp;
   return dot(
     dot(args, map)[invoke]((arg) => dot(arg, "toString")[invoke]()),
@@ -77,8 +86,8 @@ let str = function (...args) {
 let CollectionView = function (collection, idx) {
   this["collection"] = collection;
   this["idx"] = idx;
-  collection = collection ?? nil;
-  idx = idx ?? nil;
+  collection ??= nil;
+  idx ??= nil;
   let __coil_temp;
 };
 CollectionView["prototype"][dot(Collection, "len")] = function () {
@@ -92,7 +101,7 @@ CollectionView["prototype"][dot(Collection, "empty?")] = function () {
   return dot(this, len)[invoke]()[Meta["=="]](0);
 };
 CollectionView["prototype"][dot(Collection, "at")] = function (idx) {
-  idx = idx ?? nil;
+  idx ??= nil;
   let __coil_temp;
   return dot(dot(this, "collection"), at)[invoke](
     dot(this, "idx")[Algebra["+"]](idx)
@@ -107,7 +116,7 @@ CollectionView["prototype"][dot(OrderedSequence, "last")] = function () {
   return dot(dot(this, "collection"), last)[invoke]();
 };
 CollectionView["prototype"]["skip"] = function (n) {
-  n = n ?? nil;
+  n ??= nil;
   let __coil_temp;
   return CollectionView[Meta.create]([
     dot(this, "collection"),
@@ -126,7 +135,7 @@ CollectionView["prototype"][dot(Symbol, "iterator")] = function* () {
 };
 let Lexer = function (entries) {
   this["entries"] = entries;
-  entries = entries ?? nil;
+  entries ??= nil;
   let __coil_temp;
 };
 let pass = function () {
@@ -136,7 +145,7 @@ let newline = function () {
   let __coil_temp;
 };
 Lexer["prototype"][invoke] = function (str) {
-  str = str ?? nil;
+  str ??= nil;
   let __coil_temp;
   let tokens = [];
   let index = 0;
@@ -145,7 +154,7 @@ Lexer["prototype"][invoke] = function (str) {
     return dot(str, "slice")[invoke](index);
   };
   let scan = function (pattern) {
-    pattern = pattern ?? nil;
+    pattern ??= nil;
     let __coil_temp;
     let result = dot(rest_of_string[invoke](), Keyword.for("match"))[invoke](
       pattern
@@ -271,8 +280,8 @@ let lexer = Lexer[Meta.from_entries]([
   [/^\:/, Keyword.for("colon")],
 ]);
 let expect_token__b = function (tokens, kw) {
-  tokens = tokens ?? nil;
-  kw = kw ?? nil;
+  tokens ??= nil;
+  kw ??= nil;
   let __coil_temp;
   if (
     dot(dot(tokens, first)[invoke](), at)
@@ -290,8 +299,8 @@ let expect_token__b = function (tokens, kw) {
   }
 };
 let verify_exists__b = function (expr, parser) {
-  expr = expr ?? nil;
-  parser = parser ?? nil;
+  expr ??= nil;
+  parser ??= nil;
   let __coil_temp;
   if (dot(expr, nil__q)[invoke]()[Meta.as_bool]()) {
     let __coil_temp;
@@ -305,8 +314,8 @@ let verify_exists__b = function (expr, parser) {
 };
 const parse = Symbol("parse");
 let line_and_col = function ({ line: line, col: col }) {
-  line = line ?? nil;
-  col = col ?? nil;
+  line ??= nil;
+  col ??= nil;
   let __coil_temp;
   return ObjectLiteral[Meta.from_entries]([
     [Keyword.for("line"), line],
@@ -315,12 +324,12 @@ let line_and_col = function ({ line: line, col: col }) {
 };
 let Init = function (expr) {
   this["expr"] = expr;
-  expr = expr ?? nil;
+  expr ??= nil;
   let __coil_temp;
 };
 Init["prototype"][parse] = function ([_expr, tokens]) {
-  _expr = _expr ?? nil;
-  tokens = tokens ?? nil;
+  _expr ??= nil;
+  tokens ??= nil;
   let __coil_temp;
   return [
     ObjectLiteral[Meta.from_entries]([
@@ -333,13 +342,13 @@ Init["prototype"][parse] = function ([_expr, tokens]) {
 let One = function (kw, as) {
   this["kw"] = kw;
   this["as"] = as;
-  kw = kw ?? nil;
-  as = as ?? nil;
+  kw ??= nil;
+  as ??= nil;
   let __coil_temp;
 };
 One["prototype"][parse] = function ([expr, tokens]) {
-  expr = expr ?? nil;
-  tokens = tokens ?? nil;
+  expr ??= nil;
+  tokens ??= nil;
   let __coil_temp;
   let { value: value, type: type } = dot(
     expect_token__b[invoke](tokens, dot(this, "kw")),
@@ -352,12 +361,12 @@ One["prototype"][parse] = function ([expr, tokens]) {
 };
 const can_parse__q = Symbol("can_parse?");
 Keyword["prototype"][can_parse__q] = function ([{ type: type }]) {
-  type = type ?? nil;
+  type ??= nil;
   let __coil_temp;
   return this[Meta["=="]](type);
 };
 Set["prototype"][can_parse__q] = function ([{ type: type }]) {
-  type = type ?? nil;
+  type ??= nil;
   let __coil_temp;
   return dot(this, has__q)[invoke](type);
 };
@@ -366,7 +375,7 @@ _[can_parse__q] = function ([]) {
   return true;
 };
 Array["prototype"][can_parse__q] = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return dot(dot(this, zip)[invoke](tokens), all__q)[invoke](
     ([pattern, token]) => dot(pattern, can_parse__q)[invoke]([token])
@@ -376,14 +385,14 @@ let Optional = function (parse_cond, parse_fn, as) {
   this["parse_cond"] = parse_cond;
   this["parse_fn"] = parse_fn;
   this["as"] = as;
-  parse_cond = parse_cond ?? nil;
-  parse_fn = parse_fn ?? nil;
-  as = as ?? nil;
+  parse_cond ??= nil;
+  parse_fn ??= nil;
+  as ??= nil;
   let __coil_temp;
 };
 Optional["prototype"][parse] = function ([expr, tokens]) {
-  expr = expr ?? nil;
-  tokens = tokens ?? nil;
+  expr ??= nil;
+  tokens ??= nil;
   let __coil_temp;
   if (dot(tokens, empty__q)[invoke]()[Meta.as_bool]()) {
     let __coil_temp;
@@ -403,19 +412,19 @@ Optional["prototype"][parse] = function ([expr, tokens]) {
   }
 };
 Function["prototype"][parse] = function ([_expr, tokens]) {
-  _expr = _expr ?? nil;
-  tokens = tokens ?? nil;
+  _expr ??= nil;
+  tokens ??= nil;
   let __coil_temp;
   return this[invoke](tokens);
 };
 let Chomp = function (...kws) {
   this["kws"] = kws;
-  kws = kws ?? nil;
+  kws ??= nil;
   let __coil_temp;
 };
 Chomp["prototype"][parse] = function ([expr, tokens]) {
-  expr = expr ?? nil;
-  tokens = tokens ?? nil;
+  expr ??= nil;
+  tokens ??= nil;
   let __coil_temp;
   let i = 0;
   for (let kw of dot(this, "kws")) {
@@ -428,13 +437,13 @@ Chomp["prototype"][parse] = function ([expr, tokens]) {
 let Then = function (parser, kw) {
   this["parser"] = parser;
   this["kw"] = kw;
-  parser = parser ?? nil;
-  kw = kw ?? nil;
+  parser ??= nil;
+  kw ??= nil;
   let __coil_temp;
 };
 Then["prototype"][parse] = function ([expr, tokens]) {
-  expr = expr ?? nil;
-  tokens = tokens ?? nil;
+  expr ??= nil;
+  tokens ??= nil;
   let __coil_temp;
   var __coil_if_let_temp = dot(this, "parser")[invoke](tokens) ?? nil;
   if (__coil_if_let_temp[Meta.as_bool]()) {
@@ -460,12 +469,12 @@ Then["prototype"][parse] = function ([expr, tokens]) {
 };
 let FMap = function (f) {
   this["f"] = f;
-  f = f ?? nil;
+  f ??= nil;
   let __coil_temp;
 };
 FMap["prototype"][parse] = function ([expr, tokens]) {
-  expr = expr ?? nil;
-  tokens = tokens ?? nil;
+  expr ??= nil;
+  tokens ??= nil;
   let __coil_temp;
   return [dot(this, "f")[invoke](expr), tokens];
 };
@@ -473,14 +482,14 @@ let Until = function (end_kw, parser, kw) {
   this["end_kw"] = end_kw;
   this["parser"] = parser;
   this["kw"] = kw;
-  end_kw = end_kw ?? nil;
-  parser = parser ?? nil;
-  kw = kw ?? nil;
+  end_kw ??= nil;
+  parser ??= nil;
+  kw ??= nil;
   let __coil_temp;
 };
 Until["prototype"][parse] = function ([expr, tokens]) {
-  expr = expr ?? nil;
-  tokens = tokens ?? nil;
+  expr ??= nil;
+  tokens ??= nil;
   let __coil_temp;
   let exprs = [];
   while (
@@ -512,14 +521,14 @@ let UntilEither = function (set, parser, kw) {
   this["set"] = set;
   this["parser"] = parser;
   this["kw"] = kw;
-  set = set ?? nil;
-  parser = parser ?? nil;
-  kw = kw ?? nil;
+  set ??= nil;
+  parser ??= nil;
+  kw ??= nil;
   let __coil_temp;
 };
 UntilEither["prototype"][parse] = function ([expr, tokens]) {
-  expr = expr ?? nil;
-  tokens = tokens ?? nil;
+  expr ??= nil;
+  tokens ??= nil;
   let __coil_temp;
   let exprs = [];
   while (
@@ -547,13 +556,13 @@ UntilEither["prototype"][parse] = function ([expr, tokens]) {
 let Case = function (parse_map, kw) {
   this["parse_map"] = parse_map;
   this["kw"] = kw;
-  parse_map = parse_map ?? nil;
-  kw = kw ?? nil;
+  parse_map ??= nil;
+  kw ??= nil;
   let __coil_temp;
 };
 Case["prototype"][parse] = function ([expr, tokens]) {
-  expr = expr ?? nil;
-  tokens = tokens ?? nil;
+  expr ??= nil;
+  tokens ??= nil;
   let __coil_temp;
   var __coil_if_let_temp = dot(this, "parse_map")[invoke](tokens) ?? nil;
   if (__coil_if_let_temp[Meta.as_bool]()) {
@@ -584,13 +593,13 @@ Case["prototype"][parse] = function ([expr, tokens]) {
 let Either = function (set, kw) {
   this["set"] = set;
   this["kw"] = kw;
-  set = set ?? nil;
-  kw = kw ?? nil;
+  set ??= nil;
+  kw ??= nil;
   let __coil_temp;
 };
 Either["prototype"][parse] = function ([expr, tokens]) {
-  expr = expr ?? nil;
-  tokens = tokens ?? nil;
+  expr ??= nil;
+  tokens ??= nil;
   let __coil_temp;
   let op = verify_exists__b[invoke](
     dot(this, "set")[invoke](
@@ -612,21 +621,21 @@ Either["prototype"][parse] = function ([expr, tokens]) {
 };
 let Parser = function (...instructions) {
   this["instructions"] = instructions;
-  instructions = instructions ?? nil;
+  instructions ??= nil;
   let __coil_temp;
 };
 Parser["prototype"][invoke] = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return dot(this, parse)[invoke]([nil, tokens]);
 };
 let AbortIf = function (cond_fn) {
   this["cond_fn"] = cond_fn;
-  cond_fn = cond_fn ?? nil;
+  cond_fn ??= nil;
   let __coil_temp;
 };
 Parser["prototype"][parse] = function (result) {
-  result = result ?? nil;
+  result ??= nil;
   let __coil_temp;
   for (let instruction of dot(this, "instructions")) {
     let __coil_temp;
@@ -646,7 +655,7 @@ Parser["prototype"][parse] = function (result) {
 };
 let ParseMap = function (entries) {
   this["entries"] = entries;
-  entries = entries ?? nil;
+  entries ??= nil;
   let __coil_temp;
 };
 ParseMap["prototype"][dot(Record, "keys")] = function () {
@@ -657,8 +666,8 @@ ParseMap["prototype"][dot(Record, "keys")] = function () {
   )[invoke](Set[Meta.create]([]));
 };
 ParseMap["prototype"][invoke] = function (tokens, ...args) {
-  tokens = tokens ?? nil;
-  args = args ?? nil;
+  tokens ??= nil;
+  args ??= nil;
   let __coil_temp;
   if (dot(tokens, empty__q)[invoke]()[Meta.as_bool]()) {
     let __coil_temp;
@@ -687,8 +696,8 @@ let algebra_ops = Set[Meta.create]([
   Keyword.for("gt_eq"),
 ]);
 let parse_dot = function (tokens, lhs) {
-  tokens = tokens ?? nil;
-  lhs = lhs ?? nil;
+  tokens ??= nil;
+  lhs ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -702,8 +711,8 @@ let parse_dot = function (tokens, lhs) {
   ])[invoke](tokens);
 };
 let parse_keyword_lookup = function (tokens, lhs) {
-  tokens = tokens ?? nil;
-  lhs = lhs ?? nil;
+  tokens ??= nil;
+  lhs ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     AbortIf[Meta.create]([not_adjacent__q]),
@@ -713,7 +722,7 @@ let parse_keyword_lookup = function (tokens, lhs) {
         [Keyword.for("lhs"), lhs],
       ]),
     ]),
-    Chomp[Meta.create]([Keyword.for("keyword"), Keyword.for("property")]),
+    One[Meta.create]([Keyword.for("keyword"), Keyword.for("property")]),
     FMap[Meta.create]([
       ({ lhs: lhs, type: type, property: property }) =>
         ObjectLiteral[Meta.from_entries]([
@@ -725,8 +734,8 @@ let parse_keyword_lookup = function (tokens, lhs) {
   ])[invoke](tokens);
 };
 let not_adjacent__q = function ([_expr, tokens]) {
-  _expr = _expr ?? nil;
-  tokens = tokens ?? nil;
+  _expr ??= nil;
+  tokens ??= nil;
   let __coil_temp;
   let current = dot(tokens, first)[invoke]();
   let previous = dot(dot(tokens, "collection"), at)[invoke](
@@ -746,7 +755,7 @@ let not_adjacent__q = function ([_expr, tokens]) {
   }
 };
 let parse_adjacent_expr = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     AbortIf[Meta.create]([not_adjacent__q]),
@@ -754,8 +763,8 @@ let parse_adjacent_expr = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_inclusive_range = function (tokens, lhs) {
-  tokens = tokens ?? nil;
-  lhs = lhs ?? nil;
+  tokens ??= nil;
+  lhs ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     AbortIf[Meta.create]([not_adjacent__q]),
@@ -774,8 +783,8 @@ let parse_inclusive_range = function (tokens, lhs) {
   ])[invoke](tokens);
 };
 let parse_exclusive_range = function (tokens, lhs) {
-  tokens = tokens ?? nil;
-  lhs = lhs ?? nil;
+  tokens ??= nil;
+  lhs ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     AbortIf[Meta.create]([not_adjacent__q]),
@@ -794,8 +803,8 @@ let parse_exclusive_range = function (tokens, lhs) {
   ])[invoke](tokens);
 };
 let parse_fn_call = function (tokens, lhs) {
-  tokens = tokens ?? nil;
-  lhs = lhs ?? nil;
+  tokens ??= nil;
+  lhs ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     AbortIf[Meta.create]([not_adjacent__q]),
@@ -815,8 +824,8 @@ let parse_fn_call = function (tokens, lhs) {
   ])[invoke](tokens);
 };
 let parse_meta_from_entries = function (tokens, lhs) {
-  tokens = tokens ?? nil;
-  lhs = lhs ?? nil;
+  tokens ??= nil;
+  lhs ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     AbortIf[Meta.create]([not_adjacent__q]),
@@ -836,8 +845,8 @@ let parse_meta_from_entries = function (tokens, lhs) {
   ])[invoke](tokens, lhs);
 };
 let parse_meta_create = function (tokens, lhs) {
-  tokens = tokens ?? nil;
-  lhs = lhs ?? nil;
+  tokens ??= nil;
+  lhs ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     AbortIf[Meta.create]([not_adjacent__q]),
@@ -857,8 +866,8 @@ let parse_meta_create = function (tokens, lhs) {
   ])[invoke](tokens, lhs);
 };
 let parse_snd_expr_step = function (tokens, lhs) {
-  tokens = tokens ?? nil;
-  lhs = lhs ?? nil;
+  tokens ??= nil;
+  lhs ??= nil;
   let __coil_temp;
   return ParseMap[Meta.from_entries]([
     [Keyword.for("open_p"), parse_fn_call],
@@ -871,8 +880,8 @@ let parse_snd_expr_step = function (tokens, lhs) {
   ])[invoke](tokens, lhs);
 };
 let parse_snd_expr = function ([lhs, tokens]) {
-  lhs = lhs ?? nil;
-  tokens = tokens ?? nil;
+  lhs ??= nil;
+  tokens ??= nil;
   let __coil_temp;
   var __coil_while_let_temp = parse_snd_expr_step[invoke](tokens, lhs) ?? nil;
   while (__coil_while_let_temp[Meta.as_bool]()) {
@@ -880,13 +889,13 @@ let parse_snd_expr = function ([lhs, tokens]) {
     let __coil_temp;
     lhs = new_lhs;
     tokens = rest;
-    __coil_while_let_temp = parse_snd_expr_step[invoke](tokens, lhs);
+    __coil_while_let_temp = parse_snd_expr_step[invoke](tokens, lhs) ?? nil;
   }
   return [lhs, tokens];
 };
 let parse_algebra_op = function (tokens, lhs) {
-  tokens = tokens ?? nil;
-  lhs = lhs ?? nil;
+  tokens ??= nil;
+  lhs ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -900,8 +909,8 @@ let parse_algebra_op = function (tokens, lhs) {
   ])[invoke](tokens);
 };
 let parse_third_expr_step = function (tokens, lhs) {
-  tokens = tokens ?? nil;
-  lhs = lhs ?? nil;
+  tokens ??= nil;
+  lhs ??= nil;
   let __coil_temp;
   return ParseMap[Meta.from_entries]([[algebra_ops, parse_algebra_op]])[invoke](
     tokens,
@@ -909,8 +918,8 @@ let parse_third_expr_step = function (tokens, lhs) {
   );
 };
 let parse_third_expr = function ([lhs, tokens]) {
-  lhs = lhs ?? nil;
-  tokens = tokens ?? nil;
+  lhs ??= nil;
+  tokens ??= nil;
   let __coil_temp;
   var __coil_while_let_temp = parse_third_expr_step[invoke](tokens, lhs) ?? nil;
   while (__coil_while_let_temp[Meta.as_bool]()) {
@@ -918,13 +927,13 @@ let parse_third_expr = function ([lhs, tokens]) {
     let __coil_temp;
     lhs = new_lhs;
     tokens = rest;
-    __coil_while_let_temp = parse_third_expr_step[invoke](tokens, lhs);
+    __coil_while_let_temp = parse_third_expr_step[invoke](tokens, lhs) ?? nil;
   }
   return [lhs, tokens];
 };
 let parse_eq_op = function (tokens, lhs) {
-  tokens = tokens ?? nil;
-  lhs = lhs ?? nil;
+  tokens ??= nil;
+  lhs ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -941,8 +950,8 @@ let parse_eq_op = function (tokens, lhs) {
   ])[invoke](tokens);
 };
 let parse_fourth_expr_step = function (tokens, lhs) {
-  tokens = tokens ?? nil;
-  lhs = lhs ?? nil;
+  tokens ??= nil;
+  lhs ??= nil;
   let __coil_temp;
   return ParseMap[Meta.from_entries]([
     [
@@ -952,8 +961,8 @@ let parse_fourth_expr_step = function (tokens, lhs) {
   ])[invoke](tokens, lhs);
 };
 let parse_fourth_expr = function ([lhs, tokens]) {
-  lhs = lhs ?? nil;
-  tokens = tokens ?? nil;
+  lhs ??= nil;
+  tokens ??= nil;
   let __coil_temp;
   var __coil_while_let_temp =
     parse_fourth_expr_step[invoke](tokens, lhs) ?? nil;
@@ -962,13 +971,13 @@ let parse_fourth_expr = function ([lhs, tokens]) {
     let __coil_temp;
     lhs = new_lhs;
     tokens = rest;
-    __coil_while_let_temp = parse_fourth_expr_step[invoke](tokens, lhs);
+    __coil_while_let_temp = parse_fourth_expr_step[invoke](tokens, lhs) ?? nil;
   }
   return [lhs, tokens];
 };
 let parse_and = function (tokens, lhs) {
-  tokens = tokens ?? nil;
-  lhs = lhs ?? nil;
+  tokens ??= nil;
+  lhs ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -982,8 +991,8 @@ let parse_and = function (tokens, lhs) {
   ])[invoke](tokens);
 };
 let parse_or = function (tokens, lhs) {
-  tokens = tokens ?? nil;
-  lhs = lhs ?? nil;
+  tokens ??= nil;
+  lhs ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -997,8 +1006,8 @@ let parse_or = function (tokens, lhs) {
   ])[invoke](tokens);
 };
 let parse_fifth_expr_step = function (tokens, lhs) {
-  tokens = tokens ?? nil;
-  lhs = lhs ?? nil;
+  tokens ??= nil;
+  lhs ??= nil;
   let __coil_temp;
   return ParseMap[Meta.from_entries]([
     [Keyword.for("and"), parse_and],
@@ -1006,8 +1015,8 @@ let parse_fifth_expr_step = function (tokens, lhs) {
   ])[invoke](tokens, lhs);
 };
 let parse_fifth_expr = function ([lhs, tokens]) {
-  lhs = lhs ?? nil;
-  tokens = tokens ?? nil;
+  lhs ??= nil;
+  tokens ??= nil;
   let __coil_temp;
   var __coil_while_let_temp = parse_fifth_expr_step[invoke](tokens, lhs) ?? nil;
   while (__coil_while_let_temp[Meta.as_bool]()) {
@@ -1015,7 +1024,7 @@ let parse_fifth_expr = function ([lhs, tokens]) {
     let __coil_temp;
     lhs = new_lhs;
     tokens = rest;
-    __coil_while_let_temp = parse_fifth_expr_step[invoke](tokens, lhs);
+    __coil_while_let_temp = parse_fifth_expr_step[invoke](tokens, lhs) ?? nil;
   }
   return [lhs, tokens];
 };
@@ -1051,7 +1060,7 @@ let parse_id = Parser[Meta.create]([
   ]),
 ]);
 let parse_obj = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1086,7 +1095,7 @@ let parse_assign_id = Parser[Meta.create]([
   Either[Meta.create]([valid_ids_in_all_contexts, Keyword.for("name")]),
 ]);
 let parse_assign_array = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1122,7 +1131,7 @@ let parse_regular_obj_assign_entry = Parser[Meta.create]([
   Either[Meta.create]([valid_ids_in_all_contexts, Keyword.for("name")]),
 ]);
 let parse_obj_entry_destructure = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1185,7 +1194,7 @@ let parse_assign_expr = ParseMap[Meta.from_entries]([
   [Keyword.for("dot_dot_dot"), parse_spread_assign],
 ]);
 let parse_paren_expr = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1199,7 +1208,7 @@ let parse_paren_expr = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_yield = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1217,7 +1226,7 @@ let parse_yield = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_await = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1238,7 +1247,7 @@ let parse_num = Parser[Meta.create]([
   One[Meta.create]([Keyword.for("num"), Keyword.for("value")]),
 ]);
 let parse_array = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1256,7 +1265,7 @@ let parse_array = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_spread = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1269,7 +1278,7 @@ let parse_spread = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_not = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1282,7 +1291,7 @@ let parse_not = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_num_raw = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return dot(parse_num[invoke](tokens), pipe)[invoke](([expr, tokens]) => [
     dot(dot(expr, at)[invoke](Keyword.for("value")), as_num)[invoke](),
@@ -1294,15 +1303,15 @@ let parse_adjacent_num_raw = Parser[Meta.create]([
   Then[Meta.create]([parse_num_raw]),
 ]);
 let parse_async_modifier = Parser[Meta.create]([
-  Init[Meta.create]([true]),
+  Init[Meta.create]([ObjectLiteral[Meta.from_entries]([])]),
   Chomp[Meta.create]([Keyword.for("async")]),
 ]);
 let parse_gen_modifier = Parser[Meta.create]([
-  Init[Meta.create]([true]),
+  Init[Meta.create]([ObjectLiteral[Meta.from_entries]([])]),
   Chomp[Meta.create]([Keyword.for("times")]),
 ]);
 let parse_fn_expr_body = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1316,7 +1325,7 @@ let parse_fn_expr_body = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_args_def = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Chomp[Meta.create]([Keyword.for("open_p")]),
@@ -1325,7 +1334,7 @@ let parse_args_def = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_name_expr = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   var __coil_if_let_temp = parse_single_expr[invoke](tokens) ?? nil;
   if (__coil_if_let_temp[Meta.as_bool]()) {
@@ -1341,13 +1350,13 @@ let parse_name_expr = function (tokens) {
       let __coil_temp;
       expr = new_expr;
       tokens = new_tokens;
-      __coil_while_let_temp = parse_map[invoke](tokens, expr);
+      __coil_while_let_temp = parse_map[invoke](tokens, expr) ?? nil;
     }
     return [expr, tokens];
   }
 };
 let parse_fn = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1382,7 +1391,7 @@ let parse_fn = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_keyword_record_entry = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1396,7 +1405,7 @@ let parse_keyword_record_entry = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_regular_record_entry = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1410,7 +1419,7 @@ let parse_regular_record_entry = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_record_entry = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return ParseMap[Meta.from_entries]([
     [Keyword.for("dot_dot_dot"), parse_spread],
@@ -1422,7 +1431,7 @@ let parse_record_entry = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_prefix_inclusive_range = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1435,7 +1444,7 @@ let parse_prefix_inclusive_range = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_prefix_exclusive_range = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1448,7 +1457,7 @@ let parse_prefix_exclusive_range = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_keyword = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1467,7 +1476,7 @@ let parse_keyword = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_anon_fn = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1486,7 +1495,7 @@ let parse_anon_fn = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_reassign = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1523,12 +1532,12 @@ let SINGLE_EXPR_PARSE_MAP = ParseMap[Meta.from_entries]([
   [Keyword.for("fn"), parse_fn],
 ]);
 let parse_single_expr = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return SINGLE_EXPR_PARSE_MAP[invoke](tokens);
 };
 let parse_expr = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return parse_fifth_expr[invoke](
     parse_fourth_expr[invoke](
@@ -1539,19 +1548,19 @@ let parse_expr = function (tokens) {
   );
 };
 let parse_1_2_expr = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return parse_snd_expr[invoke](parse_single_expr[invoke](tokens));
 };
 let parse_1_2_3_expr = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return parse_third_expr[invoke](
     parse_snd_expr[invoke](parse_single_expr[invoke](tokens))
   );
 };
 let parse_1_2_3_4_expr = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return parse_fourth_expr[invoke](
     parse_third_expr[invoke](
@@ -1560,7 +1569,7 @@ let parse_1_2_3_4_expr = function (tokens) {
   );
 };
 let parse_else_branch = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1577,7 +1586,7 @@ let parse_else_branch = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_else_if_branch = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1604,7 +1613,7 @@ let parse_if_branch = ParseMap[Meta.from_entries]([
   [Keyword.for("else"), parse_else_branch],
 ]);
 let parse_if = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1639,7 +1648,7 @@ let parse_let = Parser[Meta.create]([
   Then[Meta.create]([parse_expr, Keyword.for("rhs")]),
 ]);
 let parse_if_let = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1706,7 +1715,7 @@ let parse_await_modifier = Parser[Meta.create]([
   Chomp[Meta.create]([Keyword.for("await")]),
 ]);
 let parse_for_loop = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1727,7 +1736,7 @@ let parse_for_loop = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_loop = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1740,7 +1749,7 @@ let parse_loop = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_while_loop = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1754,7 +1763,7 @@ let parse_while_loop = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_while_let_loop = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1770,7 +1779,7 @@ let parse_while_let_loop = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_continue = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1782,7 +1791,7 @@ let parse_continue = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_break = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1794,7 +1803,7 @@ let parse_break = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_catch = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1808,7 +1817,7 @@ let parse_catch = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_finally = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1821,7 +1830,7 @@ let parse_finally = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_try = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1844,7 +1853,7 @@ let parse_try = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_import = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1853,13 +1862,13 @@ let parse_import = function (tokens) {
       ]),
     ]),
     Chomp[Meta.create]([Keyword.for("import")]),
-    Then[Meta.create]([parse_assign_expr, Keyword.for("assign_exprs")]),
+    Then[Meta.create]([parse_assign_expr, Keyword.for("assign_expr")]),
     Chomp[Meta.create]([Keyword.for("from")]),
     Then[Meta.create]([parse_str, Keyword.for("path")]),
   ])[invoke](tokens);
 };
 let parse_export = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1872,7 +1881,7 @@ let parse_export = function (tokens) {
   ])[invoke](tokens);
 };
 let parse_export_default = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Init[Meta.create]([
@@ -1894,7 +1903,7 @@ let parse_direct_import = Parser[Meta.create]([
   One[Meta.create]([Keyword.for("string_lit"), Keyword.for("path")]),
 ]);
 let parse_statement = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return ParseMap[Meta.from_entries]([
     [Keyword.for("let"), parse_let],
@@ -1917,7 +1926,7 @@ let parse_statement = function (tokens) {
   ])[invoke](tokens);
 };
 let block = function (name) {
-  name = name ?? nil;
+  name ??= nil;
   let __coil_temp;
   return Parser[Meta.create]([
     Until[Meta.create]([Keyword.for("end"), parse_statement, name]),
@@ -1925,7 +1934,7 @@ let block = function (name) {
   ]);
 };
 let parse_tokens = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   let ast = [];
   var __coil_while_let_temp = parse_statement[invoke](tokens) ?? nil;
@@ -1934,12 +1943,12 @@ let parse_tokens = function (tokens) {
     let __coil_temp;
     dot(ast, "push")[invoke](statement_or_expr);
     tokens = rest;
-    __coil_while_let_temp = parse_statement[invoke](tokens);
+    __coil_while_let_temp = parse_statement[invoke](tokens) ?? nil;
   }
   return ast;
 };
 let resolve_name = function (name) {
-  name = name ?? nil;
+  name ??= nil;
   let __coil_temp;
   if (name[Meta.as_bool]()) {
     let __coil_temp;
@@ -1959,7 +1968,7 @@ let resolve_name = function (name) {
   }
 };
 let eval_if_branch = function (branch) {
-  branch = branch ?? nil;
+  branch ??= nil;
   let __coil_temp;
   if (dot(branch, nil__q)[invoke]()[Meta.as_bool]()) {
     let __coil_temp;
@@ -1997,9 +2006,9 @@ let eval_if_branch = function (branch) {
   }
 };
 let eval_if = function ({ expr: expr, pass: pass, fail: fail }) {
-  expr = expr ?? nil;
-  pass = pass ?? nil;
-  fail = fail ?? nil;
+  expr ??= nil;
+  pass ??= nil;
+  fail ??= nil;
   let __coil_temp;
   return str[invoke](
     "if (",
@@ -2012,7 +2021,7 @@ let eval_if = function ({ expr: expr, pass: pass, fail: fail }) {
   );
 };
 let eval_str = function ({ value: value }) {
-  value = value ?? nil;
+  value ??= nil;
   let __coil_temp;
   value = dot(value, Keyword.for("slice"))[invoke](1, -1);
   if (dot(value, Keyword.for("includes"))[invoke]("\n")[Meta.as_bool]()) {
@@ -2024,8 +2033,8 @@ let eval_str = function ({ value: value }) {
   }
 };
 let eval_fn_call = function ({ lhs: lhs, args: args }) {
-  lhs = lhs ?? nil;
-  args = args ?? nil;
+  lhs ??= nil;
+  args ??= nil;
   let __coil_temp;
   return str[invoke](
     eval_expr[invoke](lhs),
@@ -2035,17 +2044,17 @@ let eval_fn_call = function ({ lhs: lhs, args: args }) {
   );
 };
 let eval_id_assign_name = function ({ name: name }) {
-  name = name ?? nil;
+  name ??= nil;
   let __coil_temp;
   return resolve_name[invoke](name);
 };
 let eval_spread_assign = function ({ name: name }) {
-  name = name ?? nil;
+  name ??= nil;
   let __coil_temp;
   return str[invoke]("...", resolve_name[invoke](name));
 };
 let eval_array_deconstruction_entry = function (node) {
-  node = node ?? nil;
+  node ??= nil;
   let __coil_temp;
   return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)
     [invoke](
@@ -2062,7 +2071,7 @@ let eval_array_deconstruction_entry = function (node) {
     [invoke](node);
 };
 let eval_array_deconstruction_names = function ({ entries: entries }) {
-  entries = entries ?? nil;
+  entries ??= nil;
   let __coil_temp;
   return str[invoke](
     "[",
@@ -2073,7 +2082,7 @@ let eval_array_deconstruction_names = function ({ entries: entries }) {
   );
 };
 let eval_obj_reg_entry = function ({ name: name }) {
-  name = name ?? nil;
+  name ??= nil;
   let __coil_temp;
   return str[invoke]("'", name, "': ", resolve_name[invoke](name));
 };
@@ -2081,13 +2090,13 @@ let eval_obj_entry_rename = function ({
   old_name: old_name,
   new_name: new_name,
 }) {
-  old_name = old_name ?? nil;
-  new_name = new_name ?? nil;
+  old_name ??= nil;
+  new_name ??= nil;
   let __coil_temp;
   return str[invoke]("'", old_name, "': ", resolve_name[invoke](new_name));
 };
 let eval_obj_deconstruction_entry = function (node) {
-  node = node ?? nil;
+  node ??= nil;
   let __coil_temp;
   return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)
     [invoke](
@@ -2104,7 +2113,7 @@ let eval_obj_deconstruction_entry = function (node) {
     [invoke](node);
 };
 let eval_object_deconstruction_names = function ({ entries: entries }) {
-  entries = entries ?? nil;
+  entries ??= nil;
   let __coil_temp;
   return str[invoke](
     "{",
@@ -2115,22 +2124,22 @@ let eval_object_deconstruction_names = function ({ entries: entries }) {
   );
 };
 let eval_this_assign = function ({ name: name }) {
-  name = name ?? nil;
+  name ??= nil;
   let __coil_temp;
   return resolve_name[invoke](name);
 };
 let eval_this_spread_assign = function ({ name: name }) {
-  name = name ?? nil;
+  name ??= nil;
   let __coil_temp;
   return str[invoke]("...", resolve_name[invoke](name));
 };
 let eval_assign_all_as = function ({ name: name }) {
-  name = name ?? nil;
+  name ??= nil;
   let __coil_temp;
   return str[invoke]("* as ", name);
 };
 let eval_assign_expr = function (node) {
-  node = node ?? nil;
+  node ??= nil;
   let __coil_temp;
   return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)
     [invoke](
@@ -2153,9 +2162,9 @@ let eval_while_let_loop = function ({
   assign_expr: assign_expr,
   body: body,
 }) {
-  test_expr = test_expr ?? nil;
-  assign_expr = assign_expr ?? nil;
-  body = body ?? nil;
+  test_expr ??= nil;
+  assign_expr ??= nil;
+  body ??= nil;
   let __coil_temp;
   return str[invoke](
     "var __coil_while_let_temp = ",
@@ -2169,7 +2178,7 @@ let eval_while_let_loop = function ({
     "\n",
     "__coil_while_let_temp = ",
     eval_expr[invoke](test_expr),
-    ";\n",
+    " ?? nil;\n",
     "}"
   );
 };
@@ -2179,10 +2188,10 @@ let eval_if_let = function ({
   pass: pass,
   fail: fail,
 }) {
-  expr = expr ?? nil;
-  assign_expr = assign_expr ?? nil;
-  pass = pass ?? nil;
-  fail = fail ?? nil;
+  expr ??= nil;
+  assign_expr ??= nil;
+  pass ??= nil;
+  fail ??= nil;
   let __coil_temp;
   return str[invoke](
     "var __coil_if_let_temp = ",
@@ -2199,13 +2208,13 @@ let eval_if_let = function ({
   );
 };
 let eval_spread = function ({ expr: expr }) {
-  expr = expr ?? nil;
+  expr ??= nil;
   let __coil_temp;
   return str[invoke]("...", eval_expr[invoke](expr));
 };
 let eval_let = function ({ assign_expr: assign_expr, rhs: rhs }) {
-  assign_expr = assign_expr ?? nil;
-  rhs = rhs ?? nil;
+  assign_expr ??= nil;
+  rhs ??= nil;
   let __coil_temp;
   return str[invoke](
     "let ",
@@ -2215,7 +2224,7 @@ let eval_let = function ({ assign_expr: assign_expr, rhs: rhs }) {
   );
 };
 let eval_array = function ({ elements: elements }) {
-  elements = elements ?? nil;
+  elements ??= nil;
   let __coil_temp;
   return str[invoke](
     "[",
@@ -2224,7 +2233,7 @@ let eval_array = function ({ elements: elements }) {
   );
 };
 let eval_this_assignments = function (args) {
-  args = args ?? nil;
+  args ??= nil;
   let __coil_temp;
   return dot(
     dot(
@@ -2243,7 +2252,7 @@ let eval_this_assignments = function (args) {
   )[invoke]("");
 };
 let eval_name_expr = function (node) {
-  node = node ?? nil;
+  node ??= nil;
   let __coil_temp;
   return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)
     [invoke](
@@ -2264,18 +2273,20 @@ let eval_name_expr = function (node) {
             str[invoke](eval_name_expr[invoke](lhs), "['", property, "']"),
         ],
       ]),
-      _,
-      () => eval_expr
+      (eval_fn) => (
+        (__coil_temp = { left: eval_fn }),
+        __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : eval_expr
+      )
     )
     [invoke](node);
 };
 let entries_arg_names = function ({ entries: entries }) {
-  entries = entries ?? nil;
+  entries ??= nil;
   let __coil_temp;
   return dot(entries, "flatMap")[invoke](arg_names);
 };
 let arg_names = function (node) {
-  node = node ?? nil;
+  node ??= nil;
   let __coil_temp;
   return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)
     [invoke](
@@ -2300,18 +2311,13 @@ let arg_names = function (node) {
     [invoke](node);
 };
 let eval_nil_destructure_args = function (args) {
-  args = args ?? nil;
+  args ??= nil;
   let __coil_temp;
   if (args[Meta.as_bool]()) {
     let __coil_temp;
     return dot(
       dot(dot(args, "flatMap")[invoke](arg_names), map)[invoke]((name) =>
-        str[invoke](
-          resolve_name[invoke](name),
-          " = ",
-          resolve_name[invoke](name),
-          " ?? nil;"
-        )
+        str[invoke](resolve_name[invoke](name), " ??= nil;")
       ),
       join
     )[invoke]("\n");
@@ -2327,11 +2333,11 @@ let eval_fn = function ({
   args: args,
   body: body,
 }) {
-  is_async__q = is_async__q ?? nil;
-  generator__q = generator__q ?? nil;
-  name_expr = name_expr ?? nil;
-  args = args ?? nil;
-  body = body ?? nil;
+  is_async__q ??= nil;
+  generator__q ??= nil;
+  name_expr ??= nil;
+  args ??= nil;
+  body ??= nil;
   let __coil_temp;
   return str[invoke](
     ((__coil_temp = {
@@ -2364,10 +2370,23 @@ let eval_fn = function ({
       ? __coil_temp.right
       : __coil_temp.left),
     "(",
-    dot(dot(args, map)[invoke](eval_assign_expr), join)[invoke](", "),
+    dot(
+      dot(
+        ((__coil_temp = { left: args }),
+        __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : []),
+        map
+      )[invoke](eval_assign_expr),
+      join
+    )[invoke](", "),
     ") {\n",
-    eval_this_assignments[invoke](args),
-    eval_nil_destructure_args[invoke](args),
+    eval_this_assignments[invoke](
+      ((__coil_temp = { left: args }),
+      __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])
+    ),
+    eval_nil_destructure_args[invoke](
+      ((__coil_temp = { left: args }),
+      __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])
+    ),
     eval_ast[invoke](body),
     "}"
   );
@@ -2379,11 +2398,11 @@ let eval_obj_fn = function ({
   args: args,
   body: body,
 }) {
-  name = name ?? nil;
-  generator__q = generator__q ?? nil;
-  is_async__q = is_async__q ?? nil;
-  args = args ?? nil;
-  body = body ?? nil;
+  name ??= nil;
+  generator__q ??= nil;
+  is_async__q ??= nil;
+  args ??= nil;
+  body ??= nil;
   let __coil_temp;
   return str[invoke](
     ((__coil_temp = { left: is_async__q }),
@@ -2409,18 +2428,18 @@ let eval_obj_fn = function ({
   );
 };
 let eval_id_lookup = function ({ name: name }) {
-  name = name ?? nil;
+  name ??= nil;
   let __coil_temp;
   return resolve_name[invoke](name);
 };
 let eval_num = function ({ value: value }) {
-  value = value ?? nil;
+  value ??= nil;
   let __coil_temp;
   return str[invoke]("(", value, ")");
 };
 let eval_double_equals = function ({ lhs: lhs, rhs: rhs }) {
-  lhs = lhs ?? nil;
-  rhs = rhs ?? nil;
+  lhs ??= nil;
+  rhs ??= nil;
   let __coil_temp;
   return str[invoke](
     eval_expr[invoke](lhs),
@@ -2430,8 +2449,8 @@ let eval_double_equals = function ({ lhs: lhs, rhs: rhs }) {
   );
 };
 let eval_not_equals = function ({ lhs: lhs, rhs: rhs }) {
-  lhs = lhs ?? nil;
-  rhs = rhs ?? nil;
+  lhs ??= nil;
+  rhs ??= nil;
   let __coil_temp;
   return str[invoke](
     eval_expr[invoke](lhs),
@@ -2441,13 +2460,13 @@ let eval_not_equals = function ({ lhs: lhs, rhs: rhs }) {
   );
 };
 let eval_not = function ({ expr: expr }) {
-  expr = expr ?? nil;
+  expr ??= nil;
   let __coil_temp;
   return str[invoke](eval_expr[invoke](expr), "[Bool.negate]()");
 };
 let eval_meta_from_entries = function ({ lhs: lhs, entries: entries }) {
-  lhs = lhs ?? nil;
-  entries = entries ?? nil;
+  lhs ??= nil;
+  entries ??= nil;
   let __coil_temp;
   return str[invoke](
     eval_expr[invoke](lhs),
@@ -2457,8 +2476,8 @@ let eval_meta_from_entries = function ({ lhs: lhs, entries: entries }) {
   );
 };
 let eval_meta_create = function ({ lhs: lhs, entries: entries }) {
-  lhs = lhs ?? nil;
-  entries = entries ?? nil;
+  lhs ??= nil;
+  entries ??= nil;
   let __coil_temp;
   return str[invoke](
     eval_expr[invoke](lhs),
@@ -2468,13 +2487,13 @@ let eval_meta_create = function ({ lhs: lhs, entries: entries }) {
   );
 };
 let eval_await = function ({ expr: expr }) {
-  expr = expr ?? nil;
+  expr ??= nil;
   let __coil_temp;
   return str[invoke]("await ", eval_expr[invoke](expr));
 };
 let eval_yield = function ({ "star?": star__q, expr: expr }) {
-  star__q = star__q ?? nil;
-  expr = expr ?? nil;
+  star__q ??= nil;
+  expr ??= nil;
   let __coil_temp;
   return str[invoke](
     "yield",
@@ -2489,12 +2508,12 @@ let eval_yield = function ({ "star?": star__q, expr: expr }) {
   );
 };
 let eval_paren_expr = function ({ expr: expr }) {
-  expr = expr ?? nil;
+  expr ??= nil;
   let __coil_temp;
   return str[invoke]("(", eval_expr[invoke](expr), ")");
 };
 let eval_keyword = function ({ value: value }) {
-  value = value ?? nil;
+  value ??= nil;
   let __coil_temp;
   return str[invoke]('Keyword.for("', value, '")');
 };
@@ -2502,8 +2521,8 @@ let eval_regular_record_entry = function ({
   key_expr: key_expr,
   value_expr: value_expr,
 }) {
-  key_expr = key_expr ?? nil;
-  value_expr = value_expr ?? nil;
+  key_expr ??= nil;
+  value_expr ??= nil;
   let __coil_temp;
   return str[invoke](
     "[",
@@ -2514,8 +2533,8 @@ let eval_regular_record_entry = function ({
   );
 };
 let eval_keyword_record_entry = function ({ name: name, expr: expr }) {
-  name = name ?? nil;
-  expr = expr ?? nil;
+  name ??= nil;
+  expr ??= nil;
   let __coil_temp;
   return str[invoke](
     "[",
@@ -2528,7 +2547,7 @@ let eval_keyword_record_entry = function ({ name: name, expr: expr }) {
   );
 };
 let eval_record_entry = function (node) {
-  node = node ?? nil;
+  node ??= nil;
   let __coil_temp;
   return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)
     [invoke](
@@ -2541,8 +2560,8 @@ let eval_record_entry = function (node) {
     [invoke](node);
 };
 let eval_inclusive_range = function ({ lhs: lhs, rhs: rhs }) {
-  lhs = lhs ?? nil;
-  rhs = rhs ?? nil;
+  lhs ??= nil;
+  rhs ??= nil;
   let __coil_temp;
   if (rhs[Meta.as_bool]()) {
     let __coil_temp;
@@ -2563,8 +2582,8 @@ let eval_inclusive_range = function ({ lhs: lhs, rhs: rhs }) {
   }
 };
 let eval_exclusive_range = function ({ lhs: lhs, rhs: rhs }) {
-  lhs = lhs ?? nil;
-  rhs = rhs ?? nil;
+  lhs ??= nil;
+  rhs ??= nil;
   let __coil_temp;
   if (rhs[Meta.as_bool]()) {
     let __coil_temp;
@@ -2585,12 +2604,12 @@ let eval_exclusive_range = function ({ lhs: lhs, rhs: rhs }) {
   }
 };
 let eval_regex_lit = function ({ value: value }) {
-  value = value ?? nil;
+  value ??= nil;
   let __coil_temp;
   return value;
 };
 let eval_prefix_exclusive_range = function ({ expr: expr }) {
-  expr = expr ?? nil;
+  expr ??= nil;
   let __coil_temp;
   return str[invoke](
     "new ExclusiveRangeNoMinimum(",
@@ -2599,7 +2618,7 @@ let eval_prefix_exclusive_range = function ({ expr: expr }) {
   );
 };
 let eval_prefix_inclusive_range = function ({ expr: expr }) {
-  expr = expr ?? nil;
+  expr ??= nil;
   let __coil_temp;
   return str[invoke](
     "new InclusiveRangeNoMinimum(",
@@ -2608,8 +2627,8 @@ let eval_prefix_inclusive_range = function ({ expr: expr }) {
   );
 };
 let eval_dot = function ({ lhs: lhs, rhs: rhs }) {
-  lhs = lhs ?? nil;
-  rhs = rhs ?? nil;
+  lhs ??= nil;
+  rhs ??= nil;
   let __coil_temp;
   return str[invoke](
     "dot(",
@@ -2620,13 +2639,13 @@ let eval_dot = function ({ lhs: lhs, rhs: rhs }) {
   );
 };
 let eval_keyword_lookup = function ({ lhs: lhs, property: property }) {
-  lhs = lhs ?? nil;
-  property = property ?? nil;
+  lhs ??= nil;
+  property ??= nil;
   let __coil_temp;
   return str[invoke]("dot(", eval_expr[invoke](lhs), ", '", property, "')");
 };
 let eval_object_literal = function ({ entries: entries }) {
-  entries = entries ?? nil;
+  entries ??= nil;
   let __coil_temp;
   return str[invoke](
     "ObjectLiteral[Meta.from_entries]([",
@@ -2635,20 +2654,24 @@ let eval_object_literal = function ({ entries: entries }) {
   );
 };
 let eval_anon_fn = function ({ args: args, return_expr: return_expr }) {
-  args = args ?? nil;
-  return_expr = return_expr ?? nil;
+  args ??= nil;
+  return_expr ??= nil;
   let __coil_temp;
   return str[invoke](
     "(",
     dot(dot(args, map)[invoke](eval_assign_expr), join)[invoke](", "),
-    ") => ",
-    eval_expr[invoke](return_expr)
+    ") => {\n",
+    eval_nil_destructure_args[invoke](args),
+    "return ",
+    eval_expr[invoke](return_expr),
+    ";",
+    "}"
   );
 };
 let eval_algebra_op = function ({ lhs: lhs, op: op, rhs: rhs }) {
-  lhs = lhs ?? nil;
-  op = op ?? nil;
-  rhs = rhs ?? nil;
+  lhs ??= nil;
+  op ??= nil;
+  rhs ??= nil;
   let __coil_temp;
   return str[invoke](
     eval_expr[invoke](lhs),
@@ -2660,9 +2683,9 @@ let eval_algebra_op = function ({ lhs: lhs, op: op, rhs: rhs }) {
   );
 };
 let eval_equality_op = function ({ lhs: lhs, op: op, rhs: rhs }) {
-  lhs = lhs ?? nil;
-  op = op ?? nil;
-  rhs = rhs ?? nil;
+  lhs ??= nil;
+  op ??= nil;
+  rhs ??= nil;
   let __coil_temp;
   return str[invoke](
     eval_expr[invoke](lhs),
@@ -2674,8 +2697,8 @@ let eval_equality_op = function ({ lhs: lhs, op: op, rhs: rhs }) {
   );
 };
 let eval_and = function ({ lhs: lhs, rhs: rhs }) {
-  lhs = lhs ?? nil;
-  rhs = rhs ?? nil;
+  lhs ??= nil;
+  rhs ??= nil;
   let __coil_temp;
   return str[invoke](
     "(__coil_temp = {left: ",
@@ -2687,8 +2710,8 @@ let eval_and = function ({ lhs: lhs, rhs: rhs }) {
   );
 };
 let eval_or = function ({ lhs: lhs, rhs: rhs }) {
-  lhs = lhs ?? nil;
-  rhs = rhs ?? nil;
+  lhs ??= nil;
+  rhs ??= nil;
   let __coil_temp;
   return str[invoke](
     "(__coil_temp = {left: ",
@@ -2700,8 +2723,8 @@ let eval_or = function ({ lhs: lhs, rhs: rhs }) {
   );
 };
 let eval_reassign = function ({ name: name, expr: expr }) {
-  name = name ?? nil;
-  expr = expr ?? nil;
+  name ??= nil;
+  expr ??= nil;
   let __coil_temp;
   return str[invoke](
     resolve_name[invoke](name),
@@ -2710,7 +2733,7 @@ let eval_reassign = function ({ name: name, expr: expr }) {
   );
 };
 let eval_expr = function (node) {
-  node = node ?? nil;
+  node ??= nil;
   let __coil_temp;
   return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)
     [invoke](
@@ -2750,7 +2773,7 @@ let eval_expr = function (node) {
     [invoke](node);
 };
 let eval_return = function ({ expr: expr }) {
-  expr = expr ?? nil;
+  expr ??= nil;
   let __coil_temp;
   if (expr[Meta.as_bool]()) {
     let __coil_temp;
@@ -2761,8 +2784,8 @@ let eval_return = function ({ expr: expr }) {
   }
 };
 let eval_protocol = function ({ name: name, methods: methods }) {
-  name = name ?? nil;
-  methods = methods ?? nil;
+  name ??= nil;
+  methods ??= nil;
   let __coil_temp;
   if (methods[Meta.as_bool]()) {
     let __coil_temp;
@@ -2803,10 +2826,10 @@ let eval_for_loop = function ({
   iterable_expr: iterable_expr,
   body: body,
 }) {
-  is_await__q = is_await__q ?? nil;
-  assign_expr = assign_expr ?? nil;
-  iterable_expr = iterable_expr ?? nil;
-  body = body ?? nil;
+  is_await__q ??= nil;
+  assign_expr ??= nil;
+  iterable_expr ??= nil;
+  body ??= nil;
   let __coil_temp;
   return str[invoke](
     "for ",
@@ -2828,8 +2851,8 @@ let eval_for_loop = function ({
   );
 };
 let eval_id_assign = function ({ name: name, expr: expr }) {
-  name = name ?? nil;
-  expr = expr ?? nil;
+  name ??= nil;
+  expr ??= nil;
   let __coil_temp;
   return str[invoke](
     resolve_name[invoke](name),
@@ -2838,8 +2861,8 @@ let eval_id_assign = function ({ name: name, expr: expr }) {
   );
 };
 let eval_while_loop = function ({ test_expr: test_expr, body: body }) {
-  test_expr = test_expr ?? nil;
-  body = body ?? nil;
+  test_expr ??= nil;
+  body ??= nil;
   let __coil_temp;
   return str[invoke](
     "while (",
@@ -2850,7 +2873,7 @@ let eval_while_loop = function ({ test_expr: test_expr, body: body }) {
   );
 };
 let eval_loop = function ({ body: body }) {
-  body = body ?? nil;
+  body ??= nil;
   let __coil_temp;
   return str[invoke]("while (true) {\n", eval_ast[invoke](body), "\n}");
 };
@@ -2863,7 +2886,7 @@ let eval_break = function () {
   return "break";
 };
 let eval_try = function (node) {
-  node = node ?? nil;
+  node ??= nil;
   let __coil_temp;
   let body_js = dot(dot(node, at)[invoke](Keyword.for("body")), pipe)[invoke](
     eval_ast
@@ -2891,7 +2914,7 @@ let eval_try = function (node) {
   return str[invoke]("try {\n", body_js, "\n", "}", catch_js, finally_js);
 };
 let get_deconstructed_obj_entry_name = function (node) {
-  node = node ?? nil;
+  node ??= nil;
   let __coil_temp;
   return dot(
     dot(
@@ -2905,7 +2928,7 @@ let get_deconstructed_obj_entry_name = function (node) {
   )[invoke](node);
 };
 let get_deconstructed_array_entry_name = function (node) {
-  node = node ?? nil;
+  node ??= nil;
   let __coil_temp;
   return dot(
     dot(
@@ -2916,7 +2939,7 @@ let get_deconstructed_array_entry_name = function (node) {
   )[invoke](node);
 };
 let eval_import_deconstruction_entry = function (node) {
-  node = node ?? nil;
+  node ??= nil;
   let __coil_temp;
   return dot(node, pipe)
     [invoke](
@@ -2940,7 +2963,7 @@ let eval_import_deconstruction_entry = function (node) {
     [invoke](node);
 };
 let eval_import_deconstruction_expr = function ({ entries: entries }) {
-  entries = entries ?? nil;
+  entries ??= nil;
   let __coil_temp;
   return str[invoke](
     "{",
@@ -2951,7 +2974,7 @@ let eval_import_deconstruction_expr = function ({ entries: entries }) {
   );
 };
 let eval_import_assign_exprs = function (node) {
-  node = node ?? nil;
+  node ??= nil;
   let __coil_temp;
   return dot(node, pipe)
     [invoke](
@@ -2964,131 +2987,155 @@ let eval_import_assign_exprs = function (node) {
     )
     [invoke](node);
 };
-let eval_import = function ({ assign_exprs: assign_exprs, path: path }) {
-  assign_exprs = assign_exprs ?? nil;
-  path = path ?? nil;
+let eval_import = function ({ assign_expr: assign_expr, path: path }) {
+  assign_expr ??= nil;
+  path ??= nil;
   let __coil_temp;
   return str[invoke](
     "import ",
-    dot(dot(assign_exprs, map)[invoke](eval_import_assign_exprs), join)[invoke](
-      ", "
-    ),
+    dot(eval_import_assign_exprs[invoke](assign_expr), join)[invoke](", "),
     ' from "',
-    dot(dot(path, value), slice)[invoke](1, -1),
+    dot(dot(path, "value"), "slice")[invoke](1, -1),
     '"'
   );
 };
 let eval_export = function ({ statement: statement }) {
-  statement = statement ?? nil;
+  statement ??= nil;
   let __coil_temp;
   return str[invoke]("export ", eval_statement[invoke](statement));
 };
 let eval_export_default = function ({ expr: expr }) {
-  expr = expr ?? nil;
+  expr ??= nil;
   let __coil_temp;
   return str[invoke]("export default ", eval_expr[invoke](expr));
 };
 let eval_direct_import = function ({ path: path }) {
-  path = path ?? nil;
+  path ??= nil;
   let __coil_temp;
   return str[invoke]("import ", path);
 };
 let eval_statement = function (node) {
-  node = node ?? nil;
+  node ??= nil;
   let __coil_temp;
-  return dot(
-    dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](
-      Map[Meta.from_entries]([
-        [Keyword.for("if"), eval_if],
-        [Keyword.for("direct_import"), eval_direct_import],
-        [Keyword.for("import"), eval_import],
-        [Keyword.for("export"), eval_export],
-        [Keyword.for("export_default"), eval_export_default],
-        [Keyword.for("let"), eval_let],
-        [Keyword.for("if_let"), eval_if_let],
-        [Keyword.for("return"), eval_return],
-        [Keyword.for("protocol_def"), eval_protocol],
-        [Keyword.for("for_loop"), eval_for_loop],
-        [Keyword.for("id_assign"), eval_id_assign],
-        [Keyword.for("while_loop"), eval_while_loop],
-        [Keyword.for("loop"), eval_loop],
-        [Keyword.for("while_let_loop"), eval_while_let_loop],
-        [Keyword.for("continue"), eval_continue],
-        [Keyword.for("break"), eval_break],
-        [Keyword.for("try"), eval_try],
-      ])
-    ),
-    pipe
-  )
-    [invoke](function (f) {
-      let __coil_temp;
-      if (f[Meta.as_bool]()) {
-        let __coil_temp;
-        return compose[invoke](f, _[Algebra["+"]](";"));
-      } else {
-        let __coil_temp;
-        return eval_expr;
-      }
-    })
-    [invoke](node);
+  let eval_fn = dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](
+    Map[Meta.from_entries]([
+      [Keyword.for("if"), eval_if],
+      [Keyword.for("direct_import"), eval_direct_import],
+      [Keyword.for("import"), eval_import],
+      [Keyword.for("export"), eval_export],
+      [Keyword.for("export_default"), eval_export_default],
+      [Keyword.for("let"), eval_let],
+      [Keyword.for("if_let"), eval_if_let],
+      [Keyword.for("return"), eval_return],
+      [Keyword.for("protocol_def"), eval_protocol],
+      [Keyword.for("for_loop"), eval_for_loop],
+      [Keyword.for("id_assign"), eval_id_assign],
+      [Keyword.for("while_loop"), eval_while_loop],
+      [Keyword.for("loop"), eval_loop],
+      [Keyword.for("while_let_loop"), eval_while_let_loop],
+      [Keyword.for("continue"), eval_continue],
+      [Keyword.for("break"), eval_break],
+      [Keyword.for("try"), eval_try],
+    ])
+  );
+  if (eval_fn[Meta.as_bool]()) {
+    let __coil_temp;
+    return eval_fn[invoke](node)[Algebra["+"]](";");
+  } else {
+    let __coil_temp;
+    return eval_expr[invoke](node);
+  }
 };
 export let eval_ast = function (ast) {
-  ast = ast ?? nil;
+  ast ??= nil;
   let __coil_temp;
-  return "let __coil_temp;\n"[Algebra["+"]](
+  return str[invoke](
+    "let __coil_temp;\n",
     dot(dot(ast, map)[invoke](eval_statement), join)[invoke]("\n")
   );
 };
 export let lex = function (string) {
-  string = string ?? nil;
+  string ??= nil;
   let __coil_temp;
   return lexer[invoke](string);
 };
 let coll_view = function (tokens) {
-  tokens = tokens ?? nil;
+  tokens ??= nil;
   let __coil_temp;
   return CollectionView[Meta.create]([tokens, 0]);
 };
 export let lex_and_parse = function (string) {
-  string = string ?? nil;
+  string ??= nil;
   let __coil_temp;
   return dot(string, pipe)[invoke](lexer, coll_view, parse_tokens);
 };
 export let compile = function (string) {
-  string = string ?? nil;
+  string ??= nil;
   let __coil_temp;
   return dot(string, pipe)[invoke](lexer, coll_view, parse_tokens, eval_ast);
 };
-let [src_file_name, out_name] = dot(Deno, "args");
+let [src_file_name, out_name, ...args] = dot(Deno, "args");
 let src = dot(Deno, "readTextFileSync")[invoke](src_file_name);
-let imports = `
+let std_prefix = ".";
+var __coil_if_let_temp =
+  dot(args, find)[invoke](dot(_, has__q)[invoke]("--std-prefix")) ?? nil;
+if (__coil_if_let_temp[Meta.as_bool]()) {
+  let arg = __coil_if_let_temp;
+  let __coil_temp;
+  std_prefix = dot(dot(arg, "split")[invoke]("--std-prefix="), last)[invoke]();
+}
+let imports = str[invoke](
+  `
 \"use strict\";
-import { ObjectLiteral, Nil, nil, Keyword, dot } from './src/std/globals.js'
+import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b } from '`,
+  std_prefix,
+  `/src/std/globals.js'
 import Meta, {
   nil__q, is_a__q, create, from_entries, __equals__,
   __not_equals__, exists__q, as_bool, log, invoke, pipe
-} from './src/std/meta.js';
+} from '`,
+  std_prefix,
+  `/src/std/meta.js';
 import Iter, {
   take, until, skip, find, zip, reduce, map, flat_map, each,
   filter, reject, all__q, any__q, split, compact, join, into, compose
-} from './src/std/iter/index.js';
+} from '`,
+  std_prefix,
+  `/src/std/iter/index.js';
 import Algebra, {
   __plus__, __minus__, __divide__,
   __multiply__, __exponent__, __modulo__,
   __greater_than__, __greater_than_or_equal_to__,
   __less_than__, __less_than_or_equal_to__,
-} from './src/std/algebra.js';
-import Bool, { negate } from './src/std/bool.js';
-import Collection, { at, len, empty__q, has__q } from './src/std/collection.js';
-import OrderedSequence, { first, last } from './src/std/ordered_sequence.js';
+} from '`,
+  std_prefix,
+  `/src/std/algebra.js';
+import Bool, { negate } from '`,
+  std_prefix,
+  `/src/std/bool.js';
+import Collection, { at, len, empty__q, has__q } from '`,
+  std_prefix,
+  `/src/std/collection.js';
+import OrderedSequence, { first, last } from '`,
+  std_prefix,
+  `/src/std/ordered_sequence.js';
 import {
   inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum,
   InclusiveRangeNoMinimum, ExclusiveRangeNoMaximum, ExclusiveRangeNoMinimum
-} from './src/std/range.js';
-import Record, { keys, values } from './src/std/record.js';
-import Underscore, { _ } from './src/std/underscore.js';
-import CondMap from './src/std/cond_map.js'
-`;
+} from '`,
+  std_prefix,
+  `/src/std/range.js';
+import Record, { keys, values } from '`,
+  std_prefix,
+  `/src/std/record.js';
+import Underscore, { _ } from '`,
+  std_prefix,
+  `/src/std/underscore.js';
+import CondMap from '`,
+  std_prefix,
+  `/src/std/cond_map.js'
+`
+);
 dot(Deno, "writeTextFile")[invoke](
   out_name,
   imports[Algebra["+"]](compile[invoke](src))[Algebra["+"]]("\n")

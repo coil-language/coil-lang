@@ -3,14 +3,8 @@
   "version": "0.1.0",
   "description": "Compiler for the coil programming language",
   "main": "dist/compiler.mjs",
-  "directories": {
-    "test": "test"
-  },
   "scripts": {
-    "test": "bash coil_test",
-    "rebuild": "bash rebuild_compiler",
-    "compile": "deno run --allow-read --allow-write ./dist/compiler.mjs $1 $2 $3",
-    "eval": "npm run compile $1 $2 && deno run $2"
+    "rebuild": "bash rebuild_compiler"
   },
   "repository": {
     "type": "git",

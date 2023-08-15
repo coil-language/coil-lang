@@ -1057,7 +1057,7 @@ fn eval_while_let_loop({test_expr, assign_expr, body}) = str(
   "while (__coil_while_let_temp[Meta.as_bool]()) {\n"
     "let " eval_assign_expr(assign_expr) " = __coil_while_let_temp;\n"
     eval_ast(body) "\n"
-    "__coil_while_let_temp = " eval_expr(test_expr) ";\n"
+    "__coil_while_let_temp = " eval_expr(test_expr) " ?? nil;\n"
   "}")
 
 fn eval_if_let({expr, assign_expr, pass, fail}) = str(
@@ -1103,7 +1103,7 @@ fn eval_nil_destructure_args(args) {
   if args {  
     return args
       .flatMap(arg_names)
-      ::map(fn (name) = str(resolve_name(name) " = " resolve_name(name) " ?? nil;"))
+      ::map(fn (name) = str(resolve_name(name) " ??= nil;"))
       ::join("\n")
   } else {
     return ""
@@ -1322,9 +1322,16 @@ fn eval_try(node) {
   return str("try {\n" body_js "\n" "}" catch_js finally_js)
 }
 
-fn eval_import({assign_exprs, path}) =
-  str("import * as __coil_temp from \"" path.value.slice(1, -1) "\";\n"
-    "let {" assign_exprs::map_join(eval_assign_expr ", ") "} = __coil_temp")
+fn eval_import({assign_exprs, path}) {
+  let pathname = path.value.slice(1, -1)
+  let temp_var_name = pathname
+    .replaceAll("/" "_slash_")
+    .replaceAll("." "_dot_")
+    .replaceAll("-" "_dash_")
+    .replaceAll("~" "_tilde_")
+  return str("import * as " temp_var_name " from \"" pathname "\";\n"
+    "let {" assign_exprs::map_join(eval_assign_expr ", ") "} = " temp_var_name)
+}
 
 fn eval_export({statement}) = str("export " eval_statement(statement))
 
@@ -1370,31 +1377,31 @@ let [src_file_name, out_name] = Deno.args
 let src = Deno.readTextFileSync(src_file_name)
 let imports = "
 \"use strict\";
-import { ObjectLiteral, Nil, nil, Keyword, dot } from './src/std/globals.js'
+import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b } from '../src/std/globals.js'
 import Meta, {
   nil__q, is_a__q, create, from_entries, __equals__,
   __not_equals__, exists__q, as_bool, log, invoke, pipe
-} from './src/std/meta.js';
+} from '../src/std/meta.js';
 import Iter, {
   take, until, skip, find, zip, reduce, map, flat_map, each,
   filter, reject, all__q, any__q, split, compact, join, into, compose
-} from './src/std/iter/index.js';
+} from '../src/std/iter/index.js';
 import Algebra, {
   __plus__, __minus__, __divide__,
   __multiply__, __exponent__, __modulo__,
   __greater_than__, __greater_than_or_equal_to__,
   __less_than__, __less_than_or_equal_to__,
-} from './src/std/algebra.js';
-import Bool, { negate } from './src/std/bool.js';
-import Collection, { at, len, empty__q, has__q } from './src/std/collection.js';
-import OrderedSequence, { first, last } from './src/std/ordered_sequence.js';
+} from '../src/std/algebra.js';
+import Bool, { negate } from '../src/std/bool.js';
+import Collection, { at, len, empty__q, has__q } from '../src/std/collection.js';
+import OrderedSequence, { first, last } from '../src/std/ordered_sequence.js';
 import {
   inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum,
   InclusiveRangeNoMinimum, ExclusiveRangeNoMaximum, ExclusiveRangeNoMinimum
-} from './src/std/range.js';
-import Record, { keys, values } from './src/std/record.js';
-import Underscore, { _ } from './src/std/underscore.js';
-import CondMap from './src/std/cond_map.js'
+} from '../src/std/range.js';
+import Record, { keys, values } from '../src/std/record.js';
+import Underscore, { _ } from '../src/std/underscore.js';
+import CondMap from '../src/std/cond_map.js'
 "
 
 Deno.writeTextFile(out_name, imports + compile(src) + "\n")
