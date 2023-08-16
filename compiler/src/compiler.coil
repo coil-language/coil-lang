@@ -30,42 +30,35 @@ fn* CollectionView:prototype.(Symbol:iterator)
   end
 end
 
-fn compile(string)
+fn compile(string std_prefix)
   let tokens = string.pipe(tokenize)
   let collection_view = CollectionView[tokens 0]
   let ast = parse(collection_view)
-  return emit(ast)
+  let js = emit(ast)
+  let imports = str("
+  \"use strict\";
+  import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b } from '" std_prefix "/src/std/globals.js'
+  import Meta, {
+    nil__q, is_a__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe
+  } from '" std_prefix "/src/std/meta.js';
+  import Iter, {
+    take, until, skip, find, zip, reduce, map, flat_map, each,
+    filter, reject, all__q, any__q, split, compact, join, into, compose
+  } from '" std_prefix "/src/std/iter/index.js';
+  import Algebra from '" std_prefix "/src/std/algebra.js';
+  import Bool, { negate } from '" std_prefix "/src/std/bool.js';
+  import Collection, { at, len, empty__q, has__q } from '" std_prefix "/src/std/collection.js';
+  import OrderedSequence, { first, last } from '" std_prefix "/src/std/ordered_sequence.js';
+  import {
+    inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum,
+    InclusiveRangeNoMinimum, ExclusiveRangeNoMaximum, ExclusiveRangeNoMinimum
+  } from '" std_prefix "/src/std/range.js';
+  import Record, { keys, values } from '" std_prefix "/src/std/record.js';
+  import Underscore, { _ } from '" std_prefix "/src/std/underscore.js';
+  import CondMap from '" std_prefix "/src/std/cond_map.js'
+  ")
+
+  return js + imports
 end
 
-let [src_file_name, out_name, ...args] = Deno:args
-let src = Deno:readTextFileSync(src_file_name)
-
-let std_prefix = "."
-if let arg = args.find(_.has?("--std-prefix"))
-  std_prefix = arg:split("--std-prefix=").last()
-end
-
-let imports = str("
-\"use strict\";
-import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b } from '" std_prefix "/src/std/globals.js'
-import Meta, {
-  nil__q, is_a__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe
-} from '" std_prefix "/src/std/meta.js';
-import Iter, {
-  take, until, skip, find, zip, reduce, map, flat_map, each,
-  filter, reject, all__q, any__q, split, compact, join, into, compose
-} from '" std_prefix "/src/std/iter/index.js';
-import Algebra from '" std_prefix "/src/std/algebra.js';
-import Bool, { negate } from '" std_prefix "/src/std/bool.js';
-import Collection, { at, len, empty__q, has__q } from '" std_prefix "/src/std/collection.js';
-import OrderedSequence, { first, last } from '" std_prefix "/src/std/ordered_sequence.js';
-import {
-  inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum,
-  InclusiveRangeNoMinimum, ExclusiveRangeNoMaximum, ExclusiveRangeNoMinimum
-} from '" std_prefix "/src/std/range.js';
-import Record, { keys, values } from '" std_prefix "/src/std/record.js';
-import Underscore, { _ } from '" std_prefix "/src/std/underscore.js';
-import CondMap from '" std_prefix "/src/std/cond_map.js'
-")
-
-Deno:writeTextFile(out_name, imports + compile(src) + "\n")
+export default compile

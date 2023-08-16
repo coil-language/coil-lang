@@ -1,0 +1,11 @@
+import compile from "./compiler.mjs"
+
+let [src_file_name, out_name, ...args] = Deno:args
+let src = Deno:readTextFileSync(src_file_name)
+
+let std_prefix = "."
+if let arg = args.find(_.has?("--std-prefix"))
+  std_prefix = arg:split("--std-prefix=").last()
+end
+
+Deno:writeTextFile(out_name, compile(src std_prefix) + "\n")
