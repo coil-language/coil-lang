@@ -1,2 +1,1 @@
-let {array: [a b c]} = {array: [1 2 3]}
-console.:log(a b c)
+[1 2 3].==([1 2 3]).log()

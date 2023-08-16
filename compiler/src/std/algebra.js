@@ -150,16 +150,3 @@ String.prototype[Algebra[">="]] = function (str) {
 };
 
 export default Algebra;
-
-export const {
-  "+": __plus__,
-  "-": __minus__,
-  "/": __divide__,
-  "*": __multiply__,
-  "**": __exponent__,
-  "%": __modulo__,
-  ">": __greater_than__,
-  ">=": __greater_than_or_equal_to__,
-  "<": __less_than__,
-  "<=": __less_than_or_equal_to__,
-} = Algebra;

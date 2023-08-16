@@ -229,8 +229,6 @@ export const {
   "is_a?": is_a__q,
   create,
   from_entries,
-  "==": __equals__,
-  "!=": __not_equals__,
   "exists?": exists__q,
   as_bool,
   log,

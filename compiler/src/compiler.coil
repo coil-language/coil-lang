@@ -417,14 +417,16 @@ fn parse_third_expr([lhs tokens])
   return [lhs tokens]
 end
 
+let equality_ops = Set[:double_eq :not_eq]
+
 fn parse_eq_op(tokens, lhs) = Parser[
   Init[{type: :equality_op, lhs: lhs}]
-  Either[Set[:double_eq :not_eq] :op]
+  Either[equality_ops :op]
   Then[parse_1_2_3_expr :rhs]
 ](tokens)
 
 fn parse_fourth_expr_step(tokens, lhs) = ParseMap{
-  Set[:double_eq :not_eq] => parse_eq_op
+  equality_ops => parse_eq_op
 }(tokens, lhs)
 
 fn parse_fourth_expr([lhs tokens])
@@ -703,6 +705,16 @@ fn parse_reassign(tokens) = Parser[
   Then[parse_expr :expr]
 ](tokens)
 
+let parse_unapplied_algebra_op = Parser[
+  Init[{type: :unapplied_algebra_op}]
+  Either[algebra_ops :op]
+]
+
+let parse_unapplied_equality_op = Parser[
+  Init[{type: :unapplied_equality_op}]
+  Either[equality_ops :op]
+]
+
 let SINGLE_EXPR_PARSE_MAP = ParseMap{
   :string_lit => parse_str
   :regex_lit => parse_regex
@@ -722,6 +734,8 @@ let SINGLE_EXPR_PARSE_MAP = ParseMap{
   Set[...valid_ids_in_all_contexts :import] => parse_id
   [:async :fn] => parse_fn
   :fn => parse_fn
+  equality_ops => parse_unapplied_equality_op
+  algebra_ops => parse_unapplied_algebra_op
 }
 
 fn parse_single_expr(tokens) = SINGLE_EXPR_PARSE_MAP(tokens)
@@ -1209,8 +1223,14 @@ fn eval_or({lhs, rhs}) = str(
 
 fn eval_reassign({name, expr}) = str(resolve_name(name) " = " eval_expr(expr))
 
+fn eval_unapplied_algebra_op({op}) = str("Algebra['" op "']")
+
+fn eval_unapplied_equality_op({op}) = str("Meta['" op "']")
+
 fn eval_expr(node) = node.at(:type).pipe(Map{
   :algebra_op => eval_algebra_op
+  :unapplied_algebra_op => eval_unapplied_algebra_op
+  :unapplied_equality_op => eval_unapplied_equality_op
   :equality_op => eval_equality_op
   :and => eval_and
   :or => eval_or
@@ -1384,19 +1404,13 @@ let imports = str("
 \"use strict\";
 import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b } from '" std_prefix "/src/std/globals.js'
 import Meta, {
-  nil__q, is_a__q, create, from_entries, __equals__, as_num,
-  __not_equals__, exists__q, as_bool, log, invoke, pipe
+  nil__q, is_a__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe
 } from '" std_prefix "/src/std/meta.js';
 import Iter, {
   take, until, skip, find, zip, reduce, map, flat_map, each,
   filter, reject, all__q, any__q, split, compact, join, into, compose
 } from '" std_prefix "/src/std/iter/index.js';
-import Algebra, {
-  __plus__, __minus__, __divide__,
-  __multiply__, __exponent__, __modulo__,
-  __greater_than__, __greater_than_or_equal_to__,
-  __less_than__, __less_than_or_equal_to__,
-} from '" std_prefix "/src/std/algebra.js';
+import Algebra from '" std_prefix "/src/std/algebra.js';
 import Bool, { negate } from '" std_prefix "/src/std/bool.js';
 import Collection, { at, len, empty__q, has__q } from '" std_prefix "/src/std/collection.js';
 import OrderedSequence, { first, last } from '" std_prefix "/src/std/ordered_sequence.js';
