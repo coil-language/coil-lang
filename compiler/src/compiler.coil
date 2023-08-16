@@ -1374,11 +1374,7 @@ fn eval_statement(node)
     :try => eval_try
   })
 
-  if eval_fn
-    return eval_fn(node) + ";"
-  else
-    return eval_expr(node)
-  end
+  return (eval_fn or eval_expr)(node) + ";"
 end
 
 export fn eval_ast(ast) =
