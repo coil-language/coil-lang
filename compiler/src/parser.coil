@@ -239,6 +239,12 @@ fn parse_meta_create(tokens lhs) = Parser[
   Chomp[:close_sq]
 ](tokens lhs)
 
+fn parse_snd_assign(tokens lhs) = Parser[
+  Init[{type: :snd_assign, lhs: lhs}]
+  Chomp[:eq]
+  Then[parse_expr :rhs]
+](tokens)
+
 fn parse_snd_expr_step(tokens, lhs) = ParseMap{
   :open_p => parse_fn_call
   :open_b => parse_meta_from_entries
@@ -264,6 +270,7 @@ fn parse_algebra_op(tokens, lhs) = Parser[
 ](tokens)
 
 fn parse_third_expr_step(tokens, lhs) = ParseMap{
+  :eq => parse_snd_assign
   algebra_ops => parse_algebra_op  
 }(tokens, lhs)
 
@@ -556,13 +563,6 @@ fn parse_anon_fn(tokens) = Parser[
   Then[parse_expr :return_expr]
 ](tokens)
 
-fn parse_reassign(tokens) = Parser[
-  Init[{type: :reassign}]
-  One[:id :name]
-  Chomp[:eq]
-  Then[parse_expr :expr]
-](tokens)
-
 let parse_unapplied_algebra_op = Parser[
   Init[{type: :unapplied_algebra_op}]
   Either[algebra_ops :op]
@@ -586,7 +586,6 @@ let SINGLE_EXPR_PARSE_MAP = ParseMap{
   :bang => parse_not
   :open_b => parse_obj
   :pipe_bar => parse_anon_fn
-  [:id :eq] => parse_reassign
   [:dot_dot :eq] => parse_prefix_inclusive_range
   :dot_dot => parse_prefix_exclusive_range
   Set[...valid_ids_in_all_contexts :import] => parse_id

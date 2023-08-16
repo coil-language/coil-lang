@@ -1,5 +1,24 @@
-[1 2 3].==([1 2 3])
-# same as
-[1 2 3] == [1 2 3]
-# because `==` is just a symbol
-console.:log(==)
+fn def_class(name properties)
+  fn Ctor(...args)
+    for [property arg] of properties.zip(args)
+      this.property = arg
+    end
+  end
+
+  Object:defineProperty(Ctor "name" {value: name:value})
+
+  return {
+    fn Meta:from_entries(entries)
+      for [key f] of entries
+        Ctor:prototype.key = f
+      end
+      return Ctor
+    end
+  }
+end
+
+let Point = def_class(:Point [:x :y]){
+  fn +({x, y}) = Point[this:x + x, this:y + y]  
+}
+
+(Point[1 2] + Point[2 3]).log()

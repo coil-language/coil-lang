@@ -274,11 +274,11 @@ fn eval_or({lhs, rhs}) = str(
   ", __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : " eval_expr(rhs) ")"
 )
 
-fn eval_reassign({name, expr}) = str(resolve_name(name) " = " eval_expr(expr))
-
 fn eval_unapplied_algebra_op({op}) = str("Algebra['" op "']")
 
 fn eval_unapplied_equality_op({op}) = str("Meta['" op "']")
+
+fn eval_snd_assign({lhs, rhs}) = str(eval_name_expr(lhs) " = " eval_expr(rhs))
 
 fn eval_expr(node) = node.at(:type).pipe(Map{
   :algebra_op => eval_algebra_op
@@ -289,7 +289,7 @@ fn eval_expr(node) = node.at(:type).pipe(Map{
   :or => eval_or
   :str => eval_str
   :dot => eval_dot
-  :reassign => eval_reassign
+  :snd_assign => eval_snd_assign
   :keyword_lookup => eval_keyword_lookup
   :object_literal => eval_object_literal
   :regex_lit => eval_regex_lit
