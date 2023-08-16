@@ -9,11 +9,12 @@ fn def_class(name properties)
 
   return {
     fn Meta:from_entries(entries)
-      for [key f] of entries
-        Ctor:prototype.key = f
+      for [key value] of entries
+        Ctor:prototype.key = value
       end
       return Ctor
     end
+    fn Meta:create(args) = Ctor[...args]
   }
 end
 
