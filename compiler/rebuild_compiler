@@ -1,2 +1,6 @@
 #!sh
-deno run --allow-read --allow-write ./dist/compiler.mjs ./src/compiler.coil ./dist/compiler.mjs --std-prefix=..
+deno run --allow-read --allow-write ./dist/compiler.mjs ./src/tokenizer.coil ./dist/tokenizer.mjs --std-prefix=.. &
+deno run --allow-read --allow-write ./dist/compiler.mjs ./src/parser.coil ./dist/parser.mjs --std-prefix=.. &
+deno run --allow-read --allow-write ./dist/compiler.mjs ./src/emit.coil ./dist/emit.mjs --std-prefix=.. &
+deno run --allow-read --allow-write ./dist/compiler.mjs ./src/compiler.coil ./dist/compiler.mjs --std-prefix=.. &
+wait

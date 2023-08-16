@@ -1,0 +1,436 @@
+fn str(...args) = args.map(|arg| arg:toString()).join("")
+
+fn resolve_name(name)
+  if name
+    return name
+      .:replaceAll("?", "__q")
+      .:replaceAll("!", "__b")
+      .:replaceAll(">", "_lt_")
+      .:replaceAll("-", "_")
+  else
+    return name
+  end
+end
+
+fn eval_if_branch(branch)
+  if branch.nil?()
+    return ""
+  else if branch.:type == :else
+    return str(" else {\n" eval_ast(branch.:body or []) "\n}")
+  else if branch.:type == :else_if
+    return str(
+      " else if (" eval_expr(branch.at(:expr)) ") {\n"
+        eval_ast(branch.at(:pass) or [])
+      "\n}" eval_if_branch(branch.at(:fail))
+    )
+  else
+    raise!(Error["Expected else if"])
+  end
+end
+
+fn eval_if({expr, pass, fail}) = str(
+  "if (" eval_expr(expr) "[Meta.as_bool]()) {\n"
+    eval_ast(pass) "\n"
+  "}" eval_if_branch(fail)
+)
+
+fn eval_str({value})
+  value = value.:slice(1, -1)
+  if value.:includes("\n")
+    return str("`" value "`")
+  else
+    return str("\"" value "\"")
+  end
+end
+
+fn eval_fn_call({lhs args}) = 
+  str(eval_expr(lhs) "[invoke](" args.map(eval_expr).join(", ") ")")
+
+fn eval_id_assign_name({name}) = resolve_name(name)
+
+fn eval_spread_assign({name}) = str("..." resolve_name(name))
+
+fn eval_array_deconstruction_entry(node) = node.at(:type).pipe(Map{
+  :id_assign => eval_id_assign_name
+  :spread_assign => eval_spread_assign
+  :array_deconstruction => eval_array_deconstruction_names
+  :object_deconstruction => eval_object_deconstruction_names
+})(node)
+
+fn eval_array_deconstruction_names({entries}) =
+  str("[" entries.map(eval_array_deconstruction_entry).join(", ") "]")
+
+fn eval_obj_reg_entry({name}) = str("'" name "': " resolve_name(name))
+
+fn eval_obj_entry_rename({old_name, new_name}) =
+  str("'" old_name "': " resolve_name(new_name))
+
+fn eval_obj_assign_expr({property, assign_expr}) =
+  str("'" property "': " eval_assign_expr(assign_expr))
+
+fn eval_obj_deconstruction_entry(node) = node.at(:type).pipe(Map{
+  :obj_reg_entry => eval_obj_reg_entry
+  :obj_assign_expr => eval_obj_assign_expr
+  :obj_entry_rename => eval_obj_entry_rename
+  :spread_assign => eval_spread_assign
+  :object_deconstruction => eval_object_deconstruction_names
+})(node)
+
+fn eval_object_deconstruction_names({entries}) =
+  str("{" entries.map(eval_obj_deconstruction_entry).join(", ") "}")
+
+fn eval_this_assign({name}) = resolve_name(name)
+
+fn eval_this_spread_assign({name}) = str("..." resolve_name(name))
+
+fn eval_assign_all_as({name}) = str("* as " name)
+
+fn eval_assign_expr(node) = node.at(:type).pipe(Map{
+  :id_assign => eval_id_assign_name
+  :spread_assign => eval_spread_assign
+  :array_deconstruction => eval_array_deconstruction_names
+  :object_deconstruction => eval_object_deconstruction_names
+  :this_assign => eval_this_assign
+  :this_spread_assign => eval_spread_assign
+})(node)
+
+fn eval_while_let_loop({test_expr, assign_expr, body}) = str(
+  "var __coil_while_let_temp = " eval_expr(test_expr) " ?? nil;\n"
+  "while (__coil_while_let_temp[Meta.as_bool]()) {\n"
+    "let " eval_assign_expr(assign_expr) " = __coil_while_let_temp;\n"
+    eval_ast(body) "\n"
+    "__coil_while_let_temp = " eval_expr(test_expr) " ?? nil;\n"
+  "}")
+
+fn eval_if_let({expr, assign_expr, pass, fail}) = str(
+  "var __coil_if_let_temp = " eval_expr(expr) " ?? nil;\n"
+  "if (__coil_if_let_temp[Meta.as_bool]()) {\n"
+    "let " eval_assign_expr(assign_expr) " = __coil_if_let_temp;\n"
+    eval_ast(pass) "\n"
+  "}" eval_if_branch(fail)
+)
+
+fn eval_spread({expr}) = str("..." eval_expr(expr))
+
+fn eval_let({assign_expr, rhs}) =
+  str("let " eval_assign_expr(assign_expr) " = " eval_expr(rhs))
+
+fn eval_array({elements}) = str("[" elements.map(eval_expr).join(", ") "]")
+
+fn eval_this_assignments(args) = args
+  .filter(:type Set[:this_assign :this_spread_assign])
+  .map(|{name}| str("this['" name "'] = " resolve_name(name) ";\n"))
+  .into("")
+
+fn eval_name_expr(node) = node.at(:type).pipe(Map{
+  fn :dot({lhs rhs}) = str(eval_name_expr(lhs) "[" eval_name_expr(rhs) "]")
+  fn :keyword_lookup({lhs, property}) = str(eval_name_expr(lhs) "['" property  "']")
+} |eval_fn| eval_fn or eval_expr)(node)
+
+fn entries_arg_names({entries}) =
+  entries:flatMap(arg_names)
+
+fn arg_names(node) = node.at(:type).pipe(Map{
+  :array_deconstruction => entries_arg_names
+  :object_deconstruction => entries_arg_names
+  fn :id_assign({name}) = [name]
+  fn :obj_reg_entry({name}) = [name]
+  fn :obj_entry_rename({new_name}) = [new_name]
+  fn :spread_assign({name}) = [name]
+  fn :obj_str_rename_entry({new_name}) = [new_name]
+  fn :this_assign({name}) = [name]
+  fn :this_spread_assign({name}) = [name]
+})(node)
+
+fn eval_nil_destructure_args(args)
+  if args
+    return args:flatMap(arg_names)
+      .map(|name| str(resolve_name(name) " ??= nil;"))
+      .join("\n")
+  else
+    return ""
+  end
+end
+
+fn eval_fn_expr({is_async? generator? args body}) = str(
+  (is_async? and "async ")
+  "function "
+    (generator? and "*")
+    "(" (args or []).map(eval_assign_expr).join(", ") ") {\n"
+    eval_this_assignments(args or [])
+    eval_nil_destructure_args(args or [])
+    eval_ast(body)
+  "}")
+
+fn eval_fn(node) = str(
+  (node:name_expr:type == :id_lookup and "let ") or ""
+  eval_name_expr(node:name_expr) " = "
+  eval_fn_expr(node)
+)
+
+fn eval_obj_fn({name generator? is_async? args body}) =
+  str((is_async? and "async ")
+      (generator? and "*")
+      "['" name "'](" args.map(eval_assign_expr).join(", ") ") {\n"
+      eval_ast(body) "\n}")
+
+fn eval_id_lookup({name}) = resolve_name(name)
+
+fn eval_num({value}) = str("(" value ")")
+
+fn eval_double_equals({lhs, rhs}) =
+  str(eval_expr(lhs) "[Equal['==']](" eval_expr(rhs) ")")
+
+fn eval_not_equals({lhs, rhs}) = str(eval_expr(lhs) "[Equal['!=']](" eval_expr(rhs) ")")
+
+fn eval_not({expr}) = str(eval_expr(expr) "[Bool.negate]()")
+
+fn eval_meta_from_entries({lhs entries}) = 
+  str(eval_expr(lhs) "[Meta.from_entries](["
+    entries.map(eval_record_entry).join(", ") "])")
+
+fn eval_meta_create({lhs, entries}) =
+  str(eval_expr(lhs) "[Meta.create]([" entries.map(eval_expr).join(", ") "])")
+
+fn eval_await({expr}) = str("await " eval_expr(expr))
+
+fn eval_yield({star? expr}) = str("yield" (star? and "*") " " eval_expr(expr))
+
+fn eval_paren_expr({expr}) = str("(" eval_expr(expr) ")")
+
+fn eval_keyword({value}) = str("Keyword.for(\"" value  "\")")
+
+fn eval_regular_record_entry({key_expr value_expr}) =
+  str("[" eval_expr(key_expr) ", " eval_expr(value_expr) "]")
+
+fn eval_keyword_record_entry({name expr}) =
+  str("[" eval_keyword({value: name}) ", " eval_expr(expr) "]")
+
+fn eval_fn_record_entry(fn_node) =
+  str("[" eval_expr(fn_node:name_expr) ", " eval_fn_expr(fn_node) "]")
+
+fn eval_record_entry(node) = node.at(:type).pipe(Map{
+  :regular_record_entry => eval_regular_record_entry
+  :keyword_record_entry => eval_keyword_record_entry
+  :spread => eval_spread
+  :fn => eval_fn_record_entry
+})(node)
+
+fn eval_inclusive_range({lhs, rhs})
+  if rhs
+    return str("new InclusiveRange(" eval_expr(lhs) ", " eval_expr(rhs) ")")
+  else
+    return str("new InclusiveRangeNoMaximum(" eval_expr(lhs) ")")
+  end
+end
+
+fn eval_exclusive_range({lhs, rhs})
+  if rhs
+    return str("new ExclusiveRange(" eval_expr(lhs) ", " eval_expr(rhs) ")")
+  else
+    return str("new ExclusiveRangeNoMaximum(" eval_expr(lhs) ")")
+  end
+end
+
+fn eval_regex_lit({value}) = value
+
+fn eval_prefix_exclusive_range({expr}) = str("new ExclusiveRangeNoMinimum(" eval_expr(expr) ")") 
+
+fn eval_prefix_inclusive_range({expr}) = str("new InclusiveRangeNoMinimum(" eval_expr(expr) ")")
+
+fn eval_dot({lhs, rhs}) = str("dot(" eval_expr(lhs) ", " eval_expr(rhs) ")")
+
+fn eval_keyword_lookup({lhs property}) =
+  str("dot(" eval_expr(lhs) ", '" property "')")
+
+fn eval_object_literal({entries}) = str(
+  "ObjectLiteral[Meta.from_entries](["
+    entries.map(eval_record_entry).join(", ")
+  "])"
+)
+
+fn eval_anon_fn({args, return_expr}) = str(
+  "(" args.map(eval_assign_expr).join(", ") ") => {\n"
+    eval_nil_destructure_args(args)
+    "return " eval_expr(return_expr) ";"
+  "}"
+)
+
+fn eval_algebra_op({lhs, op, rhs}) = str(
+  eval_expr(lhs) "[Algebra[\"" op "\"]](" eval_expr(rhs) ")"
+)
+
+fn eval_equality_op({lhs, op, rhs}) = str(
+  eval_expr(lhs) "[Meta[\"" op "\"]](" eval_expr(rhs)")"
+)
+
+fn eval_and({lhs, rhs}) = str(
+  "(__coil_temp = {left: " eval_expr(lhs) "}"
+  ", __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = " eval_expr(rhs) ", __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left)"
+)
+
+fn eval_or({lhs, rhs}) = str(
+  "(__coil_temp = {left: " eval_expr(lhs) "}"
+  ", __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : " eval_expr(rhs) ")"
+)
+
+fn eval_reassign({name, expr}) = str(resolve_name(name) " = " eval_expr(expr))
+
+fn eval_unapplied_algebra_op({op}) = str("Algebra['" op "']")
+
+fn eval_unapplied_equality_op({op}) = str("Meta['" op "']")
+
+fn eval_expr(node) = node.at(:type).pipe(Map{
+  :algebra_op => eval_algebra_op
+  :unapplied_algebra_op => eval_unapplied_algebra_op
+  :unapplied_equality_op => eval_unapplied_equality_op
+  :equality_op => eval_equality_op
+  :and => eval_and
+  :or => eval_or
+  :str => eval_str
+  :dot => eval_dot
+  :reassign => eval_reassign
+  :keyword_lookup => eval_keyword_lookup
+  :object_literal => eval_object_literal
+  :regex_lit => eval_regex_lit
+  :keyword => eval_keyword
+  :prefix_exclusive_range => eval_prefix_exclusive_range
+  :prefix_inclusive_range => eval_prefix_inclusive_range
+  :id_lookup => eval_id_lookup
+  :fn_call => eval_fn_call
+  :num => eval_num
+  :array => eval_array
+  :double_equals => eval_double_equals
+  :not_equals => eval_not_equals
+  :not => eval_not
+  :fn => eval_fn
+  :meta_from_entries => eval_meta_from_entries
+  :meta_create => eval_meta_create
+  :spread => eval_spread
+  :await => eval_await
+  :yield => eval_yield
+  :paren_expr => eval_paren_expr
+  :inclusive_range => eval_inclusive_range
+  :exclusive_range => eval_exclusive_range
+  :anon_fn => eval_anon_fn
+})(node)
+
+fn eval_return({expr})
+  if expr
+    return str("return " eval_expr(expr))
+  else
+    return "return"
+  end
+end
+
+fn eval_protocol({name, methods})
+  if methods
+    return str(
+      "const " name " = Object.freeze({"
+        methods.names
+          .map(|method| str("\"" method:name "\": Symbol(\"" name ":" method:name "\")"))
+          .join(",\n")
+      "})"
+    )
+  else
+    return str("const " resolve_name(name) " = Symbol(\"" name "\")")
+  end
+end
+
+fn eval_for_loop({is_await? assign_expr iterable_expr body}) = 
+  str("for "
+      (is_await? and "await ")
+      " (let " eval_assign_expr(assign_expr) " of "
+      eval_expr(iterable_expr) ") {\n"
+        eval_ast(body) "\n"
+      "}")
+
+fn eval_id_assign({name, expr}) = str(resolve_name(name) " = " eval_expr(expr))
+
+fn eval_while_loop({test_expr, body}) =
+  str("while (" eval_expr(test_expr) "[Meta.as_bool]()) {\n" eval_ast(body) "\n}")
+
+fn eval_loop({body}) = str("while (true) {\n" eval_ast(body) "\n}")
+
+fn eval_continue() = "continue"
+
+fn eval_break() = "break"
+
+fn eval_try(node)
+  let body_js = node.at(:body).pipe(eval_ast)
+  let catch_js = ""
+  let finally_js = ""
+  if node.has?(:catch)
+    let {name, body} = node.at(:catch)
+    catch_js = str(" catch (" name ") {\n" eval_ast(body) "\n}")
+  end
+  if node.has?(:finally)
+    let {body} = node.at(:finally)
+    finally_js = str(" finally {\n" eval_ast(body) "\n}")
+  end
+  return str("try {\n" body_js "\n" "}" catch_js finally_js)
+end
+
+fn get_deconstructed_obj_entry_name(node) =
+  Map{:obj_reg_entry => :name
+      :obj_entry_rename => :old_name}
+    .at(node.at(:type))
+    .pipe(node)
+
+fn get_deconstructed_array_entry_name(node) =
+  Map{:id_assign => :name}.at(node.at(:type)).pipe(node)
+
+fn eval_import_deconstruction_entry(node) = node.pipe(:type Map{
+  fn :obj_reg_entry({name}) = resolve_name(name)
+  fn :obj_entry_rename({old_name, new_name}) =
+    str(resolve_name(old_name) " as " resolve_name(new_name))
+})(node)
+
+fn eval_import_deconstruction_expr({entries}) =
+  str("{" entries.map(eval_import_deconstruction_entry).join(", ") "}")
+
+fn eval_import_assign_exprs(node) = node.pipe(:type Map{
+  :id_assign => eval_id_assign_name
+  :object_deconstruction => eval_import_deconstruction_expr
+  :assign_all_as => eval_assign_all_as
+})(node)
+
+fn eval_import({assign_expr, path}) =
+  str("import "
+    eval_import_assign_exprs(assign_expr)
+    " from \"" path:value:slice(1, -1) "\"")
+
+fn eval_export({statement}) = str("export " eval_statement(statement))
+
+fn eval_export_default({expr}) = str("export default " eval_expr(expr))
+
+fn eval_direct_import({path}) = str("import " path)
+
+fn eval_statement(node)
+  let eval_fn = node.at(:type).pipe(Map{
+    :if => eval_if
+    :direct_import => eval_direct_import
+    :import => eval_import
+    :export => eval_export
+    :export_default => eval_export_default
+    :let => eval_let
+    :if_let => eval_if_let
+    :return => eval_return
+    :protocol_def => eval_protocol
+    :for_loop => eval_for_loop
+    :id_assign => eval_id_assign
+    :while_loop => eval_while_loop
+    :loop => eval_loop
+    :while_let_loop => eval_while_let_loop
+    :continue => eval_continue
+    :break => eval_break
+    :try => eval_try
+  })
+
+  return (eval_fn or eval_expr)(node) + ";"
+end
+
+fn eval_ast(ast) =
+  str("let __coil_temp;\n" ast.map(eval_statement).join("\n"))
+
+export default eval_ast
