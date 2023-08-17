@@ -1,4 +1,4 @@
-import Meta from "./meta.js";
+import Meta from "./meta.mjs";
 
 class CondMap {
   constructor(entries) {

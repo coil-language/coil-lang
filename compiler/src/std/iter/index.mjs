@@ -1,5 +1,6 @@
-import Algebra from "../algebra.js";
-import Meta from "../meta.js";
+import Algebra from "../algebra.mjs";
+import { ObjectLiteral } from "../globals.mjs";
+import Meta from "../meta.mjs";
 
 export function compose(...fns) {
   return (arg) => {
@@ -208,6 +209,10 @@ String.prototype[Iter.collect] = function (iterable) {
   return this[Algebra["+"]](
     iterable[reduce]((acc, cur) => acc[Algebra["+"]](cur), "")
   );
+};
+
+ObjectLiteral.prototype[Iter.collect] = function (entries) {
+  return new ObjectLiteral([...this[Symbol.iterator](), ...entries]);
 };
 
 export default Iter;

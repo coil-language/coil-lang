@@ -1,52 +1,33 @@
-export fn Elem(@ctor, @attrs, @children) {}
+export protocol render
 
-// so that you can do a{href: "/users"}["User"]
-impl Meta for Elem = {
-  ["[]"]: fn (...children) =
-    Elem[this.ctor, this.attrs, (this.children || []) + children]
-      // ::log(children)
-}
+export fn Elem(@ctor, @attrs, @children) end
 
-impl Meta for Keyword = {
-  ["[]"]: fn (...children) {
-    let str = this.value
-    let [elem_name, ...classes] = str.split(".")
-    let attrs = {}
-    if classes::not_empty?() { attrs.["class"] = classes.join(" ") }
+fn Elem:prototype.(Meta:create)(children) =
+  Elem[this:ctor this:attrs children]
 
-    return Elem[elem_name, attrs, children]
-  }
-  ["{}"]: fn (attrs) {
-    attrs = attrs::into({})
-    let str = this.value
-    let [elem_name, ...classes] = str.split(".")
-    if classes::not_empty?() { attrs.["class"] = classes.join(" ") }
-    return Elem[elem_name, attrs, attrs::at(:children) ?? []]
-  }
-}
+fn Keyword:prototype.(Meta:create)(children) =
+  Elem[this:value {} children]
 
-impl Into for Elem = fn(children) =
-  Elem[this.ctor, this.attrs, this.children + children]
+fn Keyword:prototype.(Meta:from_entries)(entries)
+  let attrs = ObjectLiteral[entries]
+  return Elem[this:value, attrs, []]
+end
 
-impl Into for HTMLElement = fn(elem) = this.appendChild(elem.[Render]())
+fn HTMLElement:prototype.(Iter:collect)(elem) = 
+  this:appendChild(elem.render())
 
-export protocol Render
-
-impl Render for Elem = fn {
+fn Elem:prototype.render()
   let {ctor, attrs, children} = this
-  let elem = document.createElement(ctor)
-  for [name val] of attrs {
-    if name.startsWith("on") {
-      elem.addEventListener(name.slice(2), val::call)
-    } else {
-      elem.setAttribute(name, val)
-    }
-  }
-  elem.append(...children::keep(_)::map(render))
+  let elem = document:createElement(ctor)
+  for [name val] of attrs
+    if name:startsWith("on")
+      elem:addEventListener(name:slice(2), val.invoke)
+    else
+      elem:setAttribute(name, val)
+    end
+  end
+  elem:append(...children.filter(_).map(|item| item.render()))
   return elem
-}
+end
 
-impl Render for String = fn =
-  document.createTextNode(this)
-
-export fn render(elem) = elem.[Render]()
+fn String:prototype.render() = document:createTextNode(this)

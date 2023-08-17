@@ -1,2 +1,2 @@
 #!/bin/sh
-deno run --allow-read --allow-write ./dist/compiler.mjs $1.coil $1.js && deno run $1.js
+deno run --allow-read --allow-write ./dist/cli.mjs $1.coil $1.js && deno run $1.js

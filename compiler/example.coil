@@ -1,25 +1,8 @@
-fn def_class(name properties)
-  fn Ctor(...args)
-    for [property arg] of properties.zip(args)
-      this.property = arg
-    end
-  end
+fn Point(@x, @y) end
 
-  Object:defineProperty(Ctor "name" {value: name:value})
-
-  return {
-    fn Meta:from_entries(entries)
-      for [key value] of entries
-        Ctor:prototype.key = value
-      end
-      return Ctor
-    end
-    fn Meta:create(args) = Ctor[...args]
-  }
-end
-
-let Point = def_class(:Point [:x :y]){
-  fn +({x, y}) = Point[this:x + x, this:y + y]  
-}
+fn Point:prototype.+({x, y}) =
+  Point[this:x + x, this:y + y]
 
 (Point[1 2] + Point[2 3]).log()
+Point[1 2].+(Point[2 3]).log()
+(+).log()

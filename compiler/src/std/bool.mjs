@@ -1,4 +1,4 @@
-import { Nil } from "./globals.js";
+import { Nil } from "./globals.mjs";
 
 const Bool = Object.freeze({
   negate: Symbol("coil-lang@0.1.0/std/bool/Bool:negate"),

@@ -1,13 +1,13 @@
-import Meta from "./meta.js";
-import Iter from "./iter/index.js";
-import IterEager from "./iter/eager.js";
-import Collection from "./collection.js";
-import OrderedSequence from "./ordered_sequence.js";
-import Algebra from "./algebra.js";
-import Record from "./record.js";
-import Bool from "./bool.js";
-import { inc } from "./range.js";
-import { dot } from "./globals.js";
+import Meta from "./meta.mjs";
+import Iter from "./iter/index.mjs";
+import IterEager from "./iter/eager.mjs";
+import Collection from "./collection.mjs";
+import OrderedSequence from "./ordered_sequence.mjs";
+import Algebra from "./algebra.mjs";
+import Record from "./record.mjs";
+import Bool from "./bool.mjs";
+import { inc } from "./range.mjs";
+import { dot } from "./globals.mjs";
 
 export default class Underscore {
   constructor(transforms) {

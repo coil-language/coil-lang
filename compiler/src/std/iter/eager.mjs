@@ -1,4 +1,4 @@
-import Meta from "../meta.js";
+import Meta from "../meta.mjs";
 
 const EagerIter = Object.freeze({
   take: Symbol("coil-lang@0.1.0/std/iter/eager/Iter:take"),

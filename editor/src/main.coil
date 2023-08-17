@@ -1,229 +1,186 @@
-import {lex_and_parse, eval_ast} from "@coil-lang/compiler/src/compiler.coil"
-import {render, Render} from "./ui.coil"
-import "./css.coil"
-import {node_to_html, html_to_ast} from "./ast.coil"
+import tokenize from "@coil-lang/compiler/src/tokenizer.coil"
+import parse from "@coil-lang/compiler/src/parser.coil"
+import "./ui.coil"
 
-fn query-selector-all(...args) =
-  this.querySelectorAll(str(...args))
-
-fn query-selector(...args) =
-    this.querySelector(str(...args))
-
-
-str.kw = fn (...args) = fn (obj) = args
-  ::map(fn (arg) {
-    if arg::str?() { return arg }
-    else { return arg::call(obj) }
-  })
-  ::into("")
-
-fn eval-node(node) =
-  node.children::pipe(html-to-ast eval-ast eval)
+fn eval_node(node) =
+  node:children.pipe(html_to_ast eval_ast eval)
 
 let editor = 
-  "let a = 10 a += 20"
-    ::pipe(lex_and_parse)
-    ::map(node-to-html)
-    ::into(:div.code_block{"tabindex" => 0}[])
+  "let a = 10"
+    .pipe(tokenize)
+    .log()
+    # .map(node_to_html)
+#     ::into(:div.code_block{"tabindex" => 0}[])
 
-fn un-resolve-name(str) {
-  if str == "_" {
-    return str
-  } else {
-    return str
-      .replaceAll("__q", "?")
-      .replaceAll("__b", "!")
-      .replaceAll("_lt_", ">")
-      .replaceAll("_", "-")
-  }
-}
-
-let global-vars = Object.keys(globalThis)::map(un-resolve-name)
-  ::into(["Set"])
-
-fn lint-unused-variables {
-  document::query-selector-all("[data-warn]")
-    ::each($.removeAttribute["data-warn"])
-
-  let ids = document::query-selector-all("[data-kind=let] > [data-attr=assign_expr] [data-text]")
-    ::map(:textContent)
-    ::into([]) + global-vars
-
-  document::query-selector-all(
-    "[data-kind=id_lookup] [data-text]"
-      ids::map(str.kw(":not([data-text=\"" _ "\"])"))::into("")
-  )
-    ::each($.setAttribute["data-warn", "possibly undefined"])
-}
+:div[].log()
 
 :div[
-  :header[:h1["Coil-Lang Structural Editor (WIP)"]]
-  :a.github{href: "https://github.com/coil-language/coil-lang"}["Github"]
-  :ul.legend[  
-    :li["Eval:" :div.shortcut["Ctrl+Enter"]]
-    :li["Next Node:" :div.shortcut["Tab"]]
-    :li["Previous Node:" :div.shortcut["Shift+Tab"]]
-    :li["Nav Up:" :div.shortcut["Ctrl+p"]]
-    :li["Nav Down:" :div.shortcut["Ctrl+n"]]
-    :li["New Node:" :div.shortcut["Esc,Esc,Enter"]]
-    :button{onclick: fn = eval-node(document.querySelector(".code_block")) }["Eval"]
+  :header[:h1["Coil-Lang Structural Editor"]]
+  :a{class: "github", href: "https://github.com/coil-language/coil-lang"}["Github"]
+  :ul[  
+    :li["Eval:" :div["Ctrl+Enter"]]
+    :li["Next Node:" :div["Tab"]]
+    :li["Previous Node:" :div["Shift+Tab"]]
+    :li["Nav Up:" :div["Ctrl+p"]]
+    :li["Nav Down:" :div["Ctrl+n"]]
+    :li["New Node:" :div["Esc,Esc,Enter"]]
+    :button{
+      fn :onclick() = eval_node(document:querySelector(".code_block"))
+    }["Eval"]
   ]
-  editor
+  # editor
 ]
-  ::into(document.body)
+  .into(document:body)
 
-lint-unused-variables()
+# let block = document.querySelector(".code_block")
 
-let block = document.querySelector(".code_block")
+document:addEventListener("keydown" fn (e)
+  if e:key == "Enter" and (e:ctrlKey or e:metaKey)
+    # let root = e:target:closest(".code_block > [data-kind]")
+    # root:setAttribute("data-evaluated", true)
+    # setTimeout(|| root:removeAttribute("data-evaluated"), 1000)
+    # eval_node({children: [root]})
+  else if e:key == "l" and e:ctrlKey
+    # console:clear()
+  else if e:key == "Enter"
+    # e:preventDefault()
+  else if e:code == "KeyF" and e:altKey
+    # e:preventDefault()
+    # e:target:parentNode:closest("[data-kind]")::log().focus()
+  end
+end )
 
-document.addEventListener("keydown" fn (e) {  
-  if e.key == "Enter" && (e.ctrlKey || e.metaKey) {
-    let root = e.target.closest(".code_block > [data-kind]")
-    root.setAttribute("data-evaluated", true)
-    setTimeout(fn = root.removeAttribute("data-evaluated"), 1000)
-    eval-node({children: [root]})
-  } else if e.key == "l" && e.ctrlKey {
-    console.clear()
-  } else if e.key == "Enter" {
-    e.preventDefault()
-  } else if e.code == "KeyF" && e.altKey {
-    e.preventDefault()
-    // re-implementing TODO
-    e.target.parentNode.closest("[data-kind]")::log().focus()
-  }
-})
+# let last_key = null
+# window.addEventListener("keydown" fn (e) {
+#   if Set[e.key last_key] == Set["Escape"] ||
+#     (e.key == "Enter" && e.target == document.body) {
+#     block.focus()
+#   }
+#   last_key = e.key
+# })
 
-let last_key = null
-window.addEventListener("keydown" fn (e) {
-  if Set[e.key last_key] == Set["Escape"] ||
-    (e.key == "Enter" && e.target == document.body) {
-    block.focus()
-  }
-  last_key = e.key
-})
+# fn handle_delete(e) {
+#   if Set[e.key last_key] == Set["Backspace"] && e.target.textContent.trim() == "" {
+#     let closest_node_root = e.target.closest("[data-kind]")
+#     if closest_node_root.parentNode.childNodes.length == 1 {
+#       closest_node_root.parentNode.closest("[data-kind]").remove()
+#     } else {
+#       closest_node_root.remove()
+#     }
+#   }
+# }
 
-fn handle_delete(e) {
-  if Set[e.key last_key] == Set["Backspace"] && e.target.textContent.trim() == "" {
-    let closest_node_root = e.target.closest("[data-kind]")
-    if closest_node_root.parentNode.childNodes.length == 1 {
-      closest_node_root.parentNode.closest("[data-kind]").remove()
-    } else {
-      closest_node_root.remove()
-    }
-  }
-}
+# protocol TextNodes
 
-protocol TextNodes
+# impl TextNodes for Keyword = Set[]
+# define TextNodes for :id_assign = Set["name"]
+# define TextNodes for :property_lookup = Set["property"]
+# define TextNodes for :math_op = Set["op"]
+# define TextNodes for :op_eq = Set["op"]
+# define TextNodes for :spread_assign = Set["name"]
+# define TextNodes for :keyword_record_entry = Set["name"]
 
-impl TextNodes for Keyword = Set[]
-define TextNodes for :id_assign = Set["name"]
-define TextNodes for :property_lookup = Set["property"]
-define TextNodes for :math_op = Set["op"]
-define TextNodes for :op_eq = Set["op"]
-define TextNodes for :spread_assign = Set["name"]
-define TextNodes for :keyword_record_entry = Set["name"]
+# fn resolve-name! {
+#   this.dataset.text = this.dataset.text
+#     .replaceAll("_", "-")
+#   this.textContent = this.textContent
+#     .replaceAll("_", "-")
+# }
 
-fn resolve-name! {
-  this.dataset.text = this.dataset.text
-    .replaceAll("_", "-")
-  this.textContent = this.textContent
-    .replaceAll("_", "-")
-}
+# fn register_eval(root) {
+#   root.querySelectorAll("[data-attr]:not(:has([data-attr]))")::each(fn (elem) {
+#     elem.addEventListener("blur" fn (e) {
+#       let parent = e.target.closest("[data-kind]")
+#       let kind = parent.dataset.kind::as_keyword()
+#       if e.target.dataset.attr |> kind.[TextNodes] {
+#         e.target::resolve-name!()
+#         lint-unused-variables()
+#         return
+#       } else {
+#         let out = elem.textContent::pipe(lex_and_parse).[0]::pipe(node-to-html render)
+#         if out.dataset.kind == "id_lookup" {
+#           out.querySelector("[data-text]")::resolve-name!()
+#         }
+#         let out_target = elem.closest("[data-kind]")
+#         register_eval(out)
+#         out_target.replaceWith(out)
+#         lint-unused-variables()
+#       }        
+#     })
+#   })
+# }
+# register_eval(document)
 
-fn register_eval(root) {
-  root.querySelectorAll("[data-attr]:not(:has([data-attr]))")::each(fn (elem) {
-    elem.addEventListener("blur" fn (e) {
-      let parent = e.target.closest("[data-kind]")
-      let kind = parent.dataset.kind::as_keyword()
-      if e.target.dataset.attr |> kind.[TextNodes] {
-        e.target::resolve-name!()
-        lint-unused-variables()
-        return
-      } else {
-        let out = elem.textContent::pipe(lex_and_parse).[0]::pipe(node-to-html render)
-        if out.dataset.kind == "id_lookup" {
-          out.querySelector("[data-text]")::resolve-name!()
-        }
-        let out_target = elem.closest("[data-kind]")
-        register_eval(out)
-        out_target.replaceWith(out)
-        lint-unused-variables()
-      }        
-    })
-  })
-}
-register_eval(document)
+# fn plain-node? =
+#   this.classList.contains("plain_node")
 
-fn plain-node? =
-  this.classList.contains("plain_node")
+# // navigation
+# block.addEventListener("keydown" fn (e) {
+#   fn most-recent-parent {
+#     if e.target::plain-node?() {
+#       return e.target
+#     } else {
+#       // TODO: how do we do this less ad-hoc?
+#       return e.target.closest("[data-kind=fn] > [data-attr=body] > [data-kind]")
+#         ?? e.target.closest(".code_block > [data-kind]")
+#     }
+#   }
+#   fn focus = 
+#     (this&.querySelector("[data-attr]:not(:has([data-attr]))") ?? this)
+#       &.focus()
+#   if e.key == "p" && e.ctrlKey {
+#     most-recent-parent()&.previousSibling::focus()
+#   } else if e.key == "n" && e.ctrlKey {
+#     most-recent-parent()&.nextSibling::focus()
+#   }
+# })
 
-// navigation
-block.addEventListener("keydown" fn (e) {
-  fn most-recent-parent {
-    if e.target::plain-node?() {
-      return e.target
-    } else {
-      // TODO: how do we do this less ad-hoc?
-      return e.target.closest("[data-kind=fn] > [data-attr=body] > [data-kind]")
-        ?? e.target.closest(".code_block > [data-kind]")
-    }
-  }
-  fn focus = 
-    (this&.querySelector("[data-attr]:not(:has([data-attr]))") ?? this)
-      &.focus()
-  if e.key == "p" && e.ctrlKey {
-    most-recent-parent()&.previousSibling::focus()
-  } else if e.key == "n" && e.ctrlKey {
-    most-recent-parent()&.nextSibling::focus()
-  }
-})
+# block.addEventListener("keydown" fn (e) {  
+#   if e.target != block { return handle_delete(e) }
+#   let new_node = :div.plain_node{"contenteditable" => true}[].[Render]()
+#   block.appendChild(new_node)
+#   fn reify(e) {
+#     try {
+#       let node = lex_and_parse(e.target.textContent).[0]::pipe(node-to-html render)
+#       e.target.outerHTML = node.outerHTML
+#     } catch err {
+#       console.log("there's been an error" err)
+#       new_node.classList.add("error")
+#     }
+#   }
 
-block.addEventListener("keydown" fn (e) {  
-  if e.target != block { return handle_delete(e) }
-  let new_node = :div.plain_node{"contenteditable" => true}[].[Render]()
-  block.appendChild(new_node)
-  fn reify(e) {
-    try {
-      let node = lex_and_parse(e.target.textContent).[0]::pipe(node-to-html render)
-      e.target.outerHTML = node.outerHTML
-    } catch err {
-      console.log("there's been an error" err)
-      new_node.classList.add("error")
-    }
-  }
+#   new_node.addEventListener("blur" reify)
+#   new_node.addEventListener("keydown" fn (e) {
+#     if e.key == "Enter" {
+#       reify(e)
+#     } else if e.key == "Backspace" && new_node.textContent.trim()::empty?() {
+#       new_node.remove()
+#     }
+#   })
+#   new_node.focus()
+# })
 
-  new_node.addEventListener("blur" reify)
-  new_node.addEventListener("keydown" fn (e) {
-    if e.key == "Enter" {
-      reify(e)
-    } else if e.key == "Backspace" && new_node.textContent.trim()::empty?() {
-      new_node.remove()
-    }
-  })
-  new_node.focus()
-})
+# fn register-new-node-listener(node) {
+#   node.addEventListener("keydown" fn (e) {
 
-fn register-new-node-listener(node) {
-  node.addEventListener("keydown" fn (e) {
+#   })
+# }
 
-  })
-}
-
-// needed operations
-// [x] navigation (left right up down)
-//   - navigation within a body node
-//     - how do we do this without iterating through
-//       all body-ful nodes & seeing if we are in one.
-//       I don't imagine that will be very fast ^
-//       it also is a pain to maintain
-// [-] deletion (ask parent how to delete)
-// [ ] append node (ask parent where & how to insert)
-//    - look at insertAdjacentSibling - https://developer.mozilla.org/en-US/docs/Web/API/Element/insertAdjacentElement
-// [ ] modify parent node with operator (::, +)
-//    - is this only operators?
+# // needed operations
+# // [x] navigation (left right up down)
+# //   - navigation within a body node
+# //     - how do we do this without iterating through
+# //       all body-ful nodes & seeing if we are in one.
+# //       I don't imagine that will be very fast ^
+# //       it also is a pain to maintain
+# // [-] deletion (ask parent how to delete)
+# // [ ] append node (ask parent where & how to insert)
+# //    - look at insertAdjacentSibling - https://developer.mozilla.org/en-US/docs/Web/API/Element/insertAdjacentElement
+# // [ ] modify parent node with operator (::, +)
+# //    - is this only operators?
 
 
-// UI
-// [x] displaying node information correctly
-// [x] display node information with formatting & color
-// [ ] change formatting when content is long / wrap
+# // UI
+# // [x] displaying node information correctly
+# // [x] display node information with formatting & color
+# // [ ] change formatting when content is long / wrap

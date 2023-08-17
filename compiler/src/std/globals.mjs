@@ -46,6 +46,9 @@ export class Keyword {
   [Symbol.toPrimitive]() {
     return this.value;
   }
+  toString() {
+    return this.value;
+  }
 }
 
 export function dot(lhs, rhs) {

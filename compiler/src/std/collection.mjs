@@ -1,5 +1,5 @@
-import Meta from "./meta.js";
-import { ObjectLiteral } from "./globals.js";
+import Meta from "./meta.mjs";
+import { ObjectLiteral } from "./globals.mjs";
 
 const Collection = Object.freeze({
   at: Symbol("coil-lang/@0.1.0/std/collection/Collection:at"),

@@ -1,5 +1,25 @@
+"use strict";
+import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b } from '../src/std/globals.mjs'
+import Meta, {
+  nil__q, is_a__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe
+} from '../src/std/meta.mjs';
+import Iter, {
+  take, until, skip, find, zip, reduce, map, flat_map, each,
+  filter, reject, all__q, any__q, split, compact, join, into, compose
+} from '../src/std/iter/index.mjs';
+import Algebra from '../src/std/algebra.mjs';
+import Bool, { negate } from '../src/std/bool.mjs';
+import Collection, { at, len, empty__q, has__q } from '../src/std/collection.mjs';
+import OrderedSequence, { first, last } from '../src/std/ordered_sequence.mjs';
+import {
+  inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum,
+  InclusiveRangeNoMinimum, ExclusiveRangeNoMaximum, ExclusiveRangeNoMinimum
+} from '../src/std/range.mjs';
+import Record, { keys, values } from '../src/std/record.mjs';
+import Underscore, { _ } from '../src/std/underscore.mjs';
+import CondMap from '../src/std/cond_map.mjs'
 let __coil_temp;
-import {ParseError} from "./parse_error.js";
+import {ParseError} from "./parse_error.mjs";
 import tokenize from "./tokenizer.mjs";
 import parse from "./parser.mjs";
 import emit from "./emit.mjs";
@@ -44,48 +64,26 @@ let tokens = dot(string, pipe)[invoke](tokenize);
 let collection_view = CollectionView[Meta.create]([tokens, (0)]);
 let ast = parse[invoke](collection_view);
 let js = emit[invoke](ast);
-let imports = str[invoke](`
-  \"use strict\";
-  import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b } from '`, std_prefix, `/src/std/globals.js'
-  import Meta, {
-    nil__q, is_a__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe
-  } from '`, std_prefix, `/src/std/meta.js';
-  import Iter, {
-    take, until, skip, find, zip, reduce, map, flat_map, each,
-    filter, reject, all__q, any__q, split, compact, join, into, compose
-  } from '`, std_prefix, `/src/std/iter/index.js';
-  import Algebra from '`, std_prefix, `/src/std/algebra.js';
-  import Bool, { negate } from '`, std_prefix, `/src/std/bool.js';
-  import Collection, { at, len, empty__q, has__q } from '`, std_prefix, `/src/std/collection.js';
-  import OrderedSequence, { first, last } from '`, std_prefix, `/src/std/ordered_sequence.js';
-  import {
-    inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum,
-    InclusiveRangeNoMinimum, ExclusiveRangeNoMaximum, ExclusiveRangeNoMinimum
-  } from '`, std_prefix, `/src/std/range.js';
-  import Record, { keys, values } from '`, std_prefix, `/src/std/record.js';
-  import Underscore, { _ } from '`, std_prefix, `/src/std/underscore.js';
-  import CondMap from '`, std_prefix, `/src/std/cond_map.js'
-  `);
-return js[Algebra["+"]](imports);};
+let imports = str[invoke](`\"use strict\";
+import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b } from '`, std_prefix, `/src/std/globals.mjs'
+import Meta, {
+  nil__q, is_a__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe
+} from '`, std_prefix, `/src/std/meta.mjs';
+import Iter, {
+  take, until, skip, find, zip, reduce, map, flat_map, each,
+  filter, reject, all__q, any__q, split, compact, join, into, compose
+} from '`, std_prefix, `/src/std/iter/index.mjs';
+import Algebra from '`, std_prefix, `/src/std/algebra.mjs';
+import Bool, { negate } from '`, std_prefix, `/src/std/bool.mjs';
+import Collection, { at, len, empty__q, has__q } from '`, std_prefix, `/src/std/collection.mjs';
+import OrderedSequence, { first, last } from '`, std_prefix, `/src/std/ordered_sequence.mjs';
+import {
+  inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum,
+  InclusiveRangeNoMinimum, ExclusiveRangeNoMaximum, ExclusiveRangeNoMinimum
+} from '`, std_prefix, `/src/std/range.mjs';
+import Record, { keys, values } from '`, std_prefix, `/src/std/record.mjs';
+import Underscore, { _ } from '`, std_prefix, `/src/std/underscore.mjs';
+import CondMap from '`, std_prefix, `/src/std/cond_map.mjs'
+`);
+return imports[Algebra["+"]](js);};
 export default compile;
-  "use strict";
-  import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b } from '../src/std/globals.js'
-  import Meta, {
-    nil__q, is_a__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe
-  } from '../src/std/meta.js';
-  import Iter, {
-    take, until, skip, find, zip, reduce, map, flat_map, each,
-    filter, reject, all__q, any__q, split, compact, join, into, compose
-  } from '../src/std/iter/index.js';
-  import Algebra from '../src/std/algebra.js';
-  import Bool, { negate } from '../src/std/bool.js';
-  import Collection, { at, len, empty__q, has__q } from '../src/std/collection.js';
-  import OrderedSequence, { first, last } from '../src/std/ordered_sequence.js';
-  import {
-    inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum,
-    InclusiveRangeNoMinimum, ExclusiveRangeNoMaximum, ExclusiveRangeNoMinimum
-  } from '../src/std/range.js';
-  import Record, { keys, values } from '../src/std/record.js';
-  import Underscore, { _ } from '../src/std/underscore.js';
-  import CondMap from '../src/std/cond_map.js'
-  

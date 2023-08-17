@@ -1,4 +1,4 @@
-import * as coil_lang from "@coil-lang/compiler";
+import compile from "@coil-lang/compiler/";
 const fileRegex = /\.(coil)$/;
 
 export default function coil() {
@@ -7,7 +7,7 @@ export default function coil() {
     transform(src, id) {
       if (fileRegex.test(id)) {
         return {
-          code: coil_lang.compile(src),
+          code: compile(src, "@coil-lang/compiler/"),
           map: null,
         };
       }

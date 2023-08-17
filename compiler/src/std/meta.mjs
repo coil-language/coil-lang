@@ -1,4 +1,4 @@
-import { ObjectLiteral, Keyword, Nil, nil } from "./globals.js";
+import { ObjectLiteral, Keyword, Nil, nil } from "./globals.mjs";
 
 const Meta = Object.freeze({
   "nil?": Symbol("coil-lang@0.1.0/std/meta/Meta:nil?"),

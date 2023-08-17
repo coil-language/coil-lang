@@ -12,6 +12,6 @@
     "vite": "^4.3.0-beta.2"
   },
   "dependencies": {
-    "@coil-lang/compiler": "0.0.17"
+    "@coil-lang/compiler": "0.1.2"
   }
 }
