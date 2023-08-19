@@ -465,7 +465,7 @@ let parse_not = function (tokens) {
 tokens ??= nil;let __coil_temp;
 return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("not")]])]), Chomp[Meta.create]([Keyword.for("bang")]), Then[Meta.create]([parse_expr, Keyword.for("expr")])])[invoke](tokens);};
 let parse_async_modifier = Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([])]), Chomp[Meta.create]([Keyword.for("async")])]);
-let parse_gen_modifier = Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([])]), Chomp[Meta.create]([Keyword.for("times")])]);
+let parse_gen_modifier = Parser[Meta.create]([AbortIf[Meta.create]([not_adjacent__q]), Init[Meta.create]([ObjectLiteral[Meta.from_entries]([])]), Chomp[Meta.create]([Keyword.for("times")])]);
 let parse_fn_expr_body = function (tokens) {
 tokens ??= nil;let __coil_temp;
 return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("return")]])]), Chomp[Meta.create]([Keyword.for("eq")]), Then[Meta.create]([parse_expr, Keyword.for("expr")]), FMap[Meta.create]([(node) => {
@@ -551,7 +551,7 @@ return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries](
 let parse_protocol_methods = Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("protocol_method")]])]), Chomp[Meta.create]([Keyword.for("open_b")]), Until[Meta.create]([Keyword.for("close_b"), parse_id, Keyword.for("names")]), Chomp[Meta.create]([Keyword.for("close_b")])]);
 let parse_protocol = Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("protocol_def")]])]), Chomp[Meta.create]([Keyword.for("protocol")]), One[Meta.create]([Keyword.for("id"), Keyword.for("name")]), Optional[Meta.create]([Keyword.for("open_b"), parse_protocol_methods, Keyword.for("methods")])]);
 let parse_return = Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("return")]])]), Chomp[Meta.create]([Keyword.for("return")]), Optional[Meta.create]([dot(SINGLE_EXPR_PARSE_MAP, keys)[invoke](), parse_expr, Keyword.for("expr")])]);
-let parse_await_modifier = Parser[Meta.create]([Init[Meta.create]([true]), Chomp[Meta.create]([Keyword.for("await")])]);
+let parse_await_modifier = Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([])]), Chomp[Meta.create]([Keyword.for("await")])]);
 let parse_for_loop = function (tokens) {
 tokens ??= nil;let __coil_temp;
 return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("for_loop")]])]), Chomp[Meta.create]([Keyword.for("for")]), Optional[Meta.create]([Keyword.for("await"), parse_await_modifier, Keyword.for("is_await?")]), Then[Meta.create]([parse_assign_expr, Keyword.for("assign_expr")]), Chomp[Meta.create]([Keyword.for("of")]), Then[Meta.create]([parse_expr, Keyword.for("iterable_expr")]), block[invoke](Keyword.for("body"))])[invoke](tokens);};

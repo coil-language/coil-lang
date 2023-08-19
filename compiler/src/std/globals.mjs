@@ -54,7 +54,11 @@ export class Keyword {
 export function dot(lhs, rhs) {
   let result = lhs[rhs];
   if (typeof result === "function") {
-    return result.bind(lhs);
+    let fn = result.bind(lhs);
+    for (let key in result) {
+      fn[key] = result[key]?.bind(lhs);
+    }
+    return fn;
   } else {
     return result ?? nil;
   }

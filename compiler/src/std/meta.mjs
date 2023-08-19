@@ -17,7 +17,7 @@ const Meta = Object.freeze({
 });
 
 Object.prototype[Meta.log] = function (...args) {
-  console.log(this, ...args);
+  console.log(...args, this);
   return this;
 };
 

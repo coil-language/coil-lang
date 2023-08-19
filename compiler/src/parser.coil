@@ -179,7 +179,7 @@ fn parse_dot(tokens, lhs) = Parser[
 ](tokens)
 
 fn parse_keyword_lookup(tokens, lhs) = Parser[
-  AbortIf[not_adjacent?]    
+  AbortIf[not_adjacent?]
   Init[{type: :keyword_lookup, lhs: lhs}]
   One[:keyword :property]
   FMap[|{lhs, type, property}| {lhs: lhs, type: type, property: property:slice(1)}]
@@ -470,6 +470,7 @@ let parse_async_modifier = Parser[
 ]
 
 let parse_gen_modifier = Parser[
+  AbortIf[not_adjacent?]
   Init[{}]
   Chomp[:times]
 ]
@@ -612,7 +613,7 @@ fn parse_else_branch(tokens) = Parser[
 ](tokens)
 
 fn parse_else_if_branch(tokens) = Parser[
-  Init[{type: :else_if}]  
+  Init[{type: :else_if}]
   Chomp[:else :if]
   Then[parse_expr :expr]
   UntilEither[Set[:else :end] parse_statement :pass]
@@ -673,7 +674,7 @@ let parse_return = Parser[
 ]
 
 let parse_await_modifier = Parser[
-  Init[true]
+  Init[{}]
   Chomp[:await]
 ]
 
