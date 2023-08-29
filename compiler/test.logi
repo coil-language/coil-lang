@@ -1,0 +1,4 @@
+fact person("marcelle", 10).
+fact person("jack", 11).
+
+? person(?name, ?age).
