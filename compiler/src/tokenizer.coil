@@ -43,7 +43,7 @@ fn Tokenizer:prototype.invoke(str)
       end
     end
     if !found
-      raise!(Error["No token matched."])
+      panic!("No token matched.")
     end
   end
 
@@ -54,6 +54,7 @@ let tokenize = Tokenizer{
   /^\n/ => newline
   /^\s+/ => pass
   /^\#.*/ => pass
+  /^\-\-.*/ => pass
   /^\,/ => pass
   /^\;/ => pass
   /^if\s/ => :if

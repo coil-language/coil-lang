@@ -1,10 +1,10 @@
 "use strict";
-import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b } from '../src/std/globals.mjs'
+import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b } from '../src/std/globals.mjs'
 import Meta, {
   nil__q, is_a__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe
 } from '../src/std/meta.mjs';
 import Iter, {
-  take, until, skip, find, zip, reduce, map, flat_map, each,
+  take, until, skip, find, zip, reduce, map, flat_map, each, count,
   filter, reject, all__q, any__q, split, compact, join, into, compose
 } from '../src/std/iter/index.mjs';
 import Algebra from '../src/std/algebra.mjs';
@@ -34,7 +34,7 @@ expr ??= nil;
 parser ??= nil;let __coil_temp;
 if (dot(expr, nil__q)[invoke]()[Meta.as_bool]()) {
 let __coil_temp;
-raise__b[invoke](Error[Meta.create](["Parser Failed - Expected "[Algebra["+"]](parser)]));
+panic__b[invoke]("Parser Failed - Expected ", parser);
 } else {
 let __coil_temp;
 return expr;
@@ -223,7 +223,7 @@ return [new_expr, new_tokens];
 } else {
 let __coil_temp;
 dot(console, log)[invoke](dot(dot(this, 'tokens'), first)[invoke](), dot(this, 'parse_map'));
-raise__b[invoke](Error[Meta.create](["Case Parse Failed"]));
+panic__b[invoke]("Case Parse Failed");
 };};
 let Either = function (set, kw) {
 this['set'] = set;

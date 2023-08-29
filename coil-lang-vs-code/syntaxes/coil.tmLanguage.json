@@ -35,7 +35,7 @@
       "patterns": [
         {
           "name": "comment.line.coil",
-          "begin": "(\\#).*",
+          "begin": "(--).*",
           "end": "\n"
         }
       ]

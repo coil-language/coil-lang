@@ -9,7 +9,7 @@ end
 
 fn verify_exists!(expr, parser)
   if expr.nil?()
-    raise!(Error["Parser Failed - Expected " + parser])
+    panic!("Parser Failed - Expected " parser)
   else
     return expr
   end
@@ -123,7 +123,7 @@ fn Case:prototype.parse([expr tokens])
     end
   else
     console.log(this:tokens.first(), this:parse_map)
-    raise!(Error["Case Parse Failed"])
+    panic!("Case Parse Failed")
   end
 end
 

@@ -15,6 +15,7 @@ export class Nil {
   toString() {
     return "";
   }
+  *[Symbol.iterator]() {}
 }
 
 export let nil = new Proxy(new Nil(), {
@@ -67,4 +68,8 @@ export function dot(lhs, rhs) {
 export function raise__b(error) {
   console.error(error.stack);
   throw error;
+}
+
+export function panic__b(...args) {
+  throw args.map((x) => x.toString()).join("");
 }

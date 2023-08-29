@@ -1,10 +1,10 @@
 "use strict";
-import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b } from '../src/std/globals.mjs'
+import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b } from '../src/std/globals.mjs'
 import Meta, {
   nil__q, is_a__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe
 } from '../src/std/meta.mjs';
 import Iter, {
-  take, until, skip, find, zip, reduce, map, flat_map, each,
+  take, until, skip, find, zip, reduce, map, flat_map, each, count,
   filter, reject, all__q, any__q, split, compact, join, into, compose
 } from '../src/std/iter/index.mjs';
 import Algebra from '../src/std/algebra.mjs';
@@ -45,7 +45,7 @@ let __coil_temp;
 return str[invoke](" else if (", eval_expr[invoke](dot(branch, at)[invoke](Keyword.for("expr"))), ") {\n", eval_ast[invoke]((__coil_temp = {left: dot(branch, at)[invoke](Keyword.for("pass"))}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), "\n}", eval_if_branch[invoke](dot(branch, at)[invoke](Keyword.for("fail"))));
 } else {
 let __coil_temp;
-raise__b[invoke](Error[Meta.create](["Expected else if"]));
+panic__b[invoke]("Expected else if");
 };};
 let eval_if = function ({'expr': expr, 'pass': pass, 'fail': fail}) {
 expr ??= nil;

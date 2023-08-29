@@ -24,7 +24,7 @@ fn eval_if_branch(branch)
       "\n}" eval_if_branch(branch.at(:fail))
     )
   else
-    raise!(Error["Expected else if"])
+    panic!("Expected else if")
   end
 end
 

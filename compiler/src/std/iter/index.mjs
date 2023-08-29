@@ -33,6 +33,7 @@ const Iter = Object.freeze({
   join: Symbol("coil-lang@0.1.0/std/iter/Iter:join"),
   into: Symbol("coil-lang@0.1.0/std/iter/into"),
   collect: Symbol("coil-lang@0.1.0/std/iter/collect"),
+  count: Symbol("coil-lang@0.1.0/std/iter/count"),
 });
 
 let Impl = {
@@ -195,6 +196,14 @@ Object.prototype[Iter.join] = function (separator) {
   return out;
 };
 
+Object.prototype[Iter.count] = function () {
+  let count = 0;
+  for (let _ of this) {
+    count++;
+  }
+  return count;
+};
+
 Object.prototype[Iter.into] = function (collector) {
   return collector[Iter.collect](this);
 };
@@ -276,4 +285,5 @@ export const {
   join,
   into,
   consume,
+  count,
 } = Iter;

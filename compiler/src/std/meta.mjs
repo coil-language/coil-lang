@@ -57,6 +57,10 @@ Object.prototype[Meta["!="]] = function (other) {
   return !this[Meta["=="]](other);
 };
 
+Nil.prototype[Meta["=="]] = function (other) {
+  return this === other;
+};
+
 Function.prototype[Meta["=="]] = function (other) {
   return this === other;
 };
