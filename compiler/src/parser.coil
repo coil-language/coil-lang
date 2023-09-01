@@ -564,6 +564,14 @@ fn parse_anon_fn(tokens) = Parser[
   Then[parse_expr :return_expr]
 ](tokens)
 
+fn parse_anon_body_fn(tokens) = Parser[
+  Init[{type: :anon_body_fn}]
+  Chomp[:do :pipe_bar]
+  Until[:pipe_bar parse_assign_expr :args]
+  Chomp[:pipe_bar]
+  Then[block() :body]
+](tokens)
+
 let parse_unapplied_algebra_op = Parser[
   Init[{type: :unapplied_algebra_op}]
   Either[algebra_ops :op]
@@ -587,6 +595,7 @@ let SINGLE_EXPR_PARSE_MAP = ParseMap{
   :bang => parse_not
   :open_b => parse_obj
   :pipe_bar => parse_anon_fn
+  :do => parse_anon_body_fn
   [:dot_dot :eq] => parse_prefix_inclusive_range
   :dot_dot => parse_prefix_exclusive_range
   Set[...valid_ids_in_all_contexts :import] => parse_id

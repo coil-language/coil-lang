@@ -256,6 +256,13 @@ fn eval_anon_fn({args, return_expr}) = str(
   "}"
 )
 
+fn eval_anon_body_fn({args body}) = str(
+  "(" args.map(eval_assign_expr).join(", ") ") => {\n"
+    eval_nil_destructure_args(args) "\n"
+    eval_ast(body)
+  "}"
+)
+
 fn eval_algebra_op({lhs, op, rhs}) = str(
   eval_expr(lhs) "[Algebra[\"" op "\"]](" eval_expr(rhs) ")"
 )
@@ -313,6 +320,7 @@ fn eval_expr(node) = node.at(:type).pipe(Map{
   :inclusive_range => eval_inclusive_range
   :exclusive_range => eval_exclusive_range
   :anon_fn => eval_anon_fn
+  :anon_body_fn => eval_anon_body_fn
 })(node)
 
 fn eval_return({expr})

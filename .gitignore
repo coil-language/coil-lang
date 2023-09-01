@@ -10,3 +10,4 @@ editor/**/*.ttf
 experiments/**/dist
 editor/dist
 example_v2.js
+game

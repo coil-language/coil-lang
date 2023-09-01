@@ -1,186 +1,38 @@
-import tokenize from "@coil-lang/compiler/src/tokenizer.coil"
-import parse from "@coil-lang/compiler/src/parser.coil"
-import "./ui.coil"
+import {parse} from "./parsing_utils.coil"
+import eval_ast from "@coil-lang/compiler/src/emit.coil"
+import {render} from "./ui.coil"
 
-fn eval_node(node) =
-  node:children.pipe(html_to_ast eval_ast eval)
+protocol to_html
 
-let editor = 
-  "let a = 10"
-    .pipe(tokenize)
-    .log()
-    # .map(node_to_html)
-#     ::into(:div.code_block{"tabindex" => 0}[])
+array.map:async(|item| item + 1)
 
-:div[].log()
+fn ObjectLiteral:prototype.to_html()
+  console:log(this)
+  let elem = :div{"data-type" => this:type}
+  this:type.to_html(this)
+  # elem:appendChild(...)
+  return [elem]
+end
 
-:div[
-  :header[:h1["Coil-Lang Structural Editor"]]
-  :a{class: "github", href: "https://github.com/coil-language/coil-lang"}["Github"]
-  :ul[  
-    :li["Eval:" :div["Ctrl+Enter"]]
-    :li["Next Node:" :div["Tab"]]
-    :li["Previous Node:" :div["Shift+Tab"]]
-    :li["Nav Up:" :div["Ctrl+p"]]
-    :li["Nav Down:" :div["Ctrl+n"]]
-    :li["New Node:" :div["Esc,Esc,Enter"]]
-    :button{
-      fn :onclick() = eval_node(document:querySelector(".code_block"))
-    }["Eval"]
-  ]
-  # editor
-]
-  .into(document:body)
+fn Array:prototype.to_html() =
+  this:map(|node| node.to_html())
 
-# let block = document.querySelector(".code_block")
-
-document:addEventListener("keydown" fn (e)
-  if e:key == "Enter" and (e:ctrlKey or e:metaKey)
-    # let root = e:target:closest(".code_block > [data-kind]")
-    # root:setAttribute("data-evaluated", true)
-    # setTimeout(|| root:removeAttribute("data-evaluated"), 1000)
-    # eval_node({children: [root]})
-  else if e:key == "l" and e:ctrlKey
-    # console:clear()
-  else if e:key == "Enter"
-    # e:preventDefault()
-  else if e:code == "KeyF" and e:altKey
-    # e:preventDefault()
-    # e:target:parentNode:closest("[data-kind]")::log().focus()
+fn Keyword:prototype.to_html(node)
+  let out = []
+  let ignored_attrs = Set["type" "pos"]
+  for [name value] of node
+    if ignored_attrs.has?(name)
+      continue
+    else
+      console:log(name value)
+      let elem = :div{"data-attr" => name}
+      value.to_html().log
+      # elem:appendChild(...)
+      out:push(elem)
+    end
   end
-end )
+  return out
+end
 
-# let last_key = null
-# window.addEventListener("keydown" fn (e) {
-#   if Set[e.key last_key] == Set["Escape"] ||
-#     (e.key == "Enter" && e.target == document.body) {
-#     block.focus()
-#   }
-#   last_key = e.key
-# })
-
-# fn handle_delete(e) {
-#   if Set[e.key last_key] == Set["Backspace"] && e.target.textContent.trim() == "" {
-#     let closest_node_root = e.target.closest("[data-kind]")
-#     if closest_node_root.parentNode.childNodes.length == 1 {
-#       closest_node_root.parentNode.closest("[data-kind]").remove()
-#     } else {
-#       closest_node_root.remove()
-#     }
-#   }
-# }
-
-# protocol TextNodes
-
-# impl TextNodes for Keyword = Set[]
-# define TextNodes for :id_assign = Set["name"]
-# define TextNodes for :property_lookup = Set["property"]
-# define TextNodes for :math_op = Set["op"]
-# define TextNodes for :op_eq = Set["op"]
-# define TextNodes for :spread_assign = Set["name"]
-# define TextNodes for :keyword_record_entry = Set["name"]
-
-# fn resolve-name! {
-#   this.dataset.text = this.dataset.text
-#     .replaceAll("_", "-")
-#   this.textContent = this.textContent
-#     .replaceAll("_", "-")
-# }
-
-# fn register_eval(root) {
-#   root.querySelectorAll("[data-attr]:not(:has([data-attr]))")::each(fn (elem) {
-#     elem.addEventListener("blur" fn (e) {
-#       let parent = e.target.closest("[data-kind]")
-#       let kind = parent.dataset.kind::as_keyword()
-#       if e.target.dataset.attr |> kind.[TextNodes] {
-#         e.target::resolve-name!()
-#         lint-unused-variables()
-#         return
-#       } else {
-#         let out = elem.textContent::pipe(lex_and_parse).[0]::pipe(node-to-html render)
-#         if out.dataset.kind == "id_lookup" {
-#           out.querySelector("[data-text]")::resolve-name!()
-#         }
-#         let out_target = elem.closest("[data-kind]")
-#         register_eval(out)
-#         out_target.replaceWith(out)
-#         lint-unused-variables()
-#       }        
-#     })
-#   })
-# }
-# register_eval(document)
-
-# fn plain-node? =
-#   this.classList.contains("plain_node")
-
-# // navigation
-# block.addEventListener("keydown" fn (e) {
-#   fn most-recent-parent {
-#     if e.target::plain-node?() {
-#       return e.target
-#     } else {
-#       // TODO: how do we do this less ad-hoc?
-#       return e.target.closest("[data-kind=fn] > [data-attr=body] > [data-kind]")
-#         ?? e.target.closest(".code_block > [data-kind]")
-#     }
-#   }
-#   fn focus = 
-#     (this&.querySelector("[data-attr]:not(:has([data-attr]))") ?? this)
-#       &.focus()
-#   if e.key == "p" && e.ctrlKey {
-#     most-recent-parent()&.previousSibling::focus()
-#   } else if e.key == "n" && e.ctrlKey {
-#     most-recent-parent()&.nextSibling::focus()
-#   }
-# })
-
-# block.addEventListener("keydown" fn (e) {  
-#   if e.target != block { return handle_delete(e) }
-#   let new_node = :div.plain_node{"contenteditable" => true}[].[Render]()
-#   block.appendChild(new_node)
-#   fn reify(e) {
-#     try {
-#       let node = lex_and_parse(e.target.textContent).[0]::pipe(node-to-html render)
-#       e.target.outerHTML = node.outerHTML
-#     } catch err {
-#       console.log("there's been an error" err)
-#       new_node.classList.add("error")
-#     }
-#   }
-
-#   new_node.addEventListener("blur" reify)
-#   new_node.addEventListener("keydown" fn (e) {
-#     if e.key == "Enter" {
-#       reify(e)
-#     } else if e.key == "Backspace" && new_node.textContent.trim()::empty?() {
-#       new_node.remove()
-#     }
-#   })
-#   new_node.focus()
-# })
-
-# fn register-new-node-listener(node) {
-#   node.addEventListener("keydown" fn (e) {
-
-#   })
-# }
-
-# // needed operations
-# // [x] navigation (left right up down)
-# //   - navigation within a body node
-# //     - how do we do this without iterating through
-# //       all body-ful nodes & seeing if we are in one.
-# //       I don't imagine that will be very fast ^
-# //       it also is a pain to maintain
-# // [-] deletion (ask parent how to delete)
-# // [ ] append node (ask parent where & how to insert)
-# //    - look at insertAdjacentSibling - https://developer.mozilla.org/en-US/docs/Web/API/Element/insertAdjacentElement
-# // [ ] modify parent node with operator (::, +)
-# //    - is this only operators?
-
-
-# // UI
-# // [x] displaying node information correctly
-# // [x] display node information with formatting & color
-# // [ ] change formatting when content is long / wrap
+let ast = parse("let a = 10")
+  .to_html()
