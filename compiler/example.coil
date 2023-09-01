@@ -232,15 +232,28 @@ end
 fn :fact.run(db {name args}) =
   [...db {name: name, args: args:map(|item| item.val())}]
 
-fn* :query.run(db {fact_name args})
-  for tuple of db.filter(:name Set[fact_name])
-    let obj = {}
-    for [arg i] of args.zip(0..)
-      obj.(arg:name) = tuple:args.i
-    end
-    yield obj
-  end
-end
+fn :query.run(db {fact_name args}) =
+  db.filter(:name Set[fact_name])
+    .filter(|tuple| args
+      .zip(tuple:args)
+      .all?(do |[query found]|
+        if query:kind == :variable
+          return true
+        else
+          return Number(query:value) == found
+        end
+      end)
+    )
+    .map(|tuple| args
+      .zip(tuple:args)
+      .map(do |[query found]|
+        if query:kind == :variable
+          return [query:name found]
+        end
+      end)
+      .compact()
+      .into({})
+    )
 
 fn ObjectLiteral:prototype.val(db) =
   this:kind.val(this)
