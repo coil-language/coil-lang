@@ -198,7 +198,9 @@ Array.prototype[Meta.invoke] = function (index) {
 
 String.prototype[Meta.invoke] = function (collection) {
   if (typeof collection === "string" || collection instanceof Keyword) {
-    throw new TypeError("Can't 'invoke' a string with " + collection.str());
+    throw new TypeError(
+      "Can't 'invoke' a string with " + collection.toString()
+    );
   } else {
     return collection[Meta.invoke](this) ?? nil;
   }
@@ -215,10 +217,12 @@ Number.prototype[Meta.invoke] = function (collection) {
 };
 
 Keyword.prototype[Meta.invoke] = function (collection) {
-  if (collection instanceof Keyword || typeof collection === "string") {
+  if (collection instanceof Keyword) {
     throw new TypeError(
       "Can't 'invoke' a keyword with" + collection.toString()
     );
+  } else if (typeof collection === "string") {
+    return collection[this];
   } else if (typeof collection[Meta.invoke] !== "undefined") {
     return collection[Meta.invoke](this) ?? nil;
   } else {

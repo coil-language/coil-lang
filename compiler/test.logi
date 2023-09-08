@@ -1,4 +1,2 @@
-fact person("marcelle", 10).
-fact person("jack", 11).
-
-? person(?name, 11).
+fact person({ name = "marcelle", age = 10 }).
+fact person({ name = "jack", age = 11 }).

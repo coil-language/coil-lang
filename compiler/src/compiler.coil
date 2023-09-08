@@ -2,35 +2,36 @@ import { ParseError } from "./parse_error.mjs"
 import tokenize from "./tokenizer.mjs"
 import parse from "./parser.mjs"
 import emit from "./emit.mjs"
-fn str(...args) = args.map(|arg| arg:toString()).join("")
 
-fn CollectionView(@collection, @idx) end
+def str(...args) = args.map(|arg| arg:toString()).join("")
 
-fn CollectionView:prototype.(Collection:len) =
+def CollectionView(@collection, @idx) end
+
+def CollectionView:prototype.(Collection:len) =
   this:collection.len() - this:idx
 
-fn CollectionView:prototype.(Collection:empty?) =
+def CollectionView:prototype.(Collection:empty?) =
   this.len() == 0
 
-fn CollectionView:prototype.(Collection:at)(idx) =
+def CollectionView:prototype.(Collection:at)(idx) =
   this:collection.at(this:idx + idx)
 
-fn CollectionView:prototype.(OrderedSequence:first) =
+def CollectionView:prototype.(OrderedSequence:first) =
   this:collection.at(this:idx)
 
-fn CollectionView:prototype.(OrderedSequence:last) =
+def CollectionView:prototype.(OrderedSequence:last) =
   this:collection.last()
 
-fn CollectionView:prototype:skip(n) =
+def CollectionView:prototype:skip(n) =
   CollectionView[this:collection, this:idx + n]
 
-fn* CollectionView:prototype.(Symbol:iterator)
+def* CollectionView:prototype.(Symbol:iterator)
   for i of this:idx..this:collection.len()
     yield this:collection.i
   end
 end
 
-fn compile(string std_prefix)
+def compile(string std_prefix)
   let tokens = string.pipe(tokenize)
   let collection_view = CollectionView[tokens 0]
   let ast = parse(collection_view)

@@ -1,5 +1,5 @@
 
-fn expect_token!(tokens, kw)
+def expect_token!(tokens, kw)
   if tokens.first().at(:type) != kw
     raise!(ParseError[kw, tokens.first()])
   else
@@ -7,7 +7,7 @@ fn expect_token!(tokens, kw)
   end
 end
 
-fn verify_exists!(expr, parser)
+def verify_exists!(expr, parser)
   if expr.nil?()
     panic!("Parser Failed - Expected " parser)
   else
@@ -15,32 +15,32 @@ fn verify_exists!(expr, parser)
   end
 end
 
-#  PARSER MACHINE IMPL
+-- PARSER MACHINE IMPL
 
 protocol parse
 
-fn line_and_col({line, col}) = {line: line, col: col}
+def line_and_col({line, col}) = {line: line, col: col}
 
-fn Init(@expr) end
-fn Init:prototype.parse([_expr tokens]) = 
+def Init(@expr) end
+def Init:prototype.parse([_expr tokens]) = 
   [{...this:expr, pos: line_and_col(tokens.first())} tokens]
 
-fn One(@kw, @as) end
-fn One:prototype.parse([expr tokens])
+def One(@kw, @as) end
+def One:prototype.parse([expr tokens])
   let {value, type} = expect_token!(tokens this:kw).first()
   return [{...expr, this:as => value} tokens:skip(1)]
 end
 
 protocol can_parse?
 
-fn Keyword:prototype.can_parse?([{type}]) = this == type
+def Keyword:prototype.can_parse?([{type}]) = this == type
 
-fn Set:prototype.can_parse?(tokens) =
+def Set:prototype.can_parse?(tokens) =
   this.any?(|cond| cond.can_parse?(tokens))
 
-fn _.can_parse?([]) = true
+def _.can_parse?([]) = true
 
-fn Array:prototype.can_parse?(tokens)
+def Array:prototype.can_parse?(tokens)
   if this.len() > tokens.len()
     return false
   else
@@ -48,8 +48,8 @@ fn Array:prototype.can_parse?(tokens)
   end
 end
 
-fn Optional(@parse_cond, @parse_fn, @as) end
-fn Optional:prototype.parse([expr tokens])
+def Optional(@parse_cond, @parse_fn, @as) end
+def Optional:prototype.parse([expr tokens])
   if tokens.empty?()
     return [expr tokens]
   else if this:parse_cond.can_parse?(tokens)
@@ -59,10 +59,10 @@ fn Optional:prototype.parse([expr tokens])
   end
 end
 
-fn Function:prototype.parse([_expr tokens]) = this(tokens)
+def Function:prototype.parse([_expr tokens]) = this(tokens)
 
-fn Chomp(...@kws) end
-fn Chomp:prototype.parse([expr tokens])
+def Chomp(...@kws) end
+def Chomp:prototype.parse([expr tokens])
   let i = 0
   for kw of this:kws
     expect_token!(tokens:skip(i), kw)
@@ -71,8 +71,8 @@ fn Chomp:prototype.parse([expr tokens])
   return [expr, tokens:skip(i)]
 end
 
-fn Then(@parser, @kw) end
-fn Then:prototype.parse([expr tokens])
+def Then(@parser, @kw) end
+def Then:prototype.parse([expr tokens])
   if let [new_expr new_tokens] = this:parser(tokens)
     if this:kw
       return [{...expr, this:kw => new_expr} new_tokens]
@@ -84,11 +84,11 @@ fn Then:prototype.parse([expr tokens])
   end
 end
 
-fn FMap(@f) end
-fn FMap:prototype.parse([expr tokens]) = [this:f(expr) tokens]
+def FMap(@f) end
+def FMap:prototype.parse([expr tokens]) = [this:f(expr) tokens]
 
-fn Until(@end_kw, @parser, @kw) end
-fn Until:prototype.parse([expr tokens])
+def Until(@end_kw, @parser, @kw) end
+def Until:prototype.parse([expr tokens])
   let exprs = []
   while tokens.first().at(:type) != this:end_kw
     let [expr new_tokens] = verify_exists!(this:parser(tokens) this)
@@ -102,8 +102,8 @@ fn Until:prototype.parse([expr tokens])
   end
 end
 
-fn UntilEither(@set, @parser, @kw) end
-fn UntilEither:prototype.parse([expr tokens])
+def UntilEither(@set, @parser, @kw) end
+def UntilEither:prototype.parse([expr tokens])
   let exprs = []
   while !tokens.first().at(:type).pipe(this:set)
     let [expr new_tokens] = verify_exists!(this:parser(tokens) this)
@@ -113,8 +113,8 @@ fn UntilEither:prototype.parse([expr tokens])
   return [{...expr, this:kw => exprs} tokens]
 end
 
-fn Case(@parse_map, @kw) end
-fn Case:prototype.parse([expr tokens])
+def Case(@parse_map, @kw) end
+def Case:prototype.parse([expr tokens])
   if let [new_expr, new_tokens] = this:parse_map(tokens)
     if this:kw
       return [{...expr, this:kw => new_expr}, new_tokens]
@@ -127,19 +127,19 @@ fn Case:prototype.parse([expr tokens])
   end
 end
 
-fn Either(@set, @kw) end
-fn Either:prototype.parse([expr tokens])
+def Either(@set, @kw) end
+def Either:prototype.parse([expr tokens])
   let op = verify_exists!(this:set(tokens.first().at(:type)), this:set)
   let [new_expr, rest] = [tokens.first(), tokens:skip(1)]
   return [{...expr this:kw => new_expr.at(:value)}, rest]
 end
 
-fn Parser(...@instructions) end
-fn Parser:prototype.invoke(tokens) = this.parse([nil tokens])
+def Parser(...@instructions) end
+def Parser:prototype.invoke(tokens) = this.parse([nil tokens])
 
-fn AbortIf(@cond_fn) end
+def AbortIf(@cond_fn) end
 
-fn Parser:prototype.parse(result)
+def Parser:prototype.parse(result)
   for instruction of this:instructions
     if instruction.is_a?(AbortIf)
       if instruction:cond_fn(result)
@@ -153,12 +153,12 @@ fn Parser:prototype.parse(result)
   return result
 end
 
-fn ParseMap(@entries) end
+def ParseMap(@entries) end
 
-fn ParseMap:prototype.(Record:keys) =
+def ParseMap:prototype.(Record:keys) =
   this:entries.map(|[pattern _]| pattern).into(Set[])
 
-fn ParseMap:prototype.invoke(tokens, ...args)
+def ParseMap:prototype.invoke(tokens, ...args)
   if tokens.empty?()
     return
   else
@@ -172,20 +172,20 @@ end
 
 let algebra_ops = Set[:mod :plus :minus :times :pow :div :lt :gt :lt_eq :gt_eq]
 
-fn parse_dot(tokens, lhs) = Parser[
+def parse_dot(tokens, lhs) = Parser[
   Init[{type: :dot, lhs: lhs}]
   Chomp[:dot]
   Then[parse_single_expr :rhs]
 ](tokens)
 
-fn parse_keyword_lookup(tokens, lhs) = Parser[
+def parse_keyword_lookup(tokens, lhs) = Parser[
   AbortIf[not_adjacent?]
   Init[{type: :keyword_lookup, lhs: lhs}]
   One[:keyword :property]
   FMap[|{lhs, type, property}| {lhs: lhs, type: type, property: property:slice(1)}]
 ](tokens)
 
-fn not_adjacent?([_expr tokens])
+def not_adjacent?([_expr tokens])
   let current = tokens.first()
   let previous = tokens.at(-1)
   if current:line != previous:line
@@ -196,26 +196,26 @@ fn not_adjacent?([_expr tokens])
   end
 end
 
-fn parse_adjacent_expr(tokens) = Parser[
+def parse_adjacent_expr(tokens) = Parser[
   AbortIf[not_adjacent?]
   Then[parse_expr]
 ](tokens)
 
-fn parse_inclusive_range(tokens lhs) = Parser[
+def parse_inclusive_range(tokens lhs) = Parser[
   AbortIf[not_adjacent?]
   Init[{type: :inclusive_range, lhs: lhs}]
   Chomp[:dot_dot :eq]
   Optional[SINGLE_EXPR_PARSE_MAP.keys() parse_adjacent_expr :rhs]
 ](tokens)
 
-fn parse_exclusive_range(tokens lhs) = Parser[
+def parse_exclusive_range(tokens lhs) = Parser[
   AbortIf[not_adjacent?]
   Init[{type: :exclusive_range, lhs: lhs}]
   Chomp[:dot_dot]
   Optional[SINGLE_EXPR_PARSE_MAP.keys() parse_adjacent_expr :rhs]
 ](tokens)
 
-fn parse_fn_call(tokens lhs) = Parser[
+def parse_fn_call(tokens lhs) = Parser[
   AbortIf[not_adjacent?]
   Init[{type: :fn_call, lhs: lhs}]
   Chomp[:open_p]
@@ -223,7 +223,7 @@ fn parse_fn_call(tokens lhs) = Parser[
   Chomp[:close_p]
 ](tokens)
 
-fn parse_meta_from_entries(tokens lhs) = Parser[
+def parse_meta_from_entries(tokens lhs) = Parser[
   AbortIf[not_adjacent?]
   Init[{type: :meta_from_entries, lhs: lhs}]
   Chomp[:open_b]
@@ -231,7 +231,7 @@ fn parse_meta_from_entries(tokens lhs) = Parser[
   Chomp[:close_b]
 ](tokens lhs)
 
-fn parse_meta_create(tokens lhs) = Parser[
+def parse_meta_create(tokens lhs) = Parser[
   AbortIf[not_adjacent?]
   Init[{type: :meta_create, lhs: lhs}]
   Chomp[:open_sq]
@@ -239,13 +239,13 @@ fn parse_meta_create(tokens lhs) = Parser[
   Chomp[:close_sq]
 ](tokens lhs)
 
-fn parse_snd_assign(tokens lhs) = Parser[
+def parse_snd_assign(tokens lhs) = Parser[
   Init[{type: :snd_assign, lhs: lhs}]
   Chomp[:eq]
   Then[parse_expr :rhs]
 ](tokens)
 
-fn parse_snd_expr_step(tokens, lhs) = ParseMap{
+def parse_snd_expr_step(tokens, lhs) = ParseMap{
   :open_p => parse_fn_call
   :open_b => parse_meta_from_entries
   :open_sq => parse_meta_create
@@ -255,7 +255,7 @@ fn parse_snd_expr_step(tokens, lhs) = ParseMap{
   :dot_dot => parse_exclusive_range
 }(tokens, lhs)
 
-fn parse_snd_expr([lhs tokens])  
+def parse_snd_expr([lhs tokens])  
   while let [new_lhs rest] = parse_snd_expr_step(tokens, lhs)
     lhs = new_lhs
     tokens = rest
@@ -263,18 +263,18 @@ fn parse_snd_expr([lhs tokens])
   return [lhs tokens]
 end
 
-fn parse_algebra_op(tokens, lhs) = Parser[
+def parse_algebra_op(tokens, lhs) = Parser[
   Init[{type: :algebra_op, lhs: lhs}]
   Either[algebra_ops :op]
   Then[parse_1_2_expr :rhs]
 ](tokens)
 
-fn parse_third_expr_step(tokens, lhs) = ParseMap{
+def parse_third_expr_step(tokens, lhs) = ParseMap{
   :eq => parse_snd_assign
   algebra_ops => parse_algebra_op  
 }(tokens, lhs)
 
-fn parse_third_expr([lhs tokens])
+def parse_third_expr([lhs tokens])
    while let [new_lhs rest] = parse_third_expr_step(tokens, lhs)
     lhs = new_lhs
     tokens = rest
@@ -284,17 +284,17 @@ end
 
 let equality_ops = Set[:double_eq :not_eq]
 
-fn parse_eq_op(tokens, lhs) = Parser[
+def parse_eq_op(tokens, lhs) = Parser[
   Init[{type: :equality_op, lhs: lhs}]
   Either[equality_ops :op]
   Then[parse_1_2_3_expr :rhs]
 ](tokens)
 
-fn parse_fourth_expr_step(tokens, lhs) = ParseMap{
+def parse_fourth_expr_step(tokens, lhs) = ParseMap{
   equality_ops => parse_eq_op
 }(tokens, lhs)
 
-fn parse_fourth_expr([lhs tokens])
+def parse_fourth_expr([lhs tokens])
    while let [new_lhs rest] = parse_fourth_expr_step(tokens, lhs)
     lhs = new_lhs
     tokens = rest
@@ -302,24 +302,24 @@ fn parse_fourth_expr([lhs tokens])
   return [lhs tokens]
 end
 
-fn parse_and(tokens lhs) = Parser[
+def parse_and(tokens lhs) = Parser[
   Init[{type: :and, lhs: lhs}]
   Chomp[:and]
   Then[parse_1_2_3_4_expr :rhs]
 ](tokens)
 
-fn parse_or(tokens lhs) = Parser[
+def parse_or(tokens lhs) = Parser[
   Init[{type: :or, lhs: lhs}]
   Chomp[:or]
   Then[parse_1_2_3_4_expr :rhs]
 ](tokens)
 
-fn parse_fifth_expr_step(tokens, lhs) = ParseMap{
+def parse_fifth_expr_step(tokens, lhs) = ParseMap{
   :and => parse_and
   :or => parse_or
 }(tokens, lhs)
 
-fn parse_fifth_expr([lhs tokens])
+def parse_fifth_expr([lhs tokens])
    while let [new_lhs rest] = parse_fifth_expr_step(tokens, lhs)
     lhs = new_lhs
     tokens = rest
@@ -344,7 +344,7 @@ let parse_id = Parser[
   Either[Set[...valid_ids_in_all_contexts :import] :name]
 ]
 
-fn parse_obj(tokens) = Parser[
+def parse_obj(tokens) = Parser[
   Init[{type: :object_literal}]
   Chomp[:open_b]
   Until[:close_b parse_record_entry :entries]
@@ -362,7 +362,7 @@ let parse_assign_id = Parser[
   Either[valid_ids_in_all_contexts :name]
 ]
 
-fn parse_assign_array(tokens) = Parser[
+def parse_assign_array(tokens) = Parser[
   Init[{type: :array_deconstruction}]
   Chomp[:open_sq]
   Until[:close_sq parse_assign_expr :entries]
@@ -381,7 +381,7 @@ let parse_regular_obj_assign_entry = Parser[
   Either[valid_ids_in_all_contexts :name]
 ]
 
-fn parse_obj_entry_destructure(tokens) = Parser[
+def parse_obj_entry_destructure(tokens) = Parser[
   Init[{type: :obj_assign_expr}]
   Either[valid_ids_in_all_contexts :property]
   Chomp[:colon]
@@ -423,21 +423,21 @@ let parse_assign_expr = ParseMap{
   :dot_dot_dot => parse_spread_assign
 }
 
-fn parse_paren_expr(tokens) = Parser[
+def parse_paren_expr(tokens) = Parser[
   Init[{type: :paren_expr}]
   Chomp[:open_p]
   Then[parse_expr :expr]
   Chomp[:close_p]
 ](tokens)
 
-fn parse_yield(tokens) = Parser[
+def parse_yield(tokens) = Parser[
   Init[{type: :yield}]
   Chomp[:yield]
   Optional[:times parse_gen_modifier :star?]
   Then[parse_expr :expr]
 ](tokens)
 
-fn parse_await(tokens) = Parser[
+def parse_await(tokens) = Parser[
   Init[{type: :await}]
   Chomp[:await]
   Then[parse_expr :expr]
@@ -445,20 +445,20 @@ fn parse_await(tokens) = Parser[
 
 let parse_num = Parser[Init[{type: :num}] One[:num :value]]
 
-fn parse_array(tokens) = Parser[
+def parse_array(tokens) = Parser[
   Init[{type: :array}]
   Chomp[:open_sq]
   Until[:close_sq parse_expr :elements]
   Chomp[:close_sq]
 ](tokens)
 
-fn parse_spread(tokens) = Parser[
+def parse_spread(tokens) = Parser[
   Init[{type: :spread}]
   Chomp[:dot_dot_dot]
   Then[parse_expr :expr]
 ](tokens)
 
-fn parse_not(tokens) = Parser[
+def parse_not(tokens) = Parser[
   Init[{type: :not}]
   Chomp[:bang]
   Then[parse_expr :expr]
@@ -475,20 +475,20 @@ let parse_gen_modifier = Parser[
   Chomp[:times]
 ]
 
-fn parse_fn_expr_body(tokens) = Parser[
+def parse_fn_expr_body(tokens) = Parser[
   Init[{type: :return}]
   Chomp[:eq]
   Then[parse_expr :expr]
   FMap[|node| [node]]
 ](tokens)
 
-fn parse_args_def(tokens) = Parser[
+def parse_args_def(tokens) = Parser[
   Chomp[:open_p]
   Until[:close_p parse_assign_expr]
   Chomp[:close_p]
 ](tokens)
 
-fn parse_name_expr(tokens)
+def parse_name_expr(tokens)
   if let [expr tokens] = parse_single_expr(tokens)
     let parse_map = ParseMap{
       :dot => parse_dot
@@ -502,7 +502,7 @@ fn parse_name_expr(tokens)
   end
 end
 
-fn parse_fn(tokens) = Parser[
+def parse_fn(tokens) = Parser[
   Init[{type: :fn}]
   Optional[:async parse_async_modifier :is_async?]
   Chomp[:fn]
@@ -515,48 +515,63 @@ fn parse_fn(tokens) = Parser[
   } :body]
 ](tokens)
 
-fn parse_keyword_record_entry(tokens) = Parser[
+def parse_def(tokens) = Parser[
+  Init[{type: :fn}]
+  Optional[:async parse_async_modifier :is_async?]
+  Chomp[:def]
+  Optional[:times parse_gen_modifier :generator?]
+  Then[parse_name_expr :name_expr]
+  Optional[:open_p parse_args_def :args]
+  Case[ParseMap{
+    :eq => parse_fn_expr_body,
+    _ => block()
+  } :body]
+](tokens)
+
+def parse_keyword_record_entry(tokens) = Parser[
   Init[{type: :keyword_record_entry}]
   One[:id :name]
   Chomp[:colon]
   Then[parse_expr :expr]
 ](tokens)
 
-fn parse_regular_record_entry(tokens) = Parser[
+def parse_regular_record_entry(tokens) = Parser[
   Init[{type: :regular_record_entry}]
   Then[parse_expr :key_expr]
   Chomp[:arrow]
   Then[parse_expr :value_expr]
 ](tokens)
 
-fn parse_record_entry(tokens) = ParseMap{
+def parse_record_entry(tokens) = ParseMap{
   :dot_dot_dot => parse_spread
   [:id :colon] => parse_keyword_record_entry
   [:id :arrow] => parse_regular_record_entry
   :fn => parse_fn
+  :def => parse_def
   [:async :fn] => parse_fn
+  [:async :def] => parse_def
   _ => parse_regular_record_entry
 }(tokens)
 
-fn parse_prefix_inclusive_range(tokens) = Parser[
+def parse_prefix_inclusive_range(tokens) = Parser[
   Init[{type: :prefix_inclusive_range}]
   Chomp[:dot_dot :eq]
   Then[parse_expr :expr]
 ](tokens)
 
-fn parse_prefix_exclusive_range(tokens) = Parser[
+def parse_prefix_exclusive_range(tokens) = Parser[
   Init[{type: :prefix_exclusive_range}]
   Chomp[:dot_dot]
   Then[parse_expr :expr]
 ](tokens)
 
-fn parse_keyword(tokens) = Parser[
+def parse_keyword(tokens) = Parser[
   Init[{type: :keyword}]
   One[:keyword :value]
   FMap[|{type, value}| {type: type, value: value:slice(1)}]
 ](tokens)
 
-fn parse_anon_fn(tokens) = Parser[
+def parse_anon_fn(tokens) = Parser[
   Init[{type: :anon_fn}]
   Chomp[:pipe_bar]
   Until[:pipe_bar parse_assign_expr :args]
@@ -564,7 +579,7 @@ fn parse_anon_fn(tokens) = Parser[
   Then[parse_expr :return_expr]
 ](tokens)
 
-fn parse_anon_body_fn(tokens) = Parser[
+def parse_anon_body_fn(tokens) = Parser[
   Init[{type: :anon_body_fn}]
   Chomp[:do :pipe_bar]
   Until[:pipe_bar parse_assign_expr :args]
@@ -600,28 +615,30 @@ let SINGLE_EXPR_PARSE_MAP = ParseMap{
   :dot_dot => parse_prefix_exclusive_range
   Set[...valid_ids_in_all_contexts :import] => parse_id
   [:async :fn] => parse_fn
+  [:async :def] => parse_def
   :fn => parse_fn
+  :def => parse_def
   equality_ops => parse_unapplied_equality_op
   algebra_ops => parse_unapplied_algebra_op
 }
 
-fn parse_single_expr(tokens) = SINGLE_EXPR_PARSE_MAP(tokens)
+def parse_single_expr(tokens) = SINGLE_EXPR_PARSE_MAP(tokens)
 
-fn parse_expr(tokens) = parse_fifth_expr(parse_fourth_expr(parse_third_expr(parse_snd_expr(parse_single_expr(tokens)))))
+def parse_expr(tokens) = parse_fifth_expr(parse_fourth_expr(parse_third_expr(parse_snd_expr(parse_single_expr(tokens)))))
 
-fn parse_1_2_expr(tokens) = parse_snd_expr(parse_single_expr(tokens))
+def parse_1_2_expr(tokens) = parse_snd_expr(parse_single_expr(tokens))
 
-fn parse_1_2_3_expr(tokens) = parse_third_expr(parse_snd_expr(parse_single_expr(tokens)))
+def parse_1_2_3_expr(tokens) = parse_third_expr(parse_snd_expr(parse_single_expr(tokens)))
 
-fn parse_1_2_3_4_expr(tokens) = parse_fourth_expr(parse_third_expr(parse_snd_expr(parse_single_expr(tokens))))
+def parse_1_2_3_4_expr(tokens) = parse_fourth_expr(parse_third_expr(parse_snd_expr(parse_single_expr(tokens))))
 
-fn parse_else_branch(tokens) = Parser[
+def parse_else_branch(tokens) = Parser[
   Init[{type: :else}]  
   Chomp[:else]
   UntilEither[Set[:else :end] parse_statement :body]
 ](tokens)
 
-fn parse_else_if_branch(tokens) = Parser[
+def parse_else_if_branch(tokens) = Parser[
   Init[{type: :else_if}]
   Chomp[:else :if]
   Then[parse_expr :expr]
@@ -634,7 +651,7 @@ let parse_if_branch = ParseMap{
   :else => parse_else_branch
 }
 
-fn parse_if(tokens) = Parser[
+def parse_if(tokens) = Parser[
   Init[{type: :if}]
   Chomp[:if]
   Then[parse_expr :expr]
@@ -651,7 +668,7 @@ let parse_let = Parser[
   Then[parse_expr :rhs]
 ]
 
-fn parse_if_let(tokens) = Parser[
+def parse_if_let(tokens) = Parser[
   Init[{type: :if_let}]
   Chomp[:if :let]
   Then[parse_assign_expr :assign_expr]
@@ -687,7 +704,7 @@ let parse_await_modifier = Parser[
   Chomp[:await]
 ]
 
-fn parse_for_loop(tokens) = Parser[
+def parse_for_loop(tokens) = Parser[
   Init[{type: :for_loop}]
   Chomp[:for]
   Optional[:await parse_await_modifier :is_await?]
@@ -697,20 +714,20 @@ fn parse_for_loop(tokens) = Parser[
   block(:body)
 ](tokens)
 
-fn parse_loop(tokens) = Parser[
+def parse_loop(tokens) = Parser[
   Init[{type: :loop}]
   Chomp[:loop]
   block(:body)
 ](tokens)
 
-fn parse_while_loop(tokens) = Parser[
+def parse_while_loop(tokens) = Parser[
   Init[{type: :while_loop}]
   Chomp[:while]
   Then[parse_expr :test_expr]
   block(:body)
 ](tokens)
 
-fn parse_while_let_loop(tokens) = Parser[
+def parse_while_let_loop(tokens) = Parser[
   Init[{type: :while_let_loop}]
   Chomp[:while :let]
   Then[parse_assign_expr :assign_expr]
@@ -719,30 +736,30 @@ fn parse_while_let_loop(tokens) = Parser[
   block(:body)
 ](tokens)
 
-fn parse_continue(tokens) = Parser[
+def parse_continue(tokens) = Parser[
   Init[{type: :continue}]
   Chomp[:continue]
 ](tokens)
 
-fn parse_break(tokens) = Parser[
+def parse_break(tokens) = Parser[
   Init[{type: :break}]
   Chomp[:break]
 ](tokens)
 
-fn parse_catch(tokens) = Parser[
+def parse_catch(tokens) = Parser[
   Init[{type: :catch}]
   Chomp[:catch]
   One[:id :name]
   block(:body)
 ](tokens)
 
-fn parse_finally(tokens) = Parser[
+def parse_finally(tokens) = Parser[
   Init[{type: :finally}]
   Chomp[:finally]
   block(:body)
 ](tokens)
 
-fn parse_try(tokens) = Parser[
+def parse_try(tokens) = Parser[
   Init[{type: :try}]
   Chomp[:try]
   block(:body)
@@ -750,7 +767,7 @@ fn parse_try(tokens) = Parser[
   Optional[:finally parse_finally :finally]
 ](tokens)
 
-fn parse_import(tokens) = Parser[
+def parse_import(tokens) = Parser[
   Init[{type: :import}]
   Chomp[:import]
   Then[parse_assign_expr :assign_expr]
@@ -758,13 +775,13 @@ fn parse_import(tokens) = Parser[
   Then[parse_str :path]
 ](tokens)
 
-fn parse_export(tokens) = Parser[
+def parse_export(tokens) = Parser[
   Init[{type: :export}]
   Chomp[:export]
   Then[parse_statement :statement]
 ](tokens)
 
-fn parse_export_default(tokens) = Parser[
+def parse_export_default(tokens) = Parser[
   Init[{type: :export_default}]
   Chomp[:export :default]
   Then[parse_expr :expr]
@@ -776,7 +793,7 @@ let parse_direct_import = Parser[
   One[:string_lit :path]
 ]
 
-fn parse_statement(tokens) = ParseMap{
+def parse_statement(tokens) = ParseMap{
   :let => parse_let
   :for => parse_for_loop
   :try => parse_try
@@ -796,12 +813,12 @@ fn parse_statement(tokens) = ParseMap{
   _ => parse_expr
 }(tokens)
 
-fn block(name) = Parser[
+def block(name) = Parser[
   Until[:end parse_statement name]
   Chomp[:end]
 ]
 
-fn parse_tokens(tokens)
+def parse_tokens(tokens)
   let ast = []
   while let [statement_or_expr, rest] = parse_statement(tokens)
     ast:push(statement_or_expr)

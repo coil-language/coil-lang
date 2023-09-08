@@ -44,7 +44,7 @@
       "patterns": [
         {
           "name": "keyword.control.coil",
-          "match": "(await|async|or|and|keyof|of|impl|define|let|protocol|do|end|if|fn|while|loop|try|catch|finally|else|yield|return|continue|break|export|default|import|from|for)\\b"
+          "match": "(await|async|or|and|keyof|of|impl|define|let|protocol|do|end|if|def|fn|while|loop|try|catch|finally|else|yield|return|continue|break|export|default|import|from|for)\\b"
         }
       ]
     },

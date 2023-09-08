@@ -1,14 +1,14 @@
-fn Tokenizer(@entries) end
+def Tokenizer(@entries) end
 
-fn pass() end
-fn newline() end
+def pass() end
+def newline() end
 
-fn Tokenizer:prototype.invoke(str)
+def Tokenizer:prototype.invoke(str)
   let tokens = []
   let index = 0
-  fn rest_of_string() = str:slice(index)
+  def rest_of_string() = str:slice(index)
 
-  fn scan(pattern)
+  def scan(pattern)
     let result = rest_of_string().:match(pattern)
     if result.nil?() or result:index != 0
       return false
@@ -89,6 +89,7 @@ let tokenize = Tokenizer{
   /^\!/ => :bang
   /^\=/ => :eq
   /^fn\b/ => :fn
+  /^def\b/ => :def
   /^\{/ => :open_b
   /^\}/ => :close_b
   /^\(/ => :open_p
