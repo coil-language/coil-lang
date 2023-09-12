@@ -333,7 +333,7 @@ name ??= nil;
 methods ??= nil;let __coil_temp;
 if (methods[Meta.as_bool]()) {
 let __coil_temp;
-return str[invoke]("const ", name, " = Object.freeze({", dot(dot(dot(methods, names), map)[invoke]((method) => {
+return str[invoke]("const ", name, " = Object.freeze({", dot(dot(dot(methods, 'names'), map)[invoke]((method) => {
 method ??= nil;return str[invoke]("\"", dot(method, 'name'), "\": Symbol(\"", name, ":", dot(method, 'name'), "\")");}), join)[invoke](",\n"), "})");
 } else {
 let __coil_temp;

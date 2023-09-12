@@ -335,7 +335,7 @@ def eval_protocol({name, methods})
   if methods
     return str(
       "const " name " = Object.freeze({"
-        methods.names
+        methods:names
           .map(|method| str("\"" method:name "\": Symbol(\"" name ":" method:name "\")"))
           .join(",\n")
       "})"

@@ -1,0 +1,65 @@
+import { DB } from "https://deno.land/x/sqlite/mod.ts"
+def str(...args) = args.map(|arg| arg:toString()).join("")
+
+-- def Table(@name @columns) end
+-- def Table.(Meta:from_entries)(entries) = |name| Table[name entries]
+
+-- def Db(@sqlite_conn @entries) end
+-- def Db:file() end
+-- def Db.(Meta:from_entries)(entries)
+--   entries = entries.reject(0 Set[Db:file])
+--   name = entries.find(0 Set[Db:file]).pipe(1)
+--   return Db[name, entries]
+-- end
+
+-- def TableQuery(@name @entries) end
+
+-- let Query = Proxy[{} {
+--   def :get(_ name) = {
+--     def Meta:from_entries(entries) = TableQuery[name entries]
+--   }
+-- }]
+
+-- let db = Db{
+--   Db:file => "test.db"
+--   edge: Table{x: :int, y: :int}
+--   def :path({x, y}) =
+--     Query:edge{x: x, y: y}
+--   def :path({x, y}) = [
+--     Query:edge{x: x, y: ?:z}
+--     Query:edge{x: ?:z, y: y}
+--   ]
+-- }
+
+let db = DB["test.db"]
+
+protocol Sql {exec, type}
+
+def :int.(Sql:type)() = "INTEGER"
+
+def Table(@entries) end
+def Table:prototype.(Sql:exec)(tbl_name) = this:entries
+  .map(|[name type]| str(name " " type.(Sql:type)()))
+  .join(",\n")
+  .pipe(|types| str(
+    "CREATE TABLE IF NOT EXISTS " tbl_name "("
+      "id INTEGER PRIMARY_KEY,"
+      types
+    ");"))
+
+
+Table{x: :int, y: :int}.(Sql:exec)("edge").pipe(db:execute)
+
+db:execute("
+CREATE VIEW IF NOT EXISTS path AS
+SELECT e1.x, e2.y from edge e1
+INNER JOIN edge e2 ON e1.y == e2.x;
+")
+
+db:query("INSERT INTO edge (x, y) VALUES (?, ?);" [1 2])
+db:query("INSERT INTO edge (x, y) VALUES (?, ?);" [2 3])
+
+db:query("SELECT * FROM path WHERE x = 1 AND y = 3")
+  .log()
+
+db:close()
