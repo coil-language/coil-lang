@@ -79,13 +79,17 @@ node ??= nil;return emit_assign_expr[invoke](node, Self);}), join)[invoke]("\n")
 let emit_record_entry = function (node, Parent) {
 node ??= nil;
 Parent ??= nil;let __coil_temp;
-return dot(node, pipe)[invoke](Keyword.for("type"), Map[Meta.from_entries]([[Keyword.for("regular_record_entry"), function ({'key_expr': key_expr, 'value_expr': value_expr}) {
+return dot(node, pipe)[invoke](Keyword.for("type"), Map[Meta.from_entries]([[Keyword.for("regular_record_entry"), function ({'key_expr': key_expr, 'value_expr': value_expr, 'pos': pos}) {
 key_expr ??= nil;
-value_expr ??= nil;let __coil_temp;
+value_expr ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, Key, Value] = [nid[invoke](), nid[invoke](), nid[invoke]()];
+return str[invoke](line_and_col[invoke](pos, Self), "\n", "regular_record_entry(", Self, ", ", Parent, ").\n", "key_expr(", Key, ", ", Self, ").\n", emit_node[invoke](key_expr, Key), "\n", "value_expr(", Value, ", ", Self, ").\n", emit_node[invoke](value_expr, Value));}], [Keyword.for("keyword_record_entry"), function ({'name': name, 'expr': expr, 'pos': pos}) {
+name ??= nil;
+expr ??= nil;
+pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-let Key = nid[invoke]();
-let Value = nid[invoke]();
-return str[invoke]("regular_record_entry(", Self, ", ", Parent, ").\n", "key_expr(", Key, ", ", Self, ").\n", emit_node[invoke](key_expr, Key), "\n", "value_expr(", Value, ", ", Self, ").\n", emit_node[invoke](value_expr, Value));}]]))[invoke](node, Parent);};
+return str[invoke](line_and_col[invoke](pos, Self), "\n", "keyword_record_entry(", name, ", ", Self, ", ", Parent, ").\n", emit_node[invoke](expr, Self));}]]))[invoke](node, Parent);};
 let emit_node = function (node, Parent) {
 node ??= nil;
 Parent ??= nil;let __coil_temp;

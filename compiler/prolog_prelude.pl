@@ -34,8 +34,10 @@ value(Ctx, keyword(Name)) :-
 value(Ctx, object_literal(Out)) :-
   object_literal(Object, Ctx),
   findall(Entry, object_entry_value(Object, Entry), Out).
-  
 
+object_entry_value(Object, record_entry(keyword(Name), Value)) :-
+  keyword_record_entry(Name, Entry, Object),
+  value(Entry, Value).
 object_entry_value(Object, record_entry(Name, Value)) :-
   regular_record_entry(Entry, Object),
   key_expr(Key, Entry),

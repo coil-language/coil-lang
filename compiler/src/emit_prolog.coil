@@ -74,18 +74,24 @@ def emit_args(args, Parent)
 end
 
 def emit_record_entry(node, Parent) = node.pipe(:type Map{
-  def :regular_record_entry({key_expr value_expr})
-    let Self = nid()
-    let Key = nid()
-    let Value = nid()
+  def :regular_record_entry({key_expr value_expr, pos})
+    let [Self Key Value] = [nid() nid() nid()]
     return str(
+      line_and_col(pos, Self) "\n"
       "regular_record_entry(" Self ", " Parent ").\n"
       "key_expr(" Key ", " Self ").\n"
       emit_node(key_expr, Key) "\n"
       "value_expr(" Value ", " Self ").\n"
       emit_node(value_expr, Value)
     )
-
+  end
+  def :keyword_record_entry({name, expr, pos})
+    let Self = nid()
+    return str(
+      line_and_col(pos, Self) "\n"
+      "keyword_record_entry(" name ", " Self ", " Parent ").\n"
+      emit_node(expr, Self)
+    )
   end
 })(node, Parent)
 
