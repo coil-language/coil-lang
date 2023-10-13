@@ -568,7 +568,7 @@ def parse_prefix_exclusive_range(tokens) = Parser[
 def parse_keyword(tokens) = Parser[
   Init[{type: :keyword}]
   One[:keyword :value]
-  FMap[|{type, value}| {type: type, value: value:slice(1)}]
+  FMap[|{type, value, pos}| {type: type, value: value:slice(1), pos: pos}]
 ](tokens)
 
 def parse_anon_fn(tokens) = Parser[

@@ -1,0 +1,27 @@
+export def str(...args) = args.map(|arg| arg:toString()).join("")
+
+export def CollectionView(@collection, @idx) end
+
+def CollectionView:prototype.(Collection:len) =
+  this:collection.len() - this:idx
+
+def CollectionView:prototype.(Collection:empty?) =
+  this.len() == 0
+
+def CollectionView:prototype.(Collection:at)(idx) =
+  this:collection.at(this:idx + idx)
+
+def CollectionView:prototype.(OrderedSequence:first) =
+  this:collection.at(this:idx)
+
+def CollectionView:prototype.(OrderedSequence:last) =
+  this:collection.last()
+
+def CollectionView:prototype:skip(n) =
+  CollectionView[this:collection, this:idx + n]
+
+def* CollectionView:prototype.(Symbol:iterator)
+  for i of this:idx..this:collection.len()
+    yield this:collection.i
+  end
+end

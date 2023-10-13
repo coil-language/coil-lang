@@ -513,9 +513,10 @@ tokens ??= nil;let __coil_temp;
 return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("prefix_exclusive_range")]])]), Chomp[Meta.create]([Keyword.for("dot_dot")]), Then[Meta.create]([parse_expr, Keyword.for("expr")])])[invoke](tokens);};
 let parse_keyword = function (tokens) {
 tokens ??= nil;let __coil_temp;
-return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("keyword")]])]), One[Meta.create]([Keyword.for("keyword"), Keyword.for("value")]), FMap[Meta.create]([({'type': type, 'value': value}) => {
+return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("keyword")]])]), One[Meta.create]([Keyword.for("keyword"), Keyword.for("value")]), FMap[Meta.create]([({'type': type, 'value': value, 'pos': pos}) => {
 type ??= nil;
-value ??= nil;return ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), type], [Keyword.for("value"), dot(value, 'slice')[invoke]((1))]]);}])])[invoke](tokens);};
+value ??= nil;
+pos ??= nil;return ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), type], [Keyword.for("value"), dot(value, 'slice')[invoke]((1))], [Keyword.for("pos"), pos]]);}])])[invoke](tokens);};
 let parse_anon_fn = function (tokens) {
 tokens ??= nil;let __coil_temp;
 return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("anon_fn")]])]), Chomp[Meta.create]([Keyword.for("pipe_bar")]), Until[Meta.create]([Keyword.for("pipe_bar"), parse_assign_expr, Keyword.for("args")]), Chomp[Meta.create]([Keyword.for("pipe_bar")]), Then[Meta.create]([parse_expr, Keyword.for("return_expr")])])[invoke](tokens);};

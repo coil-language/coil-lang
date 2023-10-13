@@ -1,0 +1,182 @@
+import tokenize from "./tokenizer.mjs"
+import parse from "./parser.mjs"
+import emit from "./emit.mjs"
+import {str, CollectionView} from "./shared.mjs"
+
+let nid_count = 0
+def nid()
+  nid_count = nid_count + 1
+  return str("nid_" nid_count)
+end
+
+def line_and_col(pos, Ctx) = 
+  str("line_and_col(" Ctx ", " pos:line ", " pos:col ").")
+
+def emit_assign_expr(node, Parent) = node.pipe(:type Map{
+  def :id_assign({name pos})
+    let Self = nid()
+    return str(
+      line_and_col(pos, Self) "\n"
+      "id_assign(" name ", " Self ", " Parent ").\n"
+    )
+  end
+  def :array_deconstruction({entries}) = entries.zip(0..)
+    .map(do |[node idx]|
+      let Var = nid()
+      return str(
+        emit_assign_expr(node, Var) "\n"
+        "array_deconstruction(" Var ", " idx ", " Parent ")."
+      )
+    end).join("\n")
+})(node)
+
+def emit_let({assign_expr, rhs, pos} Parent)
+  let Self = nid()
+  return str(
+    "let(" Self ", " Parent ").\n"
+    line_and_col(pos, Self) "\n"
+    emit_assign_expr(assign_expr, Self) "\n"
+    emit_node(rhs, Self)
+  )
+end
+
+def emit_array({elements, pos} Parent)
+  let Self = nid()
+  return str(
+    "line_and_col(" Self ", " pos:line ", " pos:col ").\n"
+    "array_node(" Self ", " Parent ").\n"
+    elements.zip(0..).map(do |[expr idx]|
+      let V2 = nid()
+      return str(
+        emit_node(expr, V2) "\n"
+        "array_element(" V2 ", " idx ", " Self ")."
+      )
+    end).join("\n")
+  )
+end
+
+def emit_name_expr(node, Parent)
+  let Self = nid()
+  return str(
+    "name_expr(" Self ", " Parent ").\n"
+    emit_node(node, Self)
+  )
+end
+
+def emit_args(args, Parent)
+  let Self = nid()
+  return str(
+    "fn_args(" Self ", " Parent ").\n"
+    args
+      .map(|node| emit_assign_expr(node, Self))
+      .join("\n")
+  )
+end
+
+def emit_record_entry(node, Parent) = node.pipe(:type Map{
+  def :regular_record_entry({key_expr value_expr})
+    let Self = nid()
+    let Key = nid()
+    let Value = nid()
+    return str(
+      "regular_record_entry(" Self ", " Parent ").\n"
+      "key_expr(" Key ", " Self ").\n"
+      emit_node(key_expr, Key) "\n"
+      "value_expr(" Value ", " Self ").\n"
+      emit_node(value_expr, Value)
+    )
+
+  end
+})(node, Parent)
+
+def emit_node(node, Parent) = node.pipe(:type Map{
+  :let => emit_let
+  :array => emit_array
+  def :id_lookup({name pos})
+    let Self = nid()
+    return str(
+      line_and_col(pos, Self) "\n"
+      "id_lookup(" name ", " Self ", " Parent ").\n"
+    )
+  end
+  def :num({value, pos})
+    let Self = nid()
+    return str(
+      line_and_col(pos, Self) "\n"
+      "num(" value ", " Self ", " Parent ")."
+    )
+  end
+  def :keyword({value, pos})
+    let Self = nid()
+    return str(
+      line_and_col(pos, Self) "\n"
+      "keyword(" value ", " Self ", " Parent ")."
+    )
+  end
+  def :str({value, pos})
+    let Self = nid()
+    return str(
+      line_and_col(pos, Self) "\n"
+      "str(" value ", " Self ", "Parent ")."
+    )
+  end
+  def :object_literal({entries})
+    let Self = nid()
+    return str(
+      "object_literal(" Self ", " Parent ").\n"
+      entries.map(|node| emit_record_entry(node, Self)).join("\n")
+    )
+  end
+  def :return({expr pos})
+    let Self = nid()
+    return str(
+      "return(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      emit_node(expr, Self)
+    )
+  end
+  def :fn({args, name_expr, body, pos})
+    let Self = nid()
+    return str(
+      emit_name_expr(name_expr, Self) "\n"
+      line_and_col(pos, Self) "\n"
+      "fn(" Self ", " Parent ").\n"
+      emit_args(args, Self) "\n"
+      emit_ast(body, Self) "\n"
+    )
+  end
+  def :snd_assign({lhs rhs pos})
+    let [Self Lhs Rhs] = [nid() nid() nid()]
+    return str(
+      "snd_assign(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      "lhs(" Lhs "," Self ").\n"
+      emit_node(lhs, Lhs) "\n"
+      "rhs(" Rhs ", " Self ").\n"
+      emit_node(rhs, Rhs) "\n"
+    )
+  end
+}).pipe(do |f|
+  if f
+    return f(node, Parent)
+  else
+    console:error(node)
+  end
+end)
+
+def emit_ast(ast, Parent) = ast
+  .map(|node| emit_node(node, Parent))
+  .flat_map(|statement| statement.:split("\n"))
+  .into([])
+  .:sort()
+  .join("\n")
+
+let ast = tokenize(Deno:readTextFileSync("./example.coil"))
+  .pipe(|tokens| CollectionView[tokens 0])
+  .pipe(parse)
+
+let prelude = Deno:readTextFileSync("./prolog_prelude.pl")
+
+let module_nid = nid()
+
+str(prelude "module([main], " module_nid ").\n" emit_ast(ast, module_nid)):trim().log()

@@ -3,5 +3,7 @@ deno run --allow-read --allow-write ./dist/cli.mjs ./src/tokenizer.coil ./dist/t
 deno run --allow-read --allow-write ./dist/cli.mjs ./src/parser.coil ./dist/parser.mjs --std-prefix=.. &
 deno run --allow-read --allow-write ./dist/cli.mjs ./src/emit.coil ./dist/emit.mjs --std-prefix=.. &
 deno run --allow-read --allow-write ./dist/cli.mjs ./src/compiler.coil ./dist/compiler.mjs --std-prefix=.. &
+deno run --allow-read --allow-write ./dist/cli.mjs ./src/shared.coil ./dist/shared.mjs --std-prefix=.. &
 deno run --allow-read --allow-write ./dist/cli.mjs ./src/cli.coil ./dist/cli.mjs --std-prefix=.. &
+deno run --allow-read --allow-write ./dist/cli.mjs ./src/emit_prolog.coil ./dist/emit_prolog.mjs --std-prefix=.. &
 wait
