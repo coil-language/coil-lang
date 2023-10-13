@@ -502,19 +502,6 @@ def parse_name_expr(tokens)
   end
 end
 
-def parse_fn(tokens) = Parser[
-  Init[{type: :fn}]
-  Optional[:async parse_async_modifier :is_async?]
-  Chomp[:fn]
-  Optional[:times parse_gen_modifier :generator?]
-  Then[parse_name_expr :name_expr]
-  Optional[:open_p parse_args_def :args]
-  Case[ParseMap{
-    :eq => parse_fn_expr_body,
-    _ => block()
-  } :body]
-](tokens)
-
 def parse_def(tokens) = Parser[
   Init[{type: :fn}]
   Optional[:async parse_async_modifier :is_async?]
@@ -546,9 +533,7 @@ def parse_record_entry(tokens) = ParseMap{
   :dot_dot_dot => parse_spread
   [:id :colon] => parse_keyword_record_entry
   [:id :arrow] => parse_regular_record_entry
-  :fn => parse_fn
   :def => parse_def
-  [:async :fn] => parse_fn
   [:async :def] => parse_def
   _ => parse_regular_record_entry
 }(tokens)
@@ -614,9 +599,7 @@ let SINGLE_EXPR_PARSE_MAP = ParseMap{
   [:dot_dot :eq] => parse_prefix_inclusive_range
   :dot_dot => parse_prefix_exclusive_range
   Set[...valid_ids_in_all_contexts :import] => parse_id
-  [:async :fn] => parse_fn
   [:async :def] => parse_def
-  :fn => parse_fn
   :def => parse_def
   equality_ops => parse_unapplied_equality_op
   algebra_ops => parse_unapplied_algebra_op
