@@ -11,11 +11,8 @@ Coil is an all-in-one solution for all of your web development needs. This inclu
 - [x] coil-lang (pre-alpha)
   - dynamic functional programming language
   - highly compatible with JavaScript
+- [ ] prolog backend (work in progress)
+  - emit all AST nodes as prolog facts
 - [ ] coil-editor (proof of concept)
   - structural editor
-  - limited shortcuts
-  - limited code navigation
-  - limited eval
-  - visual block editor
-- [ ] coil-web (prototyping)
-  - idea/prototyping phase
+
