@@ -215,7 +215,11 @@ return str[invoke]("this_spread_assign(", name, ", ", Self, ", ", Parent, ").\n"
 name ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke]("this_assign(", name, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("or"), function ({'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
+return str[invoke]("this_assign(", name, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("regex_lit"), function ({'value': value, 'pos': pos}) {
+value ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("regex_lit(\"", value, "\", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("or"), function ({'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
 lhs ??= nil;
 rhs ??= nil;
 pos ??= nil;let __coil_temp;

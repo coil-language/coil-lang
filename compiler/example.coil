@@ -2,7 +2,7 @@ let [a b] = [1 "2" :k {} b]
 ..10
 ..=11
 
-def id(x) = x
+/a-b/
 
 for await a of [1 2]
 

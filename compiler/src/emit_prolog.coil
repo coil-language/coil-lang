@@ -339,12 +339,50 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       line_and_col(pos, Self)
     )
   end
-  -- :object_deconstruction
-  -- :obj_assign_expr
-  -- :obj_reg_entry
-  -- :obj_entry_rename
-  -- :spread_assign
-  -- :regex_lit
+  def :object_deconstruction({entries, pos})
+    let Self = nid()
+    return str(
+      "object_deconstruction(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      entries.map(|node| emit_node(node, Self)).join("\n")
+    )
+  end
+  def :obj_assign_expr({property, assign_expr, pos})
+    let Self = nid()
+    return str(
+      "obj_assign_expr(" property ", " Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      emit_node(assign_expr, Self)
+    )
+  end
+  def :obj_reg_entry({name pos})
+    let Self = nid()
+    return str(
+      "obj_reg_entry(" name ", " Self ", " Parent ").\n"
+      line_and_col(pos, Self)
+    )
+  end
+  def :obj_entry_rename({old_name, new_name, pos})
+    let Self = nid()
+    return str(
+      "obj_entry_rename(" old_name ", " new_name ", " Self ", " Parent ").\n"
+      line_and_col(pos, Self)
+    )
+  end
+  def :spread_assign({name, pos})
+    let Self = nid()
+    return str(
+      "spread_assign(" name ", " Self ", " Parent ").\n"
+      line_and_col(pos, Self)
+    )
+  end
+  def :regex_lit({value pos})
+    let Self = nid()
+    return str(
+      "regex_lit(\"" value "\", " Self ", " Parent ").\n"
+      line_and_col(pos, Self)
+    )
+  end
   def :or({lhs, rhs, pos})
     let [Self Lhs Rhs] = [nid() nid() nid()]
     return str(
