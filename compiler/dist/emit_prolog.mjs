@@ -117,13 +117,15 @@ node ??= nil;return emit_record_entry[invoke](node, Self);}), join)[invoke]("\n"
 expr ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke]("return(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_node[invoke](expr, Self));}], [Keyword.for("fn"), function ({'args': args, 'name_expr': name_expr, 'body': body, 'pos': pos}) {
+return str[invoke]("return(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_node[invoke](expr, Self));}], [Keyword.for("fn"), function ({'args': args, 'name_expr': name_expr, 'body': body, 'pos': pos, 'is_async?': is_async__q, 'generator?': generator__q}) {
 args ??= nil;
 name_expr ??= nil;
 body ??= nil;
-pos ??= nil;let __coil_temp;
+pos ??= nil;
+is_async__q ??= nil;
+generator__q ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke](emit_name_expr[invoke](name_expr, Self), "\n", line_and_col[invoke](pos, Self), "\n", "fn(", Self, ", ", Parent, ").\n", emit_args[invoke](args, Self), "\n", emit_ast[invoke](body, Self), "\n");}], [Keyword.for("snd_assign"), function ({'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
+return str[invoke](emit_name_expr[invoke](name_expr, Self), "\n", line_and_col[invoke](pos, Self), "\n", "fn(", Self, ", ", Parent, ").\n", "is_async(", dot(is_async__q, as_bool)[invoke](), ", ", Self, ").\n", "generator(", dot(generator__q, as_bool)[invoke](), ", ", Self, ").\n", emit_args[invoke](args, Self), "\n", emit_ast[invoke](body, Self), "\n");}], [Keyword.for("snd_assign"), function ({'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
 lhs ??= nil;
 rhs ??= nil;
 pos ??= nil;let __coil_temp;

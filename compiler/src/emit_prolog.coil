@@ -141,13 +141,14 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       emit_node(expr, Self)
     )
   end
-  def :fn({args, name_expr, body, pos})
-    -- TODO: is_async?, generator?
+  def :fn({args, name_expr, body, pos, is_async?, generator?})
     let Self = nid()
     return str(
       emit_name_expr(name_expr, Self) "\n"
       line_and_col(pos, Self) "\n"
       "fn(" Self ", " Parent ").\n"
+      "is_async(" is_async?.as_bool() ", " Self ").\n"
+      "generator(" generator?.as_bool() ", " Self ").\n"
       emit_args(args, Self) "\n"
       emit_ast(body, Self) "\n"
     )
