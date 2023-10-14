@@ -257,7 +257,7 @@ def emit_node(node, Parent) = node.pipe(:type Map{
     let Self = nid()
     return str(
       "protocol_def(" name ", " Self ", " Parent ").\n"
-      methods?.map(|node| emit_node(node, Self))?.join("\n")
+      methods.map(|node| emit_node(node, Self)).join("\n")
     )
   end
   -- :if_let
@@ -343,8 +343,32 @@ def emit_node(node, Parent) = node.pipe(:type Map{
   -- :meta_create
   -- :meta_from_entries
   -- :fn_call
-  -- :exclusive_range
-  -- :inclusive_range
+  def :exclusive_range({lhs rhs pos})
+    let [Self Lhs Rhs] = [nid() nid() nid()]
+    return str(
+      "exclusive_range(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      "lhs(" Lhs ", " Self ").\n"
+      emit_node(lhs, Lhs) "\n"
+      rhs and str(
+        "rhs(" Rhs ", " Self ").\n"  
+        emit_node(rhs, Rhs)
+      )
+    )
+  end
+  def :inclusive_range({lhs rhs pos})
+  let [Self Lhs Rhs] = [nid() nid() nid()]
+    return str(
+      "inclusive_range(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      "lhs(" Lhs ", " Self ").\n"
+      emit_node(lhs, Lhs) "\n"
+      rhs and str(
+        "rhs(" Rhs ", " Self ").\n"  
+        emit_node(rhs, Rhs)
+      )
+    )
+  end
   def :keyword_lookup({lhs, property, pos})
     let Self = nid()
     return str(

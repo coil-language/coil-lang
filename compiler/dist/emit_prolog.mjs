@@ -175,8 +175,8 @@ name ??= nil;return str[invoke]("protocol_method_name(", name, ", ", Self, ").")
 name ??= nil;
 methods ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke]("protocol_def(", name, ", ", Self, ", ", Parent, ").\n", dot(methods__q, map)[invoke]((node) => {
-node ??= nil;return emit_node[invoke](node, Self);}), dot(__q, join)[invoke]("\n"));}], [Keyword.for("await"), function ({'expr': expr, 'pos': pos}) {
+return str[invoke]("protocol_def(", name, ", ", Self, ", ", Parent, ").\n", dot(dot(methods, map)[invoke]((node) => {
+node ??= nil;return emit_node[invoke](node, Self);}), join)[invoke]("\n"));}], [Keyword.for("await"), function ({'expr': expr, 'pos': pos}) {
 expr ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
@@ -207,7 +207,22 @@ lhs ??= nil;
 rhs ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Lhs, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("and(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs), "\n");}], [Keyword.for("dot"), function ({'lhs': lhs, 'rhs': rhs}) {
+return str[invoke]("and(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs), "\n");}], [Keyword.for("exclusive_range"), function ({'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
+lhs ??= nil;
+rhs ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, Lhs, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
+return str[invoke]("exclusive_range(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", (__coil_temp = {left: rhs}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs)), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left));}], [Keyword.for("inclusive_range"), function ({'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
+lhs ??= nil;
+rhs ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, Lhs, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
+return str[invoke]("inclusive_range(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", (__coil_temp = {left: rhs}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs)), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left));}], [Keyword.for("keyword_lookup"), function ({'lhs': lhs, 'property': property, 'pos': pos}) {
+lhs ??= nil;
+property ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("keyword_lookup(", property, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_node[invoke](lhs, Self));}], [Keyword.for("dot"), function ({'lhs': lhs, 'rhs': rhs}) {
 lhs ??= nil;
 rhs ??= nil;let __coil_temp;
 let [Self, Lhs, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
