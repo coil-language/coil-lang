@@ -230,6 +230,19 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       emit_ast(body, Self)
     )
   end
+  def :for_loop({is_await? assign_expr iterable_expr body pos})
+    let [Self Assign Iterable] = [nid() nid() nid()]
+    return str(
+      "for_loop(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      "is_await(" is_await?.as_bool() ", " Self ").\n"
+      "assign_expr(" Assign ", " Self ").\n"
+      emit_assign_expr(assign_expr, Assign) "\n"
+      "iterable_expr(" Iterable ", " Self ").\n"
+      emit_node(iterable_expr, Iterable) "\n"
+      emit_ast(body, Self)
+    )
+  end
 }).pipe(do |f|
   if f
     return f(node, Parent)

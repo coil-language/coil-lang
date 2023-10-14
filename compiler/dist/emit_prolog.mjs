@@ -160,7 +160,14 @@ return str[invoke]("while_loop(", Self, ", ", Parent, ").\n", line_and_col[invok
 body ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke]("loop(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_ast[invoke](body, Self));}]])), pipe)[invoke]((f) => {
+return str[invoke]("loop(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_ast[invoke](body, Self));}], [Keyword.for("for_loop"), function ({'is_await?': is_await__q, 'assign_expr': assign_expr, 'iterable_expr': iterable_expr, 'body': body, 'pos': pos}) {
+is_await__q ??= nil;
+assign_expr ??= nil;
+iterable_expr ??= nil;
+body ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, Assign, Iterable] = [nid[invoke](), nid[invoke](), nid[invoke]()];
+return str[invoke]("for_loop(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "is_await(", dot(is_await__q, as_bool)[invoke](), ", ", Self, ").\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_assign_expr[invoke](assign_expr, Assign), "\n", "iterable_expr(", Iterable, ", ", Self, ").\n", emit_node[invoke](iterable_expr, Iterable), "\n", emit_ast[invoke](body, Self));}]])), pipe)[invoke]((f) => {
 f ??= nil;
 let __coil_temp;
 if (f[Meta.as_bool]()) {
