@@ -272,12 +272,44 @@ def emit_node(node, Parent) = node.pipe(:type Map{
   -- :prefix_inclusive_range
   -- :not
   -- :spread
-  -- :array
-  -- :await
-  -- :yield
-  -- :paren_expr
-  -- :this_spread_assign
-  -- :this_assign
+  def :await({expr pos})
+    let Self = nid()
+    return str(
+      "await(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      emit_node(expr, Self)
+    )
+  end
+  def :yield({star? expr pos})
+    let Self = nid()
+    return str(
+      "yield(" star?.as_bool() ", " Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      emit_node(expr, Self)
+    )
+  end
+  def :paren_expr({expr pos})
+    let Self = nid()
+    return str(
+      "paren_expr(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      emit_node(expr, Self)
+    )
+  end
+  def :this_spread_assign({name pos})
+    let Self = nid()
+    return str(
+      "this_spread_assign(" name ", " Self ", " Parent ").\n"
+      line_and_col(pos, Self)
+    )
+  end
+  def :this_assign({name pos})
+    let Self = nid()
+    return str(
+      "this_assign(" name ", " Self ", " Parent ").\n"
+      line_and_col(pos, Self)
+    )
+  end
   -- :object_deconstruction
   -- :obj_assign_expr
   -- :obj_reg_entry

@@ -176,7 +176,20 @@ name ??= nil;
 methods ??= nil;let __coil_temp;
 let Self = nid[invoke]();
 return str[invoke]("protocol_def(", name, ", ", Self, ", ", Parent, ").\n", dot(methods__q, map)[invoke]((node) => {
-node ??= nil;return emit_node[invoke](node, Self);}), dot(__q, join)[invoke]("\n"));}]])), pipe)[invoke]((f) => {
+node ??= nil;return emit_node[invoke](node, Self);}), dot(__q, join)[invoke]("\n"));}], [Keyword.for("await"), function ({'expr': expr, 'pos': pos}) {
+expr ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("await(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_node[invoke](expr, Self));}], [Keyword.for("yield"), function ({'star?': star__q, 'expr': expr, 'pos': pos}) {
+star__q ??= nil;
+expr ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("yield(", dot(star__q, as_bool)[invoke](), ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_node[invoke](expr, Self));}], [Keyword.for("paren_expr"), function ({'expr': expr, 'pos': pos}) {
+expr ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("paren_expr(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_node[invoke](expr, Self));}]])), pipe)[invoke]((f) => {
 f ??= nil;
 let __coil_temp;
 if (f[Meta.as_bool]()) {
