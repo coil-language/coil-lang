@@ -128,7 +128,24 @@ lhs ??= nil;
 rhs ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Lhs, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("snd_assign(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ",", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs), "\n");}]])), pipe)[invoke]((f) => {
+return str[invoke]("snd_assign(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ",", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs), "\n");}], [Keyword.for("direct_import"), function ({'path': path, 'pos': pos}) {
+path ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("direct_import(", path, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n");}], [Keyword.for("export_default"), function ({'expr': expr, 'pos': pos}) {
+expr ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("export_default(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_node[invoke](expr, Self));}], [Keyword.for("export"), function ({'statement': statement, 'pos': pos}) {
+statement ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("export(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_node[invoke](statement, Self));}], [Keyword.for("import"), function ({'assign_expr': assign_expr, 'path': path, 'pos': pos}) {
+assign_expr ??= nil;
+path ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, Assign] = [nid[invoke](), nid[invoke]()];
+return str[invoke]("import(", dot(path, 'value'), ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_assign_expr[invoke](assign_expr, Assign));}]])), pipe)[invoke]((f) => {
 f ??= nil;
 let __coil_temp;
 if (f[Meta.as_bool]()) {

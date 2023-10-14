@@ -162,6 +162,38 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       emit_node(rhs, Rhs) "\n"
     )
   end
+  def :direct_import({path pos})
+    let Self = nid()
+    return str(
+      "direct_import(" path ", " Self ", " Parent ").\n"  
+      line_and_col(pos, Self) "\n"
+    )
+  end
+  def :export_default({expr pos})
+    let Self = nid()
+    return str(
+      "export_default(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      emit_node(expr, Self)
+    )
+  end
+  def :export({statement pos})
+    let Self = nid()
+    return str(
+      "export(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      emit_node(statement, Self)
+    )
+  end
+  def :import({assign_expr path pos})
+    let [Self, Assign] = [nid() nid()]
+    return str(
+      "import(" path:value ", " Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      "assign_expr(" Assign ", " Self ").\n"
+      emit_assign_expr(assign_expr, Assign)
+    )
+  end
 }).pipe(do |f|
   if f
     return f(node, Parent)
