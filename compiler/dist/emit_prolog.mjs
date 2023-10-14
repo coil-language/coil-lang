@@ -167,7 +167,16 @@ iterable_expr ??= nil;
 body ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Assign, Iterable] = [nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("for_loop(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "is_await(", dot(is_await__q, as_bool)[invoke](), ", ", Self, ").\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_assign_expr[invoke](assign_expr, Assign), "\n", "iterable_expr(", Iterable, ", ", Self, ").\n", emit_node[invoke](iterable_expr, Iterable), "\n", emit_ast[invoke](body, Self));}]])), pipe)[invoke]((f) => {
+return str[invoke]("for_loop(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "is_await(", dot(is_await__q, as_bool)[invoke](), ", ", Self, ").\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_assign_expr[invoke](assign_expr, Assign), "\n", "iterable_expr(", Iterable, ", ", Self, ").\n", emit_node[invoke](iterable_expr, Iterable), "\n", emit_ast[invoke](body, Self));}], [Keyword.for("protocol_method"), function ({'names': names}) {
+names ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("protocol_method(", Self, ", ", Parent, ").\n", dot(dot(names, map)[invoke]((name) => {
+name ??= nil;return str[invoke]("protocol_method_name(", name, ", ", Self, ").");}), join)[invoke]("\n"));}], [Keyword.for("protocol_def"), function ({'name': name, 'methods': methods}) {
+name ??= nil;
+methods ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("protocol_def(", name, ", ", Self, ", ", Parent, ").\n", dot(methods__q, map)[invoke]((node) => {
+node ??= nil;return emit_node[invoke](node, Self);}), dot(__q, join)[invoke]("\n"));}]])), pipe)[invoke]((f) => {
 f ??= nil;
 let __coil_temp;
 if (f[Meta.as_bool]()) {
