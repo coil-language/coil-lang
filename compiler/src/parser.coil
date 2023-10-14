@@ -182,7 +182,8 @@ def parse_keyword_lookup(tokens, lhs) = Parser[
   AbortIf[not_adjacent?]
   Init[{type: :keyword_lookup, lhs: lhs}]
   One[:keyword :property]
-  FMap[|{lhs, type, property}| {lhs: lhs, type: type, property: property:slice(1)}]
+  FMap[|{lhs, type, property, pos}|
+    {lhs: lhs, type: type, property: property:slice(1), pos: pos}]
 ](tokens)
 
 def not_adjacent?([_expr tokens])

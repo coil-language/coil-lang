@@ -197,7 +197,21 @@ return str[invoke]("this_spread_assign(", name, ", ", Self, ", ", Parent, ").\n"
 name ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke]("this_assign(", name, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}]])), pipe)[invoke]((f) => {
+return str[invoke]("this_assign(", name, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("or"), function ({'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
+lhs ??= nil;
+rhs ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, Lhs, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
+return str[invoke]("or(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs), "\n");}], [Keyword.for("and"), function ({'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
+lhs ??= nil;
+rhs ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, Lhs, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
+return str[invoke]("and(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs), "\n");}], [Keyword.for("dot"), function ({'lhs': lhs, 'rhs': rhs}) {
+lhs ??= nil;
+rhs ??= nil;let __coil_temp;
+let [Self, Lhs, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
+return str[invoke]("dot(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs), "\n");}]])), pipe)[invoke]((f) => {
 f ??= nil;
 let __coil_temp;
 if (f[Meta.as_bool]()) {

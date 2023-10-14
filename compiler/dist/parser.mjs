@@ -298,10 +298,11 @@ return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries](
 let parse_keyword_lookup = function (tokens, lhs) {
 tokens ??= nil;
 lhs ??= nil;let __coil_temp;
-return Parser[Meta.create]([AbortIf[Meta.create]([not_adjacent__q]), Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("keyword_lookup")], [Keyword.for("lhs"), lhs]])]), One[Meta.create]([Keyword.for("keyword"), Keyword.for("property")]), FMap[Meta.create]([({'lhs': lhs, 'type': type, 'property': property}) => {
+return Parser[Meta.create]([AbortIf[Meta.create]([not_adjacent__q]), Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("keyword_lookup")], [Keyword.for("lhs"), lhs]])]), One[Meta.create]([Keyword.for("keyword"), Keyword.for("property")]), FMap[Meta.create]([({'lhs': lhs, 'type': type, 'property': property, 'pos': pos}) => {
 lhs ??= nil;
 type ??= nil;
-property ??= nil;return ObjectLiteral[Meta.from_entries]([[Keyword.for("lhs"), lhs], [Keyword.for("type"), type], [Keyword.for("property"), dot(property, 'slice')[invoke]((1))]]);}])])[invoke](tokens);};
+property ??= nil;
+pos ??= nil;return ObjectLiteral[Meta.from_entries]([[Keyword.for("lhs"), lhs], [Keyword.for("type"), type], [Keyword.for("property"), dot(property, 'slice')[invoke]((1))], [Keyword.for("pos"), pos]]);}])])[invoke](tokens);};
 let not_adjacent__q = function ([_expr, tokens]) {
 _expr ??= nil;
 tokens ??= nil;let __coil_temp;

@@ -316,8 +316,28 @@ def emit_node(node, Parent) = node.pipe(:type Map{
   -- :obj_entry_rename
   -- :spread_assign
   -- :regex_lit
-  -- :or
-  -- :and
+  def :or({lhs, rhs, pos})
+    let [Self Lhs Rhs] = [nid() nid() nid()]
+    return str(
+      "or(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      "lhs(" Lhs ", " Self ").\n"
+      emit_node(lhs, Lhs) "\n"
+      "rhs(" Rhs ", " Self ").\n"
+      emit_node(rhs, Rhs) "\n"
+    )
+  end
+  def :and({lhs, rhs, pos})
+    let [Self Lhs Rhs] = [nid() nid() nid()]
+    return str(
+      "and(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      "lhs(" Lhs ", " Self ").\n"
+      emit_node(lhs, Lhs) "\n"
+      "rhs(" Rhs ", " Self ").\n"
+      emit_node(rhs, Rhs) "\n"
+    )
+  end
   -- :equality_op
   -- :algebra_op
   -- :meta_create
@@ -325,8 +345,25 @@ def emit_node(node, Parent) = node.pipe(:type Map{
   -- :fn_call
   -- :exclusive_range
   -- :inclusive_range
-  -- :keyword_lookup
-  -- :dot
+  def :keyword_lookup({lhs, property, pos})
+    let Self = nid()
+    return str(
+      "keyword_lookup(" property ", " Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      emit_node(lhs, Self)
+    )
+  end
+  def :dot({lhs, rhs})
+    let [Self Lhs Rhs] = [nid() nid() nid()]
+    return str(
+      "dot(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      "lhs(" Lhs ", " Self ").\n"
+      emit_node(lhs, Lhs) "\n"
+      "rhs(" Rhs ", " Self ").\n"
+      emit_node(rhs, Rhs) "\n"
+    )
+  end
 }).pipe(do |f|
   if f
     return f(node, Parent)
