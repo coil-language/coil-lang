@@ -189,7 +189,15 @@ return str[invoke]("yield(", dot(star__q, as_bool)[invoke](), ", ", Self, ", ", 
 expr ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke]("paren_expr(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_node[invoke](expr, Self));}]])), pipe)[invoke]((f) => {
+return str[invoke]("paren_expr(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_node[invoke](expr, Self));}], [Keyword.for("this_spread_assign"), function ({'name': name, 'pos': pos}) {
+name ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("this_spread_assign(", name, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("this_assign"), function ({'name': name, 'pos': pos}) {
+name ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("this_assign(", name, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}]])), pipe)[invoke]((f) => {
 f ??= nil;
 let __coil_temp;
 if (f[Meta.as_bool]()) {
