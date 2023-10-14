@@ -439,7 +439,17 @@ def emit_node(node, Parent) = node.pipe(:type Map{
   -- :algebra_op
   -- :meta_create
   -- :meta_from_entries
-  -- :fn_call
+  def :fn_call({lhs, args, pos})
+    let [Self Args Lhs] = [nid() nid()]
+    return str(
+      "fn_call(" Self ", " Parent ").\n"
+      line_and_col(pos, Self)
+      "lhs(" Lhs ", " Self ").\n"
+      emit_node(lhs, Lhs) "\n"
+      "args(" Args ", " Self ").\n"
+      args.map(|node| emit_node(node, Args)).join("\n")
+    )
+  end
   def :exclusive_range({lhs rhs pos})
     let [Self Lhs Rhs] = [nid() nid() nid()]
     return str(

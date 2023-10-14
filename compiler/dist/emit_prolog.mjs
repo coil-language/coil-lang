@@ -270,7 +270,13 @@ lhs ??= nil;
 rhs ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Lhs, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("and(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs), "\n");}], [Keyword.for("exclusive_range"), function ({'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
+return str[invoke]("and(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs), "\n");}], [Keyword.for("fn_call"), function ({'lhs': lhs, 'args': args, 'pos': pos}) {
+lhs ??= nil;
+args ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, Args, Lhs] = [nid[invoke](), nid[invoke]()];
+return str[invoke]("fn_call(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "args(", Args, ", ", Self, ").\n", dot(dot(args, map)[invoke]((node) => {
+node ??= nil;return emit_node[invoke](node, Args);}), join)[invoke]("\n"));}], [Keyword.for("exclusive_range"), function ({'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
 lhs ??= nil;
 rhs ??= nil;
 pos ??= nil;let __coil_temp;
