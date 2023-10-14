@@ -270,11 +270,35 @@ lhs ??= nil;
 rhs ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Lhs, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("and(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs), "\n");}], [Keyword.for("fn_call"), function ({'lhs': lhs, 'args': args, 'pos': pos}) {
+return str[invoke]("and(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs), "\n");}], [Keyword.for("equality_op"), function ({'op': op, 'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
+op ??= nil;
+lhs ??= nil;
+rhs ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, Lhs, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
+return str[invoke]("equality_op(", op, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs));}], [Keyword.for("algebra_op"), function ({'op': op, 'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
+op ??= nil;
+lhs ??= nil;
+rhs ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, Lhs, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
+return str[invoke]("algebra_op(", op, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs));}], [Keyword.for("meta_create"), function ({'lhs': lhs, 'entries': entries, 'pos': pos}) {
+lhs ??= nil;
+entries ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, Entries, Lhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
+return str[invoke]("meta_create(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", "entries(", Entries, ", ", Self, ").\n", dot(dot(entries, map)[invoke]((node) => {
+node ??= nil;return emit_node[invoke](node, Entries);}), join)[invoke]("\n"));}], [Keyword.for("meta_from_entries"), function ({'lhs': lhs, 'entries': entries, 'pos': pos}) {
+lhs ??= nil;
+entries ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, Entries, Lhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
+return str[invoke]("meta_from_entries(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", "entries(", Entries, ", ", Self, ").\n", dot(dot(entries, map)[invoke]((node) => {
+node ??= nil;return emit_record_entry[invoke](node, Entries);}), join)[invoke]("\n"));}], [Keyword.for("fn_call"), function ({'lhs': lhs, 'args': args, 'pos': pos}) {
 lhs ??= nil;
 args ??= nil;
 pos ??= nil;let __coil_temp;
-let [Self, Args, Lhs] = [nid[invoke](), nid[invoke]()];
+let [Self, Args, Lhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
 return str[invoke]("fn_call(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "args(", Args, ", ", Self, ").\n", dot(dot(args, map)[invoke]((node) => {
 node ??= nil;return emit_node[invoke](node, Args);}), join)[invoke]("\n"));}], [Keyword.for("exclusive_range"), function ({'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
 lhs ??= nil;

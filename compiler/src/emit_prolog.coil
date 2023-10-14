@@ -435,12 +435,50 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       emit_node(rhs, Rhs) "\n"
     )
   end
-  -- :equality_op
-  -- :algebra_op
-  -- :meta_create
-  -- :meta_from_entries
+  def :equality_op({op, lhs, rhs, pos})
+    let [Self Lhs Rhs] = [nid() nid() nid()]
+    return str(
+      "equality_op(" op ", " Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      "lhs(" Lhs ", " Self ").\n"
+      emit_node(lhs, Lhs) "\n"
+      "rhs(" Rhs ", " Self ").\n"
+      emit_node(rhs, Rhs)
+    )
+  end
+  def :algebra_op({op, lhs, rhs, pos})
+    let [Self Lhs Rhs] = [nid() nid() nid()]
+    return str(
+      "algebra_op(" op ", " Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      "lhs(" Lhs ", " Self ").\n"
+      emit_node(lhs, Lhs) "\n"
+      "rhs(" Rhs ", " Self ").\n"
+      emit_node(rhs, Rhs)
+    )
+  end
+  def :meta_create({lhs, entries, pos})
+    let [Self Entries Lhs] = [nid() nid() nid()]
+    return str(
+      "meta_create(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      "lhs(" Lhs ", " Self ").\n"
+      "entries(" Entries ", " Self ").\n"
+      entries.map(|node| emit_node(node, Entries)).join("\n")
+    )
+  end
+  def :meta_from_entries({lhs, entries, pos})
+    let [Self Entries Lhs] = [nid() nid() nid()]
+    return str(
+      "meta_from_entries(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      "lhs(" Lhs ", " Self ").\n"
+      "entries(" Entries ", " Self ").\n"
+      entries.map(|node| emit_record_entry(node, Entries)).join("\n")
+    )
+  end
   def :fn_call({lhs, args, pos})
-    let [Self Args Lhs] = [nid() nid()]
+    let [Self Args Lhs] = [nid() nid() nid()]
     return str(
       "fn_call(" Self ", " Parent ").\n"
       line_and_col(pos, Self)
