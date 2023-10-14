@@ -145,7 +145,22 @@ assign_expr ??= nil;
 path ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Assign] = [nid[invoke](), nid[invoke]()];
-return str[invoke]("import(", dot(path, 'value'), ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_assign_expr[invoke](assign_expr, Assign));}]])), pipe)[invoke]((f) => {
+return str[invoke]("import(", dot(path, 'value'), ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_assign_expr[invoke](assign_expr, Assign));}], [Keyword.for("break"), function ({'pos': pos}) {
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("break(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("continue"), function ({'pos': pos}) {
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("continue(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("while_loop"), function ({'body': body, 'test_expr': test_expr, 'pos': pos}) {
+body ??= nil;
+test_expr ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, TestExpr] = [nid[invoke](), nid[invoke]()];
+return str[invoke]("while_loop(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "test_expr(", TestExpr, ", ", Self, ").\n", emit_node[invoke](test_expr, TestExpr), "\n", emit_ast[invoke](body, Self));}], [Keyword.for("loop"), function ({'body': body, 'pos': pos}) {
+body ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("loop(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_ast[invoke](body, Self));}]])), pipe)[invoke]((f) => {
 f ??= nil;
 let __coil_temp;
 if (f[Meta.as_bool]()) {

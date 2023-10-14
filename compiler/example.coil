@@ -1,6 +1,3 @@
-let [list b] = [1 2]
-list = {
-  :name => "marcelle"
-  age: 26
-}
-let l = list
+loop
+  10
+end

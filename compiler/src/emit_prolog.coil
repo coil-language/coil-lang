@@ -194,6 +194,42 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       emit_assign_expr(assign_expr, Assign)
     )
   end
+  def :break({pos})
+    let Self = nid()
+    return str(
+      "break(" Self ", " Parent ").\n"
+      line_and_col(pos, Self)
+    )
+  end
+  def :continue({pos})
+    let Self = nid()
+    return str(
+      "continue(" Self ", " Parent ").\n"
+      line_and_col(pos, Self)
+    )
+  end
+  -- :try
+  -- :finally
+  -- :catch
+  -- :while_let_loop
+  def :while_loop({body test_expr pos})
+    let [Self TestExpr] = [nid() nid()]
+    return str(
+      "while_loop(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      "test_expr(" TestExpr ", " Self ").\n"
+      emit_node(test_expr, TestExpr) "\n"
+      emit_ast(body, Self)
+    )
+  end
+  def :loop({body pos})
+    let Self = nid()
+    return str(
+      "loop(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      emit_ast(body, Self)
+    )
+  end
 }).pipe(do |f|
   if f
     return f(node, Parent)
