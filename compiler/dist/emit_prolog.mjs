@@ -178,7 +178,25 @@ name ??= nil;
 methods ??= nil;let __coil_temp;
 let Self = nid[invoke]();
 return str[invoke]("protocol_def(", name, ", ", Self, ", ", Parent, ").\n", dot(dot(methods, map)[invoke]((node) => {
-node ??= nil;return emit_node[invoke](node, Self);}), join)[invoke]("\n"));}], [Keyword.for("prefix_exclusive_range"), function ({'expr': expr, 'pos': pos}) {
+node ??= nil;return emit_node[invoke](node, Self);}), join)[invoke]("\n"));}], [Keyword.for("unapplied_equality_op"), function ({'op': op, 'pos': pos}) {
+op ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("unapplied_equality_op(", op, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("unapplied_algebra_op"), function ({'op': op, 'pos': pos}) {
+op ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("unapplied_algebra_op(", op, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("anon_body_fn"), function ({'args': args, 'body': body, 'pos': pos}) {
+args ??= nil;
+body ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, Body] = [nid[invoke](), nid[invoke]()];
+return str[invoke]("anon_body_fn(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_args[invoke](args, Self), "\n", "body(", Body, ", ", Self, ").\n", emit_ast[invoke](body, Body));}], [Keyword.for("anon_fn"), function ({'args': args, 'return_expr': return_expr, 'pos': pos}) {
+args ??= nil;
+return_expr ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, Return] = [nid[invoke](), nid[invoke](), nid[invoke]()];
+return str[invoke]("anon_fn(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_args[invoke](args, Self), "\n", "return_expr(", Return, ", ", Self, ").\n", emit_node[invoke](return_expr, Return));}], [Keyword.for("prefix_exclusive_range"), function ({'expr': expr, 'pos': pos}) {
 expr ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
@@ -215,7 +233,30 @@ return str[invoke]("this_spread_assign(", name, ", ", Self, ", ", Parent, ").\n"
 name ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke]("this_assign(", name, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("regex_lit"), function ({'value': value, 'pos': pos}) {
+return str[invoke]("this_assign(", name, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("object_deconstruction"), function ({'entries': entries, 'pos': pos}) {
+entries ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("object_deconstruction(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", dot(dot(entries, map)[invoke]((node) => {
+node ??= nil;return emit_node[invoke](node, Self);}), join)[invoke]("\n"));}], [Keyword.for("obj_assign_expr"), function ({'property': property, 'assign_expr': assign_expr, 'pos': pos}) {
+property ??= nil;
+assign_expr ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("obj_assign_expr(", property, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_node[invoke](assign_expr, Self));}], [Keyword.for("obj_reg_entry"), function ({'name': name, 'pos': pos}) {
+name ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("obj_reg_entry(", name, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("obj_entry_rename"), function ({'old_name': old_name, 'new_name': new_name, 'pos': pos}) {
+old_name ??= nil;
+new_name ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("obj_entry_rename(", old_name, ", ", new_name, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("spread_assign"), function ({'name': name, 'pos': pos}) {
+name ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("spread_assign(", name, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("regex_lit"), function ({'value': value, 'pos': pos}) {
 value ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();

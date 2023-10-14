@@ -265,10 +265,40 @@ def emit_node(node, Parent) = node.pipe(:type Map{
   -- :if
   -- :else_if
   -- :else
-  -- :unapplied_equality_op
-  -- :unapplied_algebra_op
-  -- :anon_body_fn
-  -- :anon_fn
+  def :unapplied_equality_op({op, pos})
+    let Self = nid()
+    return str(
+      "unapplied_equality_op(" op ", " Self ", " Parent ").\n"
+      line_and_col(pos, Self)
+    )
+  end
+  def :unapplied_algebra_op({op, pos})
+    let Self = nid()
+    return str(
+      "unapplied_algebra_op(" op ", " Self ", " Parent ").\n"
+      line_and_col(pos, Self)
+    )
+  end
+  def :anon_body_fn({args body pos})
+    let [Self Body] = [nid() nid()]
+    return str(
+      "anon_body_fn(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      emit_args(args, Self) "\n"
+      "body(" Body ", " Self ").\n"
+      emit_ast(body, Body)
+    )
+  end
+  def :anon_fn({args return_expr pos})
+    let [Self Return] = [nid() nid() nid()]
+    return str(
+      "anon_fn(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      emit_args(args Self) "\n"
+      "return_expr(" Return ", " Self ").\n"
+      emit_node(return_expr, Return)
+    )
+  end
   def :prefix_exclusive_range({expr pos})
     let Self = nid()
     return str(
