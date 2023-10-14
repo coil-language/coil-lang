@@ -269,10 +269,38 @@ def emit_node(node, Parent) = node.pipe(:type Map{
   -- :unapplied_algebra_op
   -- :anon_body_fn
   -- :anon_fn
-  -- :prefix_exclusive_range
-  -- :prefix_inclusive_range
-  -- :not
-  -- :spread
+  def :prefix_exclusive_range({expr pos})
+    let Self = nid()
+    return str(
+      "prefix_exclusive_range(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      emit_node(expr, Self)
+    )
+  end
+  def :prefix_inclusive_range({expr pos})
+    let Self = nid()
+    return str(
+      "prefix_inclusive_range(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      emit_node(expr, Self)
+    )
+  end
+  def :not({expr pos})
+    let Self = nid()
+    return str(
+      "not(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      emit_node(expr, Self)
+    )
+  end
+  def :spread({expr pos})
+    let Self = nid()
+    return str(
+      "spread(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      emit_node(expr, Self)
+    )
+  end
   def :await({expr pos})
     let Self = nid()
     return str(

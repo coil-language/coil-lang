@@ -1,6 +1,8 @@
 let [a b] = [1 "2" :k {} b]
-1..10
-0..=11
+..10
+..=11
+
+def id(x) = x
 
 for await a of [1 2]
 

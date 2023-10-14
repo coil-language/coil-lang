@@ -178,7 +178,23 @@ name ??= nil;
 methods ??= nil;let __coil_temp;
 let Self = nid[invoke]();
 return str[invoke]("protocol_def(", name, ", ", Self, ", ", Parent, ").\n", dot(dot(methods, map)[invoke]((node) => {
-node ??= nil;return emit_node[invoke](node, Self);}), join)[invoke]("\n"));}], [Keyword.for("await"), function ({'expr': expr, 'pos': pos}) {
+node ??= nil;return emit_node[invoke](node, Self);}), join)[invoke]("\n"));}], [Keyword.for("prefix_exclusive_range"), function ({'expr': expr, 'pos': pos}) {
+expr ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("prefix_exclusive_range(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_node[invoke](expr, Self));}], [Keyword.for("prefix_inclusive_range"), function ({'expr': expr, 'pos': pos}) {
+expr ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("prefix_inclusive_range(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_node[invoke](expr, Self));}], [Keyword.for("not"), function ({'expr': expr, 'pos': pos}) {
+expr ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("not(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_node[invoke](expr, Self));}], [Keyword.for("spread"), function ({'expr': expr, 'pos': pos}) {
+expr ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("spread(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_node[invoke](expr, Self));}], [Keyword.for("await"), function ({'expr': expr, 'pos': pos}) {
 expr ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
