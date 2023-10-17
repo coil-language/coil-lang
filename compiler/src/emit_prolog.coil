@@ -9,34 +9,20 @@ def nid()
   return str("nid_" nid_count)
 end
 
+def quote(s) = str("\"" s "\"")
+
 def line_and_col(pos, Ctx) = 
   str("line_and_col(" Ctx ", " pos:line ", " pos:col ").")
 
-def emit_assign_expr(node, Parent) = node.pipe(:type Map{
-  def :id_assign({name pos})
-    let Self = nid()
-    return str(
-      line_and_col(pos, Self) "\n"
-      "id_assign(" name ", " Self ", " Parent ").\n"
-    )
-  end
-  def :array_deconstruction({entries}) = entries.zip(0..)
-    .map(do |[node idx]|
-      let Var = nid()
-      return str(
-        emit_assign_expr(node, Var) "\n"
-        "array_deconstruction(" Var ", " idx ", " Parent ")."
-      )
-    end).join("\n")
-})(node)
-
 def emit_let({assign_expr, rhs, pos} Parent)
-  let Self = nid()
+  let [Self Assign Rhs] = [nid() nid() nid()]
   return str(
     "let(" Self ", " Parent ").\n"
     line_and_col(pos, Self) "\n"
-    emit_assign_expr(assign_expr, Self) "\n"
-    emit_node(rhs, Self)
+    "assign_expr(" Assign ", " Self ").\n"
+    emit_node(assign_expr, Self) "\n"
+    "rhs(" Rhs ", " Self ").\n"
+    emit_node(rhs, Rhs)
   )
 end
 
@@ -68,7 +54,7 @@ def emit_args(args, Parent)
   return str(
     "fn_args(" Self ", " Parent ").\n"
     args
-      .map(|node| emit_assign_expr(node, Self))
+      .map(|node| emit_node(node, Self))
       .join("\n")
   )
 end
@@ -89,7 +75,7 @@ def emit_record_entry(node, Parent) = node.pipe(:type Map{
     let Self = nid()
     return str(
       line_and_col(pos, Self) "\n"
-      "keyword_record_entry(" name ", " Self ", " Parent ").\n"
+      "keyword_record_entry(" quote(name) ", " Self ", " Parent ").\n"
       emit_node(expr, Self)
     )
   end
@@ -98,11 +84,27 @@ def emit_record_entry(node, Parent) = node.pipe(:type Map{
 def emit_node(node, Parent) = node.pipe(:type Map{
   :let => emit_let
   :array => emit_array
+  def :id_assign({name pos})
+    let Self = nid()
+    return str(
+      line_and_col(pos, Self) "\n"
+      "id_assign(" quote(name) ", " Self ", " Parent ").\n"
+    )
+  end
+  def :array_deconstruction({entries}) = entries.zip(0..)
+    .map(do |[node idx]|
+      let Var = nid()
+      return str(
+        emit_node(node, Var) "\n"
+        line_and_col(node:pos, Var) "\n"
+        "array_deconstruction(" Var ", " idx ", " Parent ")."
+      )
+    end).join("\n")
   def :id_lookup({name pos})
     let Self = nid()
     return str(
       line_and_col(pos, Self) "\n"
-      "id_lookup(" name ", " Self ", " Parent ").\n"
+      "id_lookup(" quote(name) ", " Self ", " Parent ").\n"
     )
   end
   def :num({value, pos})
@@ -116,7 +118,7 @@ def emit_node(node, Parent) = node.pipe(:type Map{
     let Self = nid()
     return str(
       line_and_col(pos, Self) "\n"
-      "keyword(" value ", " Self ", " Parent ")."
+      "keyword(" quote(value) ", " Self ", " Parent ")."
     )
   end
   def :str({value, pos})
@@ -126,10 +128,11 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       "str(" value ", " Self ", "Parent ")."
     )
   end
-  def :object_literal({entries})
+  def :object_literal({entries, pos})
     let Self = nid()
     return str(
       "object_literal(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
       entries.map(|node| emit_record_entry(node, Self)).join("\n")
     )
   end
@@ -193,7 +196,7 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       "import(" path:value ", " Self ", " Parent ").\n"
       line_and_col(pos, Self) "\n"
       "assign_expr(" Assign ", " Self ").\n"
-      emit_assign_expr(assign_expr, Assign)
+      emit_node(assign_expr, Assign)
     )
   end
   def :break({pos})
@@ -233,7 +236,7 @@ def emit_node(node, Parent) = node.pipe(:type Map{
   def :catch({name, body, pos})
     let [Self Body] = [nid() nid()]
     return str(
-      "catch(" name ", " Self ", " Parent ").\n"
+      "catch(" quote(name) ", " Self ", " Parent ").\n"
       line_and_col(pos, Self) "\n"
       "body(" Body ", " Self ").\n"
       emit_ast(body, Body)
@@ -245,7 +248,7 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       "while_let_loop(" Self ", " Parent ").\n"
       line_and_col(pos, Self) "\n"
       "assign_expr(" Assign ", " Self ").\n"
-      emit_assign_expr(assign_expr, Assign) "\n"
+      emit_node(assign_expr, Assign) "\n"
       "test_expr(" Test ", " Self ").\n"
       emit_node(test_expr, Test) "\n"
       "body(" Body ", " Self ").\n"
@@ -277,7 +280,7 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       line_and_col(pos, Self) "\n"
       "is_await(" is_await?.as_bool() ", " Self ").\n"
       "assign_expr(" Assign ", " Self ").\n"
-      emit_assign_expr(assign_expr, Assign) "\n"
+      emit_node(assign_expr, Assign) "\n"
       "iterable_expr(" Iterable ", " Self ").\n"
       emit_node(iterable_expr, Iterable) "\n"
       emit_ast(body, Self)
@@ -288,14 +291,14 @@ def emit_node(node, Parent) = node.pipe(:type Map{
     return str(
       "protocol_method(" Self ", " Parent ").\n"
       names
-        .map(|name| str("protocol_method_name(" name ", " Self ")."))
+        .map(|name| str("protocol_method_name(" quote(name) ", " Self ")."))
         .join("\n")
     )
   end
   def :protocol_def({name, methods})
     let Self = nid()
     return str(
-      "protocol_def(" name ", " Self ", " Parent ").\n"
+      "protocol_def(" quote(name) ", " Self ", " Parent ").\n"
       methods.map(|node| emit_node(node, Self)).join("\n")
     )
   end
@@ -305,7 +308,7 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       "if_let(" Self ", " Parent ").\n"
       line_and_col(pos, Self) "\n"
       "assign_expr(" Assign ", " Self ").\n"
-      emit_assign_expr(assign_expr, Assign) "\n"
+      emit_node(assign_expr, Assign) "\n"
       "expr(" Expr ", " Self ").\n"
       emit_node(expr, Expr) "\n"
       "pass(" Pass ", " Self ").\n"
@@ -357,14 +360,14 @@ def emit_node(node, Parent) = node.pipe(:type Map{
   def :unapplied_equality_op({op, pos})
     let Self = nid()
     return str(
-      "unapplied_equality_op(" op ", " Self ", " Parent ").\n"
+      "unapplied_equality_op(" quote(op) ", " Self ", " Parent ").\n"
       line_and_col(pos, Self)
     )
   end
   def :unapplied_algebra_op({op, pos})
     let Self = nid()
     return str(
-      "unapplied_algebra_op(" op ", " Self ", " Parent ").\n"
+      "unapplied_algebra_op(" quote(op) ", " Self ", " Parent ").\n"
       line_and_col(pos, Self)
     )
   end
@@ -447,14 +450,14 @@ def emit_node(node, Parent) = node.pipe(:type Map{
   def :this_spread_assign({name pos})
     let Self = nid()
     return str(
-      "this_spread_assign(" name ", " Self ", " Parent ").\n"
+      "this_spread_assign(" quote(name) ", " Self ", " Parent ").\n"
       line_and_col(pos, Self)
     )
   end
   def :this_assign({name pos})
     let Self = nid()
     return str(
-      "this_assign(" name ", " Self ", " Parent ").\n"
+      "this_assign(" quote(name) ", " Self ", " Parent ").\n"
       line_and_col(pos, Self)
     )
   end
@@ -469,7 +472,7 @@ def emit_node(node, Parent) = node.pipe(:type Map{
   def :obj_assign_expr({property, assign_expr, pos})
     let Self = nid()
     return str(
-      "obj_assign_expr(" property ", " Self ", " Parent ").\n"
+      "obj_assign_expr(" quote(property) ", " Self ", " Parent ").\n"
       line_and_col(pos, Self) "\n"
       emit_node(assign_expr, Self)
     )
@@ -477,21 +480,21 @@ def emit_node(node, Parent) = node.pipe(:type Map{
   def :obj_reg_entry({name pos})
     let Self = nid()
     return str(
-      "obj_reg_entry(" name ", " Self ", " Parent ").\n"
+      "obj_reg_entry(" quote(name) ", " Self ", " Parent ").\n"
       line_and_col(pos, Self)
     )
   end
   def :obj_entry_rename({old_name, new_name, pos})
     let Self = nid()
     return str(
-      "obj_entry_rename(" old_name ", " new_name ", " Self ", " Parent ").\n"
+      "obj_entry_rename(" quote(old_name) ", " quote(new_name) ", " Self ", " Parent ").\n"
       line_and_col(pos, Self)
     )
   end
   def :spread_assign({name, pos})
     let Self = nid()
     return str(
-      "spread_assign(" name ", " Self ", " Parent ").\n"
+      "spread_assign(" quote(name) ", " Self ", " Parent ").\n"
       line_and_col(pos, Self)
     )
   end
@@ -528,7 +531,7 @@ def emit_node(node, Parent) = node.pipe(:type Map{
   def :equality_op({op, lhs, rhs, pos})
     let [Self Lhs Rhs] = [nid() nid() nid()]
     return str(
-      "equality_op(" op ", " Self ", " Parent ").\n"
+      "equality_op(" quote(op) ", " Self ", " Parent ").\n"
       line_and_col(pos, Self) "\n"
       "lhs(" Lhs ", " Self ").\n"
       emit_node(lhs, Lhs) "\n"
@@ -539,7 +542,7 @@ def emit_node(node, Parent) = node.pipe(:type Map{
   def :algebra_op({op, lhs, rhs, pos})
     let [Self Lhs Rhs] = [nid() nid() nid()]
     return str(
-      "algebra_op(" op ", " Self ", " Parent ").\n"
+      "algebra_op(" quote(op) ", " Self ", " Parent ").\n"
       line_and_col(pos, Self) "\n"
       "lhs(" Lhs ", " Self ").\n"
       emit_node(lhs, Lhs) "\n"
@@ -607,7 +610,7 @@ def emit_node(node, Parent) = node.pipe(:type Map{
   def :keyword_lookup({lhs, property, pos})
     let Self = nid()
     return str(
-      "keyword_lookup(" property ", " Self ", " Parent ").\n"
+      "keyword_lookup(" quote(property) ", " Self ", " Parent ").\n"
       line_and_col(pos, Self) "\n"
       emit_node(lhs, Self)
     )
@@ -638,7 +641,7 @@ def emit_ast(ast, Parent) = ast
   .:sort()
   .join("\n")
 
-let ast = tokenize(Deno:readTextFileSync("./src/tokenizer.coil"))
+let ast = tokenize(Deno:readTextFileSync("./example.coil"))
   .pipe(|tokens| CollectionView[tokens 0])
   .pipe(parse)
 

@@ -28,32 +28,20 @@ let nid = function () {
 let __coil_temp;
 nid_count = nid_count[Algebra["+"]]((1));
 return str[invoke]("nid_", nid_count);};
+let quote = function (s) {
+s ??= nil;let __coil_temp;
+return str[invoke]("\"", s, "\"");};
 let line_and_col = function (pos, Ctx) {
 pos ??= nil;
 Ctx ??= nil;let __coil_temp;
 return str[invoke]("line_and_col(", Ctx, ", ", dot(pos, 'line'), ", ", dot(pos, 'col'), ").");};
-let emit_assign_expr = function (node, Parent) {
-node ??= nil;
-Parent ??= nil;let __coil_temp;
-return dot(node, pipe)[invoke](Keyword.for("type"), Map[Meta.from_entries]([[Keyword.for("id_assign"), function ({'name': name, 'pos': pos}) {
-name ??= nil;
-pos ??= nil;let __coil_temp;
-let Self = nid[invoke]();
-return str[invoke](line_and_col[invoke](pos, Self), "\n", "id_assign(", name, ", ", Self, ", ", Parent, ").\n");}], [Keyword.for("array_deconstruction"), function ({'entries': entries}) {
-entries ??= nil;let __coil_temp;
-return dot(dot(dot(entries, zip)[invoke](new ExclusiveRangeNoMaximum((0))), map)[invoke](([node, idx]) => {
-node ??= nil;
-idx ??= nil;
-let __coil_temp;
-let Var = nid[invoke]();
-return str[invoke](emit_assign_expr[invoke](node, Var), "\n", "array_deconstruction(", Var, ", ", idx, ", ", Parent, ").");}), join)[invoke]("\n");}]]))[invoke](node);};
 let emit_let = function ({'assign_expr': assign_expr, 'rhs': rhs, 'pos': pos}, Parent) {
 assign_expr ??= nil;
 rhs ??= nil;
 pos ??= nil;
 Parent ??= nil;let __coil_temp;
-let Self = nid[invoke]();
-return str[invoke]("let(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_assign_expr[invoke](assign_expr, Self), "\n", emit_node[invoke](rhs, Self));};
+let [Self, Assign, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
+return str[invoke]("let(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_node[invoke](assign_expr, Self), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs));};
 let emit_array = function ({'elements': elements, 'pos': pos}, Parent) {
 elements ??= nil;
 pos ??= nil;
@@ -75,7 +63,7 @@ args ??= nil;
 Parent ??= nil;let __coil_temp;
 let Self = nid[invoke]();
 return str[invoke]("fn_args(", Self, ", ", Parent, ").\n", dot(dot(args, map)[invoke]((node) => {
-node ??= nil;return emit_assign_expr[invoke](node, Self);}), join)[invoke]("\n"));};
+node ??= nil;return emit_node[invoke](node, Self);}), join)[invoke]("\n"));};
 let emit_record_entry = function (node, Parent) {
 node ??= nil;
 Parent ??= nil;let __coil_temp;
@@ -89,15 +77,26 @@ name ??= nil;
 expr ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke](line_and_col[invoke](pos, Self), "\n", "keyword_record_entry(", name, ", ", Self, ", ", Parent, ").\n", emit_node[invoke](expr, Self));}]]))[invoke](node, Parent);};
+return str[invoke](line_and_col[invoke](pos, Self), "\n", "keyword_record_entry(", quote[invoke](name), ", ", Self, ", ", Parent, ").\n", emit_node[invoke](expr, Self));}]]))[invoke](node, Parent);};
 let emit_node = function (node, Parent) {
 node ??= nil;
 Parent ??= nil;let __coil_temp;
-return dot(dot(node, pipe)[invoke](Keyword.for("type"), Map[Meta.from_entries]([[Keyword.for("let"), emit_let], [Keyword.for("array"), emit_array], [Keyword.for("id_lookup"), function ({'name': name, 'pos': pos}) {
+return dot(dot(node, pipe)[invoke](Keyword.for("type"), Map[Meta.from_entries]([[Keyword.for("let"), emit_let], [Keyword.for("array"), emit_array], [Keyword.for("id_assign"), function ({'name': name, 'pos': pos}) {
 name ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke](line_and_col[invoke](pos, Self), "\n", "id_lookup(", name, ", ", Self, ", ", Parent, ").\n");}], [Keyword.for("num"), function ({'value': value, 'pos': pos}) {
+return str[invoke](line_and_col[invoke](pos, Self), "\n", "id_assign(", quote[invoke](name), ", ", Self, ", ", Parent, ").\n");}], [Keyword.for("array_deconstruction"), function ({'entries': entries}) {
+entries ??= nil;let __coil_temp;
+return dot(dot(dot(entries, zip)[invoke](new ExclusiveRangeNoMaximum((0))), map)[invoke](([node, idx]) => {
+node ??= nil;
+idx ??= nil;
+let __coil_temp;
+let Var = nid[invoke]();
+return str[invoke](emit_node[invoke](node, Var), "\n", line_and_col[invoke](dot(node, 'pos'), Var), "\n", "array_deconstruction(", Var, ", ", idx, ", ", Parent, ").");}), join)[invoke]("\n");}], [Keyword.for("id_lookup"), function ({'name': name, 'pos': pos}) {
+name ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke](line_and_col[invoke](pos, Self), "\n", "id_lookup(", quote[invoke](name), ", ", Self, ", ", Parent, ").\n");}], [Keyword.for("num"), function ({'value': value, 'pos': pos}) {
 value ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
@@ -105,14 +104,15 @@ return str[invoke](line_and_col[invoke](pos, Self), "\n", "num(", value, ", ", S
 value ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke](line_and_col[invoke](pos, Self), "\n", "keyword(", value, ", ", Self, ", ", Parent, ").");}], [Keyword.for("str"), function ({'value': value, 'pos': pos}) {
+return str[invoke](line_and_col[invoke](pos, Self), "\n", "keyword(", quote[invoke](value), ", ", Self, ", ", Parent, ").");}], [Keyword.for("str"), function ({'value': value, 'pos': pos}) {
 value ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke](line_and_col[invoke](pos, Self), "\n", "str(", value, ", ", Self, ", ", Parent, ").");}], [Keyword.for("object_literal"), function ({'entries': entries}) {
-entries ??= nil;let __coil_temp;
+return str[invoke](line_and_col[invoke](pos, Self), "\n", "str(", value, ", ", Self, ", ", Parent, ").");}], [Keyword.for("object_literal"), function ({'entries': entries, 'pos': pos}) {
+entries ??= nil;
+pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke]("object_literal(", Self, ", ", Parent, ").\n", dot(dot(entries, map)[invoke]((node) => {
+return str[invoke]("object_literal(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", dot(dot(entries, map)[invoke]((node) => {
 node ??= nil;return emit_record_entry[invoke](node, Self);}), join)[invoke]("\n"));}], [Keyword.for("return"), function ({'expr': expr, 'pos': pos}) {
 expr ??= nil;
 pos ??= nil;let __coil_temp;
@@ -147,7 +147,7 @@ assign_expr ??= nil;
 path ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Assign] = [nid[invoke](), nid[invoke]()];
-return str[invoke]("import(", dot(path, 'value'), ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_assign_expr[invoke](assign_expr, Assign));}], [Keyword.for("break"), function ({'pos': pos}) {
+return str[invoke]("import(", dot(path, 'value'), ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_node[invoke](assign_expr, Assign));}], [Keyword.for("break"), function ({'pos': pos}) {
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
 return str[invoke]("break(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("continue"), function ({'pos': pos}) {
@@ -165,13 +165,13 @@ name ??= nil;
 body ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Body] = [nid[invoke](), nid[invoke]()];
-return str[invoke]("catch(", name, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "body(", Body, ", ", Self, ").\n", emit_ast[invoke](body, Body));}], [Keyword.for("while_let_loop"), function ({'assign_expr': assign_expr, 'test_expr': test_expr, 'body': body, 'pos': pos}) {
+return str[invoke]("catch(", quote[invoke](name), ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "body(", Body, ", ", Self, ").\n", emit_ast[invoke](body, Body));}], [Keyword.for("while_let_loop"), function ({'assign_expr': assign_expr, 'test_expr': test_expr, 'body': body, 'pos': pos}) {
 assign_expr ??= nil;
 test_expr ??= nil;
 body ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Assign, Test, Body] = [nid[invoke](), nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("while_let_loop(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_assign_expr[invoke](assign_expr, Assign), "\n", "test_expr(", Test, ", ", Self, ").\n", emit_node[invoke](test_expr, Test), "\n", "body(", Body, ", ", Self, ").\n", emit_ast[invoke](body, Body));}], [Keyword.for("while_loop"), function ({'body': body, 'test_expr': test_expr, 'pos': pos}) {
+return str[invoke]("while_let_loop(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_node[invoke](assign_expr, Assign), "\n", "test_expr(", Test, ", ", Self, ").\n", emit_node[invoke](test_expr, Test), "\n", "body(", Body, ", ", Self, ").\n", emit_ast[invoke](body, Body));}], [Keyword.for("while_loop"), function ({'body': body, 'test_expr': test_expr, 'pos': pos}) {
 body ??= nil;
 test_expr ??= nil;
 pos ??= nil;let __coil_temp;
@@ -187,15 +187,15 @@ iterable_expr ??= nil;
 body ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Assign, Iterable] = [nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("for_loop(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "is_await(", dot(is_await__q, as_bool)[invoke](), ", ", Self, ").\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_assign_expr[invoke](assign_expr, Assign), "\n", "iterable_expr(", Iterable, ", ", Self, ").\n", emit_node[invoke](iterable_expr, Iterable), "\n", emit_ast[invoke](body, Self));}], [Keyword.for("protocol_method"), function ({'names': names}) {
+return str[invoke]("for_loop(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "is_await(", dot(is_await__q, as_bool)[invoke](), ", ", Self, ").\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_node[invoke](assign_expr, Assign), "\n", "iterable_expr(", Iterable, ", ", Self, ").\n", emit_node[invoke](iterable_expr, Iterable), "\n", emit_ast[invoke](body, Self));}], [Keyword.for("protocol_method"), function ({'names': names}) {
 names ??= nil;let __coil_temp;
 let Self = nid[invoke]();
 return str[invoke]("protocol_method(", Self, ", ", Parent, ").\n", dot(dot(names, map)[invoke]((name) => {
-name ??= nil;return str[invoke]("protocol_method_name(", name, ", ", Self, ").");}), join)[invoke]("\n"));}], [Keyword.for("protocol_def"), function ({'name': name, 'methods': methods}) {
+name ??= nil;return str[invoke]("protocol_method_name(", quote[invoke](name), ", ", Self, ").");}), join)[invoke]("\n"));}], [Keyword.for("protocol_def"), function ({'name': name, 'methods': methods}) {
 name ??= nil;
 methods ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke]("protocol_def(", name, ", ", Self, ", ", Parent, ").\n", dot(dot(methods, map)[invoke]((node) => {
+return str[invoke]("protocol_def(", quote[invoke](name), ", ", Self, ", ", Parent, ").\n", dot(dot(methods, map)[invoke]((node) => {
 node ??= nil;return emit_node[invoke](node, Self);}), join)[invoke]("\n"));}], [Keyword.for("if_let"), function ({'assign_expr': assign_expr, 'expr': expr, 'pass': pass, 'fail': fail, 'pos': pos}) {
 assign_expr ??= nil;
 expr ??= nil;
@@ -203,7 +203,7 @@ pass ??= nil;
 fail ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Assign, Expr, Pass, Fail] = [nid[invoke](), nid[invoke](), nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("if_let(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_assign_expr[invoke](assign_expr, Assign), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", (__coil_temp = {left: fail}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("fail(", Fail, ", ", Self, ").\n", emit_ast[invoke](fail, Fail)), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left));}], [Keyword.for("if"), function ({'expr': expr, 'pass': pass, 'fail': fail, 'pos': pos}) {
+return str[invoke]("if_let(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_node[invoke](assign_expr, Assign), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", (__coil_temp = {left: fail}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("fail(", Fail, ", ", Self, ").\n", emit_ast[invoke](fail, Fail)), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left));}], [Keyword.for("if"), function ({'expr': expr, 'pass': pass, 'fail': fail, 'pos': pos}) {
 expr ??= nil;
 pass ??= nil;
 fail ??= nil;
@@ -223,11 +223,11 @@ return str[invoke]("else(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos
 op ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke]("unapplied_equality_op(", op, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("unapplied_algebra_op"), function ({'op': op, 'pos': pos}) {
+return str[invoke]("unapplied_equality_op(", quote[invoke](op), ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("unapplied_algebra_op"), function ({'op': op, 'pos': pos}) {
 op ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke]("unapplied_algebra_op(", op, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("anon_body_fn"), function ({'args': args, 'body': body, 'pos': pos}) {
+return str[invoke]("unapplied_algebra_op(", quote[invoke](op), ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("anon_body_fn"), function ({'args': args, 'body': body, 'pos': pos}) {
 args ??= nil;
 body ??= nil;
 pos ??= nil;let __coil_temp;
@@ -270,11 +270,11 @@ return str[invoke]("paren_expr(", Self, ", ", Parent, ").\n", line_and_col[invok
 name ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke]("this_spread_assign(", name, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("this_assign"), function ({'name': name, 'pos': pos}) {
+return str[invoke]("this_spread_assign(", quote[invoke](name), ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("this_assign"), function ({'name': name, 'pos': pos}) {
 name ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke]("this_assign(", name, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("object_deconstruction"), function ({'entries': entries, 'pos': pos}) {
+return str[invoke]("this_assign(", quote[invoke](name), ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("object_deconstruction"), function ({'entries': entries, 'pos': pos}) {
 entries ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
@@ -284,20 +284,20 @@ property ??= nil;
 assign_expr ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke]("obj_assign_expr(", property, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_node[invoke](assign_expr, Self));}], [Keyword.for("obj_reg_entry"), function ({'name': name, 'pos': pos}) {
+return str[invoke]("obj_assign_expr(", quote[invoke](property), ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_node[invoke](assign_expr, Self));}], [Keyword.for("obj_reg_entry"), function ({'name': name, 'pos': pos}) {
 name ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke]("obj_reg_entry(", name, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("obj_entry_rename"), function ({'old_name': old_name, 'new_name': new_name, 'pos': pos}) {
+return str[invoke]("obj_reg_entry(", quote[invoke](name), ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("obj_entry_rename"), function ({'old_name': old_name, 'new_name': new_name, 'pos': pos}) {
 old_name ??= nil;
 new_name ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke]("obj_entry_rename(", old_name, ", ", new_name, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("spread_assign"), function ({'name': name, 'pos': pos}) {
+return str[invoke]("obj_entry_rename(", quote[invoke](old_name), ", ", quote[invoke](new_name), ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("spread_assign"), function ({'name': name, 'pos': pos}) {
 name ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke]("spread_assign(", name, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("regex_lit"), function ({'value': value, 'pos': pos}) {
+return str[invoke]("spread_assign(", quote[invoke](name), ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("regex_lit"), function ({'value': value, 'pos': pos}) {
 value ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
@@ -318,13 +318,13 @@ lhs ??= nil;
 rhs ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Lhs, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("equality_op(", op, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs));}], [Keyword.for("algebra_op"), function ({'op': op, 'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
+return str[invoke]("equality_op(", quote[invoke](op), ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs));}], [Keyword.for("algebra_op"), function ({'op': op, 'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
 op ??= nil;
 lhs ??= nil;
 rhs ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Lhs, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("algebra_op(", op, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs));}], [Keyword.for("meta_create"), function ({'lhs': lhs, 'entries': entries, 'pos': pos}) {
+return str[invoke]("algebra_op(", quote[invoke](op), ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs));}], [Keyword.for("meta_create"), function ({'lhs': lhs, 'entries': entries, 'pos': pos}) {
 lhs ??= nil;
 entries ??= nil;
 pos ??= nil;let __coil_temp;
@@ -357,7 +357,7 @@ lhs ??= nil;
 property ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke]("keyword_lookup(", property, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_node[invoke](lhs, Self));}], [Keyword.for("dot"), function ({'lhs': lhs, 'rhs': rhs}) {
+return str[invoke]("keyword_lookup(", quote[invoke](property), ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_node[invoke](lhs, Self));}], [Keyword.for("dot"), function ({'lhs': lhs, 'rhs': rhs}) {
 lhs ??= nil;
 rhs ??= nil;let __coil_temp;
 let [Self, Lhs, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
@@ -377,7 +377,7 @@ Parent ??= nil;let __coil_temp;
 return dot(dot(dot(dot(dot(ast, map)[invoke]((node) => {
 node ??= nil;return emit_node[invoke](node, Parent);}), flat_map)[invoke]((statement) => {
 statement ??= nil;return dot(statement, Keyword.for("split"))[invoke]("\n");}), into)[invoke]([]), Keyword.for("sort"))[invoke](), join)[invoke]("\n");};
-let ast = dot(dot(tokenize[invoke](dot(Deno, 'readTextFileSync')[invoke]("./src/tokenizer.coil")), pipe)[invoke]((tokens) => {
+let ast = dot(dot(tokenize[invoke](dot(Deno, 'readTextFileSync')[invoke]("./example.coil")), pipe)[invoke]((tokens) => {
 tokens ??= nil;return CollectionView[Meta.create]([tokens, (0)]);}), pipe)[invoke](parse);
 let prelude = dot(Deno, 'readTextFileSync')[invoke]("./prolog_prelude.pl");
 let module_nid = nid[invoke]();
