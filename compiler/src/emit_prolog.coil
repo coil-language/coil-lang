@@ -59,7 +59,9 @@ def emit_args(args, Parent)
   )
 end
 
-def emit_record_entry(node, Parent) = node.pipe(:type Map{
+def emit_node(node, Parent) = node.pipe(:type Map{
+  :let => emit_let
+  :array => emit_array
   def :regular_record_entry({key_expr value_expr, pos})
     let [Self Key Value] = [nid() nid() nid()]
     return str(
@@ -79,11 +81,6 @@ def emit_record_entry(node, Parent) = node.pipe(:type Map{
       emit_node(expr, Self)
     )
   end
-})(node, Parent)
-
-def emit_node(node, Parent) = node.pipe(:type Map{
-  :let => emit_let
-  :array => emit_array
   def :id_assign({name pos})
     let Self = nid()
     return str(
@@ -133,7 +130,7 @@ def emit_node(node, Parent) = node.pipe(:type Map{
     return str(
       "object_literal(" Self ", " Parent ").\n"
       line_and_col(pos, Self) "\n"
-      entries.map(|node| emit_record_entry(node, Self)).join("\n")
+      entries.map(|node| emit_node(node, Self)).join("\n")
     )
   end
   def :return({expr pos})
@@ -567,7 +564,7 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       line_and_col(pos, Self) "\n"
       "lhs(" Lhs ", " Self ").\n"
       "entries(" Entries ", " Self ").\n"
-      entries.map(|node| emit_record_entry(node, Entries)).join("\n")
+      entries.map(|node| emit_node(node, Entries)).join("\n")
     )
   end
   def :fn_call({lhs, args, pos})
@@ -637,11 +634,12 @@ end)
 def emit_ast(ast, Parent) = ast
   .map(|node| emit_node(node, Parent))
   .flat_map(|statement| statement.:split("\n"))
+  .filter(|line| line:trim():length > 0)
   .into([])
   .:sort()
   .join("\n")
 
-let ast = tokenize(Deno:readTextFileSync("./src/compiler.coil"))
+let ast = tokenize(Deno:readTextFileSync("./src/emit_prolog.coil"))
   .pipe(|tokens| CollectionView[tokens 0])
   .pipe(parse)
 

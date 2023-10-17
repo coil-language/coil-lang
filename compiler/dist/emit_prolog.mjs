@@ -64,10 +64,10 @@ Parent ??= nil;let __coil_temp;
 let Self = nid[invoke]();
 return str[invoke]("fn_args(", Self, ", ", Parent, ").\n", dot(dot(args, map)[invoke]((node) => {
 node ??= nil;return emit_node[invoke](node, Self);}), join)[invoke]("\n"));};
-let emit_record_entry = function (node, Parent) {
+let emit_node = function (node, Parent) {
 node ??= nil;
 Parent ??= nil;let __coil_temp;
-return dot(node, pipe)[invoke](Keyword.for("type"), Map[Meta.from_entries]([[Keyword.for("regular_record_entry"), function ({'key_expr': key_expr, 'value_expr': value_expr, 'pos': pos}) {
+return dot(dot(node, pipe)[invoke](Keyword.for("type"), Map[Meta.from_entries]([[Keyword.for("let"), emit_let], [Keyword.for("array"), emit_array], [Keyword.for("regular_record_entry"), function ({'key_expr': key_expr, 'value_expr': value_expr, 'pos': pos}) {
 key_expr ??= nil;
 value_expr ??= nil;
 pos ??= nil;let __coil_temp;
@@ -77,11 +77,7 @@ name ??= nil;
 expr ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke](line_and_col[invoke](pos, Self), "\n", "keyword_record_entry(", quote[invoke](name), ", ", Self, ", ", Parent, ").\n", emit_node[invoke](expr, Self));}]]))[invoke](node, Parent);};
-let emit_node = function (node, Parent) {
-node ??= nil;
-Parent ??= nil;let __coil_temp;
-return dot(dot(node, pipe)[invoke](Keyword.for("type"), Map[Meta.from_entries]([[Keyword.for("let"), emit_let], [Keyword.for("array"), emit_array], [Keyword.for("id_assign"), function ({'name': name, 'pos': pos}) {
+return str[invoke](line_and_col[invoke](pos, Self), "\n", "keyword_record_entry(", quote[invoke](name), ", ", Self, ", ", Parent, ").\n", emit_node[invoke](expr, Self));}], [Keyword.for("id_assign"), function ({'name': name, 'pos': pos}) {
 name ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
@@ -113,7 +109,7 @@ entries ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
 return str[invoke]("object_literal(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", dot(dot(entries, map)[invoke]((node) => {
-node ??= nil;return emit_record_entry[invoke](node, Self);}), join)[invoke]("\n"));}], [Keyword.for("return"), function ({'expr': expr, 'pos': pos}) {
+node ??= nil;return emit_node[invoke](node, Self);}), join)[invoke]("\n"));}], [Keyword.for("return"), function ({'expr': expr, 'pos': pos}) {
 expr ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
@@ -336,7 +332,7 @@ entries ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Entries, Lhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
 return str[invoke]("meta_from_entries(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", "entries(", Entries, ", ", Self, ").\n", dot(dot(entries, map)[invoke]((node) => {
-node ??= nil;return emit_record_entry[invoke](node, Entries);}), join)[invoke]("\n"));}], [Keyword.for("fn_call"), function ({'lhs': lhs, 'args': args, 'pos': pos}) {
+node ??= nil;return emit_node[invoke](node, Entries);}), join)[invoke]("\n"));}], [Keyword.for("fn_call"), function ({'lhs': lhs, 'args': args, 'pos': pos}) {
 lhs ??= nil;
 args ??= nil;
 pos ??= nil;let __coil_temp;
@@ -375,9 +371,10 @@ dot(console, 'error')[invoke]("unknown", node, dot(Error[Meta.create]([]), 'stac
 let emit_ast = function (ast, Parent) {
 ast ??= nil;
 Parent ??= nil;let __coil_temp;
-return dot(dot(dot(dot(dot(ast, map)[invoke]((node) => {
+return dot(dot(dot(dot(dot(dot(ast, map)[invoke]((node) => {
 node ??= nil;return emit_node[invoke](node, Parent);}), flat_map)[invoke]((statement) => {
-statement ??= nil;return dot(statement, Keyword.for("split"))[invoke]("\n");}), into)[invoke]([]), Keyword.for("sort"))[invoke](), join)[invoke]("\n");};
+statement ??= nil;return dot(statement, Keyword.for("split"))[invoke]("\n");}), filter)[invoke]((line) => {
+line ??= nil;return dot(dot(line, 'trim')[invoke](), 'length')[Algebra[">"]]((0));}), into)[invoke]([]), Keyword.for("sort"))[invoke](), join)[invoke]("\n");};
 let ast = dot(dot(tokenize[invoke](dot(Deno, 'readTextFileSync')[invoke]("./src/emit_prolog.coil")), pipe)[invoke]((tokens) => {
 tokens ??= nil;return CollectionView[Meta.create]([tokens, (0)]);}), pipe)[invoke](parse);
 let prelude = dot(Deno, 'readTextFileSync')[invoke]("./prolog_prelude.pl");
