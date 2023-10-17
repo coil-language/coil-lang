@@ -35,29 +35,6 @@ let line_and_col = function (pos, Ctx) {
 pos ??= nil;
 Ctx ??= nil;let __coil_temp;
 return str[invoke]("line_and_col(", Ctx, ", ", dot(pos, 'line'), ", ", dot(pos, 'col'), ").");};
-let emit_let = function ({'assign_expr': assign_expr, 'rhs': rhs, 'pos': pos}, Parent) {
-assign_expr ??= nil;
-rhs ??= nil;
-pos ??= nil;
-Parent ??= nil;let __coil_temp;
-let [Self, Assign, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("let(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_node[invoke](assign_expr, Self), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs));};
-let emit_array = function ({'elements': elements, 'pos': pos}, Parent) {
-elements ??= nil;
-pos ??= nil;
-Parent ??= nil;let __coil_temp;
-let Self = nid[invoke]();
-return str[invoke]("line_and_col(", Self, ", ", dot(pos, 'line'), ", ", dot(pos, 'col'), ").\n", "array_node(", Self, ", ", Parent, ").\n", dot(dot(dot(elements, zip)[invoke](new ExclusiveRangeNoMaximum((0))), map)[invoke](([expr, idx]) => {
-expr ??= nil;
-idx ??= nil;
-let __coil_temp;
-let V2 = nid[invoke]();
-return str[invoke](emit_node[invoke](expr, V2), "\n", "array_element(", V2, ", ", idx, ", ", Self, ").");}), join)[invoke]("\n"));};
-let emit_name_expr = function (node, Parent) {
-node ??= nil;
-Parent ??= nil;let __coil_temp;
-let Self = nid[invoke]();
-return str[invoke]("name_expr(", Self, ", ", Parent, ").\n", emit_node[invoke](node, Self));};
 let emit_args = function (args, Parent) {
 args ??= nil;
 Parent ??= nil;let __coil_temp;
@@ -67,7 +44,21 @@ node ??= nil;return emit_node[invoke](node, Self);}), join)[invoke]("\n"));};
 let emit_node = function (node, Parent) {
 node ??= nil;
 Parent ??= nil;let __coil_temp;
-return dot(dot(node, pipe)[invoke](Keyword.for("type"), Map[Meta.from_entries]([[Keyword.for("let"), emit_let], [Keyword.for("array"), emit_array], [Keyword.for("regular_record_entry"), function ({'key_expr': key_expr, 'value_expr': value_expr, 'pos': pos}) {
+return dot(dot(node, pipe)[invoke](Keyword.for("type"), Map[Meta.from_entries]([[Keyword.for("let"), function ({'assign_expr': assign_expr, 'rhs': rhs, 'pos': pos}) {
+assign_expr ??= nil;
+rhs ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, Assign, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
+return str[invoke]("let(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_node[invoke](assign_expr, Self), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs));}], [Keyword.for("array"), function ({'elements': elements, 'pos': pos}) {
+elements ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("line_and_col(", Self, ", ", dot(pos, 'line'), ", ", dot(pos, 'col'), ").\n", "array_node(", Self, ", ", Parent, ").\n", dot(dot(dot(elements, zip)[invoke](new ExclusiveRangeNoMaximum((0))), map)[invoke](([expr, idx]) => {
+expr ??= nil;
+idx ??= nil;
+let __coil_temp;
+let V2 = nid[invoke]();
+return str[invoke](emit_node[invoke](expr, V2), "\n", "array_element(", V2, ", ", idx, ", ", Self, ").");}), join)[invoke]("\n"));}], [Keyword.for("regular_record_entry"), function ({'key_expr': key_expr, 'value_expr': value_expr, 'pos': pos}) {
 key_expr ??= nil;
 value_expr ??= nil;
 pos ??= nil;let __coil_temp;
@@ -120,8 +111,8 @@ body ??= nil;
 pos ??= nil;
 is_async__q ??= nil;
 generator__q ??= nil;let __coil_temp;
-let Self = nid[invoke]();
-return str[invoke](emit_name_expr[invoke](name_expr, Self), "\n", line_and_col[invoke](pos, Self), "\n", "fn(", Self, ", ", Parent, ").\n", "is_async(", dot(is_async__q, as_bool)[invoke](), ", ", Self, ").\n", "generator(", dot(generator__q, as_bool)[invoke](), ", ", Self, ").\n", emit_args[invoke](args, Self), "\n", emit_ast[invoke](body, Self), "\n");}], [Keyword.for("snd_assign"), function ({'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
+let [Self, Name] = [nid[invoke](), nid[invoke]()];
+return str[invoke]("fn(", Self, ", ", Parent, ").\n", "name_expr(", Name, ", ", Self, ").\n", emit_node[invoke](name_expr, Name), "\n", line_and_col[invoke](pos, Self), "\n", "is_async(", dot(is_async__q, as_bool)[invoke](), ", ", Self, ").\n", "generator(", dot(generator__q, as_bool)[invoke](), ", ", Self, ").\n", emit_args[invoke](args, Self), "\n", emit_ast[invoke](body, Self), "\n");}], [Keyword.for("snd_assign"), function ({'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
 lhs ??= nil;
 rhs ??= nil;
 pos ??= nil;let __coil_temp;

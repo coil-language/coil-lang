@@ -14,41 +14,6 @@ def quote(s) = str("\"" s "\"")
 def line_and_col(pos, Ctx) = 
   str("line_and_col(" Ctx ", " pos:line ", " pos:col ").")
 
-def emit_let({assign_expr, rhs, pos} Parent)
-  let [Self Assign Rhs] = [nid() nid() nid()]
-  return str(
-    "let(" Self ", " Parent ").\n"
-    line_and_col(pos, Self) "\n"
-    "assign_expr(" Assign ", " Self ").\n"
-    emit_node(assign_expr, Self) "\n"
-    "rhs(" Rhs ", " Self ").\n"
-    emit_node(rhs, Rhs)
-  )
-end
-
-def emit_array({elements, pos} Parent)
-  let Self = nid()
-  return str(
-    "line_and_col(" Self ", " pos:line ", " pos:col ").\n"
-    "array_node(" Self ", " Parent ").\n"
-    elements.zip(0..).map(do |[expr idx]|
-      let V2 = nid()
-      return str(
-        emit_node(expr, V2) "\n"
-        "array_element(" V2 ", " idx ", " Self ")."
-      )
-    end).join("\n")
-  )
-end
-
-def emit_name_expr(node, Parent)
-  let Self = nid()
-  return str(
-    "name_expr(" Self ", " Parent ").\n"
-    emit_node(node, Self)
-  )
-end
-
 def emit_args(args, Parent)
   let Self = nid()
   return str(
@@ -60,8 +25,31 @@ def emit_args(args, Parent)
 end
 
 def emit_node(node, Parent) = node.pipe(:type Map{
-  :let => emit_let
-  :array => emit_array
+  def :let({assign_expr, rhs, pos})
+    let [Self Assign Rhs] = [nid() nid() nid()]
+    return str(
+      "let(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      "assign_expr(" Assign ", " Self ").\n"
+      emit_node(assign_expr, Self) "\n"
+      "rhs(" Rhs ", " Self ").\n"
+      emit_node(rhs, Rhs)
+    )
+  end
+  def :array({elements, pos})
+    let Self = nid()
+    return str(
+      "line_and_col(" Self ", " pos:line ", " pos:col ").\n"
+      "array_node(" Self ", " Parent ").\n"
+      elements.zip(0..).map(do |[expr idx]|
+        let V2 = nid()
+        return str(
+          emit_node(expr, V2) "\n"
+          "array_element(" V2 ", " idx ", " Self ")."
+        )
+      end).join("\n")
+    )
+  end
   def :regular_record_entry({key_expr value_expr, pos})
     let [Self Key Value] = [nid() nid() nid()]
     return str(
@@ -142,11 +130,12 @@ def emit_node(node, Parent) = node.pipe(:type Map{
     )
   end
   def :fn({args, name_expr, body, pos, is_async?, generator?})
-    let Self = nid()
+    let [Self Name] = [nid() nid()]
     return str(
-      emit_name_expr(name_expr, Self) "\n"
-      line_and_col(pos, Self) "\n"
       "fn(" Self ", " Parent ").\n"
+      "name_expr(" Name ", " Self ").\n"
+      emit_node(name_expr, Name) "\n"
+      line_and_col(pos, Self) "\n"
       "is_async(" is_async?.as_bool() ", " Self ").\n"
       "generator(" generator?.as_bool() ", " Self ").\n"
       emit_args(args, Self) "\n"
