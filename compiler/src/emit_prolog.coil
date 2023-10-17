@@ -125,7 +125,7 @@ def emit_node(node, Parent) = node.pipe(:type Map{
     let Self = nid()
     return str(
       line_and_col(pos, Self) "\n"
-      "str(" value ", " Self ", "Parent ")."
+      "str(" value:replaceAll("\n" "\\n") ", " Self ", "Parent ")."
     )
   end
   def :object_literal({entries, pos})
@@ -641,7 +641,7 @@ def emit_ast(ast, Parent) = ast
   .:sort()
   .join("\n")
 
-let ast = tokenize(Deno:readTextFileSync("./src/tokenizer.coil"))
+let ast = tokenize(Deno:readTextFileSync("./src/compiler.coil"))
   .pipe(|tokens| CollectionView[tokens 0])
   .pipe(parse)
 
