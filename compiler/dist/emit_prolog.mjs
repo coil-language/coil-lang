@@ -301,6 +301,7 @@ return str[invoke]("spread_assign(", name, ", ", Self, ", ", Parent, ").\n", lin
 value ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
+value = dot(dot(value, 'replaceAll')[invoke]("\\", "\\\\"), 'replaceAll')[invoke]("\"", "\\\"");
 return str[invoke]("regex_lit(\"", value, "\", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("or"), function ({'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
 lhs ??= nil;
 rhs ??= nil;
@@ -376,7 +377,7 @@ Parent ??= nil;let __coil_temp;
 return dot(dot(dot(dot(dot(ast, map)[invoke]((node) => {
 node ??= nil;return emit_node[invoke](node, Parent);}), flat_map)[invoke]((statement) => {
 statement ??= nil;return dot(statement, Keyword.for("split"))[invoke]("\n");}), into)[invoke]([]), Keyword.for("sort"))[invoke](), join)[invoke]("\n");};
-let ast = dot(dot(tokenize[invoke](dot(Deno, 'readTextFileSync')[invoke]("./example.coil")), pipe)[invoke]((tokens) => {
+let ast = dot(dot(tokenize[invoke](dot(Deno, 'readTextFileSync')[invoke]("./src/tokenizer.coil")), pipe)[invoke]((tokens) => {
 tokens ??= nil;return CollectionView[Meta.create]([tokens, (0)]);}), pipe)[invoke](parse);
 let prelude = dot(Deno, 'readTextFileSync')[invoke]("./prolog_prelude.pl");
 let module_nid = nid[invoke]();
