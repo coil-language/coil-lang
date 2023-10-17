@@ -153,7 +153,25 @@ let Self = nid[invoke]();
 return str[invoke]("break(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("continue"), function ({'pos': pos}) {
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke]("continue(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("while_loop"), function ({'body': body, 'test_expr': test_expr, 'pos': pos}) {
+return str[invoke]("continue(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("try"), function (node) {
+node ??= nil;let __coil_temp;
+let [Self, Body] = [nid[invoke](), nid[invoke]()];
+return str[invoke]("try(", Self, ", ", Parent, ").\n", line_and_col[invoke](dot(node, 'pos'), Self), "\n", "body(", Body, ", ", Self, ").\n", emit_ast[invoke](dot(node, 'body'), Body), "\n", (__coil_temp = {left: dot(node, 'catch')}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = emit_node[invoke](dot(node, 'catch'), Self), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left), (__coil_temp = {left: dot(node, 'finally')}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = emit_node[invoke](dot(node, 'finally'), Self), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left));}], [Keyword.for("finally"), function ({'body': body, 'pos': pos}) {
+body ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, Body] = [nid[invoke](), nid[invoke]()];
+return str[invoke]("finally(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "body(", Body, ", ", Self, ").\n", emit_ast[invoke](body, Body));}], [Keyword.for("catch"), function ({'name': name, 'body': body, 'pos': pos}) {
+name ??= nil;
+body ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, Body] = [nid[invoke](), nid[invoke]()];
+return str[invoke]("catch(", name, ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "body(", Body, ", ", Self, ").\n", emit_ast[invoke](body, Body));}], [Keyword.for("while_let_loop"), function ({'assign_expr': assign_expr, 'test_expr': test_expr, 'body': body, 'pos': pos}) {
+assign_expr ??= nil;
+test_expr ??= nil;
+body ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, Assign, Test, Body] = [nid[invoke](), nid[invoke](), nid[invoke](), nid[invoke]()];
+return str[invoke]("while_let_loop(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_assign_expr[invoke](assign_expr, Assign), "\n", "test_expr(", Test, ", ", Self, ").\n", emit_node[invoke](test_expr, Test), "\n", "body(", Body, ", ", Self, ").\n", emit_ast[invoke](body, Body));}], [Keyword.for("while_loop"), function ({'body': body, 'test_expr': test_expr, 'pos': pos}) {
 body ??= nil;
 test_expr ??= nil;
 pos ??= nil;let __coil_temp;
@@ -185,19 +203,19 @@ pass ??= nil;
 fail ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Assign, Expr, Pass, Fail] = [nid[invoke](), nid[invoke](), nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("if_let(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_assign_expr[invoke](assign_expr, Assign), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", "fail(", Fail, ", ", Self, ").\n", emit_ast[invoke](fail, Fail));}], [Keyword.for("if"), function ({'expr': expr, 'pass': pass, 'fail': fail, 'pos': pos}) {
+return str[invoke]("if_let(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_assign_expr[invoke](assign_expr, Assign), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", (__coil_temp = {left: fail}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("fail(", Fail, ", ", Self, ").\n", emit_ast[invoke](fail, Fail)), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left));}], [Keyword.for("if"), function ({'expr': expr, 'pass': pass, 'fail': fail, 'pos': pos}) {
 expr ??= nil;
 pass ??= nil;
 fail ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Expr, Pass, Fail] = [nid[invoke](), nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("if(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", "fail(", Fail, ", ", Self, ").\n", emit_ast[invoke](fail, Fail));}], [Keyword.for("else_if"), function ({'expr': expr, 'pass': pass, 'fail': fail, 'pos': pos}) {
+return str[invoke]("if(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", (__coil_temp = {left: fail}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("fail(", Fail, ", ", Self, ").\n", emit_ast[invoke](fail, Fail)), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left));}], [Keyword.for("else_if"), function ({'expr': expr, 'pass': pass, 'fail': fail, 'pos': pos}) {
 expr ??= nil;
 pass ??= nil;
 fail ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Expr, Pass, Fail] = [nid[invoke](), nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("else_if(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", "fail(", Fail, ", ", Self, ").\n", emit_ast[invoke](fail, Fail));}], [Keyword.for("else"), function ({'body': body, 'pos': pos}) {
+return str[invoke]("else_if(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", (__coil_temp = {left: fail}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("fail(", Fail, ", ", Self, ").\n", emit_ast[invoke](fail, Fail)), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left));}], [Keyword.for("else"), function ({'body': body, 'pos': pos}) {
 body ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();

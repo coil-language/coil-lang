@@ -210,11 +210,49 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       line_and_col(pos, Self)
     )
   end
-  -- :try
-  -- :finally
-  -- :catch
-  -- :while_let_loop
-  def :while_loop({body test_expr pos})
+  def :try(node)
+    let [Self Body] = [nid() nid()]
+    return str(
+      "try(" Self ", " Parent ").\n"
+      line_and_col(node:pos, Self) "\n"
+      "body(" Body ", " Self ").\n"
+      emit_ast(node:body, Body) "\n"
+      node:catch and emit_node(node:catch, Self)
+      node:finally and emit_node(node:finally, Self)
+    )
+  end
+  def :finally({body, pos})
+    let [Self Body] = [nid() nid()]
+    return str(
+      "finally(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      "body(" Body ", " Self ").\n"
+      emit_ast(body, Body)
+    )
+  end
+  def :catch({name, body, pos})
+    let [Self Body] = [nid() nid()]
+    return str(
+      "catch(" name ", " Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      "body(" Body ", " Self ").\n"
+      emit_ast(body, Body)
+    )
+  end
+  def :while_let_loop({assign_expr, test_expr, body, pos})
+    let [Self Assign Test Body] = [nid() nid() nid() nid()]
+    return str(
+      "while_let_loop(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      "assign_expr(" Assign ", " Self ").\n"
+      emit_assign_expr(assign_expr, Assign) "\n"
+      "test_expr(" Test ", " Self ").\n"
+      emit_node(test_expr, Test) "\n"
+      "body(" Body ", " Self ").\n"
+      emit_ast(body, Body)
+    )
+  end
+  def :while_loop({body, test_expr, pos})
     let [Self TestExpr] = [nid() nid()]
     return str(
       "while_loop(" Self ", " Parent ").\n"
@@ -272,8 +310,10 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       emit_node(expr, Expr) "\n"
       "pass(" Pass ", " Self ").\n"
       emit_ast(pass, Pass) "\n"
-      "fail(" Fail ", " Self ").\n"
-      emit_ast(fail, Fail)
+      fail and str(
+        "fail(" Fail ", " Self ").\n"
+        emit_ast(fail, Fail)
+      )
     )
   end
   def :if({expr, pass, fail, pos})
@@ -285,8 +325,10 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       emit_node(expr, Expr) "\n"
       "pass(" Pass ", " Self ").\n"
       emit_ast(pass, Pass) "\n"
-      "fail(" Fail ", " Self ").\n"
-      emit_ast(fail, Fail)
+      fail and str(
+        "fail(" Fail ", " Self ").\n"
+        emit_ast(fail, Fail)
+      )
     )
   end
   def :else_if({expr, pass, fail, pos})
@@ -298,8 +340,10 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       emit_node(expr, Expr) "\n"
       "pass(" Pass ", " Self ").\n"
       emit_ast(pass, Pass) "\n"
-      "fail(" Fail ", " Self ").\n"
-      emit_ast(fail, Fail)
+      fail and str(
+        "fail(" Fail ", " Self ").\n"
+        emit_ast(fail, Fail)
+      )
     )
   end
   def :else({body pos})
