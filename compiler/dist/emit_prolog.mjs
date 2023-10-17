@@ -203,19 +203,19 @@ pass ??= nil;
 fail ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Assign, Expr, Pass, Fail] = [nid[invoke](), nid[invoke](), nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("if_let(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_node[invoke](assign_expr, Assign), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", (__coil_temp = {left: fail}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("fail(", Fail, ", ", Self, ").\n", emit_ast[invoke](fail, Fail)), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left));}], [Keyword.for("if"), function ({'expr': expr, 'pass': pass, 'fail': fail, 'pos': pos}) {
+return str[invoke]("if_let(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_node[invoke](assign_expr, Assign), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", (__coil_temp = {left: fail}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("fail(", Fail, ", ", Self, ").\n", emit_node[invoke](fail, Fail)), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left));}], [Keyword.for("if"), function ({'expr': expr, 'pass': pass, 'fail': fail, 'pos': pos}) {
 expr ??= nil;
 pass ??= nil;
 fail ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Expr, Pass, Fail] = [nid[invoke](), nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("if(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", (__coil_temp = {left: fail}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("fail(", Fail, ", ", Self, ").\n", emit_ast[invoke](fail, Fail)), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left));}], [Keyword.for("else_if"), function ({'expr': expr, 'pass': pass, 'fail': fail, 'pos': pos}) {
+return str[invoke]("if(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", (__coil_temp = {left: fail}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("fail(", Fail, ", ", Self, ").\n", emit_node[invoke](fail, Fail)), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left));}], [Keyword.for("else_if"), function ({'expr': expr, 'pass': pass, 'fail': fail, 'pos': pos}) {
 expr ??= nil;
 pass ??= nil;
 fail ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Expr, Pass, Fail] = [nid[invoke](), nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("else_if(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", (__coil_temp = {left: fail}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("fail(", Fail, ", ", Self, ").\n", emit_ast[invoke](fail, Fail)), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left));}], [Keyword.for("else"), function ({'body': body, 'pos': pos}) {
+return str[invoke]("else_if(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", (__coil_temp = {left: fail}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("fail(", Fail, ", ", Self, ").\n", emit_node[invoke](fail, Fail)), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left));}], [Keyword.for("else"), function ({'body': body, 'pos': pos}) {
 body ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
@@ -341,7 +341,7 @@ lhs ??= nil;
 args ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Args, Lhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("fn_call(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "args(", Args, ", ", Self, ").\n", dot(dot(args, map)[invoke]((node) => {
+return str[invoke]("fn_call(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "args(", Args, ", ", Self, ").\n", dot(dot(args, map)[invoke]((node) => {
 node ??= nil;return emit_node[invoke](node, Args);}), join)[invoke]("\n"));}], [Keyword.for("exclusive_range"), function ({'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
 lhs ??= nil;
 rhs ??= nil;
@@ -357,9 +357,10 @@ lhs ??= nil;
 property ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
-return str[invoke]("keyword_lookup(", quote[invoke](property), ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_node[invoke](lhs, Self));}], [Keyword.for("dot"), function ({'lhs': lhs, 'rhs': rhs}) {
+return str[invoke]("keyword_lookup(", quote[invoke](property), ", ", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_node[invoke](lhs, Self));}], [Keyword.for("dot"), function ({'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
 lhs ??= nil;
-rhs ??= nil;let __coil_temp;
+rhs ??= nil;
+pos ??= nil;let __coil_temp;
 let [Self, Lhs, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
 return str[invoke]("dot(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs), "\n");}]])), pipe)[invoke]((f) => {
 f ??= nil;
@@ -369,7 +370,7 @@ let __coil_temp;
 return f[invoke](node, Parent);
 } else {
 let __coil_temp;
-dot(console, 'error')[invoke](node);
+dot(console, 'error')[invoke]("unknown", node, dot(Error[Meta.create]([]), 'stack'));
 };});};
 let emit_ast = function (ast, Parent) {
 ast ??= nil;
@@ -377,7 +378,7 @@ Parent ??= nil;let __coil_temp;
 return dot(dot(dot(dot(dot(ast, map)[invoke]((node) => {
 node ??= nil;return emit_node[invoke](node, Parent);}), flat_map)[invoke]((statement) => {
 statement ??= nil;return dot(statement, Keyword.for("split"))[invoke]("\n");}), into)[invoke]([]), Keyword.for("sort"))[invoke](), join)[invoke]("\n");};
-let ast = dot(dot(tokenize[invoke](dot(Deno, 'readTextFileSync')[invoke]("./example.coil")), pipe)[invoke]((tokens) => {
+let ast = dot(dot(tokenize[invoke](dot(Deno, 'readTextFileSync')[invoke]("./src/tokenizer.coil")), pipe)[invoke]((tokens) => {
 tokens ??= nil;return CollectionView[Meta.create]([tokens, (0)]);}), pipe)[invoke](parse);
 let prelude = dot(Deno, 'readTextFileSync')[invoke]("./prolog_prelude.pl");
 let module_nid = nid[invoke]();

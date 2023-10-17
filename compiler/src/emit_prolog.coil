@@ -315,7 +315,7 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       emit_ast(pass, Pass) "\n"
       fail and str(
         "fail(" Fail ", " Self ").\n"
-        emit_ast(fail, Fail)
+        emit_node(fail, Fail)
       )
     )
   end
@@ -330,7 +330,7 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       emit_ast(pass, Pass) "\n"
       fail and str(
         "fail(" Fail ", " Self ").\n"
-        emit_ast(fail, Fail)
+        emit_node(fail, Fail)
       )
     )
   end
@@ -345,7 +345,7 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       emit_ast(pass, Pass) "\n"
       fail and str(
         "fail(" Fail ", " Self ").\n"
-        emit_ast(fail, Fail)
+        emit_node(fail, Fail)
       )
     )
   end
@@ -574,7 +574,7 @@ def emit_node(node, Parent) = node.pipe(:type Map{
     let [Self Args Lhs] = [nid() nid() nid()]
     return str(
       "fn_call(" Self ", " Parent ").\n"
-      line_and_col(pos, Self)
+      line_and_col(pos, Self) "\n"
       "lhs(" Lhs ", " Self ").\n"
       emit_node(lhs, Lhs) "\n"
       "args(" Args ", " Self ").\n"
@@ -615,7 +615,7 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       emit_node(lhs, Self)
     )
   end
-  def :dot({lhs, rhs})
+  def :dot({lhs, rhs, pos})
     let [Self Lhs Rhs] = [nid() nid() nid()]
     return str(
       "dot(" Self ", " Parent ").\n"
@@ -630,7 +630,7 @@ def emit_node(node, Parent) = node.pipe(:type Map{
   if f
     return f(node, Parent)
   else
-    console:error(node)
+    console:error("unknown", node, Error[]:stack)
   end
 end)
 
@@ -641,7 +641,7 @@ def emit_ast(ast, Parent) = ast
   .:sort()
   .join("\n")
 
-let ast = tokenize(Deno:readTextFileSync("./example.coil"))
+let ast = tokenize(Deno:readTextFileSync("./src/tokenizer.coil"))
   .pipe(|tokens| CollectionView[tokens 0])
   .pipe(parse)
 
