@@ -261,10 +261,55 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       methods.map(|node| emit_node(node, Self)).join("\n")
     )
   end
-  -- :if_let
-  -- :if
-  -- :else_if
-  -- :else
+  def :if_let({assign_expr, expr, pass, fail, pos})
+    let [Self Assign Expr Pass Fail] = [nid() nid() nid() nid() nid()]
+    return str(
+      "if_let(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      "assign_expr(" Assign ", " Self ").\n"
+      emit_assign_expr(assign_expr, Assign) "\n"
+      "expr(" Expr ", " Self ").\n"
+      emit_node(expr, Expr) "\n"
+      "pass(" Pass ", " Self ").\n"
+      emit_ast(pass, Pass) "\n"
+      "fail(" Fail ", " Self ").\n"
+      emit_ast(fail, Fail)
+    )
+  end
+  def :if({expr, pass, fail, pos})
+    let [Self Expr Pass Fail] = [nid() nid() nid() nid()]
+    return str(
+      "if(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      "expr(" Expr ", " Self ").\n"
+      emit_node(expr, Expr) "\n"
+      "pass(" Pass ", " Self ").\n"
+      emit_ast(pass, Pass) "\n"
+      "fail(" Fail ", " Self ").\n"
+      emit_ast(fail, Fail)
+    )
+  end
+  def :else_if({expr, pass, fail, pos})
+    let [Self Expr Pass Fail] = [nid() nid() nid() nid()]
+    return str(
+      "else_if(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      "expr(" Expr ", " Self ").\n"
+      emit_node(expr, Expr) "\n"
+      "pass(" Pass ", " Self ").\n"
+      emit_ast(pass, Pass) "\n"
+      "fail(" Fail ", " Self ").\n"
+      emit_ast(fail, Fail)
+    )
+  end
+  def :else({body pos})
+    let Self = nid()
+    return str(
+      "else(" Self ", " Parent ").\n"
+      line_and_col(pos, Self) "\n"
+      emit_ast(body, Self)
+    )
+  end
   def :unapplied_equality_op({op, pos})
     let Self = nid()
     return str(

@@ -178,7 +178,30 @@ name ??= nil;
 methods ??= nil;let __coil_temp;
 let Self = nid[invoke]();
 return str[invoke]("protocol_def(", name, ", ", Self, ", ", Parent, ").\n", dot(dot(methods, map)[invoke]((node) => {
-node ??= nil;return emit_node[invoke](node, Self);}), join)[invoke]("\n"));}], [Keyword.for("unapplied_equality_op"), function ({'op': op, 'pos': pos}) {
+node ??= nil;return emit_node[invoke](node, Self);}), join)[invoke]("\n"));}], [Keyword.for("if_let"), function ({'assign_expr': assign_expr, 'expr': expr, 'pass': pass, 'fail': fail, 'pos': pos}) {
+assign_expr ??= nil;
+expr ??= nil;
+pass ??= nil;
+fail ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, Assign, Expr, Pass, Fail] = [nid[invoke](), nid[invoke](), nid[invoke](), nid[invoke](), nid[invoke]()];
+return str[invoke]("if_let(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_assign_expr[invoke](assign_expr, Assign), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", "fail(", Fail, ", ", Self, ").\n", emit_ast[invoke](fail, Fail));}], [Keyword.for("if"), function ({'expr': expr, 'pass': pass, 'fail': fail, 'pos': pos}) {
+expr ??= nil;
+pass ??= nil;
+fail ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, Expr, Pass, Fail] = [nid[invoke](), nid[invoke](), nid[invoke](), nid[invoke]()];
+return str[invoke]("if(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", "fail(", Fail, ", ", Self, ").\n", emit_ast[invoke](fail, Fail));}], [Keyword.for("else_if"), function ({'expr': expr, 'pass': pass, 'fail': fail, 'pos': pos}) {
+expr ??= nil;
+pass ??= nil;
+fail ??= nil;
+pos ??= nil;let __coil_temp;
+let [Self, Expr, Pass, Fail] = [nid[invoke](), nid[invoke](), nid[invoke](), nid[invoke]()];
+return str[invoke]("else_if(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", "fail(", Fail, ", ", Self, ").\n", emit_ast[invoke](fail, Fail));}], [Keyword.for("else"), function ({'body': body, 'pos': pos}) {
+body ??= nil;
+pos ??= nil;let __coil_temp;
+let Self = nid[invoke]();
+return str[invoke]("else(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", emit_ast[invoke](body, Self));}], [Keyword.for("unapplied_equality_op"), function ({'op': op, 'pos': pos}) {
 op ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
