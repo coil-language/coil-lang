@@ -1,7 +1,7 @@
 "use strict";
 import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b } from '../src/std/globals.mjs'
 import Meta, {
-  nil__q, is_a__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe
+  nil__q, is_a__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, to_s
 } from '../src/std/meta.mjs';
 import Iter, {
   take, until, skip, find, zip, reduce, map, flat_map, each, count,
@@ -34,7 +34,8 @@ expr ??= nil;
 parser ??= nil;let __coil_temp;
 if (dot(expr, nil__q)[invoke]()[Meta.as_bool]()) {
 let __coil_temp;
-panic__b[invoke]("Parser Failed - Expected ", parser);
+dot(parser, log)[invoke]();
+panic__b[invoke]("Parser Failed");
 } else {
 let __coil_temp;
 return expr;

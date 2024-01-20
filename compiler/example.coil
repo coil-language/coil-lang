@@ -1,9 +1,1 @@
-let [a b] = [1 "2" :k {} b]
-..10
-..=11
-
-/a-b/
-
-for await a of [1 2]
-
-end
+[1 2 3].to_s().log()

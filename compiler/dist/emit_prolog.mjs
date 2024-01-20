@@ -1,7 +1,7 @@
 "use strict";
 import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b } from '../src/std/globals.mjs'
 import Meta, {
-  nil__q, is_a__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe
+  nil__q, is_a__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, to_s
 } from '../src/std/meta.mjs';
 import Iter, {
   take, until, skip, find, zip, reduce, map, flat_map, each, count,

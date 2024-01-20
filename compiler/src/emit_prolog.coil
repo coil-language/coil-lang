@@ -581,7 +581,7 @@ def emit_node(node, Parent) = node.pipe(:type Map{
     )
   end
   def :inclusive_range({lhs rhs pos})
-  let [Self Lhs Rhs] = [nid() nid() nid()]
+    let [Self Lhs Rhs] = [nid() nid() nid()]
     return str(
       "inclusive_range(" Self ", " Parent ").\n"
       line_and_col(pos, Self) "\n"
@@ -635,5 +635,7 @@ let ast = tokenize(Deno:readTextFileSync("./src/emit_prolog.coil"))
 let prelude = Deno:readTextFileSync("./prolog_prelude.pl")
 
 let module_nid = nid()
+
+
 
 str(prelude "module([main], " module_nid ").\n" emit_ast(ast, module_nid)):trim().log()

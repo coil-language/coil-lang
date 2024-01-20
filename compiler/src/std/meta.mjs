@@ -14,7 +14,48 @@ const Meta = Object.freeze({
   pipe: Symbol("coil-lang@0.1.0/std/meta/Meta:pipe"),
   as_bool: Symbol("coil-lang@0.1.0/std/meta/Meta:as_bool"),
   as_num: Symbol("coil-lang@0.1.0/std/meta/Meta:as_num"),
+  to_s: Symbol("coil-lang@0.1.0/std/meta/Meta:debug"),
 });
+
+String.prototype[Meta.to_s] = function () {
+  return `"${this}"`;
+};
+
+Keyword.prototype[Meta.to_s] = function () {
+  return `:${this}`;
+};
+
+Number.prototype[Meta.to_s] = function () {
+  return this.toString();
+};
+
+Nil.prototype[Meta.to_s] = function () {
+  return "nil";
+};
+
+Boolean.prototype[Meta.to_s] = function () {
+  return this.toString();
+};
+
+Map.prototype[Meta.to_s] = function () {
+  let output = "Map{ ";
+  for (let [key, value] of this) {
+    output += `${key[Meta.to_s]()} => ${value[Meta.to_s]()}, `;
+  }
+  return output + "}";
+};
+
+ObjectLiteral.prototype[Meta.to_s] = function () {
+  let output = "{ ";
+  for (let [key, value] of this) {
+    output += `${key[Meta.to_s]()} => ${value[Meta.to_s]()}, `;
+  }
+  return output + "}";
+};
+
+Array.prototype[Meta.to_s] = function () {
+  return `[${this.map((x) => x[Meta.to_s]()).join(", ")}]`;
+};
 
 Object.prototype[Meta.log] = function (...args) {
   console.log(...args, this);
@@ -243,4 +284,5 @@ export const {
   invoke,
   pipe,
   as_num,
+  to_s,
 } = Meta;
