@@ -37,7 +37,7 @@ def eval_if({expr, pass, fail}) = str(
 def eval_str({value})
   value = value.:slice(1, -1)
   if value.:includes("\n")
-    return str("`" value "`")
+    return str("`" value:replaceAll("`", "\\`") "`")
   else
     return str("\"" value "\"")
   end

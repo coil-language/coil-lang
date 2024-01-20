@@ -57,7 +57,7 @@ value ??= nil;let __coil_temp;
 value = dot(value, Keyword.for("slice"))[invoke]((1), (-1));
 if (dot(value, Keyword.for("includes"))[invoke]("\n")[Meta.as_bool]()) {
 let __coil_temp;
-return str[invoke]("`", value, "`");
+return str[invoke]("`", dot(value, 'replaceAll')[invoke]("`", "\\`"), "`");
 } else {
 let __coil_temp;
 return str[invoke]("\"", value, "\"");
