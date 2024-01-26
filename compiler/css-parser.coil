@@ -1,16 +1,5 @@
 export protocol matches?
 
-export let config = {ignore: [/^\s+/]}
-
-def skip_ignores(str)
-  for rule of config:ignore
-    if let {skip} = rule.matches?(str)
-      str = str:slice(skip)
-    end
-  end
-  return str
-end
-
 def String:prototype.matches?(str)
   if str:startsWith(this)
     return {result: this, skip: this.len()}
@@ -41,7 +30,6 @@ def Then:prototype.invoke([state str]) = this:parser([state str])
 
 export def Skip(@pattern) end
 def Skip:prototype.invoke([state str])
-  str = skip_ignores(str)
   if let {result skip} = this:pattern.matches?(str)
     return [state str:slice(skip)]
   else
@@ -51,7 +39,6 @@ end
 
 export def Store(@pattern @property) end
 def Store:prototype.invoke([state str])
-  str = skip_ignores(str)
   if let {result skip} = this:pattern.matches?(str)
     return [{...state this:property => result} str:slice(skip)]
   else
@@ -61,23 +48,30 @@ end
 
 def Until(@pattern @parser @property) end
 def Until:prototype.invoke([state str])
-  str = skip_ignores(str)
   let nodes = []
   while !this:pattern.matches?(str)
     let [result rest_str] = this:parser([nil str])
     nodes:push(result)
-    str = skip_ignores(rest_str)
+    str = rest_str
   end
   return [{...state this:property => nodes} str]
 end
 
 def ParseMap(@entries) end
 def ParseMap:prototype.invoke([state str])
-  str = skip_ignores(str)
-  return this:entries
-    .find(|[pattern _]| pattern.matches?(str))
-    .pipe(|[_ parser]| parser([state str]))
+  if let [_ parser] = this:entries.find(|[pattern _]| pattern.matches?(str))
+    return parser([state str])
+  else
+    this.log([state str])
+    panic!("ParseMap failed!")
+  end
 end
+
+def Trim end
+def Trim.invoke([state str]) = [state str:trimLeft()]
+
+def Debug(@msg) end
+def Debug:prototype.invoke([state str]) = [state str].log(this:msg)
 
 let parse_class_selector = Parser[
   Init[{kind: :class_selector}]
@@ -87,7 +81,7 @@ let parse_class_selector = Parser[
 
 let parse_selector_arg = Parser[
   Init[{kind: :selector_arg}]
-  Store[/^\w+/ :arg]
+  Trim Store[/^\w+/ :arg] Trim
 ]
 
 let parse_pseudo_selector_with_args = Parser[
@@ -95,8 +89,8 @@ let parse_pseudo_selector_with_args = Parser[
   Skip[":"]
   Store[/^(\w|-)+/ :name]
   Skip["("]
-  Until[")" parse_selector_arg :args]
-  Skip[")"]
+  Trim Until[")" parse_selector_arg :args]
+  Trim Skip[")"]
 ]
 
 let parse_pseudo_selector_without_args = Parser[
@@ -117,29 +111,37 @@ let parse_px_value = Parser[
   Skip["px"]
 ]
 
+let parse_pct_value = Parser[
+  Init[{kind: :pct_value}]
+  Store[/^\d+/ :value]
+  Skip["%"]
+]
+
 let parse_value = ParseMap{
   /^\d+px/ => parse_px_value
+  /^\d+%/ => parse_pct_value
 }
 
 let parse_rule = Parser[
   Init[{kind: :rule}]
-  Store[/^\w+/ :name]
-  Skip[":"]
-  Then[parse_value :value]
-  Skip[";"]
+  Trim Store[/^\w+/ :name]
+  Debug["rule"]
+  Trim Skip[":"]
+  Trim Then[parse_value :value]
+  Trim Skip[";"]
 ]
 
 let parse_declaration = Parser[
   Init[{kind: :declaration}]
-  Then[parse_query :query]
-  Skip["{"]
-  Until["}" parse_rule :rules]
-  Skip["}"]
+  Trim Then[parse_query :query]
+  Trim Skip["{"]
+  Until[/\s*}/ parse_rule :rules]
+  Trim Skip["}"]
 ]
 
 let program = "
 :nth-child(odd) {
-  width: 20px;
+  
 }
 "
 
