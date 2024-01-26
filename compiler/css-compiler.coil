@@ -1,0 +1,112 @@
+export protocol matches?
+
+export let config = {ignore: [/^\s+/]}
+
+def skip_ignores(str)
+  for rule of config:ignore
+    if let {skip} = rule.matches?(str)
+      str = str:slice(skip)
+    end
+  end
+  return str
+end
+
+def String:prototype.matches?(str)
+  if str:startsWith(this)
+    return {result: this, skip: this.len()}
+  else
+    return false
+  end
+end
+
+def RegExp:prototype.matches?(str)
+  let result = str:match(this)
+  if result.nil?() or result:index != 0
+    return false
+  else
+    return {result: result.0, skip: result.0.:length}
+  end
+end
+
+export def Parser(...@steps) end
+def Parser:prototype.invoke([_ str]) =
+  this:steps.reduce(|[result str] parser| parser([result str]), [nil str])
+
+export def Init(@state) end
+def Init:prototype.invoke([_ str]) = [this:state str]
+
+export def Then(@parser @property) end
+def Then:prototype.invoke([state str]) = this:parser([state str])
+  .pipe(|[state str]| [{this:property => state} str])
+
+export def Skip(@pattern) end
+def Skip:prototype.invoke([state str])
+  str = skip_ignores(str)
+  if let {result skip} = this:pattern.matches?(str)
+    return [state str:slice(skip)]
+  else
+    this.log({state: state, str: str}) Error[]:stack.log() panic!()
+  end
+end
+
+export def Store(@pattern @property) end
+def Store:prototype.invoke([state str])
+  str = skip_ignores(str)
+  if let {result skip} = this:pattern.matches?(str)
+    return [{...state this:property => result} str:slice(skip)]
+  else
+    this.log() Error[]:stack.log() panic!()
+  end
+end
+
+def Until(@pattern @parser @property) end
+def Until:prototype.invoke([state str])
+  str = skip_ignores(str)
+  let nodes = []
+  while !this:pattern.matches?(str)
+    let [result rest_str] = this:parser([nil str])
+    nodes:push(result)
+    str = skip_ignores(rest_str)
+  end
+  return [{...state this:property => nodes} str]
+end
+
+def ParseMap(@entries) end
+def ParseMap:prototype.invoke([state str])
+  str = skip_ignores(str)
+  return this:entries
+    .find(|[pattern _]| pattern.matches?(str))
+    .pipe(|[_ parser]| parser([state str]))
+end
+
+let parse_class_selector = Parser[
+  Init[{kind: :class_selector}]
+  Skip["."]
+  Store[/^\w+/ :name]
+]
+
+let parse_query = ParseMap{"." => parse_class_selector}
+
+let parse_rule = Parser[
+  Init[{kind: :rule}]
+  Store[/^\w+/ :name]
+  Skip[":"]
+  Store[/((?!;).)*/ :value]
+  Skip[";"]
+]
+
+let parse_declaration = Parser[
+  Init[{kind: :declaration}]
+  Then[parse_query :query]
+  Skip["{"]
+  Until["}" parse_rule :rules]
+  Skip["}"]
+]
+
+let program = "
+.name {
+  width: 20px;
+}
+"
+
+parse_declaration([nil program]).0.log()
