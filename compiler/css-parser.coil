@@ -37,7 +37,7 @@ def Init:prototype.invoke([_ str]) = [this:state str]
 
 export def Then(@parser @property) end
 def Then:prototype.invoke([state str]) = this:parser([state str])
-  .pipe(|[state str]| [{this:property => state} str])
+  .pipe(|[result str]| [{...state this:property => result} str])
 
 export def Skip(@pattern) end
 def Skip:prototype.invoke([state str])
@@ -85,13 +85,47 @@ let parse_class_selector = Parser[
   Store[/^\w+/ :name]
 ]
 
-let parse_query = ParseMap{"." => parse_class_selector}
+let parse_selector_arg = Parser[
+  Init[{kind: :selector_arg}]
+  Store[/^\w+/ :arg]
+]
+
+let parse_pseudo_selector_with_args = Parser[
+  Init[{kind: :pseudo_selector_with_args}]
+  Skip[":"]
+  Store[/^(\w|-)+/ :name]
+  Skip["("]
+  Until[")" parse_selector_arg :args]
+  Skip[")"]
+]
+
+let parse_pseudo_selector_without_args = Parser[
+  Init[{kind: :pseudo_selector_without_args}]
+  Skip[":"]
+  Store[/^(\w|-)+/ :name]
+]
+
+let parse_query = ParseMap{
+  "." => parse_class_selector
+  /^:(\w|-)+\(/ => parse_pseudo_selector_with_args
+  ":" => parse_pseudo_selector_without_args
+}
+
+let parse_px_value = Parser[
+  Init[{kind: :px_value}]
+  Store[/^\d+/ :value]
+  Skip["px"]
+]
+
+let parse_value = ParseMap{
+  /^\d+px/ => parse_px_value
+}
 
 let parse_rule = Parser[
   Init[{kind: :rule}]
   Store[/^\w+/ :name]
   Skip[":"]
-  Store[/((?!;).)*/ :value]
+  Then[parse_value :value]
   Skip[";"]
 ]
 
@@ -104,7 +138,7 @@ let parse_declaration = Parser[
 ]
 
 let program = "
-.name {
+:nth-child(odd) {
   width: 20px;
 }
 "
