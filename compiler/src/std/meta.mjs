@@ -194,7 +194,7 @@ Nil.prototype[Meta["exists?"]] = function () {
 };
 
 Object.prototype[Meta["is_a?"]] = function (Ctor) {
-  return this instanceof Ctor;
+  return Object(this) instanceof Ctor;
 };
 
 Function.prototype[Meta.create] = function (args) {

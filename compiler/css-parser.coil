@@ -166,7 +166,7 @@ let parse_declaration = Parser[
   Init[{kind: :declaration}]
   Trim Then[parse_query :query]
   Trim Skip["{"]
-  Until[/\s*}/ parse_rule :rules]
+  Until[/^\s*}/ parse_rule :rules]
   Trim Skip["}"]
 ]
 
