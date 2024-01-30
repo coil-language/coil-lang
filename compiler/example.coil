@@ -1,3 +1,6 @@
-"
-`
-".log()
+let f = |a| {
+  let b = a  
+  return b + 1
+}
+
+f(1).log()

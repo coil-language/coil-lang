@@ -303,7 +303,7 @@ return Parser[Meta.create]([AbortIf[Meta.create]([not_adjacent__q]), Init[Meta.c
 lhs ??= nil;
 type ??= nil;
 property ??= nil;
-pos ??= nil;return ObjectLiteral[Meta.from_entries]([[Keyword.for("lhs"), lhs], [Keyword.for("type"), type], [Keyword.for("property"), dot(property, 'slice')[invoke]((1))], [Keyword.for("pos"), pos]]);}])])[invoke](tokens);};
+pos ??= nil;return (ObjectLiteral[Meta.from_entries]([[Keyword.for("lhs"), lhs], [Keyword.for("type"), type], [Keyword.for("property"), dot(property, 'slice')[invoke]((1))], [Keyword.for("pos"), pos]]));}])])[invoke](tokens);};
 let not_adjacent__q = function ([_expr, tokens]) {
 _expr ??= nil;
 tokens ??= nil;let __coil_temp;
@@ -515,10 +515,13 @@ tokens ??= nil;let __coil_temp;
 return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("keyword")]])]), One[Meta.create]([Keyword.for("keyword"), Keyword.for("value")]), FMap[Meta.create]([({'type': type, 'value': value, 'pos': pos}) => {
 type ??= nil;
 value ??= nil;
-pos ??= nil;return ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), type], [Keyword.for("value"), dot(value, 'slice')[invoke]((1))], [Keyword.for("pos"), pos]]);}])])[invoke](tokens);};
+pos ??= nil;return (ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), type], [Keyword.for("value"), dot(value, 'slice')[invoke]((1))], [Keyword.for("pos"), pos]]));}])])[invoke](tokens);};
+let parse_anon_fn_body = function (tokens) {
+tokens ??= nil;let __coil_temp;
+return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("brace_body")]])]), Chomp[Meta.create]([Keyword.for("open_b")]), Until[Meta.create]([Keyword.for("close_b"), parse_statement, Keyword.for("body")]), Chomp[Meta.create]([Keyword.for("close_b")])])[invoke](tokens);};
 let parse_anon_fn = function (tokens) {
 tokens ??= nil;let __coil_temp;
-return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("anon_fn")]])]), Chomp[Meta.create]([Keyword.for("pipe_bar")]), Until[Meta.create]([Keyword.for("pipe_bar"), parse_assign_expr, Keyword.for("args")]), Chomp[Meta.create]([Keyword.for("pipe_bar")]), Then[Meta.create]([parse_expr, Keyword.for("return_expr")])])[invoke](tokens);};
+return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("anon_fn")]])]), Chomp[Meta.create]([Keyword.for("pipe_bar")]), Until[Meta.create]([Keyword.for("pipe_bar"), parse_assign_expr, Keyword.for("args")]), Chomp[Meta.create]([Keyword.for("pipe_bar")]), Then[Meta.create]([ParseMap[Meta.from_entries]([[Keyword.for("open_b"), parse_anon_fn_body], [_, parse_expr]]), Keyword.for("return_node")])])[invoke](tokens);};
 let parse_anon_body_fn = function (tokens) {
 tokens ??= nil;let __coil_temp;
 return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("anon_body_fn")]])]), Chomp[Meta.create]([Keyword.for("do"), Keyword.for("pipe_bar")]), Until[Meta.create]([Keyword.for("pipe_bar"), parse_assign_expr, Keyword.for("args")]), Chomp[Meta.create]([Keyword.for("pipe_bar")]), Then[Meta.create]([block[invoke](), Keyword.for("body")])])[invoke](tokens);};

@@ -183,7 +183,7 @@ def parse_keyword_lookup(tokens, lhs) = Parser[
   Init[{type: :keyword_lookup, lhs: lhs}]
   One[:keyword :property]
   FMap[|{lhs, type, property, pos}|
-    {lhs: lhs, type: type, property: property:slice(1), pos: pos}]
+    ({lhs: lhs, type: type, property: property:slice(1), pos: pos})]
 ](tokens)
 
 def not_adjacent?([_expr tokens])
@@ -554,7 +554,14 @@ def parse_prefix_exclusive_range(tokens) = Parser[
 def parse_keyword(tokens) = Parser[
   Init[{type: :keyword}]
   One[:keyword :value]
-  FMap[|{type, value, pos}| {type: type, value: value:slice(1), pos: pos}]
+  FMap[|{type, value, pos}| ({type: type, value: value:slice(1), pos: pos})]
+](tokens)
+
+def parse_anon_fn_body(tokens) = Parser[
+  Init[{type: :brace_body}]
+  Chomp[:open_b]
+  Until[:close_b parse_statement :body]
+  Chomp[:close_b]
 ](tokens)
 
 def parse_anon_fn(tokens) = Parser[
@@ -562,7 +569,7 @@ def parse_anon_fn(tokens) = Parser[
   Chomp[:pipe_bar]
   Until[:pipe_bar parse_assign_expr :args]
   Chomp[:pipe_bar]
-  Then[parse_expr :return_expr]
+  Then[ParseMap{:open_b => parse_anon_fn_body, _ => parse_expr} :return_node]
 ](tokens)
 
 def parse_anon_body_fn(tokens) = Parser[

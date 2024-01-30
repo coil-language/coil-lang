@@ -143,7 +143,7 @@ let Self = nid[invoke]();
 return str[invoke]("continue(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self));}], [Keyword.for("try"), function (node) {
 node ??= nil;let __coil_temp;
 let [Self, Body] = [nid[invoke](), nid[invoke]()];
-return str[invoke]("try(", Self, ", ", Parent, ").\n", line_and_col[invoke](dot(node, 'pos'), Self), "\n", "body(", Body, ", ", Self, ").\n", emit_ast[invoke](dot(node, 'body'), Body), "\n", (__coil_temp = {left: dot(node, 'catch')}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = emit_node[invoke](dot(node, 'catch'), Self), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left), (__coil_temp = {left: dot(node, 'finally')}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = emit_node[invoke](dot(node, 'finally'), Self), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left));}], [Keyword.for("finally"), function ({'body': body, 'pos': pos}) {
+return str[invoke]("try(", Self, ", ", Parent, ").\n", line_and_col[invoke](dot(node, 'pos'), Self), "\n", "body(", Body, ", ", Self, ").\n", emit_ast[invoke](dot(node, 'body'), Body), "\n", (__coil_temp = {left: dot(node, 'catch')}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = emit_node[invoke](dot(node, 'catch'), Self), __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right), (__coil_temp = {left: dot(node, 'finally')}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = emit_node[invoke](dot(node, 'finally'), Self), __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right));}], [Keyword.for("finally"), function ({'body': body, 'pos': pos}) {
 body ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Body] = [nid[invoke](), nid[invoke]()];
@@ -190,19 +190,19 @@ pass ??= nil;
 fail ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Assign, Expr, Pass, Fail] = [nid[invoke](), nid[invoke](), nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("if_let(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_node[invoke](assign_expr, Assign), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", (__coil_temp = {left: fail}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("fail(", Fail, ", ", Self, ").\n", emit_node[invoke](fail, Fail)), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left));}], [Keyword.for("if"), function ({'expr': expr, 'pass': pass, 'fail': fail, 'pos': pos}) {
+return str[invoke]("if_let(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "assign_expr(", Assign, ", ", Self, ").\n", emit_node[invoke](assign_expr, Assign), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", (__coil_temp = {left: fail}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("fail(", Fail, ", ", Self, ").\n", emit_node[invoke](fail, Fail)), __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right));}], [Keyword.for("if"), function ({'expr': expr, 'pass': pass, 'fail': fail, 'pos': pos}) {
 expr ??= nil;
 pass ??= nil;
 fail ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Expr, Pass, Fail] = [nid[invoke](), nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("if(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", (__coil_temp = {left: fail}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("fail(", Fail, ", ", Self, ").\n", emit_node[invoke](fail, Fail)), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left));}], [Keyword.for("else_if"), function ({'expr': expr, 'pass': pass, 'fail': fail, 'pos': pos}) {
+return str[invoke]("if(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", (__coil_temp = {left: fail}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("fail(", Fail, ", ", Self, ").\n", emit_node[invoke](fail, Fail)), __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right));}], [Keyword.for("else_if"), function ({'expr': expr, 'pass': pass, 'fail': fail, 'pos': pos}) {
 expr ??= nil;
 pass ??= nil;
 fail ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Expr, Pass, Fail] = [nid[invoke](), nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("else_if(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", (__coil_temp = {left: fail}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("fail(", Fail, ", ", Self, ").\n", emit_node[invoke](fail, Fail)), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left));}], [Keyword.for("else"), function ({'body': body, 'pos': pos}) {
+return str[invoke]("else_if(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "expr(", Expr, ", ", Self, ").\n", emit_node[invoke](expr, Expr), "\n", "pass(", Pass, ", ", Self, ").\n", emit_ast[invoke](pass, Pass), "\n", (__coil_temp = {left: fail}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("fail(", Fail, ", ", Self, ").\n", emit_node[invoke](fail, Fail)), __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right));}], [Keyword.for("else"), function ({'body': body, 'pos': pos}) {
 body ??= nil;
 pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
@@ -334,12 +334,12 @@ lhs ??= nil;
 rhs ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Lhs, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("exclusive_range(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", (__coil_temp = {left: rhs}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs)), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left));}], [Keyword.for("inclusive_range"), function ({'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
+return str[invoke]("exclusive_range(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", (__coil_temp = {left: rhs}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs)), __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right));}], [Keyword.for("inclusive_range"), function ({'lhs': lhs, 'rhs': rhs, 'pos': pos}) {
 lhs ??= nil;
 rhs ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Lhs, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
-return str[invoke]("inclusive_range(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", (__coil_temp = {left: rhs}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs)), __coil_temp.right[Meta.as_bool]() === true) ? __coil_temp.right : __coil_temp.left));}], [Keyword.for("keyword_lookup"), function ({'lhs': lhs, 'property': property, 'pos': pos}) {
+return str[invoke]("inclusive_range(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", (__coil_temp = {left: rhs}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = str[invoke]("rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs)), __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right));}], [Keyword.for("keyword_lookup"), function ({'lhs': lhs, 'property': property, 'pos': pos}) {
 lhs ??= nil;
 property ??= nil;
 pos ??= nil;let __coil_temp;
