@@ -75,7 +75,6 @@ let tokenize = Tokenizer{
   /^loop\s/ => :loop
   /^and\s/ => :and
   /^or\s/ => :or
-  /^do\b/ => :do
   /^continue\s/ => :continue
   /^break\s/ => :break
   /^of\s/ => :of

@@ -55,8 +55,7 @@ pos ??= nil;let __coil_temp;
 let Self = nid[invoke]();
 return str[invoke]("line_and_col(", Self, ", ", dot(pos, 'line'), ", ", dot(pos, 'col'), ").\n", "array_node(", Self, ", ", Parent, ").\n", dot(dot(dot(elements, zip)[invoke](new ExclusiveRangeNoMaximum((0))), map)[invoke](([expr, idx]) => {
 expr ??= nil;
-idx ??= nil;
-let __coil_temp;
+idx ??= nil;let __coil_temp;
 let V2 = nid[invoke]();
 return str[invoke](emit_node[invoke](expr, V2), "\n", "array_element(", V2, ", ", idx, ", ", Self, ").");}), join)[invoke]("\n"));}], [Keyword.for("regular_record_entry"), function ({'key_expr': key_expr, 'value_expr': value_expr, 'pos': pos}) {
 key_expr ??= nil;
@@ -76,8 +75,7 @@ return str[invoke](line_and_col[invoke](pos, Self), "\n", "id_assign(", quote[in
 entries ??= nil;let __coil_temp;
 return dot(dot(dot(entries, zip)[invoke](new ExclusiveRangeNoMaximum((0))), map)[invoke](([node, idx]) => {
 node ??= nil;
-idx ??= nil;
-let __coil_temp;
+idx ??= nil;let __coil_temp;
 let Var = nid[invoke]();
 return str[invoke](emit_node[invoke](node, Var), "\n", line_and_col[invoke](dot(node, 'pos'), Var), "\n", "array_deconstruction(", Var, ", ", idx, ", ", Parent, ").");}), join)[invoke]("\n");}], [Keyword.for("id_lookup"), function ({'name': name, 'pos': pos}) {
 name ??= nil;
@@ -350,8 +348,7 @@ rhs ??= nil;
 pos ??= nil;let __coil_temp;
 let [Self, Lhs, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
 return str[invoke]("dot(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs), "\n");}]])), pipe)[invoke]((f) => {
-f ??= nil;
-let __coil_temp;
+f ??= nil;let __coil_temp;
 if (f[Meta.as_bool]()) {
 let __coil_temp;
 return f[invoke](node, Parent);

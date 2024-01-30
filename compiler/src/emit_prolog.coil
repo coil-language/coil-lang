@@ -41,13 +41,13 @@ def emit_node(node, Parent) = node.pipe(:type Map{
     return str(
       "line_and_col(" Self ", " pos:line ", " pos:col ").\n"
       "array_node(" Self ", " Parent ").\n"
-      elements.zip(0..).map(do |[expr idx]|
+      elements.zip(0..).map(|[expr idx]| {
         let V2 = nid()
         return str(
           emit_node(expr, V2) "\n"
           "array_element(" V2 ", " idx ", " Self ")."
         )
-      end).join("\n")
+      }).join("\n")
     )
   end
   def :regular_record_entry({key_expr value_expr, pos})
@@ -77,14 +77,14 @@ def emit_node(node, Parent) = node.pipe(:type Map{
     )
   end
   def :array_deconstruction({entries}) = entries.zip(0..)
-    .map(do |[node idx]|
+    .map(|[node idx]| {
       let Var = nid()
       return str(
         emit_node(node, Var) "\n"
         line_and_col(node:pos, Var) "\n"
         "array_deconstruction(" Var ", " idx ", " Parent ")."
       )
-    end).join("\n")
+    }).join("\n")
   def :id_lookup({name pos})
     let Self = nid()
     return str(
@@ -612,13 +612,13 @@ def emit_node(node, Parent) = node.pipe(:type Map{
       emit_node(rhs, Rhs) "\n"
     )
   end
-}).pipe(do |f|
+}).pipe(|f| {
   if f
     return f(node, Parent)
   else
     console:error("unknown", node, Error[]:stack)
   end
-end)
+})
 
 def emit_ast(ast, Parent) = ast
   .map(|node| emit_node(node, Parent))

@@ -348,11 +348,11 @@ def :query.run(db {fact_name args}) =
     )
     .map(|tuple| args
       .zip(tuple:args)
-      .flat_map(do |[query found]|
+      .flat_map(|[query found]| {
         if query:kind == :variable
           return Map{query:name => found}
         end
-      end)
+      })
       .compact()
       .into(Map{})
     )
