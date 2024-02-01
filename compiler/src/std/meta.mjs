@@ -1,20 +1,20 @@
 import { ObjectLiteral, Keyword, Nil, nil } from "./globals.mjs";
 
 const Meta = Object.freeze({
-  "nil?": Symbol("coil-lang@0.1.0/std/meta/Meta:nil?"),
+  "nil?": Symbol("coil-lang@0.1.6/std/meta/Meta:nil?"),
   // look into using `Symbol.hasInstance`
-  "is_a?": Symbol("coil-lang@0.1.0/std/meta/Meta:is_a?"),
-  create: Symbol("coil-lang@0.1.0/std/meta/Meta:create"),
-  from_entries: Symbol("coil-lang@0.1.0/std/meta/Meta:from_entries"),
-  "==": Symbol("coil-lang@0.1.0/std/meta/Meta:=="),
-  "!=": Symbol("coil-lang@0.1.0/std/meta/Meta:!="),
-  "exists?": Symbol("coil-lang@0.1.0/std/meta/Meta:exists?"),
-  log: Symbol("coil-lang@0.1.0/std/meta/Meta:log"),
-  invoke: Symbol("coil-lang@0.1.0/std/meta/Meta:invoke"),
-  pipe: Symbol("coil-lang@0.1.0/std/meta/Meta:pipe"),
-  as_bool: Symbol("coil-lang@0.1.0/std/meta/Meta:as_bool"),
-  as_num: Symbol("coil-lang@0.1.0/std/meta/Meta:as_num"),
-  to_s: Symbol("coil-lang@0.1.0/std/meta/Meta:debug"),
+  "is_a?": Symbol("coil-lang@0.1.6/std/meta/Meta:is_a?"),
+  create: Symbol("coil-lang@0.1.6/std/meta/Meta:create"),
+  from_entries: Symbol("coil-lang@0.1.6/std/meta/Meta:from_entries"),
+  "==": Symbol("coil-lang@0.1.6/std/meta/Meta:=="),
+  "!=": Symbol("coil-lang@0.1.6/std/meta/Meta:!="),
+  "exists?": Symbol("coil-lang@0.1.6/std/meta/Meta:exists?"),
+  log: Symbol("coil-lang@0.1.6/std/meta/Meta:log"),
+  invoke: Symbol("coil-lang@0.1.6/std/meta/Meta:invoke"),
+  pipe: Symbol("coil-lang@0.1.6/std/meta/Meta:pipe"),
+  as_bool: Symbol("coil-lang@0.1.6/std/meta/Meta:as_bool"),
+  as_num: Symbol("coil-lang@0.1.6/std/meta/Meta:as_num"),
+  to_s: Symbol("coil-lang@0.1.6/std/meta/Meta:debug"),
 });
 
 String.prototype[Meta.to_s] = function () {

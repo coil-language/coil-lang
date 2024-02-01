@@ -1,17 +1,17 @@
 import Meta from "../meta.mjs";
 
 const EagerIter = Object.freeze({
-  take: Symbol("coil-lang@0.1.0/std/iter/eager/Iter:take"),
-  until: Symbol("coil-lang@0.1.0/std/iter/eager/Iter:until"),
-  skip: Symbol("coil-lang@0.1.0/std/iter/eager/Iter:skip"),
-  zip: Symbol("coil-lang@0.1.0/std/iter/eager/Iter:zip"),
-  map: Symbol("coil-lang@0.1.0/std/iter/eager/Iter:map"),
-  flat_map: Symbol("coil-lang@0.1.0/std/iter/eager/Iter:flat_map"),
-  filter: Symbol("coil-lang@0.1.0/std/iter/eager/Iter:filter"),
-  reject: Symbol("coil-lang@0.1.0/std/iter/eager/Iter:reject"),
-  split: Symbol("coil-lang@0.1.0/std/iter/eager/Iter:split"),
-  compact: Symbol("coil-lang@0.1.0/std/iter/eager/Iter:compact"),
-  join: Symbol("coil-lang@0.1.0/std/iter/eager/Iter:join"),
+  take: Symbol("coil-lang@0.1.6/std/iter/eager/Iter:take"),
+  until: Symbol("coil-lang@0.1.6/std/iter/eager/Iter:until"),
+  skip: Symbol("coil-lang@0.1.6/std/iter/eager/Iter:skip"),
+  zip: Symbol("coil-lang@0.1.6/std/iter/eager/Iter:zip"),
+  map: Symbol("coil-lang@0.1.6/std/iter/eager/Iter:map"),
+  flat_map: Symbol("coil-lang@0.1.6/std/iter/eager/Iter:flat_map"),
+  filter: Symbol("coil-lang@0.1.6/std/iter/eager/Iter:filter"),
+  reject: Symbol("coil-lang@0.1.6/std/iter/eager/Iter:reject"),
+  split: Symbol("coil-lang@0.1.6/std/iter/eager/Iter:split"),
+  compact: Symbol("coil-lang@0.1.6/std/iter/eager/Iter:compact"),
+  join: Symbol("coil-lang@0.1.6/std/iter/eager/Iter:join"),
 });
 
 Object.prototype[EagerIter.take] = function (n) {

@@ -13,22 +13,22 @@ export function compose(...fns) {
 }
 
 const Iter = Object.freeze({
-  take: Symbol("coil-lang@0.1.0/std/iter/async/Iter:take"),
-  until: Symbol("coil-lang@0.1.0/std/iter/async/Iter:until"),
-  skip: Symbol("coil-lang@0.1.0/std/iter/async/Iter:skip"),
-  find: Symbol("coil-lang@0.1.0/std/iter/async/Iter:find"),
-  zip: Symbol("coil-lang@0.1.0/std/iter/async/Iter:zip"),
-  reduce: Symbol("coil-lang@0.1.0/std/iter/async/Iter:reduce"),
-  map: Symbol("coil-lang@0.1.0/std/iter/async/Iter:map"),
-  flat_map: Symbol("coil-lang@0.1.0/std/iter/async/Iter:flat_map"),
-  each: Symbol("coil-lang@0.1.0/std/iter/async/Iter:each"),
-  filter: Symbol("coil-lang@0.1.0/std/iter/async/Iter:filter"),
-  reject: Symbol("coil-lang@0.1.0/std/iter/async/Iter:reject"),
-  "all?": Symbol("coil-lang@0.1.0/std/iter/async/Iter:all?"),
-  "any?": Symbol("coil-lang@0.1.0/std/iter/async/Iter:any?"),
-  split: Symbol("coil-lang@0.1.0/std/iter/async/Iter:split"),
-  compact: Symbol("coil-lang@0.1.0/std/iter/async/Iter:compact"),
-  join: Symbol("coil-lang@0.1.0/std/iter/async/Iter:join"),
+  take: Symbol("coil-lang@0.1.6/std/iter/async/Iter:take"),
+  until: Symbol("coil-lang@0.1.6/std/iter/async/Iter:until"),
+  skip: Symbol("coil-lang@0.1.6/std/iter/async/Iter:skip"),
+  find: Symbol("coil-lang@0.1.6/std/iter/async/Iter:find"),
+  zip: Symbol("coil-lang@0.1.6/std/iter/async/Iter:zip"),
+  reduce: Symbol("coil-lang@0.1.6/std/iter/async/Iter:reduce"),
+  map: Symbol("coil-lang@0.1.6/std/iter/async/Iter:map"),
+  flat_map: Symbol("coil-lang@0.1.6/std/iter/async/Iter:flat_map"),
+  each: Symbol("coil-lang@0.1.6/std/iter/async/Iter:each"),
+  filter: Symbol("coil-lang@0.1.6/std/iter/async/Iter:filter"),
+  reject: Symbol("coil-lang@0.1.6/std/iter/async/Iter:reject"),
+  "all?": Symbol("coil-lang@0.1.6/std/iter/async/Iter:all?"),
+  "any?": Symbol("coil-lang@0.1.6/std/iter/async/Iter:any?"),
+  split: Symbol("coil-lang@0.1.6/std/iter/async/Iter:split"),
+  compact: Symbol("coil-lang@0.1.6/std/iter/async/Iter:compact"),
+  join: Symbol("coil-lang@0.1.6/std/iter/async/Iter:join"),
 });
 
 Object.prototype[Iter.take] = async function* (n) {

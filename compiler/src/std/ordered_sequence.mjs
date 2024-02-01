@@ -1,7 +1,7 @@
 // TODO: rename to OrderedCollection
 const OrderedSequence = Object.freeze({
-  first: Symbol("coil-lang@0.1.0/std/ordered_sequence/OrderedSequence:first"),
-  last: Symbol("coil-lang@0.1.0/std/ordered_sequence/OrderedSequence:last"),
+  first: Symbol("coil-lang@0.1.6/std/ordered_sequence/OrderedSequence:first"),
+  last: Symbol("coil-lang@0.1.6/std/ordered_sequence/OrderedSequence:last"),
 });
 
 Array.prototype[OrderedSequence.first] = function () {
