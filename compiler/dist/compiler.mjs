@@ -1,5 +1,5 @@
 "use strict";
-import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b } from '../src/std/globals.mjs'
+import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b, type_of } from '../src/std/globals.mjs'
 import Meta, {
   nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, to_s
 } from '../src/std/meta.mjs';
@@ -65,7 +65,7 @@ let collection_view = CollectionView[Meta.create]([tokens, (0)]);
 let ast = parse[invoke](collection_view);
 let js = emit[invoke](ast);
 let imports = str[invoke](`\"use strict\";
-import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b } from '`, std_prefix, `/src/std/globals.mjs'
+import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b, type_of } from '`, std_prefix, `/src/std/globals.mjs'
 import Meta, {
   nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, to_s
 } from '`, std_prefix, `/src/std/meta.mjs';
