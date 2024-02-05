@@ -3,7 +3,6 @@ import { ObjectLiteral, Keyword, Nil, nil } from "./globals.mjs";
 const Meta = Object.freeze({
   "nil?": Symbol("coil-lang@0.1.6/std/meta/Meta:nil?"),
   // look into using `Symbol.hasInstance`
-  "is_a?": Symbol("coil-lang@0.1.6/std/meta/Meta:is_a?"),
   create: Symbol("coil-lang@0.1.6/std/meta/Meta:create"),
   from_entries: Symbol("coil-lang@0.1.6/std/meta/Meta:from_entries"),
   "==": Symbol("coil-lang@0.1.6/std/meta/Meta:=="),
@@ -193,10 +192,6 @@ Nil.prototype[Meta["exists?"]] = function () {
   return false;
 };
 
-Object.prototype[Meta["is_a?"]] = function (Ctor) {
-  return Object(this) instanceof Ctor;
-};
-
 Function.prototype[Meta.create] = function (args) {
   return Reflect.construct(this, args);
 };
@@ -275,7 +270,6 @@ export default Meta;
 
 export const {
   "nil?": nil__q,
-  "is_a?": is_a__q,
   create,
   from_entries,
   "exists?": exists__q,

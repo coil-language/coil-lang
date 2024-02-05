@@ -279,6 +279,8 @@ def eval_equality_op({lhs, op, rhs}) = str(
   eval_expr(lhs) "[Meta[\"" op "\"]](" eval_expr(rhs)")"
 )
 
+def eval_instanceof({lhs, rhs}) = str("(" eval_expr(lhs) " instanceof " eval_expr(rhs) ")")
+
 -- TODO: this is broken
 def eval_and({lhs, rhs}) = str(
   "(__coil_temp = {left: " eval_expr(lhs) "}"
@@ -305,6 +307,7 @@ def eval_expr(node) = node.at(:type).pipe(Map{
   :equality_op => eval_equality_op
   :and => eval_and
   :or => eval_or
+  :instanceof => eval_instanceof
   :str => eval_str
   :dot => eval_dot
   :snd_assign => eval_snd_assign

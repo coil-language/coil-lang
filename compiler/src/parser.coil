@@ -141,7 +141,7 @@ def AbortIf(@cond_fn) end
 
 def Parser:prototype.parse(result)
   for instruction of this:instructions
-    if instruction.is_a?(AbortIf)
+    if instruction instanceof AbortIf
       if instruction:cond_fn(result)
         return
       else
@@ -264,15 +264,22 @@ def parse_snd_expr([lhs tokens])
   return [lhs tokens]
 end
 
-def parse_algebra_op(tokens, lhs) = Parser[
+def parse_algebra_op(tokens lhs) = Parser[
   Init[{type: :algebra_op, lhs: lhs}]
   Either[algebra_ops :op]
   Then[parse_1_2_expr :rhs]
 ](tokens)
 
+def parse_instanceof(tokens lhs) = Parser[
+  Init[{type: :instanceof, lhs: lhs}]
+  Chomp[:instanceof]
+  Then[parse_1_2_expr :rhs]
+](tokens)
+
 def parse_third_expr_step(tokens, lhs) = ParseMap{
   :eq => parse_snd_assign
-  algebra_ops => parse_algebra_op  
+  :instanceof => parse_instanceof
+  algebra_ops => parse_algebra_op
 }(tokens, lhs)
 
 def parse_third_expr([lhs tokens])

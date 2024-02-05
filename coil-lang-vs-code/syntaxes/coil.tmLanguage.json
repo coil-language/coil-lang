@@ -63,7 +63,7 @@
     "lang_constants": {
       "patterns": [
         {
-          "match": "\\b(true|false|nil|this)\\b",
+          "match": "\\b(instanceof|true|false|nil|this)\\b",
           "name": "constant.language"
         },
         {

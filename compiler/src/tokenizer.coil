@@ -70,6 +70,7 @@ let tokenize = Tokenizer{
   /^try\s/ => :try
   /^catch\s/ => :catch
   /^finally\s/ => :finally
+  /^instanceof\s/ => :instanceof
   /^end\b/ => :end
   /^while\s/ => :while
   /^loop\s/ => :loop

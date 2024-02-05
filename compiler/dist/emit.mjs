@@ -1,7 +1,7 @@
 "use strict";
 import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b } from '../src/std/globals.mjs'
 import Meta, {
-  nil__q, is_a__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, to_s
+  nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, to_s
 } from '../src/std/meta.mjs';
 import Iter, {
   take, until, skip, find, zip, reduce, map, flat_map, each, count,
@@ -307,6 +307,10 @@ lhs ??= nil;
 op ??= nil;
 rhs ??= nil;let __coil_temp;
 return str[invoke](eval_expr[invoke](lhs), "[Meta[\"", op, "\"]](", eval_expr[invoke](rhs), ")");};
+let eval_instanceof = function ({'lhs': lhs, 'rhs': rhs}) {
+lhs ??= nil;
+rhs ??= nil;let __coil_temp;
+return str[invoke]("(", eval_expr[invoke](lhs), " instanceof ", eval_expr[invoke](rhs), ")");};
 let eval_and = function ({'lhs': lhs, 'rhs': rhs}) {
 lhs ??= nil;
 rhs ??= nil;let __coil_temp;
@@ -327,7 +331,7 @@ rhs ??= nil;let __coil_temp;
 return str[invoke](eval_name_expr[invoke](lhs), " = ", eval_expr[invoke](rhs));};
 let eval_expr = function (node) {
 node ??= nil;let __coil_temp;
-return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("algebra_op"), eval_algebra_op], [Keyword.for("unapplied_algebra_op"), eval_unapplied_algebra_op], [Keyword.for("unapplied_equality_op"), eval_unapplied_equality_op], [Keyword.for("equality_op"), eval_equality_op], [Keyword.for("and"), eval_and], [Keyword.for("or"), eval_or], [Keyword.for("str"), eval_str], [Keyword.for("dot"), eval_dot], [Keyword.for("snd_assign"), eval_snd_assign], [Keyword.for("keyword_lookup"), eval_keyword_lookup], [Keyword.for("object_literal"), eval_object_literal], [Keyword.for("regex_lit"), eval_regex_lit], [Keyword.for("keyword"), eval_keyword], [Keyword.for("prefix_exclusive_range"), eval_prefix_exclusive_range], [Keyword.for("prefix_inclusive_range"), eval_prefix_inclusive_range], [Keyword.for("id_lookup"), eval_id_lookup], [Keyword.for("fn_call"), eval_fn_call], [Keyword.for("num"), eval_num], [Keyword.for("array"), eval_array], [Keyword.for("double_equals"), eval_double_equals], [Keyword.for("not_equals"), eval_not_equals], [Keyword.for("not"), eval_not], [Keyword.for("fn"), eval_fn], [Keyword.for("meta_from_entries"), eval_meta_from_entries], [Keyword.for("meta_create"), eval_meta_create], [Keyword.for("spread"), eval_spread], [Keyword.for("await"), eval_await], [Keyword.for("yield"), eval_yield], [Keyword.for("paren_expr"), eval_paren_expr], [Keyword.for("inclusive_range"), eval_inclusive_range], [Keyword.for("exclusive_range"), eval_exclusive_range], [Keyword.for("anon_fn"), eval_anon_fn], [Keyword.for("anon_body_fn"), eval_anon_body_fn]]))[invoke](node);};
+return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("algebra_op"), eval_algebra_op], [Keyword.for("unapplied_algebra_op"), eval_unapplied_algebra_op], [Keyword.for("unapplied_equality_op"), eval_unapplied_equality_op], [Keyword.for("equality_op"), eval_equality_op], [Keyword.for("and"), eval_and], [Keyword.for("or"), eval_or], [Keyword.for("instanceof"), eval_instanceof], [Keyword.for("str"), eval_str], [Keyword.for("dot"), eval_dot], [Keyword.for("snd_assign"), eval_snd_assign], [Keyword.for("keyword_lookup"), eval_keyword_lookup], [Keyword.for("object_literal"), eval_object_literal], [Keyword.for("regex_lit"), eval_regex_lit], [Keyword.for("keyword"), eval_keyword], [Keyword.for("prefix_exclusive_range"), eval_prefix_exclusive_range], [Keyword.for("prefix_inclusive_range"), eval_prefix_inclusive_range], [Keyword.for("id_lookup"), eval_id_lookup], [Keyword.for("fn_call"), eval_fn_call], [Keyword.for("num"), eval_num], [Keyword.for("array"), eval_array], [Keyword.for("double_equals"), eval_double_equals], [Keyword.for("not_equals"), eval_not_equals], [Keyword.for("not"), eval_not], [Keyword.for("fn"), eval_fn], [Keyword.for("meta_from_entries"), eval_meta_from_entries], [Keyword.for("meta_create"), eval_meta_create], [Keyword.for("spread"), eval_spread], [Keyword.for("await"), eval_await], [Keyword.for("yield"), eval_yield], [Keyword.for("paren_expr"), eval_paren_expr], [Keyword.for("inclusive_range"), eval_inclusive_range], [Keyword.for("exclusive_range"), eval_exclusive_range], [Keyword.for("anon_fn"), eval_anon_fn], [Keyword.for("anon_body_fn"), eval_anon_body_fn]]))[invoke](node);};
 let eval_return = function ({'expr': expr}) {
 expr ??= nil;let __coil_temp;
 if (expr[Meta.as_bool]()) {

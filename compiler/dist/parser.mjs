@@ -1,7 +1,7 @@
 "use strict";
 import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b } from '../src/std/globals.mjs'
 import Meta, {
-  nil__q, is_a__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, to_s
+  nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, to_s
 } from '../src/std/meta.mjs';
 import Iter, {
   take, until, skip, find, zip, reduce, map, flat_map, each, count,
@@ -253,7 +253,7 @@ Parser['prototype'][parse] = function (result) {
 result ??= nil;let __coil_temp;
 for  (let instruction of dot(this, 'instructions')) {
 let __coil_temp;
-if (dot(instruction, is_a__q)[invoke](AbortIf)[Meta.as_bool]()) {
+if ((instruction instanceof AbortIf)[Meta.as_bool]()) {
 let __coil_temp;
 if (dot(instruction, 'cond_fn')[invoke](result)[Meta.as_bool]()) {
 let __coil_temp;
@@ -364,10 +364,14 @@ let parse_algebra_op = function (tokens, lhs) {
 tokens ??= nil;
 lhs ??= nil;let __coil_temp;
 return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("algebra_op")], [Keyword.for("lhs"), lhs]])]), Either[Meta.create]([algebra_ops, Keyword.for("op")]), Then[Meta.create]([parse_1_2_expr, Keyword.for("rhs")])])[invoke](tokens);};
+let parse_instanceof = function (tokens, lhs) {
+tokens ??= nil;
+lhs ??= nil;let __coil_temp;
+return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("instanceof")], [Keyword.for("lhs"), lhs]])]), Chomp[Meta.create]([Keyword.for("instanceof")]), Then[Meta.create]([parse_1_2_expr, Keyword.for("rhs")])])[invoke](tokens);};
 let parse_third_expr_step = function (tokens, lhs) {
 tokens ??= nil;
 lhs ??= nil;let __coil_temp;
-return ParseMap[Meta.from_entries]([[Keyword.for("eq"), parse_snd_assign], [algebra_ops, parse_algebra_op]])[invoke](tokens, lhs);};
+return ParseMap[Meta.from_entries]([[Keyword.for("eq"), parse_snd_assign], [Keyword.for("instanceof"), parse_instanceof], [algebra_ops, parse_algebra_op]])[invoke](tokens, lhs);};
 let parse_third_expr = function ([lhs, tokens]) {
 lhs ??= nil;
 tokens ??= nil;let __coil_temp;

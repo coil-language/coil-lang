@@ -413,7 +413,7 @@ protocol match_extract
 def CallMap:prototype.+(call_map) = CallMap{...this, ...call_map}
 
 def CallMap:prototype.match_extract(item)
-  if item.is_a?(Var)
+  if item instanceof Var
     return this.map(1)
       .skip(1)
       .reduce(|acc, item| acc + item, this:entries(0)(1))
@@ -429,13 +429,13 @@ def QueryImpl:prototype:shape() =
     .pipe(|csv| str("[{" csv "}]"))
 
 def Number:prototype.match?(query) =
-  query.is_a?(Var) or query == this
+  query instanceof Var or query == this
 
 def ObjectLiteral:prototype.match?(query)
   for [key, sub_query] of query:entries
     if !this.has?(key)
       return false
-    else if sub_query.is_a?(Var)
+    else if sub_query instanceof Var
       continue
     else if !this.key.match?(sub_query)
       return false
