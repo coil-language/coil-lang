@@ -1,5 +1,4 @@
 import { DB } from "https://deno.land/x/sqlite/mod.ts"
-def str(...args) = args.map(|arg| arg:toString()).join("")
 
 let db = DB["test.db"]
 

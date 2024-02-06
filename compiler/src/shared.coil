@@ -1,5 +1,3 @@
-export def str(...args) = args.map(|arg| arg:toString()).join("")
-
 export def CollectionView(@collection, @idx) end
 
 def CollectionView:prototype.(Collection:len) =

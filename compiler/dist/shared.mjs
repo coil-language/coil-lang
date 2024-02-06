@@ -1,8 +1,6 @@
 "use strict";
-import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b, type_of } from '../src/std/globals.mjs'
-import Meta, {
-  nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, to_s
-} from '../src/std/meta.mjs';
+import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b, type_of, str } from '../src/std/globals.mjs'
+import Meta, { nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe } from '../src/std/meta.mjs';
 import Iter, {
   take, until, skip, find, zip, reduce, map, flat_map, each, count,
   filter, reject, all__q, any__q, split, compact, join, into, compose
@@ -19,10 +17,6 @@ import Record, { keys, values } from '../src/std/record.mjs';
 import Underscore, { _ } from '../src/std/underscore.mjs';
 import CondMap from '../src/std/cond_map.mjs'
 let __coil_temp;
-export let str = function (...args) {
-args ??= nil;let __coil_temp;
-return dot(dot(args, map)[invoke]((arg) => {
-arg ??= nil;return dot(arg, 'toString')[invoke]();}), join)[invoke]("");};;
 export let CollectionView = function (collection, idx) {
 this['collection'] = collection;
 this['idx'] = idx;

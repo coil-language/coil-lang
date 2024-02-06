@@ -18,17 +18,7 @@ export class Nil {
   *[Symbol.iterator]() {}
 }
 
-export let nil = new Proxy(new Nil(), {
-  get(target, property, _receiver) {
-    if (property in target) {
-      return target[property];
-    } else if (property === Symbol.toStringTag) {
-      return "Nil";
-    } else {
-      throw new TypeError(`Nil does not have property: ${property.toString()}`);
-    }
-  },
-});
+export let nil = new Nil();
 
 export class Keyword {
   static cache = new Map();
@@ -76,4 +66,8 @@ export function panic__b(...args) {
 
 export function type_of(object) {
   return typeof object;
+}
+
+export function str(...strs) {
+  return strs.join("");
 }

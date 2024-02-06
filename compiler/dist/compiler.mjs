@@ -1,8 +1,6 @@
 "use strict";
-import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b, type_of } from '../src/std/globals.mjs'
-import Meta, {
-  nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, to_s
-} from '../src/std/meta.mjs';
+import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b, type_of, str } from '../src/std/globals.mjs'
+import Meta, { nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe } from '../src/std/meta.mjs';
 import Iter, {
   take, until, skip, find, zip, reduce, map, flat_map, each, count,
   filter, reject, all__q, any__q, split, compact, join, into, compose
@@ -23,10 +21,6 @@ import {ParseError} from "./parse_error.mjs";
 import tokenize from "./tokenizer.mjs";
 import parse from "./parser.mjs";
 import emit from "./emit.mjs";
-let str = function (...args) {
-args ??= nil;let __coil_temp;
-return dot(dot(args, map)[invoke]((arg) => {
-arg ??= nil;return dot(arg, 'toString')[invoke]();}), join)[invoke]("");};
 let CollectionView = function (collection, idx) {
 this['collection'] = collection;
 this['idx'] = idx;
@@ -65,10 +59,8 @@ let collection_view = CollectionView[Meta.create]([tokens, (0)]);
 let ast = parse[invoke](collection_view);
 let js = emit[invoke](ast);
 let imports = str[invoke](`\"use strict\";
-import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b, type_of } from '`, std_prefix, `/src/std/globals.mjs'
-import Meta, {
-  nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, to_s
-} from '`, std_prefix, `/src/std/meta.mjs';
+import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b, type_of, str } from '`, std_prefix, `/src/std/globals.mjs'
+import Meta, { nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe } from '`, std_prefix, `/src/std/meta.mjs';
 import Iter, {
   take, until, skip, find, zip, reduce, map, flat_map, each, count,
   filter, reject, all__q, any__q, split, compact, join, into, compose

@@ -1,5 +1,3 @@
-def str(...args) = args.map(|arg| arg:toString()).join("")
-
 def resolve_name(name)
   if name
     return name

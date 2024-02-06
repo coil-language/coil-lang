@@ -1,6 +1,3 @@
-def str(...args) =
-  args.map(|arg| arg:toString()).join("")
-
 protocol lex
 def pass() end
 
