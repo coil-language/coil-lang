@@ -1,6 +1,6 @@
 "use strict";
 import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b, type_of, str } from '../src/std/globals.mjs'
-import Meta, { nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe } from '../src/std/meta.mjs';
+import Meta, { nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, as_kw } from '../src/std/meta.mjs';
 import Iter, {
   take, until, skip, find, zip, reduce, map, flat_map, each, count,
   filter, reject, all__q, any__q, split, compact, join, into, compose
@@ -60,7 +60,7 @@ let ast = parse[invoke](collection_view);
 let js = emit[invoke](ast);
 let imports = str[invoke](`\"use strict\";
 import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b, type_of, str } from '`, std_prefix, `/src/std/globals.mjs'
-import Meta, { nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe } from '`, std_prefix, `/src/std/meta.mjs';
+import Meta, { nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, as_kw } from '`, std_prefix, `/src/std/meta.mjs';
 import Iter, {
   take, until, skip, find, zip, reduce, map, flat_map, each, count,
   filter, reject, all__q, any__q, split, compact, join, into, compose

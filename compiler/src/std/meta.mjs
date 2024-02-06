@@ -1,4 +1,4 @@
-import { ObjectLiteral, Keyword, Nil, nil } from "./globals.mjs";
+import { ObjectLiteral, Keyword, Nil, nil, str } from "./globals.mjs";
 
 const Meta = Object.freeze({
   "nil?": Symbol("coil-lang@0.1.6/std/meta/Meta:nil?"),
@@ -15,6 +15,20 @@ const Meta = Object.freeze({
   as_num: Symbol("coil-lang@0.1.6/std/meta/Meta:as_num"),
   as_kw: Symbol("coil-lang@0.1.9/std/meta/Meta:as_kw"),
 });
+
+str.fmt = function (...args) {
+  return (object) => {
+    let out = "";
+    for (let arg of args) {
+      if (typeof arg === "string") {
+        out += arg;
+      } else {
+        out += arg[Meta.invoke](object);
+      }
+    }
+    return out;
+  };
+};
 
 String.prototype[Meta.as_kw] = function () {
   return Keyword.for(this);
@@ -243,4 +257,5 @@ export const {
   invoke,
   pipe,
   as_num,
+  as_kw,
 } = Meta;
