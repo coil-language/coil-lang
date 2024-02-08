@@ -55,6 +55,20 @@ export function dot(lhs, rhs) {
   }
 }
 
+export function from_js(js_object) {
+  if (js_object == null) {
+    return nil;
+  } else if (Object.getPrototypeOf(obj) === Object.prototype) {
+    let out = new ObjectLiteral();
+    for (let key in js_object) {
+      out[key] = js_object[key];
+    }
+    return out;
+  } else {
+    return js_object;
+  }
+}
+
 export function raise__b(error) {
   console.error(error.stack);
   throw error;
