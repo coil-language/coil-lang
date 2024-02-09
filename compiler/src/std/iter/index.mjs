@@ -15,41 +15,39 @@ export function compose(...fns) {
 }
 
 const Iter = Object.freeze({
-  take: Symbol("coil-lang@0.1.6/std/iter/Iter:take"),
-  until: Symbol("coil-lang@0.1.6/std/iter/Iter:until"),
-  skip: Symbol("coil-lang@0.1.6/std/iter/Iter:skip"),
-  find: Symbol("coil-lang@0.1.6/std/iter/Iter:find"),
-  zip: Symbol("coil-lang@0.1.6/std/iter/Iter:zip"),
-  reduce: Symbol("coil-lang@0.1.6/std/iter/Iter:reduce"),
-  map: Symbol("coil-lang@0.1.6/std/iter/Iter:map"),
-  flat_map: Symbol("coil-lang@0.1.6/std/iter/Iter:flat_map"),
-  each: Symbol("coil-lang@0.1.6/std/iter/Iter:each"),
-  filter: Symbol("coil-lang@0.1.6/std/iter/Iter:filter"),
-  reject: Symbol("coil-lang@0.1.6/std/iter/Iter:reject"),
-  "all?": Symbol("coil-lang@0.1.6/std/iter/Iter:all?"),
-  "any?": Symbol("coil-lang@0.1.6/std/iter/Iter:any?"),
-  split: Symbol("coil-lang@0.1.6/std/iter/Iter:split"),
-  compact: Symbol("coil-lang@0.1.6/std/iter/Iter:compact"),
-  join: Symbol("coil-lang@0.1.6/std/iter/Iter:join"),
-  into: Symbol("coil-lang@0.1.6/std/iter/into"),
-  collect: Symbol("coil-lang@0.1.6/std/iter/collect"),
-  count: Symbol("coil-lang@0.1.6/std/iter/count"),
+  take: Symbol("coil-lang@0.1.11/std/iter/Iter:take"),
+  until: Symbol("coil-lang@0.1.11/std/iter/Iter:until"),
+  skip: Symbol("coil-lang@0.1.11/std/iter/Iter:skip"),
+  find: Symbol("coil-lang@0.1.11/std/iter/Iter:find"),
+  find_map: Symbol("coil-lang@0.1.11/std/iter/Iter:find_map"),
+  zip: Symbol("coil-lang@0.1.11/std/iter/Iter:zip"),
+  reduce: Symbol("coil-lang@0.1.11/std/iter/Iter:reduce"),
+  map: Symbol("coil-lang@0.1.11/std/iter/Iter:map"),
+  flat_map: Symbol("coil-lang@0.1.11/std/iter/Iter:flat_map"),
+  each: Symbol("coil-lang@0.1.11/std/iter/Iter:each"),
+  filter: Symbol("coil-lang@0.1.11/std/iter/Iter:filter"),
+  filter_map: Symbol("coil-lang@0.1.11/std/iter/Iter:filter_map"),
+  reject: Symbol("coil-lang@0.1.11/std/iter/Iter:reject"),
+  "all?": Symbol("coil-lang@0.1.11/std/iter/Iter:all?"),
+  "any?": Symbol("coil-lang@0.1.11/std/iter/Iter:any?"),
+  split: Symbol("coil-lang@0.1.11/std/iter/Iter:split"),
+  compact: Symbol("coil-lang@0.1.11/std/iter/Iter:compact"),
+  join: Symbol("coil-lang@0.1.11/std/iter/Iter:join"),
+  into: Symbol("coil-lang@0.1.11/std/iter/into"),
+  collect: Symbol("coil-lang@0.1.11/std/iter/collect"),
+  count: Symbol("coil-lang@0.1.11/std/iter/count"),
 });
 
-let Impl = {
-  *take(n) {
-    let i = 0;
-    for (let elem of this) {
-      if (i++ == n) {
-        break;
-      } else {
-        yield elem;
-      }
+Object.prototype[Iter.take] = function* take(n) {
+  let i = 0;
+  for (let elem of this) {
+    if (i++ == n) {
+      break;
+    } else {
+      yield elem;
     }
-  },
+  }
 };
-
-Object.prototype[Iter.take] = Impl.take;
 
 Object.prototype[Iter.until] = function* (...fns) {
   let f = compose(...fns);
@@ -78,6 +76,16 @@ Object.prototype[Iter.find] = function (...fns) {
   for (let elem of this) {
     if (f(elem)[Meta.as_bool]()) {
       return elem;
+    }
+  }
+};
+
+Object.prototype[Iter.find_map] = function (...fns) {
+  let f = compose(...fns);
+  for (let elem of this) {
+    let val = f(elem);
+    if (val[Meta.as_bool]()) {
+      return val;
     }
   }
 };
@@ -130,6 +138,16 @@ Object.prototype[Iter.filter] = function* (...fns) {
   for (let elem of this) {
     if (f(elem)[Meta.as_bool]()) {
       yield elem;
+    }
+  }
+};
+
+Object.prototype[Iter.filter_map] = function* (...fns) {
+  let f = compose(...fns);
+  for (let elem of this) {
+    let result = f(elem);
+    if (result[Meta.as_bool]()) {
+      yield result;
     }
   }
 };
@@ -271,12 +289,14 @@ export const {
   until,
   skip,
   find,
+  find_map,
   zip,
   reduce,
   map,
   flat_map,
   each,
   filter,
+  filter_map,
   reject,
   "all?": all__q,
   "any?": any__q,

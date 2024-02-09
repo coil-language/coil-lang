@@ -1,17 +1,4 @@
-def match_on(key) = {
-  def Meta:from_entries(entries) = {
-    ...entries
-    def Meta:invoke(object) = this.(object.key)(object)
-  }
-}
-
-let animals =
-  [{kind: :cat, name: "fluffy"}
-   {kind: :dog, name: "joey"}]
-
-let greet = match_on(:kind){
-  def :cat({name}) = str(name " says 'meow'!")
-  def :dog({name}) = str(name " says 'ruff'!")
-}
-
-greet(animals.0)
+[1 2 3]
+  .filter_map(Map{1 => 2, 2 => 3})
+  .into(Set[])
+  .log()
