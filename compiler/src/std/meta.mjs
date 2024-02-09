@@ -75,6 +75,10 @@ Object.prototype[Meta["!="]] = function (other) {
   return !this[Meta["=="]](other);
 };
 
+Boolean.prototype[Meta["=="]] = function (other) {
+  return this.valueOf() === other.valueOf();
+};
+
 Nil.prototype[Meta["=="]] = function (other) {
   // TODO: we probably shouldn't allow multiple instances of Nil
   return this === other || other instanceof Nil;
