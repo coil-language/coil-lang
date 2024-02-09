@@ -27,7 +27,7 @@ def eval_if_branch(branch)
 end
 
 def eval_if({expr, pass, fail}) = str(
-  "if (" eval_expr(expr) "[Meta.as_bool]()) {\n"
+  "if ((" eval_expr(expr) ")[Meta.as_bool]()) {\n"
     eval_ast(pass) "\n"
   "}" eval_if_branch(fail)
 )
@@ -368,7 +368,7 @@ def eval_for_loop({is_await? assign_expr iterable_expr body}) =
 def eval_id_assign({name, expr}) = str(resolve_name(name) " = " eval_expr(expr))
 
 def eval_while_loop({test_expr, body}) =
-  str("while (" eval_expr(test_expr) "[Meta.as_bool]()) {\n" eval_ast(body) "\n}")
+  str("while ((" eval_expr(test_expr) ")[Meta.as_bool]()) {\n" eval_ast(body) "\n}")
 
 def eval_loop({body}) = str("while (true) {\n" eval_ast(body) "\n}")
 

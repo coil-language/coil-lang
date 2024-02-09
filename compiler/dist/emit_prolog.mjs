@@ -347,7 +347,7 @@ pos ??= nil;let __coil_temp;
 let [Self, Lhs, Rhs] = [nid[invoke](), nid[invoke](), nid[invoke]()];
 return str[invoke]("dot(", Self, ", ", Parent, ").\n", line_and_col[invoke](pos, Self), "\n", "lhs(", Lhs, ", ", Self, ").\n", emit_node[invoke](lhs, Lhs), "\n", "rhs(", Rhs, ", ", Self, ").\n", emit_node[invoke](rhs, Rhs), "\n");}]])), pipe)[invoke]((f) => {
 f ??= nil;let __coil_temp;
-if (f[Meta.as_bool]()) {
+if ((f)[Meta.as_bool]()) {
 let __coil_temp;
 return f[invoke](node, Parent);
 } else {

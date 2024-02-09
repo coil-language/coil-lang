@@ -37,7 +37,7 @@ return dot(str, 'slice')[invoke](index);};
 let scan = function (pattern) {
 pattern ??= nil;let __coil_temp;
 let result = dot(rest_of_string[invoke](), Keyword.for("match"))[invoke](pattern);
-if ((__coil_temp = {left: dot(result, nil__q)[invoke]()}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : dot(result, 'index')[Meta["!="]]((0)))[Meta.as_bool]()) {
+if (((__coil_temp = {left: dot(result, nil__q)[invoke]()}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : dot(result, 'index')[Meta["!="]]((0))))[Meta.as_bool]()) {
 let __coil_temp;
 return false;
 } else {
@@ -47,7 +47,7 @@ return dot(result, (0));
 };};
 let line = (1);
 let col = (1);
-while (rest_of_string[invoke]()[Meta["!="]]("")[Meta.as_bool]()) {
+while ((rest_of_string[invoke]()[Meta["!="]](""))[Meta.as_bool]()) {
 let __coil_temp;
 let found = false;
 for  (let [pattern, type] of dot(this, 'entries')) {
@@ -56,7 +56,7 @@ var __coil_if_let_temp = scan[invoke](pattern) ?? nil;
 if (__coil_if_let_temp[Meta.as_bool]()) {
 let value = __coil_if_let_temp;
 let __coil_temp;
-if (type[Meta["=="]](newline)[Meta.as_bool]()) {
+if ((type[Meta["=="]](newline))[Meta.as_bool]()) {
 let __coil_temp;
 line = line[Algebra["+"]]((1));
 col = (1);
@@ -72,7 +72,7 @@ found = true;
 break;
 };
 };
-if (found[Bool.negate]()[Meta.as_bool]()) {
+if ((found[Bool.negate]())[Meta.as_bool]()) {
 let __coil_temp;
 panic__b[invoke]("No token matched.");
 };

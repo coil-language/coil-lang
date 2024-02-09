@@ -20,7 +20,7 @@ let __coil_temp;
 let expect_token__b = function (tokens, kw) {
 tokens ??= nil;
 kw ??= nil;let __coil_temp;
-if (dot(dot(tokens, first)[invoke](), at)[invoke](Keyword.for("type"))[Meta["!="]](kw)[Meta.as_bool]()) {
+if ((dot(dot(tokens, first)[invoke](), at)[invoke](Keyword.for("type"))[Meta["!="]](kw))[Meta.as_bool]()) {
 let __coil_temp;
 raise__b[invoke](ParseError[Meta.create]([kw, dot(tokens, first)[invoke]()]));
 } else {
@@ -30,7 +30,7 @@ return tokens;
 let verify_exists__b = function (expr, parser) {
 expr ??= nil;
 parser ??= nil;let __coil_temp;
-if (dot(expr, nil__q)[invoke]()[Meta.as_bool]()) {
+if ((dot(expr, nil__q)[invoke]())[Meta.as_bool]()) {
 let __coil_temp;
 dot(parser, log)[invoke]();
 panic__b[invoke]("Parser Failed");
@@ -75,7 +75,7 @@ let __coil_temp;
 return true;};
 Array['prototype'][can_parse__q] = function (tokens) {
 tokens ??= nil;let __coil_temp;
-if (dot(this, len)[invoke]()[Algebra[">"]](dot(tokens, len)[invoke]())[Meta.as_bool]()) {
+if ((dot(this, len)[invoke]()[Algebra[">"]](dot(tokens, len)[invoke]()))[Meta.as_bool]()) {
 let __coil_temp;
 return false;
 } else {
@@ -95,7 +95,7 @@ as ??= nil;let __coil_temp;
 Optional['prototype'][parse] = function ([expr, tokens]) {
 expr ??= nil;
 tokens ??= nil;let __coil_temp;
-if (dot(tokens, empty__q)[invoke]()[Meta.as_bool]()) {
+if ((dot(tokens, empty__q)[invoke]())[Meta.as_bool]()) {
 let __coil_temp;
 return [expr, tokens];
 } else if (dot(dot(this, 'parse_cond'), can_parse__q)[invoke](tokens)) {
@@ -136,7 +136,7 @@ var __coil_if_let_temp = dot(this, 'parser')[invoke](tokens) ?? nil;
 if (__coil_if_let_temp[Meta.as_bool]()) {
 let [new_expr, new_tokens] = __coil_if_let_temp;
 let __coil_temp;
-if (dot(this, 'kw')[Meta.as_bool]()) {
+if ((dot(this, 'kw'))[Meta.as_bool]()) {
 let __coil_temp;
 return [ObjectLiteral[Meta.from_entries]([...expr, [dot(this, 'kw'), new_expr]]), new_tokens];
 } else {
@@ -167,13 +167,13 @@ Until['prototype'][parse] = function ([expr, tokens]) {
 expr ??= nil;
 tokens ??= nil;let __coil_temp;
 let exprs = [];
-while (dot(dot(tokens, first)[invoke](), at)[invoke](Keyword.for("type"))[Meta["!="]](dot(this, 'end_kw'))[Meta.as_bool]()) {
+while ((dot(dot(tokens, first)[invoke](), at)[invoke](Keyword.for("type"))[Meta["!="]](dot(this, 'end_kw')))[Meta.as_bool]()) {
 let __coil_temp;
 let [expr, new_tokens] = verify_exists__b[invoke](dot(this, 'parser')[invoke](tokens), this);
 dot(exprs, Keyword.for("push"))[invoke](expr);
 tokens = new_tokens;
 };
-if (dot(this, 'kw')[Meta.as_bool]()) {
+if ((dot(this, 'kw'))[Meta.as_bool]()) {
 let __coil_temp;
 return [ObjectLiteral[Meta.from_entries]([...expr, [dot(this, 'kw'), exprs]]), tokens];
 } else {
@@ -192,7 +192,7 @@ UntilEither['prototype'][parse] = function ([expr, tokens]) {
 expr ??= nil;
 tokens ??= nil;let __coil_temp;
 let exprs = [];
-while (dot(dot(dot(tokens, first)[invoke](), at)[invoke](Keyword.for("type")), pipe)[invoke](dot(this, 'set'))[Bool.negate]()[Meta.as_bool]()) {
+while ((dot(dot(dot(tokens, first)[invoke](), at)[invoke](Keyword.for("type")), pipe)[invoke](dot(this, 'set'))[Bool.negate]())[Meta.as_bool]()) {
 let __coil_temp;
 let [expr, new_tokens] = verify_exists__b[invoke](dot(this, 'parser')[invoke](tokens), this);
 dot(exprs, 'push')[invoke](expr);
@@ -212,7 +212,7 @@ var __coil_if_let_temp = dot(this, 'parse_map')[invoke](tokens) ?? nil;
 if (__coil_if_let_temp[Meta.as_bool]()) {
 let [new_expr, new_tokens] = __coil_if_let_temp;
 let __coil_temp;
-if (dot(this, 'kw')[Meta.as_bool]()) {
+if ((dot(this, 'kw'))[Meta.as_bool]()) {
 let __coil_temp;
 return [ObjectLiteral[Meta.from_entries]([...expr, [dot(this, 'kw'), new_expr]]), new_tokens];
 } else {
@@ -251,9 +251,9 @@ Parser['prototype'][parse] = function (result) {
 result ??= nil;let __coil_temp;
 for  (let instruction of dot(this, 'instructions')) {
 let __coil_temp;
-if ((instruction instanceof AbortIf)[Meta.as_bool]()) {
+if (((instruction instanceof AbortIf))[Meta.as_bool]()) {
 let __coil_temp;
-if (dot(instruction, 'cond_fn')[invoke](result)[Meta.as_bool]()) {
+if ((dot(instruction, 'cond_fn')[invoke](result))[Meta.as_bool]()) {
 let __coil_temp;
 return;
 } else {
@@ -276,14 +276,14 @@ _ ??= nil;return pattern;}), into)[invoke](Set[Meta.create]([]));};
 ParseMap['prototype'][invoke] = function (tokens, ...args) {
 tokens ??= nil;
 args ??= nil;let __coil_temp;
-if (dot(tokens, empty__q)[invoke]()[Meta.as_bool]()) {
+if ((dot(tokens, empty__q)[invoke]())[Meta.as_bool]()) {
 let __coil_temp;
 return;
 } else {
 let __coil_temp;
 for  (let [pattern, parser] of dot(this, 'entries')) {
 let __coil_temp;
-if (dot(pattern, can_parse__q)[invoke](tokens)[Meta.as_bool]()) {
+if ((dot(pattern, can_parse__q)[invoke](tokens))[Meta.as_bool]()) {
 let __coil_temp;
 return parser[invoke](tokens, ...args);
 };
@@ -307,7 +307,7 @@ _expr ??= nil;
 tokens ??= nil;let __coil_temp;
 let current = dot(tokens, first)[invoke]();
 let previous = dot(tokens, at)[invoke]((-1));
-if (dot(current, 'line')[Meta["!="]](dot(previous, 'line'))[Meta.as_bool]()) {
+if ((dot(current, 'line')[Meta["!="]](dot(previous, 'line')))[Meta.as_bool]()) {
 let __coil_temp;
 return true;
 } else {
