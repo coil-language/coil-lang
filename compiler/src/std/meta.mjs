@@ -117,7 +117,7 @@ Set.prototype[Meta["=="]] = function (other) {
 
 Array.prototype[Meta["=="]] = function (other) {
   if (!(other instanceof Array)) {
-    throw new TypeError("Expected Array");
+    return false;
   } else if (this.length !== other.length) {
     return false;
   } else {
@@ -132,7 +132,7 @@ Array.prototype[Meta["=="]] = function (other) {
 
 Map.prototype[Meta["=="]] = function (other) {
   if (!(other instanceof Map)) {
-    throw new TypeError("Expected Map");
+    return false;
   } else if (other.size !== this.size) {
     return false;
   } else {
@@ -147,7 +147,7 @@ Map.prototype[Meta["=="]] = function (other) {
 
 ObjectLiteral.prototype[Meta["=="]] = function (other) {
   if (!(other instanceof ObjectLiteral)) {
-    throw new TypeError("Expected Object Literal");
+    return false;
   }
   let my_keys = Object.keys(this);
   let your_keys = Object.keys(other);

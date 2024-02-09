@@ -1,4 +1,1 @@
-[1 2 3]
-  .filter_map(Map{1 => 2, 2 => 3})
-  .into(Set[])
-  .log()
+({} == 1).log()
