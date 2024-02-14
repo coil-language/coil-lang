@@ -59,7 +59,11 @@ export function from_js(js_object) {
   if (js_object == null) {
     return nil;
   } else if (Object.getPrototypeOf(js_object) === Object.prototype) {
-    return new ObjectLiteral(Object.entries(js_object));
+    let out = new ObjectLiteral([]);
+    for (let key in js_object) {
+      out[key] = from_js(js_object[key]);
+    }
+    return out;
   } else {
     return js_object;
   }
