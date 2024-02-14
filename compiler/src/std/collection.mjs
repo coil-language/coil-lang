@@ -9,8 +9,8 @@ const Collection = Object.freeze({
   "delete!": Symbol("coil-lang/@0.1.15/std/collection/Collection:delete!"),
 });
 
-ObjectLiteral.prototype[Collection["delete!"]] = function (key) {
-  delete this[key];
+ObjectLiteral.prototype[Collection["delete!"]] = function (...keys) {
+  for (let key of keys) delete this[key];
   return this;
 };
 
@@ -46,8 +46,8 @@ Array.prototype[Collection["has?"]] = function (value) {
   return this.some((elem) => elem[Meta["=="]](value));
 };
 
-Array.prototype[Collection["delete!"]] = function (idx) {
-  this.splice(idx, 1);
+Array.prototype[Collection["delete!"]] = function (...indices) {
+  for (let idx of indices) this.splice(idx, 1);
   return this;
 };
 
@@ -83,8 +83,8 @@ Map.prototype[Collection["has?"]] = function (key) {
   return this.has(key);
 };
 
-Map.prototype[Collection["delete!"]] = function (key) {
-  this.delete(key);
+Map.prototype[Collection["delete!"]] = function (...keys) {
+  for (let key of keys) this.delete(key);
   return this;
 };
 
@@ -106,11 +106,17 @@ Set.prototype[Collection["has?"]] = function (value) {
   return this.has(value);
 };
 
-Set.prototype[Collection["delete!"]] = function (value) {
-  this.delete(value);
+Set.prototype[Collection["delete!"]] = function (...values) {
+  for (let value of values) this.delete(value);
   return this;
 };
 
 export default Collection;
 
-export const { at, len, "empty?": empty__q, "has?": has__q } = Collection;
+export const {
+  at,
+  len,
+  "empty?": empty__q,
+  "has?": has__q,
+  "delete!": delete__b,
+} = Collection;
