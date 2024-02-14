@@ -7,7 +7,7 @@ import Iter, {
 } from '../src/std/iter/index.mjs';
 import Algebra from '../src/std/algebra.mjs';
 import Bool, { negate } from '../src/std/bool.mjs';
-import Collection, { at, len, empty__q, has__q } from '../src/std/collection.mjs';
+import Collection, { at, len, empty__q, has__q, delete__b } from '../src/std/collection.mjs';
 import OrderedSequence, { first, last } from '../src/std/ordered_sequence.mjs';
 import {
   inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum,
@@ -67,7 +67,7 @@ import Iter, {
 } from '`, std_prefix, `/src/std/iter/index.mjs';
 import Algebra from '`, std_prefix, `/src/std/algebra.mjs';
 import Bool, { negate } from '`, std_prefix, `/src/std/bool.mjs';
-import Collection, { at, len, empty__q, has__q } from '`, std_prefix, `/src/std/collection.mjs';
+import Collection, { at, len, empty__q, has__q, delete__b } from '`, std_prefix, `/src/std/collection.mjs';
 import OrderedSequence, { first, last } from '`, std_prefix, `/src/std/ordered_sequence.mjs';
 import {
   inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum,
