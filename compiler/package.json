@@ -1,6 +1,6 @@
 {
   "name": "@coil-lang/compiler",
-  "version": "0.1.20",
+  "version": "0.1.21",
   "description": "Compiler for the coil programming language",
   "main": "dist/compiler.mjs",
   "scripts": {},
