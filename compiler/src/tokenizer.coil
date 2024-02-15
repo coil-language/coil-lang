@@ -79,7 +79,7 @@ let tokenize = Tokenizer{
   /^continue\s/ => :continue
   /^break\s/ => :break
   /^of\s/ => :of
-  /^yield\s/ => :yield
+  /^yield\b/ => :yield
   /^async\s/ => :async
   /^await\s/ => :await
   /^\=\>/ => :arrow

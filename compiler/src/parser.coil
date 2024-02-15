@@ -441,7 +441,10 @@ def parse_paren_expr(tokens) = Parser[
 def parse_yield(tokens) = Parser[
   Init[{type: :yield}]
   Chomp[:yield]
-  Optional[:times parse_gen_modifier :star?]
+  Optional[
+    :times
+    |tokens| Parser[Init[{}] Chomp[:times]](tokens)
+    :star?]
   Then[parse_expr :expr]
 ](tokens)
 
@@ -603,7 +606,6 @@ let SINGLE_EXPR_PARSE_MAP = ParseMap{
   :regex_lit => parse_regex
   :keyword => parse_keyword
   :open_p => parse_paren_expr
-  :yield => parse_yield
   :await => parse_await
   :num => parse_num
   :open_sq => parse_array
@@ -612,6 +614,7 @@ let SINGLE_EXPR_PARSE_MAP = ParseMap{
   :open_b => parse_obj
   :pipe_bar => parse_anon_fn
   :def => parse_def
+  :yield => parse_yield
   [:times :pipe_bar] => parse_anon_gen_fn
   [:dot_dot :eq] => parse_prefix_inclusive_range
   :dot_dot => parse_prefix_exclusive_range

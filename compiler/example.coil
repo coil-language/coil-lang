@@ -1,7 +1,1 @@
-if let x = nil
-  x.log()
-else if let x = nil
-  x.log()
-else if let y = 4
-  y.log()
-end
+yield*  x
