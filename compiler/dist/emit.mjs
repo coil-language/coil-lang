@@ -34,6 +34,9 @@ return "";
 } else if (dot(branch, Keyword.for("type"))[Meta["=="]](Keyword.for("else"))) {
 let __coil_temp;
 return str[invoke](" else {\n", eval_ast[invoke]((__coil_temp = {left: dot(branch, Keyword.for("body"))}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), "\n}");
+} else if (dot(branch, Keyword.for("type"))[Meta["=="]](Keyword.for("else_if_let"))) {
+let __coil_temp;
+return str[invoke](" else {\n", eval_if_let[invoke](branch), "\n}");
 } else if (dot(branch, Keyword.for("type"))[Meta["=="]](Keyword.for("else_if"))) {
 let __coil_temp;
 return str[invoke](" else if (", eval_expr[invoke](dot(branch, at)[invoke](Keyword.for("expr"))), ") {\n", eval_ast[invoke]((__coil_temp = {left: dot(branch, at)[invoke](Keyword.for("pass"))}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), "\n}", eval_if_branch[invoke](dot(branch, at)[invoke](Keyword.for("fail"))));

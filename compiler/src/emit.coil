@@ -15,6 +15,8 @@ def eval_if_branch(branch)
     return ""
   else if branch.:type == :else
     return str(" else {\n" eval_ast(branch.:body or []) "\n}")
+  else if branch.:type == :else_if_let
+    return str(" else {\n" eval_if_let(branch) "\n}")
   else if branch.:type == :else_if
     return str(
       " else if (" eval_expr(branch.at(:expr)) ") {\n"

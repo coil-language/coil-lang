@@ -645,7 +645,18 @@ def parse_else_if_branch(tokens) = Parser[
   Optional[:else parse_if_branch :fail]
 ](tokens)
 
+def parse_else_if_let_branch(tokens) = Parser[
+  Init[{type: :else_if_let}]
+  Chomp[:else :if :let]
+  Then[parse_assign_expr :assign_expr]
+  Chomp[:eq]
+  Then[parse_expr :expr]
+  UntilEither[Set[:else :end] parse_statement :pass]
+  Optional[:else parse_if_branch :fail]
+](tokens)
+
 let parse_if_branch = ParseMap{
+  [:else :if :let] => parse_else_if_let_branch
   [:else :if] => parse_else_if_branch
   :else => parse_else_branch
 }
@@ -674,7 +685,7 @@ def parse_if_let(tokens) = Parser[
   Chomp[:eq]
   Then[parse_expr :expr]
   UntilEither[Set[:else :end] parse_statement :pass]
-  Optional[:else parse_else_branch :fail]
+  Optional[:else parse_if_branch :fail]
   Chomp[:end]
 ](tokens)
 
