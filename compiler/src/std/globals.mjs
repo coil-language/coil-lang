@@ -75,7 +75,7 @@ export function raise__b(error) {
 }
 
 export function panic__b(...args) {
-  throw args.map((x) => x.toString()).join("");
+  throw new Error(str(...args));
 }
 
 export function type_of(object) {

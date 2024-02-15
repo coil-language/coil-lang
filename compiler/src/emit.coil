@@ -264,6 +264,14 @@ def eval_anon_fn({args, return_node}) = str(
   "}"
 )
 
+def eval_anon_gen_fn({args, return_node}) = str(
+  "function *(" args.map(eval_assign_expr).join(", ") ") {\n"
+    eval_nil_destructure_args(args)
+    eval_anon_fn_body(return_node)
+  -- match arrow function behavior
+  "}.bind(this)"
+)
+
 def eval_anon_body_fn({args body}) = str(
   "(" args.map(eval_assign_expr).join(", ") ") => {\n"
     eval_nil_destructure_args(args) "\n"
@@ -334,6 +342,7 @@ def eval_expr(node) = node.at(:type).pipe(Map{
   :inclusive_range => eval_inclusive_range
   :exclusive_range => eval_exclusive_range
   :anon_fn => eval_anon_fn
+  :anon_gen_fn => eval_anon_gen_fn
   :anon_body_fn => eval_anon_body_fn
 })(node)
 
