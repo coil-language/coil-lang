@@ -216,7 +216,7 @@ return str[invoke]("await ", eval_expr[invoke](expr));};
 let eval_yield = function ({'star?': star__q, 'expr': expr}) {
 star__q ??= nil;
 expr ??= nil;let __coil_temp;
-return str[invoke]("yield", ((__coil_temp = {left: star__q}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "*", __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right)), " ", eval_expr[invoke](expr));};
+return str[invoke]("(yield", ((__coil_temp = {left: star__q}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "*", __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right)), " ", eval_expr[invoke](expr), ")");};
 let eval_paren_expr = function ({'expr': expr}) {
 expr ??= nil;let __coil_temp;
 return str[invoke]("(", eval_expr[invoke](expr), ")");};

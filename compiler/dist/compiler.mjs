@@ -49,7 +49,7 @@ CollectionView['prototype'][(dot(Symbol, 'iterator'))] = function *() {
 let __coil_temp;
 for  (let i of new ExclusiveRange(dot(this, 'idx'), dot(dot(this, 'collection'), len)[invoke]())) {
 let __coil_temp;
-yield dot(dot(this, 'collection'), i);
+(yield dot(dot(this, 'collection'), i));
 };};
 let compile = function (string, std_prefix) {
 string ??= nil;

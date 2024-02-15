@@ -194,7 +194,7 @@ def eval_meta_create({lhs, entries}) =
 
 def eval_await({expr}) = str("await " eval_expr(expr))
 
-def eval_yield({star? expr}) = str("yield" (star? and "*") " " eval_expr(expr))
+def eval_yield({star? expr}) = str("(yield" (star? and "*") " " eval_expr(expr) ")")
 
 def eval_paren_expr({expr}) = str("(" eval_expr(expr) ")")
 
