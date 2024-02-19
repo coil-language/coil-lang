@@ -46,7 +46,13 @@ end
 def eval_fn_call({lhs args}) = 
   str(eval_expr(lhs) "[invoke](" args.map(eval_expr).join(", ") ")")
 
-def eval_id_assign_name({name}) = resolve_name(name)
+def eval_id_assign_name({name})
+  if name == "_"
+    return "_ignore_me_"
+  else
+    return resolve_name(name)
+  end
+end
 
 def eval_spread_assign({name}) = str("..." resolve_name(name))
 

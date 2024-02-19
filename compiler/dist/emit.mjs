@@ -65,7 +65,13 @@ args ??= nil;let __coil_temp;
 return str[invoke](eval_expr[invoke](lhs), "[invoke](", dot(dot(args, map)[invoke](eval_expr), join)[invoke](", "), ")");};
 let eval_id_assign_name = function ({'name': name}) {
 name ??= nil;let __coil_temp;
-return resolve_name[invoke](name);};
+if ((name[Meta["=="]]("_"))[Meta.as_bool]()) {
+let __coil_temp;
+return "_ignore_me_";
+} else {
+let __coil_temp;
+return resolve_name[invoke](name);
+};};
 let eval_spread_assign = function ({'name': name}) {
 name ??= nil;let __coil_temp;
 return str[invoke]("...", resolve_name[invoke](name));};
