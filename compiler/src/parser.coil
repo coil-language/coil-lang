@@ -19,7 +19,7 @@ end
 
 protocol parse
 
-def line_and_col({line, col}) = {line: line, col: col}
+def line_and_col({line, col}) = {line, col}
 
 def Init(@expr) end
 def Init:prototype.parse([_expr tokens]) = 
@@ -53,7 +53,7 @@ def Optional:prototype.parse([expr tokens])
   if tokens.empty?()
     return [expr tokens]
   else if this:parse_cond.can_parse?(tokens)
-    return Then[this.:parse_fn, this.:as].parse([expr tokens])
+    return Then[this:parse_fn, this:as].parse([expr tokens])
   else
     return [expr tokens]
   end
@@ -528,6 +528,11 @@ def parse_def(tokens) = Parser[
   } :body]
 ](tokens)
 
+let parse_id_shorthand_record_entry = Parser[
+  Init[{type: :id_shorthand_record_entry}]
+  One[:id :name]
+]
+
 def parse_keyword_record_entry(tokens) = Parser[
   Init[{type: :keyword_record_entry}]
   One[:id :name]
@@ -542,14 +547,16 @@ def parse_regular_record_entry(tokens) = Parser[
   Then[parse_expr :value_expr]
 ](tokens)
 
-def parse_record_entry(tokens) = ParseMap{
+let parse_record_entry = ParseMap{
   :dot_dot_dot => parse_spread
   [:id :colon] => parse_keyword_record_entry
   [:id :arrow] => parse_regular_record_entry
   :def => parse_def
   [:async :def] => parse_def
+  [:id PARSE_SND_EXPR_STEP_MAP.keys()] => parse_regular_record_entry
+  :id => parse_id_shorthand_record_entry
   _ => parse_regular_record_entry
-}(tokens)
+}
 
 def parse_prefix_inclusive_range(tokens) = Parser[
   Init[{type: :prefix_inclusive_range}]

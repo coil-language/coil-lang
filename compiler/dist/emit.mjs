@@ -240,9 +240,12 @@ return str[invoke]("[", eval_keyword[invoke](ObjectLiteral[Meta.from_entries]([[
 let eval_fn_record_entry = function (fn_node) {
 fn_node ??= nil;let __coil_temp;
 return str[invoke]("[", eval_expr[invoke](dot(fn_node, 'name_expr')), ", ", eval_fn_expr[invoke](fn_node), "]");};
+let eval_id_shorthand_record_entry = function ({'name': name}) {
+name ??= nil;let __coil_temp;
+return str[invoke]("[", eval_keyword[invoke](ObjectLiteral[Meta.from_entries]([[Keyword.for("value"), name]])), ", ", resolve_name[invoke](name), "]");};
 let eval_record_entry = function (node) {
 node ??= nil;let __coil_temp;
-return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("regular_record_entry"), eval_regular_record_entry], [Keyword.for("keyword_record_entry"), eval_keyword_record_entry], [Keyword.for("spread"), eval_spread], [Keyword.for("fn"), eval_fn_record_entry]]))[invoke](node);};
+return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("regular_record_entry"), eval_regular_record_entry], [Keyword.for("keyword_record_entry"), eval_keyword_record_entry], [Keyword.for("id_shorthand_record_entry"), eval_id_shorthand_record_entry], [Keyword.for("spread"), eval_spread], [Keyword.for("fn"), eval_fn_record_entry]]))[invoke](node);};
 let eval_inclusive_range = function ({'lhs': lhs, 'rhs': rhs}) {
 lhs ??= nil;
 rhs ??= nil;let __coil_temp;

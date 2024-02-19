@@ -215,9 +215,12 @@ def eval_keyword_record_entry({name expr}) =
 def eval_fn_record_entry(fn_node) =
   str("[" eval_expr(fn_node:name_expr) ", " eval_fn_expr(fn_node) "]")
 
+def eval_id_shorthand_record_entry({name}) = str("[" eval_keyword({value: name}) ", " resolve_name(name) "]")
+
 def eval_record_entry(node) = node.at(:type).pipe(Map{
   :regular_record_entry => eval_regular_record_entry
   :keyword_record_entry => eval_keyword_record_entry
+  :id_shorthand_record_entry => eval_id_shorthand_record_entry
   :spread => eval_spread
   :fn => eval_fn_record_entry
 })(node)
