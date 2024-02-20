@@ -298,7 +298,6 @@ def eval_equality_op({lhs, op, rhs}) = str(
 
 def eval_instanceof({lhs, rhs}) = str("(" eval_expr(lhs) " instanceof " eval_expr(rhs) ")")
 
--- TODO: this is broken
 def eval_and({lhs, rhs}) = str(
   "(__coil_temp = {left: " eval_expr(lhs) "}"
   ", __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left"
