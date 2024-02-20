@@ -173,17 +173,16 @@ end
 let algebra_ops = Set[:mod :plus :minus :times :pow :div :lt :gt :lt_eq :gt_eq]
 
 def parse_dot(tokens, lhs) = Parser[
-  Init[{type: :dot, lhs: lhs}]
+  Init[{type: :dot, lhs}]
   Chomp[:dot]
   Then[parse_single_expr :rhs]
 ](tokens)
 
 def parse_keyword_lookup(tokens, lhs) = Parser[
   AbortIf[not_adjacent?]
-  Init[{type: :keyword_lookup, lhs: lhs}]
+  Init[{type: :keyword_lookup, lhs}]
   One[:keyword :property]
-  FMap[|{lhs, type, property, pos}|
-    ({lhs: lhs, type: type, property: property:slice(1), pos: pos})]
+  FMap[|{lhs, type, property, pos}| ({lhs, type, property: property:slice(1), pos})]
 ](tokens)
 
 def not_adjacent?([_expr tokens])
@@ -204,21 +203,21 @@ def parse_adjacent_expr(tokens) = Parser[
 
 def parse_inclusive_range(tokens lhs) = Parser[
   AbortIf[not_adjacent?]
-  Init[{type: :inclusive_range, lhs: lhs}]
+  Init[{type: :inclusive_range, lhs}]
   Chomp[:dot_dot :eq]
   Optional[SINGLE_EXPR_PARSE_MAP.keys() parse_adjacent_expr :rhs]
 ](tokens)
 
 def parse_exclusive_range(tokens lhs) = Parser[
   AbortIf[not_adjacent?]
-  Init[{type: :exclusive_range, lhs: lhs}]
+  Init[{type: :exclusive_range, lhs}]
   Chomp[:dot_dot]
   Optional[SINGLE_EXPR_PARSE_MAP.keys() parse_adjacent_expr :rhs]
 ](tokens)
 
 def parse_fn_call(tokens lhs) = Parser[
   AbortIf[not_adjacent?]
-  Init[{type: :fn_call, lhs: lhs}]
+  Init[{type: :fn_call, lhs}]
   Chomp[:open_p]
   Until[:close_p parse_expr :args]
   Chomp[:close_p]
@@ -226,7 +225,7 @@ def parse_fn_call(tokens lhs) = Parser[
 
 def parse_meta_from_entries(tokens lhs) = Parser[
   AbortIf[not_adjacent?]
-  Init[{type: :meta_from_entries, lhs: lhs}]
+  Init[{type: :meta_from_entries, lhs}]
   Chomp[:open_b]
   Until[:close_b parse_record_entry :entries]
   Chomp[:close_b]
@@ -234,14 +233,14 @@ def parse_meta_from_entries(tokens lhs) = Parser[
 
 def parse_meta_create(tokens lhs) = Parser[
   AbortIf[not_adjacent?]
-  Init[{type: :meta_create, lhs: lhs}]
+  Init[{type: :meta_create, lhs}]
   Chomp[:open_sq]
   Until[:close_sq parse_expr :entries]
   Chomp[:close_sq]
 ](tokens lhs)
 
 def parse_snd_assign(tokens lhs) = Parser[
-  Init[{type: :snd_assign, lhs: lhs}]
+  Init[{type: :snd_assign, lhs}]
   Chomp[:eq]
   Then[parse_expr :rhs]
 ](tokens)
@@ -267,13 +266,13 @@ def parse_snd_expr([lhs tokens])
 end
 
 def parse_algebra_op(tokens lhs) = Parser[
-  Init[{type: :algebra_op, lhs: lhs}]
+  Init[{type: :algebra_op, lhs}]
   Either[algebra_ops :op]
   Then[parse_1_2_expr :rhs]
 ](tokens)
 
 def parse_instanceof(tokens lhs) = Parser[
-  Init[{type: :instanceof, lhs: lhs}]
+  Init[{type: :instanceof, lhs}]
   Chomp[:instanceof]
   Then[parse_1_2_expr :rhs]
 ](tokens)
@@ -295,14 +294,13 @@ end
 let equality_ops = Set[:double_eq :not_eq]
 
 def parse_eq_op(tokens, lhs) = Parser[
-  Init[{type: :equality_op, lhs: lhs}]
+  Init[{type: :equality_op, lhs}]
   Either[equality_ops :op]
   Then[parse_1_2_3_expr :rhs]
 ](tokens)
 
-def parse_fourth_expr_step(tokens, lhs) = ParseMap{
-  equality_ops => parse_eq_op
-}(tokens, lhs)
+def parse_fourth_expr_step(tokens, lhs) =
+  ParseMap{equality_ops => parse_eq_op}(tokens, lhs)
 
 def parse_fourth_expr([lhs tokens])
    while let [new_lhs rest] = parse_fourth_expr_step(tokens, lhs)
@@ -313,13 +311,13 @@ def parse_fourth_expr([lhs tokens])
 end
 
 def parse_and(tokens lhs) = Parser[
-  Init[{type: :and, lhs: lhs}]
+  Init[{type: :and, lhs}]
   Chomp[:and]
   Then[parse_1_2_3_4_expr :rhs]
 ](tokens)
 
 def parse_or(tokens lhs) = Parser[
-  Init[{type: :or, lhs: lhs}]
+  Init[{type: :or, lhs}]
   Chomp[:or]
   Then[parse_1_2_3_4_expr :rhs]
 ](tokens)
