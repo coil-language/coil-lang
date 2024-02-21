@@ -478,7 +478,7 @@ return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries](
 node ??= nil;return [node];}])])[invoke](tokens);};
 let parse_args_def = function (tokens) {
 tokens ??= nil;let __coil_temp;
-return Parser[Meta.create]([Chomp[Meta.create]([Keyword.for("open_p")]), Until[Meta.create]([Keyword.for("close_p"), parse_assign_expr]), Chomp[Meta.create]([Keyword.for("close_p")])])[invoke](tokens);};
+return Parser[Meta.create]([AbortIf[Meta.create]([not_adjacent__q]), Chomp[Meta.create]([Keyword.for("open_p")]), Until[Meta.create]([Keyword.for("close_p"), parse_assign_expr]), Chomp[Meta.create]([Keyword.for("close_p")])])[invoke](tokens);};
 let parse_name_expr = function (tokens) {
 tokens ??= nil;let __coil_temp;
 var __coil_if_let_temp = parse_single_expr[invoke](tokens) ?? nil;

@@ -494,6 +494,7 @@ def parse_fn_expr_body(tokens) = Parser[
 ](tokens)
 
 def parse_args_def(tokens) = Parser[
+  AbortIf[not_adjacent?]
   Chomp[:open_p]
   Until[:close_p parse_assign_expr]
   Chomp[:close_p]
