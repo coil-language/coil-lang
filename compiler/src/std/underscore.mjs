@@ -1,6 +1,5 @@
 import Meta from "./meta.mjs";
-import Iter from "./iter/index.mjs";
-import IterEager from "./iter/eager.mjs";
+import Iter from "./iter.mjs";
 import Collection from "./collection.mjs";
 import OrderedSequence from "./ordered_sequence.mjs";
 import Algebra from "./algebra.mjs";
@@ -27,16 +26,7 @@ export default class Underscore {
   }
 }
 
-for (let sym of [
-  Meta,
-  Iter,
-  IterEager,
-  Collection,
-  OrderedSequence,
-  Algebra,
-  Record,
-  Bool,
-]
+for (let sym of [Meta, Iter, Collection, OrderedSequence, Algebra, Record, Bool]
   .flatMap(Object.values)
   .concat([inc])) {
   if (sym === Meta.invoke) {

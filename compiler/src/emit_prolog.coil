@@ -636,6 +636,4 @@ let prelude = Deno:readTextFileSync("./prolog_prelude.pl")
 
 let module_nid = nid()
 
-
-
 str(prelude "module([main], " module_nid ").\n" emit_ast(ast, module_nid)):trim().log()

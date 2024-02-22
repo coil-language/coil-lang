@@ -4,7 +4,7 @@ import Meta, { nil__q, create, from_entries, as_num, exists__q, as_bool, log, in
 import Iter, {
   take, until, skip, find, find_map, zip, reduce, map, flat_map, each, count,
   filter, filter_map, reject, all__q, any__q, split, compact, join, into, compose
-} from '../src/std/iter/index.mjs';
+} from '../src/std/iter.mjs';
 import Algebra from '../src/std/algebra.mjs';
 import Bool, { negate } from '../src/std/bool.mjs';
 import Collection, { at, len, empty__q, has__q, delete__b } from '../src/std/collection.mjs';
@@ -64,7 +64,7 @@ import Meta, { nil__q, create, from_entries, as_num, exists__q, as_bool, log, in
 import Iter, {
   take, until, skip, find, find_map, zip, reduce, map, flat_map, each, count,
   filter, filter_map, reject, all__q, any__q, split, compact, join, into, compose
-} from '`, std_prefix, `/src/std/iter/index.mjs';
+} from '`, std_prefix, `/src/std/iter.mjs';
 import Algebra from '`, std_prefix, `/src/std/algebra.mjs';
 import Bool, { negate } from '`, std_prefix, `/src/std/bool.mjs';
 import Collection, { at, len, empty__q, has__q, delete__b } from '`, std_prefix, `/src/std/collection.mjs';

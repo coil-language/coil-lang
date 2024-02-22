@@ -1,2 +1,0 @@
-fact person({ name = "marcelle", age = 10 }).
-fact person({ name = "jack", age = 11 }).

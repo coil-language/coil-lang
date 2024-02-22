@@ -1,8 +1,6 @@
-import Algebra from "../algebra.mjs";
-import { ObjectLiteral } from "../globals.mjs";
-import Meta from "../meta.mjs";
-import Async from "./async.mjs";
-import Eager from "./eager.mjs";
+import Algebra from "./algebra.mjs";
+import { ObjectLiteral } from "./globals.mjs";
+import Meta from "./meta.mjs";
 
 export function compose(...fns) {
   return (arg) => {
@@ -249,40 +247,6 @@ ObjectLiteral.prototype[Iter.collect] = function (entries) {
 };
 
 export default Iter;
-
-Object.prototype[Iter.take].async = Object.prototype[Async.take];
-Object.prototype[Iter.until].async = Object.prototype[Async.until];
-Object.prototype[Iter.skip].async = Object.prototype[Async.skip];
-Object.prototype[Iter.find].async = Object.prototype[Async.find];
-Object.prototype[Iter.zip].async = Object.prototype[Async.zip];
-Object.prototype[Iter.reduce].async = Object.prototype[Async.reduce];
-Object.prototype[Iter.map].async = Object.prototype[Async.map];
-Object.prototype[Iter.flat_map].async = Object.prototype[Async.flat_map];
-Object.prototype[Iter.each].async = Object.prototype[Async.each];
-Object.prototype[Iter.filter].async = Object.prototype[Async.filter];
-Object.prototype[Iter.reject].async = Object.prototype[Async.reject];
-Object.prototype[Iter["all?"]].async = Object.prototype[Async["all?"]];
-Object.prototype[Iter["any?"]].async = Object.prototype[Async["any"]];
-Object.prototype[Iter.split].async = Object.prototype[Async.split];
-Object.prototype[Iter.compact].async = Object.prototype[Async.compact];
-Object.prototype[Iter.join].async = Object.prototype[Async.join];
-
-Object.prototype[Iter.take].eager = Object.prototype[Eager.take];
-Object.prototype[Iter.until].eager = Object.prototype[Eager.until];
-Object.prototype[Iter.skip].eager = Object.prototype[Eager.skip];
-Object.prototype[Iter.find].eager = Object.prototype[Eager.find];
-Object.prototype[Iter.zip].eager = Object.prototype[Eager.zip];
-Object.prototype[Iter.reduce].eager = Object.prototype[Eager.reduce];
-Object.prototype[Iter.map].eager = Object.prototype[Eager.map];
-Object.prototype[Iter.flat_map].eager = Object.prototype[Eager.flat_map];
-Object.prototype[Iter.each].eager = Object.prototype[Eager.each];
-Object.prototype[Iter.filter].eager = Object.prototype[Eager.filter];
-Object.prototype[Iter.reject].eager = Object.prototype[Eager.reject];
-Object.prototype[Iter["all?"]].eager = Object.prototype[Eager["all?"]];
-Object.prototype[Iter["any?"]].eager = Object.prototype[Eager["any"]];
-Object.prototype[Iter.split].eager = Object.prototype[Eager.split];
-Object.prototype[Iter.compact].eager = Object.prototype[Eager.compact];
-Object.prototype[Iter.join].eager = Object.prototype[Eager.join];
 
 export const {
   take,
