@@ -1,14 +1,2 @@
 .DS_Store
-q1.txt
-q1.ts
-test.js
-example.js
-node_modules
-**/test/dist/**/*.js
-linter.js
-editor/**/*.ttf
-experiments/**/dist
-editor/dist
-example_v2.js
-game
-css-parser.js
+*.js
