@@ -435,9 +435,7 @@ def eval_import_assign_exprs(node) = node.pipe(:type Map{
 })(node)
 
 def eval_import({assign_expr, path}) =
-  str("import "
-    eval_import_assign_exprs(assign_expr)
-    " from \"" path:value:slice(1, -1) "\"")
+  str("import " eval_import_assign_exprs(assign_expr) " from \"" path:value:slice(1, -1) "\"")
 
 def eval_export({statement}) = str("export " eval_statement(statement))
 

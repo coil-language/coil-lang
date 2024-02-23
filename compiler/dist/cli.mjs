@@ -1,21 +1,14 @@
 "use strict";
-import { ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b, type_of, str, from_js } from '../src/std/globals.mjs'
-import Meta, { nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, as_kw } from '../src/std/meta.mjs';
-import Iter, {
-  take, until, skip, find, find_map, zip, reduce, map, flat_map, each, count,
-  filter, filter_map, reject, all__q, any__q, split, compact, join, into, compose
-} from '../src/std/iter.mjs';
+import {ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b, type_of, str, from_js} from '../src/std/globals.mjs'
+import Meta, {nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, as_kw} from '../src/std/meta.mjs';
+import Iter, {take, until, skip, find, find_map, zip, reduce, map, flat_map, each, count, filter, filter_map, reject, all__q, any__q, split, compact, join, into, compose} from '../src/std/iter.mjs';
 import Algebra from '../src/std/algebra.mjs';
-import Bool, { negate } from '../src/std/bool.mjs';
-import Collection, { at, len, empty__q, has__q, delete__b } from '../src/std/collection.mjs';
-import OrderedSequence, { first, last } from '../src/std/ordered_sequence.mjs';
-import {
-  inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum,
-  InclusiveRangeNoMinimum, ExclusiveRangeNoMaximum, ExclusiveRangeNoMinimum
-} from '../src/std/range.mjs';
-import Record, { keys, values } from '../src/std/record.mjs';
-import Underscore, { _ } from '../src/std/underscore.mjs';
-import CondMap from '../src/std/cond_map.mjs'
+import Bool, {negate} from '../src/std/bool.mjs';
+import Collection, {at, len, empty__q, has__q, delete__b} from '../src/std/collection.mjs';
+import OrderedSequence, {first, last} from '../src/std/ordered_sequence.mjs';
+import {inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum, InclusiveRangeNoMinimum, ExclusiveRangeNoMaximum, ExclusiveRangeNoMinimum} from '../src/std/range.mjs';
+import Record, {keys, values} from '../src/std/record.mjs';
+import Underscore, {_} from '../src/std/underscore.mjs';
 let __coil_temp;
 import compile from "./compiler.mjs";
 let [src_file_name, out_name, ...args] = dot(Deno, 'args');
