@@ -1,3 +1,0 @@
-#!sh
-deno run --allow-read --allow-write ./dist/cli.mjs ./src/emit_prolog.coil ./dist/emit_prolog.mjs --std-prefix=..
-deno run --allow-read --allow-write ./dist/emit_prolog.mjs > out.pl && swipl out.pl 
