@@ -2,32 +2,7 @@ import { ParseError } from "./parse_error.mjs"
 import tokenize from "./tokenizer.mjs"
 import parse from "./parser.mjs"
 import emit from "./emit.mjs"
-
-def CollectionView(@collection, @idx) end
-
-def CollectionView:prototype.(Collection:len) =
-  this:collection.len() - this:idx
-
-def CollectionView:prototype.(Collection:empty?) =
-  this.len() == 0
-
-def CollectionView:prototype.(Collection:at)(idx) =
-  this:collection.at(this:idx + idx)
-
-def CollectionView:prototype.(OrderedSequence:first) =
-  this:collection.at(this:idx)
-
-def CollectionView:prototype.(OrderedSequence:last) =
-  this:collection.last()
-
-def CollectionView:prototype:skip(n) =
-  CollectionView[this:collection, this:idx + n]
-
-def* CollectionView:prototype.(Symbol:iterator)
-  for i of this:idx..this:collection.len()
-    yield this:collection.i
-  end
-end
+import {CollectionView} from "./shared.mjs"
 
 def compile(string std_prefix)
   let tokens = string.pipe(tokenize)
@@ -42,7 +17,7 @@ import Iter, {take, until, skip, find, find_map, zip, reduce, map, flat_map, eac
 import Algebra from '" std_prefix "/src/std/algebra.mjs';
 import Bool, {negate} from '" std_prefix "/src/std/bool.mjs';
 import Collection, {at, len, empty__q, has__q, delete__b} from '" std_prefix "/src/std/collection.mjs';
-import OrderedSequence, {first, last} from '" std_prefix "/src/std/ordered_sequence.mjs';
+import OrderedSequence, {first} from '" std_prefix "/src/std/ordered_sequence.mjs';
 import {inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum, InclusiveRangeNoMinimum, ExclusiveRangeNoMaximum, ExclusiveRangeNoMinimum} from '" std_prefix "/src/std/range.mjs';
 import Record, {keys, values} from '" std_prefix "/src/std/record.mjs';
 import Underscore, {_} from '" std_prefix "/src/std/underscore.mjs';

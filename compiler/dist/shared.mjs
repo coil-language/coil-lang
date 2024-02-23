@@ -5,7 +5,7 @@ import Iter, {take, until, skip, find, find_map, zip, reduce, map, flat_map, eac
 import Algebra from '../src/std/algebra.mjs';
 import Bool, {negate} from '../src/std/bool.mjs';
 import Collection, {at, len, empty__q, has__q, delete__b} from '../src/std/collection.mjs';
-import OrderedSequence, {first, last} from '../src/std/ordered_sequence.mjs';
+import OrderedSequence, {first} from '../src/std/ordered_sequence.mjs';
 import {inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum, InclusiveRangeNoMinimum, ExclusiveRangeNoMaximum, ExclusiveRangeNoMinimum} from '../src/std/range.mjs';
 import Record, {keys, values} from '../src/std/record.mjs';
 import Underscore, {_} from '../src/std/underscore.mjs';
@@ -28,9 +28,6 @@ return dot(dot(this, 'collection'), at)[invoke](dot(this, 'idx')[Algebra["+"]](i
 CollectionView['prototype'][(dot(OrderedSequence, 'first'))] = function () {
 let __coil_temp;
 return dot(dot(this, 'collection'), at)[invoke](dot(this, 'idx'));};
-CollectionView['prototype'][(dot(OrderedSequence, 'last'))] = function () {
-let __coil_temp;
-return dot(dot(this, 'collection'), last)[invoke]();};
 CollectionView['prototype']['skip'] = function (n) {
 n ??= nil;let __coil_temp;
 return CollectionView[Meta.create]([dot(this, 'collection'), dot(this, 'idx')[Algebra["+"]](n)]);};

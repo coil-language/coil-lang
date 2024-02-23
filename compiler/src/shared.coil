@@ -12,9 +12,6 @@ def CollectionView:prototype.(Collection:at)(idx) =
 def CollectionView:prototype.(OrderedSequence:first) =
   this:collection.at(this:idx)
 
-def CollectionView:prototype.(OrderedSequence:last) =
-  this:collection.last()
-
 def CollectionView:prototype:skip(n) =
   CollectionView[this:collection, this:idx + n]
 

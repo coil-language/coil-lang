@@ -5,7 +5,7 @@ let src = Deno:readTextFileSync(src_file_name)
 
 let std_prefix = "."
 if let arg = args.find(_.has?("--std-prefix"))
-  std_prefix = arg:split("--std-prefix=").last()
+  std_prefix = arg:split("--std-prefix=").at(-1)
 end
 
 Deno:writeTextFile(out_name, compile(src std_prefix) + "\n")

@@ -5,7 +5,7 @@ import Iter, {take, until, skip, find, find_map, zip, reduce, map, flat_map, eac
 import Algebra from '../src/std/algebra.mjs';
 import Bool, {negate} from '../src/std/bool.mjs';
 import Collection, {at, len, empty__q, has__q, delete__b} from '../src/std/collection.mjs';
-import OrderedSequence, {first, last} from '../src/std/ordered_sequence.mjs';
+import OrderedSequence, {first} from '../src/std/ordered_sequence.mjs';
 import {inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum, InclusiveRangeNoMinimum, ExclusiveRangeNoMaximum, ExclusiveRangeNoMinimum} from '../src/std/range.mjs';
 import Record, {keys, values} from '../src/std/record.mjs';
 import Underscore, {_} from '../src/std/underscore.mjs';
@@ -18,6 +18,6 @@ var __coil_if_let_temp = dot(args, find)[invoke](dot(_, has__q)[invoke]("--std-p
 if (__coil_if_let_temp[Meta.as_bool]()) {
 let arg = __coil_if_let_temp;
 let __coil_temp;
-std_prefix = dot(dot(arg, 'split')[invoke]("--std-prefix="), last)[invoke]();
+std_prefix = dot(dot(arg, 'split')[invoke]("--std-prefix="), at)[invoke]((-1));
 };
 dot(Deno, 'writeTextFile')[invoke](out_name, compile[invoke](src, std_prefix)[Algebra["+"]]("\n"));
