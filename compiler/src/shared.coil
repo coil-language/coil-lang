@@ -9,7 +9,7 @@ def CollectionView:prototype.(Collection:empty?) =
 def CollectionView:prototype.(Collection:at)(idx) =
   this:collection.at(this:idx + idx)
 
-def CollectionView:prototype.(OrderedSequence:first) =
+def CollectionView:prototype.first =
   this:collection.at(this:idx)
 
 def CollectionView:prototype:skip(n) =
