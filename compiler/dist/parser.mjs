@@ -91,7 +91,7 @@ tokens ??= nil;let __coil_temp;
 if ((dot(tokens, empty__q)[invoke]())[Meta.as_bool]()) {
 let __coil_temp;
 return [expr, tokens];
-} else if (dot(dot(this, 'parse_cond'), can_parse__q)[invoke](tokens)) {
+} else if ((dot(dot(this, 'parse_cond'), can_parse__q)[invoke](tokens))[Meta.as_bool]()) {
 let __coil_temp;
 return dot(Then[Meta.create]([dot(this, 'parse_fn'), dot(this, 'as')]), parse)[invoke]([expr, tokens]);
 } else {

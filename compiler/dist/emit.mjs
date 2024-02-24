@@ -24,15 +24,15 @@ branch ??= nil;let __coil_temp;
 if ((dot(branch, nil__q)[invoke]())[Meta.as_bool]()) {
 let __coil_temp;
 return "";
-} else if (dot(branch, Keyword.for("type"))[Meta["=="]](Keyword.for("else"))) {
+} else if ((dot(branch, Keyword.for("type"))[Meta["=="]](Keyword.for("else")))[Meta.as_bool]()) {
 let __coil_temp;
 return str[invoke](" else {\n", eval_ast[invoke]((__coil_temp = {left: dot(branch, Keyword.for("body"))}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), "\n}");
-} else if (dot(branch, Keyword.for("type"))[Meta["=="]](Keyword.for("else_if_let"))) {
+} else if ((dot(branch, Keyword.for("type"))[Meta["=="]](Keyword.for("else_if_let")))[Meta.as_bool]()) {
 let __coil_temp;
 return str[invoke](" else {\n", eval_if_let[invoke](branch), "\n}");
-} else if (dot(branch, Keyword.for("type"))[Meta["=="]](Keyword.for("else_if"))) {
+} else if ((dot(branch, Keyword.for("type"))[Meta["=="]](Keyword.for("else_if")))[Meta.as_bool]()) {
 let __coil_temp;
-return str[invoke](" else if (", eval_expr[invoke](dot(branch, at)[invoke](Keyword.for("expr"))), ") {\n", eval_ast[invoke]((__coil_temp = {left: dot(branch, at)[invoke](Keyword.for("pass"))}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), "\n}", eval_if_branch[invoke](dot(branch, at)[invoke](Keyword.for("fail"))));
+return str[invoke](" else if ((", eval_expr[invoke](dot(branch, at)[invoke](Keyword.for("expr"))), ")[Meta.as_bool]()) {\n", eval_ast[invoke]((__coil_temp = {left: dot(branch, at)[invoke](Keyword.for("pass"))}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), "\n}", eval_if_branch[invoke](dot(branch, at)[invoke](Keyword.for("fail"))));
 } else {
 let __coil_temp;
 panic__b[invoke]("Expected else if");

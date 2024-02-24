@@ -53,7 +53,7 @@ if ((type[Meta["=="]](newline))[Meta.as_bool]()) {
 let __coil_temp;
 line = line[Algebra["+"]]((1));
 col = (1);
-} else if (type[Meta["!="]](pass)) {
+} else if ((type[Meta["!="]](pass))[Meta.as_bool]()) {
 let __coil_temp;
 dot(tokens, 'push')[invoke](ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), type], [Keyword.for("value"), value], [Keyword.for("line"), line], [Keyword.for("col"), col]]));
 col = col[Algebra["+"]](dot(value, len)[invoke]());

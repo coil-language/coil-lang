@@ -19,7 +19,7 @@ def eval_if_branch(branch)
     return str(" else {\n" eval_if_let(branch) "\n}")
   else if branch.:type == :else_if
     return str(
-      " else if (" eval_expr(branch.at(:expr)) ") {\n"
+      " else if ((" eval_expr(branch.at(:expr)) ")[Meta.as_bool]()) {\n"
         eval_ast(branch.at(:pass) or [])
       "\n}" eval_if_branch(branch.at(:fail))
     )
