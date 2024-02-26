@@ -20,27 +20,19 @@ export class Nil {
 
 export let nil = new Nil();
 
-export class Keyword {
-  static cache = new Map();
-  static for(name) {
-    if (this.cache.get(name)) {
-      return Keyword.cache.get(name);
-    } else {
-      let kw = new Keyword(name);
-      Keyword.cache.set(name, kw);
-      return kw;
-    }
+// Keywords
+export const from_memo = Symbol("String#from_memo");
+let __keyword_cache = new Map();
+String[from_memo] = function (string) {
+  let value = __keyword_cache.get(string);
+  if (value) {
+    return value;
+  } else {
+    let value = new String(string);
+    __keyword_cache.set(string, value);
+    return value;
   }
-  constructor(value) {
-    this.value = value;
-  }
-  [Symbol.toPrimitive]() {
-    return this.value;
-  }
-  toString() {
-    return this.value;
-  }
-}
+};
 
 export function dot(lhs, rhs) {
   let result = lhs[rhs];

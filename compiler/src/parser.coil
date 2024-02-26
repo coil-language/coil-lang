@@ -33,7 +33,7 @@ end
 
 protocol can_parse?
 
-def Keyword:prototype.can_parse?([{type}]) = this == type
+def String:prototype.can_parse?([{type}]) = this == type
 
 def Set:prototype.can_parse?(tokens) =
   this.any?(|cond| cond.can_parse?(tokens))
