@@ -145,7 +145,10 @@ entries ??= nil;let __coil_temp;
 return dot(entries, 'flatMap')[invoke](arg_names);};
 let arg_names = function (node) {
 node ??= nil;let __coil_temp;
-return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("array_deconstruction"), entries_arg_names], [Keyword.for("object_deconstruction"), entries_arg_names], [Keyword.for("id_assign"), function ({'name': name}) {
+return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("array_deconstruction"), entries_arg_names], [Keyword.for("object_deconstruction"), entries_arg_names], [Keyword.for("obj_assign_expr"), function ({'property': property, 'assign_expr': assign_expr}) {
+property ??= nil;
+assign_expr ??= nil;let __coil_temp;
+return arg_names[invoke](assign_expr);}], [Keyword.for("id_assign"), function ({'name': name}) {
 name ??= nil;let __coil_temp;
 return [name];}], [Keyword.for("obj_reg_entry"), function ({'name': name}) {
 name ??= nil;let __coil_temp;

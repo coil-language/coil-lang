@@ -144,6 +144,7 @@ def entries_arg_names({entries}) =
 def arg_names(node) = node.at(:type).pipe(Map{
   :array_deconstruction => entries_arg_names
   :object_deconstruction => entries_arg_names
+  def :obj_assign_expr({property, assign_expr}) = arg_names(assign_expr)
   def :id_assign({name}) = [name]
   def :obj_reg_entry({name}) = [name]
   def :obj_entry_rename({new_name}) = [new_name]
