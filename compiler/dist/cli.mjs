@@ -12,11 +12,17 @@ import Underscore, {_} from '../src/std/underscore.mjs';
 let __coil_temp;
 import compile from "./compiler.mjs";
 let [src_file_name, out_name, ...args] = dot(Deno, 'args');
+src_file_name ??= nil;
+out_name ??= nil;
+args ??= nil;;
 let src = dot(Deno, 'readTextFileSync')[invoke](src_file_name);
+src ??= nil;;
 let std_prefix = ".";
+std_prefix ??= nil;;
 var __coil_if_let_temp = dot(args, find)[invoke](dot(_, has__q)[invoke]("--std-prefix")) ?? nil;
 if (__coil_if_let_temp[Meta.as_bool]()) {
 let arg = __coil_if_let_temp;
+arg ??= nil;;
 let __coil_temp;
 std_prefix = dot(dot(arg, 'split')[invoke]("--std-prefix="), at)[invoke]((-1));
 };

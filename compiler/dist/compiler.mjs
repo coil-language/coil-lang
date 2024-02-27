@@ -19,9 +19,13 @@ let compile = function (string, std_prefix) {
 string ??= nil;
 std_prefix ??= nil;let __coil_temp;
 let tokens = dot(string, pipe)[invoke](tokenize);
+tokens ??= nil;;
 let collection_view = CollectionView[Meta.create]([tokens, (0)]);
+collection_view ??= nil;;
 let ast = parse[invoke](collection_view);
+ast ??= nil;;
 let js = emit[invoke](ast);
+js ??= nil;;
 let imports = str[invoke](`\"use strict\";
 import {ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b, type_of, str, from_js} from '`, std_prefix, `/src/std/globals.mjs'
 import Meta, {nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, as_kw} from '`, std_prefix, `/src/std/meta.mjs';
@@ -34,5 +38,6 @@ import {inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum, InclusiveR
 import Record, {keys, values} from '`, std_prefix, `/src/std/record.mjs';
 import Underscore, {_} from '`, std_prefix, `/src/std/underscore.mjs';
 `);
+imports ??= nil;;
 return imports[Algebra["+"]](js);};
 export default compile;

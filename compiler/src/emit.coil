@@ -104,6 +104,7 @@ def eval_while_let_loop({test_expr, assign_expr, body}) = str(
   "var __coil_while_let_temp = " eval_expr(test_expr) " ?? nil;\n"
   "while (__coil_while_let_temp[Meta.as_bool]()) {\n"
     "let " eval_assign_expr(assign_expr) " = __coil_while_let_temp;\n"
+    eval_nil_destructure_args([assign_expr]) ";\n"
     eval_ast(body) "\n"
     "__coil_while_let_temp = " eval_expr(test_expr) " ?? nil;\n"
   "}")
@@ -112,6 +113,7 @@ def eval_if_let({expr, assign_expr, pass, fail}) = str(
   "var __coil_if_let_temp = " eval_expr(expr) " ?? nil;\n"
   "if (__coil_if_let_temp[Meta.as_bool]()) {\n"
     "let " eval_assign_expr(assign_expr) " = __coil_if_let_temp;\n"
+    eval_nil_destructure_args([assign_expr]) ";\n"
     eval_ast(pass) "\n"
   "}" eval_if_branch(fail)
 )
@@ -119,7 +121,10 @@ def eval_if_let({expr, assign_expr, pass, fail}) = str(
 def eval_spread({expr}) = str("..." eval_expr(expr))
 
 def eval_let({assign_expr, rhs}) =
-  str("let " eval_assign_expr(assign_expr) " = " eval_expr(rhs))
+  str(
+    "let " eval_assign_expr(assign_expr) " = " eval_expr(rhs) ";\n"
+    eval_nil_destructure_args([assign_expr])
+  )
 
 def eval_array({elements}) = str("[" elements.map(eval_expr).join(", ") "]")
 
@@ -162,9 +167,9 @@ def eval_fn_expr({is_async? generator? args body}) = str(
   (is_async? and "async ")
   "function "
     (generator? and "*")
-    "(" (args or []).map(eval_assign_expr).join(", ") ") {\n"
-    eval_this_assignments(args or [])
-    eval_nil_destructure_args(args or [])
+    "(" args.map(eval_assign_expr).join(", ") ") {\n"
+    eval_this_assignments(args)
+    eval_nil_destructure_args(args)
     eval_ast(body)
   "}")
 
@@ -178,6 +183,7 @@ def eval_obj_fn({name generator? is_async? args body}) =
   str((is_async? and "async ")
       (generator? and "*")
       "['" name "'](" args.map(eval_assign_expr).join(", ") ") {\n"
+      eval_nil_destructure_args(args) ";\n"
       eval_ast(body) "\n}")
 
 def eval_id_lookup({name}) = resolve_name(name)
@@ -268,14 +274,14 @@ end
 
 def eval_anon_fn({args, return_node}) = str(
   "(" args.map(eval_assign_expr).join(", ") ") => {\n"
-    eval_nil_destructure_args(args)
+    eval_nil_destructure_args(args) ";\n"
     eval_anon_fn_body(return_node)
   "}"
 )
 
 def eval_anon_gen_fn({args, return_node}) = str(
   "function *(" args.map(eval_assign_expr).join(", ") ") {\n"
-    eval_nil_destructure_args(args)
+    eval_nil_destructure_args(args) ";\n"
     eval_anon_fn_body(return_node)
   -- match arrow function behavior
   "}.bind(this)"
@@ -379,8 +385,8 @@ end
 def eval_for_loop({is_await? assign_expr iterable_expr body}) = 
   str("for "
       (is_await? and "await ")
-      " (let " eval_assign_expr(assign_expr) " of "
-      eval_expr(iterable_expr) ") {\n"
+      " (let " eval_assign_expr(assign_expr) " of " eval_expr(iterable_expr) ") {\n"
+        eval_nil_destructure_args([assign_expr]) ";\n"
         eval_ast(body) "\n"
       "}")
 

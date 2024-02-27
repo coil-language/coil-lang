@@ -107,27 +107,28 @@ let eval_while_let_loop = function ({'test_expr': test_expr, 'assign_expr': assi
 test_expr ??= nil;
 assign_expr ??= nil;
 body ??= nil;let __coil_temp;
-return str[invoke]("var __coil_while_let_temp = ", eval_expr[invoke](test_expr), " ?? nil;\n", "while (__coil_while_let_temp[Meta.as_bool]()) {\n", "let ", eval_assign_expr[invoke](assign_expr), " = __coil_while_let_temp;\n", eval_ast[invoke](body), "\n", "__coil_while_let_temp = ", eval_expr[invoke](test_expr), " ?? nil;\n", "}");};
+return str[invoke]("var __coil_while_let_temp = ", eval_expr[invoke](test_expr), " ?? nil;\n", "while (__coil_while_let_temp[Meta.as_bool]()) {\n", "let ", eval_assign_expr[invoke](assign_expr), " = __coil_while_let_temp;\n", eval_nil_destructure_args[invoke]([assign_expr]), ";\n", eval_ast[invoke](body), "\n", "__coil_while_let_temp = ", eval_expr[invoke](test_expr), " ?? nil;\n", "}");};
 let eval_if_let = function ({'expr': expr, 'assign_expr': assign_expr, 'pass': pass, 'fail': fail}) {
 expr ??= nil;
 assign_expr ??= nil;
 pass ??= nil;
 fail ??= nil;let __coil_temp;
-return str[invoke]("var __coil_if_let_temp = ", eval_expr[invoke](expr), " ?? nil;\n", "if (__coil_if_let_temp[Meta.as_bool]()) {\n", "let ", eval_assign_expr[invoke](assign_expr), " = __coil_if_let_temp;\n", eval_ast[invoke](pass), "\n", "}", eval_if_branch[invoke](fail));};
+return str[invoke]("var __coil_if_let_temp = ", eval_expr[invoke](expr), " ?? nil;\n", "if (__coil_if_let_temp[Meta.as_bool]()) {\n", "let ", eval_assign_expr[invoke](assign_expr), " = __coil_if_let_temp;\n", eval_nil_destructure_args[invoke]([assign_expr]), ";\n", eval_ast[invoke](pass), "\n", "}", eval_if_branch[invoke](fail));};
 let eval_spread = function ({'expr': expr}) {
 expr ??= nil;let __coil_temp;
 return str[invoke]("...", eval_expr[invoke](expr));};
 let eval_let = function ({'assign_expr': assign_expr, 'rhs': rhs}) {
 assign_expr ??= nil;
 rhs ??= nil;let __coil_temp;
-return str[invoke]("let ", eval_assign_expr[invoke](assign_expr), " = ", eval_expr[invoke](rhs));};
+return str[invoke]("let ", eval_assign_expr[invoke](assign_expr), " = ", eval_expr[invoke](rhs), ";\n", eval_nil_destructure_args[invoke]([assign_expr]));};
 let eval_array = function ({'elements': elements}) {
 elements ??= nil;let __coil_temp;
 return str[invoke]("[", dot(dot(elements, map)[invoke](eval_expr), join)[invoke](", "), "]");};
 let eval_this_assignments = function (args) {
 args ??= nil;let __coil_temp;
 return dot(dot(dot(args, filter)[invoke](Keyword.for("type"), Set[Meta.create]([Keyword.for("this_assign"), Keyword.for("this_spread_assign")])), map)[invoke](({'name': name}) => {
-name ??= nil;return str[invoke]("this['", name, "'] = ", resolve_name[invoke](name), ";\n");}), into)[invoke]("");};
+name ??= nil;;
+return str[invoke]("this['", name, "'] = ", resolve_name[invoke](name), ";\n");}), into)[invoke]("");};
 let eval_name_expr = function (node) {
 node ??= nil;let __coil_temp;
 return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("dot"), function ({'lhs': lhs, 'rhs': rhs}) {
@@ -137,7 +138,8 @@ return str[invoke](eval_name_expr[invoke](lhs), "[", eval_name_expr[invoke](rhs)
 lhs ??= nil;
 property ??= nil;let __coil_temp;
 return str[invoke](eval_name_expr[invoke](lhs), "['", property, "']");}]]), (eval_fn) => {
-eval_fn ??= nil;return (__coil_temp = {left: eval_fn}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : eval_expr);})[invoke](node);};
+eval_fn ??= nil;;
+return (__coil_temp = {left: eval_fn}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : eval_expr);})[invoke](node);};
 let entries_arg_names = function ({'entries': entries}) {
 entries ??= nil;let __coil_temp;
 return dot(entries, 'flatMap')[invoke](arg_names);};
@@ -163,7 +165,8 @@ args ??= nil;let __coil_temp;
 if ((args)[Meta.as_bool]()) {
 let __coil_temp;
 return dot(dot(dot(args, 'flatMap')[invoke](arg_names), map)[invoke]((name) => {
-name ??= nil;return str[invoke](resolve_name[invoke](name), " ??= nil;");}), join)[invoke]("\n");
+name ??= nil;;
+return str[invoke](resolve_name[invoke](name), " ??= nil;");}), join)[invoke]("\n");
 } else {
 let __coil_temp;
 return "";
@@ -173,7 +176,7 @@ is_async__q ??= nil;
 generator__q ??= nil;
 args ??= nil;
 body ??= nil;let __coil_temp;
-return str[invoke](((__coil_temp = {left: is_async__q}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "async ", __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right)), "function ", ((__coil_temp = {left: generator__q}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "*", __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right)), "(", dot(dot(((__coil_temp = {left: args}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), map)[invoke](eval_assign_expr), join)[invoke](", "), ") {\n", eval_this_assignments[invoke]((__coil_temp = {left: args}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), eval_nil_destructure_args[invoke]((__coil_temp = {left: args}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), eval_ast[invoke](body), "}");};
+return str[invoke](((__coil_temp = {left: is_async__q}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "async ", __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right)), "function ", ((__coil_temp = {left: generator__q}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "*", __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right)), "(", dot(dot(args, map)[invoke](eval_assign_expr), join)[invoke](", "), ") {\n", eval_this_assignments[invoke](args), eval_nil_destructure_args[invoke](args), eval_ast[invoke](body), "}");};
 let eval_fn = function (node) {
 node ??= nil;let __coil_temp;
 return str[invoke]((__coil_temp = {left: ((__coil_temp = {left: dot(dot(node, 'name_expr'), 'type')[Meta["=="]](Keyword.for("id_lookup"))}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "let ", __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right))}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : ""), eval_name_expr[invoke](dot(node, 'name_expr')), " = ", eval_fn_expr[invoke](node));};
@@ -183,7 +186,7 @@ generator__q ??= nil;
 is_async__q ??= nil;
 args ??= nil;
 body ??= nil;let __coil_temp;
-return str[invoke](((__coil_temp = {left: is_async__q}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "async ", __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right)), ((__coil_temp = {left: generator__q}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "*", __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right)), "['", name, "'](", dot(dot(args, map)[invoke](eval_assign_expr), join)[invoke](", "), ") {\n", eval_ast[invoke](body), "\n}");};
+return str[invoke](((__coil_temp = {left: is_async__q}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "async ", __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right)), ((__coil_temp = {left: generator__q}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "*", __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right)), "['", name, "'](", dot(dot(args, map)[invoke](eval_assign_expr), join)[invoke](", "), ") {\n", eval_nil_destructure_args[invoke](args), ";\n", eval_ast[invoke](body), "\n}");};
 let eval_id_lookup = function ({'name': name}) {
 name ??= nil;let __coil_temp;
 return resolve_name[invoke](name);};
@@ -291,11 +294,11 @@ return str[invoke]("return ", eval_expr[invoke](node), ";");
 let eval_anon_fn = function ({'args': args, 'return_node': return_node}) {
 args ??= nil;
 return_node ??= nil;let __coil_temp;
-return str[invoke]("(", dot(dot(args, map)[invoke](eval_assign_expr), join)[invoke](", "), ") => {\n", eval_nil_destructure_args[invoke](args), eval_anon_fn_body[invoke](return_node), "}");};
+return str[invoke]("(", dot(dot(args, map)[invoke](eval_assign_expr), join)[invoke](", "), ") => {\n", eval_nil_destructure_args[invoke](args), ";\n", eval_anon_fn_body[invoke](return_node), "}");};
 let eval_anon_gen_fn = function ({'args': args, 'return_node': return_node}) {
 args ??= nil;
 return_node ??= nil;let __coil_temp;
-return str[invoke]("function *(", dot(dot(args, map)[invoke](eval_assign_expr), join)[invoke](", "), ") {\n", eval_nil_destructure_args[invoke](args), eval_anon_fn_body[invoke](return_node), "}.bind(this)");};
+return str[invoke]("function *(", dot(dot(args, map)[invoke](eval_assign_expr), join)[invoke](", "), ") {\n", eval_nil_destructure_args[invoke](args), ";\n", eval_anon_fn_body[invoke](return_node), "}.bind(this)");};
 let eval_anon_body_fn = function ({'args': args, 'body': body}) {
 args ??= nil;
 body ??= nil;let __coil_temp;
@@ -350,7 +353,8 @@ methods ??= nil;let __coil_temp;
 if ((methods)[Meta.as_bool]()) {
 let __coil_temp;
 return str[invoke]("const ", name, " = Object.freeze({", dot(dot(dot(methods, 'names'), map)[invoke]((method) => {
-method ??= nil;return str[invoke]("\"", dot(method, 'name'), "\": Symbol(\"", name, ":", dot(method, 'name'), "\")");}), join)[invoke](",\n"), "})");
+method ??= nil;;
+return str[invoke]("\"", dot(method, 'name'), "\": Symbol(\"", name, ":", dot(method, 'name'), "\")");}), join)[invoke](",\n"), "})");
 } else {
 let __coil_temp;
 return str[invoke]("const ", resolve_name[invoke](name), " = Symbol(\"", name, "\")");
@@ -360,7 +364,7 @@ is_await__q ??= nil;
 assign_expr ??= nil;
 iterable_expr ??= nil;
 body ??= nil;let __coil_temp;
-return str[invoke]("for ", ((__coil_temp = {left: is_await__q}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "await ", __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right)), " (let ", eval_assign_expr[invoke](assign_expr), " of ", eval_expr[invoke](iterable_expr), ") {\n", eval_ast[invoke](body), "\n", "}");};
+return str[invoke]("for ", ((__coil_temp = {left: is_await__q}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "await ", __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right)), " (let ", eval_assign_expr[invoke](assign_expr), " of ", eval_expr[invoke](iterable_expr), ") {\n", eval_nil_destructure_args[invoke]([assign_expr]), ";\n", eval_ast[invoke](body), "\n", "}");};
 let eval_id_assign = function ({'name': name, 'expr': expr}) {
 name ??= nil;
 expr ??= nil;let __coil_temp;
@@ -381,16 +385,22 @@ return "break";};
 let eval_try = function (node) {
 node ??= nil;let __coil_temp;
 let body_js = dot(dot(node, at)[invoke](Keyword.for("body")), pipe)[invoke](eval_ast);
+body_js ??= nil;;
 let catch_js = "";
+catch_js ??= nil;;
 let finally_js = "";
+finally_js ??= nil;;
 if ((dot(node, has__q)[invoke](Keyword.for("catch")))[Meta.as_bool]()) {
 let __coil_temp;
 let {'name': name, 'body': body} = dot(node, at)[invoke](Keyword.for("catch"));
+name ??= nil;
+body ??= nil;;
 catch_js = str[invoke](" catch (", name, ") {\n", eval_ast[invoke](body), "\n}");
 };
 if ((dot(node, has__q)[invoke](Keyword.for("finally")))[Meta.as_bool]()) {
 let __coil_temp;
 let {'body': body} = dot(node, at)[invoke](Keyword.for("finally"));
+body ??= nil;;
 finally_js = str[invoke](" finally {\n", eval_ast[invoke](body), "\n}");
 };
 return str[invoke]("try {\n", body_js, "\n", "}", catch_js, finally_js);};
@@ -430,6 +440,7 @@ return str[invoke]("import ", path);};
 let eval_statement = function (node) {
 node ??= nil;let __coil_temp;
 let eval_fn = dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("if"), eval_if], [Keyword.for("direct_import"), eval_direct_import], [Keyword.for("import"), eval_import], [Keyword.for("export"), eval_export], [Keyword.for("export_default"), eval_export_default], [Keyword.for("let"), eval_let], [Keyword.for("if_let"), eval_if_let], [Keyword.for("return"), eval_return], [Keyword.for("protocol_def"), eval_protocol], [Keyword.for("for_loop"), eval_for_loop], [Keyword.for("id_assign"), eval_id_assign], [Keyword.for("while_loop"), eval_while_loop], [Keyword.for("loop"), eval_loop], [Keyword.for("while_let_loop"), eval_while_let_loop], [Keyword.for("continue"), eval_continue], [Keyword.for("break"), eval_break], [Keyword.for("try"), eval_try]]));
+eval_fn ??= nil;;
 return ((__coil_temp = {left: eval_fn}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : eval_expr))[invoke](node)[Algebra["+"]](";");};
 let eval_ast = function (ast) {
 ast ??= nil;let __coil_temp;
