@@ -1,4 +1,4 @@
-import { ObjectLiteral, from_memo, Nil, nil, str } from "./globals.mjs";
+import { ObjectLiteral, Keyword, Nil, nil, str } from "./globals.mjs";
 
 const Meta = Object.freeze({
   "nil?": Symbol("coil-lang@0.1.6/std/meta/Meta:nil?"),
@@ -30,7 +30,7 @@ str.fmt = function (...args) {
 };
 
 String.prototype[Meta.as_kw] = function () {
-  return String[from_memo](this);
+  return Keyword.for(this);
 };
 
 Object.prototype[Meta.log] = function (...args) {
@@ -96,6 +96,10 @@ String.prototype[Meta["=="]] = function (other) {
 };
 
 BigInt.prototype[Meta["=="]] = function (other) {
+  return this === other;
+};
+
+Keyword.prototype[Meta["=="]] = function (other) {
   return this === other;
 };
 
@@ -211,7 +215,7 @@ Array.prototype[Meta.invoke] = function (index) {
 };
 
 String.prototype[Meta.invoke] = function (collection) {
-  if (typeof collection === "string") {
+  if (typeof collection === "string" || collection instanceof Keyword) {
     throw new TypeError(
       "Can't 'invoke' a string with " + collection.toString()
     );
@@ -223,9 +227,24 @@ String.prototype[Meta.invoke] = function (collection) {
 Number.prototype[Meta.invoke] = function (collection) {
   if (collection instanceof Number) {
     throw new TypeError("Can't 'invoke' a number on a number");
+  } else if (collection instanceof Keyword) {
+    return this.collection ?? nil;
   } else {
-    // should probably just do a Collection.at
     return collection[Meta.invoke](this) ?? nil;
+  }
+};
+
+Keyword.prototype[Meta.invoke] = function (collection) {
+  if (collection instanceof Keyword) {
+    throw new TypeError(
+      "Can't 'invoke' a keyword with" + collection.toString()
+    );
+  } else if (typeof collection === "string") {
+    return collection[this];
+  } else if (typeof collection[Meta.invoke] !== "undefined") {
+    return collection[Meta.invoke](this) ?? nil;
+  } else {
+    return collection[this] ?? nil;
   }
 };
 
@@ -242,5 +261,4 @@ export const {
   pipe,
   as_num,
   as_kw,
-  default_value,
 } = Meta;

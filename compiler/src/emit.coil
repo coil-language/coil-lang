@@ -43,14 +43,8 @@ def eval_str({value})
   end
 end
 
-def eval_fn_call({lhs args})
-  if lhs:type == :keyword
-    let {value} = lhs
-    return str("String[from_memo](\"" value "\")[invoke](" args.map(eval_expr).join(", ") ")")
-  else
-    return str(eval_expr(lhs) "[invoke](" args.map(eval_expr).join(", ") ")")
-  end
-end
+def eval_fn_call({lhs args}) = 
+  str(eval_expr(lhs) "[invoke](" args.map(eval_expr).join(", ") ")")
 
 def eval_id_assign_name({name})
   if name == "_"
@@ -135,14 +129,7 @@ def eval_this_assignments(args) = args
   .into("")
 
 def eval_name_expr(node) = node.at(:type).pipe(Map{
-  def :dot({lhs rhs})
-    if lhs:type == :keyword
-      let {value} = lhs
-      return str("String[from_memo](\"" value "\")[" eval_name_expr(rhs) "]")
-    else
-      return str(eval_name_expr(lhs) "[" eval_name_expr(rhs) "]")
-    end
-  end
+  def :dot({lhs rhs}) = str(eval_name_expr(lhs) "[" eval_name_expr(rhs) "]")
   def :keyword_lookup({lhs, property}) = str(eval_name_expr(lhs) "['" property  "']")
 } |eval_fn| eval_fn or eval_expr)(node)
 
@@ -217,7 +204,7 @@ def eval_yield({star? expr}) = str("(yield" (star? and "*") " " eval_expr(expr) 
 
 def eval_paren_expr({expr}) = str("(" eval_expr(expr) ")")
 
-def eval_keyword({value}) = str("\"" value "\"")
+def eval_keyword({value}) = str("Keyword.for(\"" value  "\")")
 
 def eval_regular_record_entry({key_expr value_expr}) =
   str("[" eval_expr(key_expr) ", " eval_expr(value_expr) "]")
@@ -260,14 +247,7 @@ def eval_prefix_exclusive_range({expr}) = str("new ExclusiveRangeNoMinimum(" eva
 
 def eval_prefix_inclusive_range({expr}) = str("new InclusiveRangeNoMinimum(" eval_expr(expr) ")")
 
-def eval_dot({lhs, rhs})
-  if lhs:type == :keyword
-    let {value} = lhs
-    return str("dot(String[from_memo](\"" value "\"), " eval_expr(rhs) ")")
-  else
-    return str("dot(" eval_expr(lhs) ", " eval_expr(rhs) ")")
-  end
-end
+def eval_dot({lhs, rhs}) = str("dot(" eval_expr(lhs) ", " eval_expr(rhs) ")")
 
 def eval_keyword_lookup({lhs property}) =
   str("dot(" eval_expr(lhs) ", '" property "')")

@@ -1,5 +1,5 @@
 "use strict";
-import {ObjectLiteral, Nil, nil, dot, raise__b, panic__b, type_of, str, from_js, from_memo} from '../src/std/globals.mjs'
+import {ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b, type_of, str, from_js} from '../src/std/globals.mjs'
 import Meta, {nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, as_kw} from '../src/std/meta.mjs';
 import Iter, {take, until, skip, find, find_map, zip, reduce, map, flat_map, each, count, filter, filter_map, reject, all__q, any__q, split, compact, join, into, compose} from '../src/std/iter.mjs';
 import Algebra from '../src/std/algebra.mjs';
@@ -14,7 +14,7 @@ let resolve_name = function (name) {
 name ??= nil;let __coil_temp;
 if ((name)[Meta.as_bool]()) {
 let __coil_temp;
-return dot(dot(dot(dot(name, "replaceAll")[invoke]("?", "__q"), "replaceAll")[invoke]("!", "__b"), "replaceAll")[invoke](">", "_lt_"), "replaceAll")[invoke]("-", "_");
+return dot(dot(dot(dot(name, Keyword.for("replaceAll"))[invoke]("?", "__q"), Keyword.for("replaceAll"))[invoke]("!", "__b"), Keyword.for("replaceAll"))[invoke](">", "_lt_"), Keyword.for("replaceAll"))[invoke]("-", "_");
 } else {
 let __coil_temp;
 return name;
@@ -24,15 +24,15 @@ branch ??= nil;let __coil_temp;
 if ((dot(branch, nil__q)[invoke]())[Meta.as_bool]()) {
 let __coil_temp;
 return "";
-} else if ((dot(branch, "type")[Meta["=="]]("else"))[Meta.as_bool]()) {
+} else if ((dot(branch, Keyword.for("type"))[Meta["=="]](Keyword.for("else")))[Meta.as_bool]()) {
 let __coil_temp;
-return str[invoke](" else {\n", eval_ast[invoke]((__coil_temp = {left: dot(branch, "body")}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), "\n}");
-} else if ((dot(branch, "type")[Meta["=="]]("else_if_let"))[Meta.as_bool]()) {
+return str[invoke](" else {\n", eval_ast[invoke]((__coil_temp = {left: dot(branch, Keyword.for("body"))}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), "\n}");
+} else if ((dot(branch, Keyword.for("type"))[Meta["=="]](Keyword.for("else_if_let")))[Meta.as_bool]()) {
 let __coil_temp;
 return str[invoke](" else {\n", eval_if_let[invoke](branch), "\n}");
-} else if ((dot(branch, "type")[Meta["=="]]("else_if"))[Meta.as_bool]()) {
+} else if ((dot(branch, Keyword.for("type"))[Meta["=="]](Keyword.for("else_if")))[Meta.as_bool]()) {
 let __coil_temp;
-return str[invoke](" else if ((", eval_expr[invoke](dot(branch, at)[invoke]("expr")), ")[Meta.as_bool]()) {\n", eval_ast[invoke]((__coil_temp = {left: dot(branch, at)[invoke]("pass")}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), "\n}", eval_if_branch[invoke](dot(branch, at)[invoke]("fail")));
+return str[invoke](" else if ((", eval_expr[invoke](dot(branch, at)[invoke](Keyword.for("expr"))), ")[Meta.as_bool]()) {\n", eval_ast[invoke]((__coil_temp = {left: dot(branch, at)[invoke](Keyword.for("pass"))}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), "\n}", eval_if_branch[invoke](dot(branch, at)[invoke](Keyword.for("fail"))));
 } else {
 let __coil_temp;
 panic__b[invoke]("Expected else if");
@@ -44,8 +44,8 @@ fail ??= nil;let __coil_temp;
 return str[invoke]("if ((", eval_expr[invoke](expr), ")[Meta.as_bool]()) {\n", eval_ast[invoke](pass), "\n", "}", eval_if_branch[invoke](fail));};
 let eval_str = function ({'value': value}) {
 value ??= nil;let __coil_temp;
-value = dot(value, "slice")[invoke]((1), (-1));
-if ((dot(value, "includes")[invoke]("\n"))[Meta.as_bool]()) {
+value = dot(value, Keyword.for("slice"))[invoke]((1), (-1));
+if ((dot(value, Keyword.for("includes"))[invoke]("\n"))[Meta.as_bool]()) {
 let __coil_temp;
 return str[invoke]("`", dot(value, 'replaceAll')[invoke]("`", "\\`"), "`");
 } else {
@@ -55,14 +55,7 @@ return str[invoke]("\"", value, "\"");
 let eval_fn_call = function ({'lhs': lhs, 'args': args}) {
 lhs ??= nil;
 args ??= nil;let __coil_temp;
-if ((dot(lhs, 'type')[Meta["=="]]("keyword"))[Meta.as_bool]()) {
-let __coil_temp;
-let {'value': value} = lhs;
-return str[invoke]("String[from_memo](\"", value, "\")[invoke](", dot(dot(args, map)[invoke](eval_expr), join)[invoke](", "), ")");
-} else {
-let __coil_temp;
-return str[invoke](eval_expr[invoke](lhs), "[invoke](", dot(dot(args, map)[invoke](eval_expr), join)[invoke](", "), ")");
-};};
+return str[invoke](eval_expr[invoke](lhs), "[invoke](", dot(dot(args, map)[invoke](eval_expr), join)[invoke](", "), ")");};
 let eval_id_assign_name = function ({'name': name}) {
 name ??= nil;let __coil_temp;
 if ((name[Meta["=="]]("_"))[Meta.as_bool]()) {
@@ -77,7 +70,7 @@ name ??= nil;let __coil_temp;
 return str[invoke]("...", resolve_name[invoke](name));};
 let eval_array_deconstruction_entry = function (node) {
 node ??= nil;let __coil_temp;
-return dot(dot(node, at)[invoke]("type"), pipe)[invoke](Map[Meta.from_entries]([["id_assign", eval_id_assign_name], ["spread_assign", eval_spread_assign], ["array_deconstruction", eval_array_deconstruction_names], ["object_deconstruction", eval_object_deconstruction_names]]))[invoke](node);};
+return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("id_assign"), eval_id_assign_name], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("array_deconstruction"), eval_array_deconstruction_names], [Keyword.for("object_deconstruction"), eval_object_deconstruction_names]]))[invoke](node);};
 let eval_array_deconstruction_names = function ({'entries': entries}) {
 entries ??= nil;let __coil_temp;
 return str[invoke]("[", dot(dot(entries, map)[invoke](eval_array_deconstruction_entry), join)[invoke](", "), "]");};
@@ -94,7 +87,7 @@ assign_expr ??= nil;let __coil_temp;
 return str[invoke]("'", property, "': ", eval_assign_expr[invoke](assign_expr));};
 let eval_obj_deconstruction_entry = function (node) {
 node ??= nil;let __coil_temp;
-return dot(dot(node, at)[invoke]("type"), pipe)[invoke](Map[Meta.from_entries]([["obj_reg_entry", eval_obj_reg_entry], ["obj_assign_expr", eval_obj_assign_expr], ["obj_entry_rename", eval_obj_entry_rename], ["spread_assign", eval_spread_assign], ["object_deconstruction", eval_object_deconstruction_names]]))[invoke](node);};
+return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("obj_reg_entry"), eval_obj_reg_entry], [Keyword.for("obj_assign_expr"), eval_obj_assign_expr], [Keyword.for("obj_entry_rename"), eval_obj_entry_rename], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("object_deconstruction"), eval_object_deconstruction_names]]))[invoke](node);};
 let eval_object_deconstruction_names = function ({'entries': entries}) {
 entries ??= nil;let __coil_temp;
 return str[invoke]("{", dot(dot(entries, map)[invoke](eval_obj_deconstruction_entry), join)[invoke](", "), "}");};
@@ -109,7 +102,7 @@ name ??= nil;let __coil_temp;
 return str[invoke]("* as ", name);};
 let eval_assign_expr = function (node) {
 node ??= nil;let __coil_temp;
-return dot(dot(node, at)[invoke]("type"), pipe)[invoke](Map[Meta.from_entries]([["id_assign", eval_id_assign_name], ["spread_assign", eval_spread_assign], ["array_deconstruction", eval_array_deconstruction_names], ["object_deconstruction", eval_object_deconstruction_names], ["this_assign", eval_this_assign], ["this_spread_assign", eval_spread_assign]]))[invoke](node);};
+return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("id_assign"), eval_id_assign_name], [Keyword.for("spread_assign"), eval_spread_assign], [Keyword.for("array_deconstruction"), eval_array_deconstruction_names], [Keyword.for("object_deconstruction"), eval_object_deconstruction_names], [Keyword.for("this_assign"), eval_this_assign], [Keyword.for("this_spread_assign"), eval_spread_assign]]))[invoke](node);};
 let eval_while_let_loop = function ({'test_expr': test_expr, 'assign_expr': assign_expr, 'body': body}) {
 test_expr ??= nil;
 assign_expr ??= nil;
@@ -133,21 +126,14 @@ elements ??= nil;let __coil_temp;
 return str[invoke]("[", dot(dot(elements, map)[invoke](eval_expr), join)[invoke](", "), "]");};
 let eval_this_assignments = function (args) {
 args ??= nil;let __coil_temp;
-return dot(dot(dot(args, filter)[invoke]("type", Set[Meta.create](["this_assign", "this_spread_assign"])), map)[invoke](({'name': name}) => {
+return dot(dot(dot(args, filter)[invoke](Keyword.for("type"), Set[Meta.create]([Keyword.for("this_assign"), Keyword.for("this_spread_assign")])), map)[invoke](({'name': name}) => {
 name ??= nil;return str[invoke]("this['", name, "'] = ", resolve_name[invoke](name), ";\n");}), into)[invoke]("");};
 let eval_name_expr = function (node) {
 node ??= nil;let __coil_temp;
-return dot(dot(node, at)[invoke]("type"), pipe)[invoke](Map[Meta.from_entries]([["dot", function ({'lhs': lhs, 'rhs': rhs}) {
+return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("dot"), function ({'lhs': lhs, 'rhs': rhs}) {
 lhs ??= nil;
 rhs ??= nil;let __coil_temp;
-if ((dot(lhs, 'type')[Meta["=="]]("keyword"))[Meta.as_bool]()) {
-let __coil_temp;
-let {'value': value} = lhs;
-return str[invoke]("String[from_memo](\"", value, "\")[", eval_name_expr[invoke](rhs), "]");
-} else {
-let __coil_temp;
-return str[invoke](eval_name_expr[invoke](lhs), "[", eval_name_expr[invoke](rhs), "]");
-};}], ["keyword_lookup", function ({'lhs': lhs, 'property': property}) {
+return str[invoke](eval_name_expr[invoke](lhs), "[", eval_name_expr[invoke](rhs), "]");}], [Keyword.for("keyword_lookup"), function ({'lhs': lhs, 'property': property}) {
 lhs ??= nil;
 property ??= nil;let __coil_temp;
 return str[invoke](eval_name_expr[invoke](lhs), "['", property, "']");}]]), (eval_fn) => {
@@ -157,19 +143,19 @@ entries ??= nil;let __coil_temp;
 return dot(entries, 'flatMap')[invoke](arg_names);};
 let arg_names = function (node) {
 node ??= nil;let __coil_temp;
-return dot(dot(node, at)[invoke]("type"), pipe)[invoke](Map[Meta.from_entries]([["array_deconstruction", entries_arg_names], ["object_deconstruction", entries_arg_names], ["id_assign", function ({'name': name}) {
+return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("array_deconstruction"), entries_arg_names], [Keyword.for("object_deconstruction"), entries_arg_names], [Keyword.for("id_assign"), function ({'name': name}) {
 name ??= nil;let __coil_temp;
-return [name];}], ["obj_reg_entry", function ({'name': name}) {
+return [name];}], [Keyword.for("obj_reg_entry"), function ({'name': name}) {
 name ??= nil;let __coil_temp;
-return [name];}], ["obj_entry_rename", function ({'new_name': new_name}) {
+return [name];}], [Keyword.for("obj_entry_rename"), function ({'new_name': new_name}) {
 new_name ??= nil;let __coil_temp;
-return [new_name];}], ["spread_assign", function ({'name': name}) {
+return [new_name];}], [Keyword.for("spread_assign"), function ({'name': name}) {
 name ??= nil;let __coil_temp;
-return [name];}], ["obj_str_rename_entry", function ({'new_name': new_name}) {
+return [name];}], [Keyword.for("obj_str_rename_entry"), function ({'new_name': new_name}) {
 new_name ??= nil;let __coil_temp;
-return [new_name];}], ["this_assign", function ({'name': name}) {
+return [new_name];}], [Keyword.for("this_assign"), function ({'name': name}) {
 name ??= nil;let __coil_temp;
-return [name];}], ["this_spread_assign", function ({'name': name}) {
+return [name];}], [Keyword.for("this_spread_assign"), function ({'name': name}) {
 name ??= nil;let __coil_temp;
 return [name];}]]))[invoke](node);};
 let eval_nil_destructure_args = function (args) {
@@ -190,7 +176,7 @@ body ??= nil;let __coil_temp;
 return str[invoke](((__coil_temp = {left: is_async__q}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "async ", __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right)), "function ", ((__coil_temp = {left: generator__q}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "*", __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right)), "(", dot(dot(((__coil_temp = {left: args}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), map)[invoke](eval_assign_expr), join)[invoke](", "), ") {\n", eval_this_assignments[invoke]((__coil_temp = {left: args}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), eval_nil_destructure_args[invoke]((__coil_temp = {left: args}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : [])), eval_ast[invoke](body), "}");};
 let eval_fn = function (node) {
 node ??= nil;let __coil_temp;
-return str[invoke]((__coil_temp = {left: ((__coil_temp = {left: dot(dot(node, 'name_expr'), 'type')[Meta["=="]]("id_lookup")}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "let ", __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right))}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : ""), eval_name_expr[invoke](dot(node, 'name_expr')), " = ", eval_fn_expr[invoke](node));};
+return str[invoke]((__coil_temp = {left: ((__coil_temp = {left: dot(dot(node, 'name_expr'), 'type')[Meta["=="]](Keyword.for("id_lookup"))}, __coil_temp.left[Meta.as_bool]() === false ? __coil_temp.left : (__coil_temp.right = "let ", __coil_temp.right[Meta.as_bool]() === true)  ? __coil_temp.right : __coil_temp.right))}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : ""), eval_name_expr[invoke](dot(node, 'name_expr')), " = ", eval_fn_expr[invoke](node));};
 let eval_obj_fn = function ({'name': name, 'generator?': generator__q, 'is_async?': is_async__q, 'args': args, 'body': body}) {
 name ??= nil;
 generator__q ??= nil;
@@ -235,7 +221,7 @@ expr ??= nil;let __coil_temp;
 return str[invoke]("(", eval_expr[invoke](expr), ")");};
 let eval_keyword = function ({'value': value}) {
 value ??= nil;let __coil_temp;
-return str[invoke]("\"", value, "\"");};
+return str[invoke]("Keyword.for(\"", value, "\")");};
 let eval_regular_record_entry = function ({'key_expr': key_expr, 'value_expr': value_expr}) {
 key_expr ??= nil;
 value_expr ??= nil;let __coil_temp;
@@ -243,16 +229,16 @@ return str[invoke]("[", eval_expr[invoke](key_expr), ", ", eval_expr[invoke](val
 let eval_keyword_record_entry = function ({'name': name, 'expr': expr}) {
 name ??= nil;
 expr ??= nil;let __coil_temp;
-return str[invoke]("[", eval_keyword[invoke](ObjectLiteral[Meta.from_entries]([["value", name]])), ", ", eval_expr[invoke](expr), "]");};
+return str[invoke]("[", eval_keyword[invoke](ObjectLiteral[Meta.from_entries]([[Keyword.for("value"), name]])), ", ", eval_expr[invoke](expr), "]");};
 let eval_fn_record_entry = function (fn_node) {
 fn_node ??= nil;let __coil_temp;
 return str[invoke]("[", eval_expr[invoke](dot(fn_node, 'name_expr')), ", ", eval_fn_expr[invoke](fn_node), "]");};
 let eval_id_shorthand_record_entry = function ({'name': name}) {
 name ??= nil;let __coil_temp;
-return str[invoke]("[", eval_keyword[invoke](ObjectLiteral[Meta.from_entries]([["value", name]])), ", ", resolve_name[invoke](name), "]");};
+return str[invoke]("[", eval_keyword[invoke](ObjectLiteral[Meta.from_entries]([[Keyword.for("value"), name]])), ", ", resolve_name[invoke](name), "]");};
 let eval_record_entry = function (node) {
 node ??= nil;let __coil_temp;
-return dot(dot(node, at)[invoke]("type"), pipe)[invoke](Map[Meta.from_entries]([["regular_record_entry", eval_regular_record_entry], ["keyword_record_entry", eval_keyword_record_entry], ["id_shorthand_record_entry", eval_id_shorthand_record_entry], ["spread", eval_spread], ["fn", eval_fn_record_entry]]))[invoke](node);};
+return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("regular_record_entry"), eval_regular_record_entry], [Keyword.for("keyword_record_entry"), eval_keyword_record_entry], [Keyword.for("id_shorthand_record_entry"), eval_id_shorthand_record_entry], [Keyword.for("spread"), eval_spread], [Keyword.for("fn"), eval_fn_record_entry]]))[invoke](node);};
 let eval_inclusive_range = function ({'lhs': lhs, 'rhs': rhs}) {
 lhs ??= nil;
 rhs ??= nil;let __coil_temp;
@@ -285,14 +271,7 @@ return str[invoke]("new InclusiveRangeNoMinimum(", eval_expr[invoke](expr), ")")
 let eval_dot = function ({'lhs': lhs, 'rhs': rhs}) {
 lhs ??= nil;
 rhs ??= nil;let __coil_temp;
-if ((dot(lhs, 'type')[Meta["=="]]("keyword"))[Meta.as_bool]()) {
-let __coil_temp;
-let {'value': value} = lhs;
-return str[invoke]("dot(String[from_memo](\"", value, "\"), ", eval_expr[invoke](rhs), ")");
-} else {
-let __coil_temp;
-return str[invoke]("dot(", eval_expr[invoke](lhs), ", ", eval_expr[invoke](rhs), ")");
-};};
+return str[invoke]("dot(", eval_expr[invoke](lhs), ", ", eval_expr[invoke](rhs), ")");};
 let eval_keyword_lookup = function ({'lhs': lhs, 'property': property}) {
 lhs ??= nil;
 property ??= nil;let __coil_temp;
@@ -302,7 +281,7 @@ entries ??= nil;let __coil_temp;
 return str[invoke]("ObjectLiteral[Meta.from_entries]([", dot(dot(entries, map)[invoke](eval_record_entry), join)[invoke](", "), "])");};
 let eval_anon_fn_body = function (node) {
 node ??= nil;let __coil_temp;
-if ((dot(node, 'type')[Meta["=="]]("brace_body"))[Meta.as_bool]()) {
+if ((dot(node, 'type')[Meta["=="]](Keyword.for("brace_body")))[Meta.as_bool]()) {
 let __coil_temp;
 return eval_ast[invoke](dot(node, 'body'));
 } else {
@@ -355,7 +334,7 @@ rhs ??= nil;let __coil_temp;
 return str[invoke](eval_name_expr[invoke](lhs), " = ", eval_expr[invoke](rhs));};
 let eval_expr = function (node) {
 node ??= nil;let __coil_temp;
-return dot(dot(node, at)[invoke]("type"), pipe)[invoke](Map[Meta.from_entries]([["algebra_op", eval_algebra_op], ["unapplied_algebra_op", eval_unapplied_algebra_op], ["unapplied_equality_op", eval_unapplied_equality_op], ["equality_op", eval_equality_op], ["and", eval_and], ["or", eval_or], ["instanceof", eval_instanceof], ["str", eval_str], ["dot", eval_dot], ["snd_assign", eval_snd_assign], ["keyword_lookup", eval_keyword_lookup], ["object_literal", eval_object_literal], ["regex_lit", eval_regex_lit], ["keyword", eval_keyword], ["prefix_exclusive_range", eval_prefix_exclusive_range], ["prefix_inclusive_range", eval_prefix_inclusive_range], ["id_lookup", eval_id_lookup], ["fn_call", eval_fn_call], ["num", eval_num], ["array", eval_array], ["double_equals", eval_double_equals], ["not_equals", eval_not_equals], ["not", eval_not], ["fn", eval_fn], ["meta_from_entries", eval_meta_from_entries], ["meta_create", eval_meta_create], ["spread", eval_spread], ["await", eval_await], ["yield", eval_yield], ["paren_expr", eval_paren_expr], ["inclusive_range", eval_inclusive_range], ["exclusive_range", eval_exclusive_range], ["anon_fn", eval_anon_fn], ["anon_gen_fn", eval_anon_gen_fn], ["anon_body_fn", eval_anon_body_fn]]))[invoke](node);};
+return dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("algebra_op"), eval_algebra_op], [Keyword.for("unapplied_algebra_op"), eval_unapplied_algebra_op], [Keyword.for("unapplied_equality_op"), eval_unapplied_equality_op], [Keyword.for("equality_op"), eval_equality_op], [Keyword.for("and"), eval_and], [Keyword.for("or"), eval_or], [Keyword.for("instanceof"), eval_instanceof], [Keyword.for("str"), eval_str], [Keyword.for("dot"), eval_dot], [Keyword.for("snd_assign"), eval_snd_assign], [Keyword.for("keyword_lookup"), eval_keyword_lookup], [Keyword.for("object_literal"), eval_object_literal], [Keyword.for("regex_lit"), eval_regex_lit], [Keyword.for("keyword"), eval_keyword], [Keyword.for("prefix_exclusive_range"), eval_prefix_exclusive_range], [Keyword.for("prefix_inclusive_range"), eval_prefix_inclusive_range], [Keyword.for("id_lookup"), eval_id_lookup], [Keyword.for("fn_call"), eval_fn_call], [Keyword.for("num"), eval_num], [Keyword.for("array"), eval_array], [Keyword.for("double_equals"), eval_double_equals], [Keyword.for("not_equals"), eval_not_equals], [Keyword.for("not"), eval_not], [Keyword.for("fn"), eval_fn], [Keyword.for("meta_from_entries"), eval_meta_from_entries], [Keyword.for("meta_create"), eval_meta_create], [Keyword.for("spread"), eval_spread], [Keyword.for("await"), eval_await], [Keyword.for("yield"), eval_yield], [Keyword.for("paren_expr"), eval_paren_expr], [Keyword.for("inclusive_range"), eval_inclusive_range], [Keyword.for("exclusive_range"), eval_exclusive_range], [Keyword.for("anon_fn"), eval_anon_fn], [Keyword.for("anon_gen_fn"), eval_anon_gen_fn], [Keyword.for("anon_body_fn"), eval_anon_body_fn]]))[invoke](node);};
 let eval_return = function ({'expr': expr}) {
 expr ??= nil;let __coil_temp;
 if ((expr)[Meta.as_bool]()) {
@@ -401,31 +380,31 @@ let __coil_temp;
 return "break";};
 let eval_try = function (node) {
 node ??= nil;let __coil_temp;
-let body_js = dot(dot(node, at)[invoke]("body"), pipe)[invoke](eval_ast);
+let body_js = dot(dot(node, at)[invoke](Keyword.for("body")), pipe)[invoke](eval_ast);
 let catch_js = "";
 let finally_js = "";
-if ((dot(node, has__q)[invoke]("catch"))[Meta.as_bool]()) {
+if ((dot(node, has__q)[invoke](Keyword.for("catch")))[Meta.as_bool]()) {
 let __coil_temp;
-let {'name': name, 'body': body} = dot(node, at)[invoke]("catch");
+let {'name': name, 'body': body} = dot(node, at)[invoke](Keyword.for("catch"));
 catch_js = str[invoke](" catch (", name, ") {\n", eval_ast[invoke](body), "\n}");
 };
-if ((dot(node, has__q)[invoke]("finally"))[Meta.as_bool]()) {
+if ((dot(node, has__q)[invoke](Keyword.for("finally")))[Meta.as_bool]()) {
 let __coil_temp;
-let {'body': body} = dot(node, at)[invoke]("finally");
+let {'body': body} = dot(node, at)[invoke](Keyword.for("finally"));
 finally_js = str[invoke](" finally {\n", eval_ast[invoke](body), "\n}");
 };
 return str[invoke]("try {\n", body_js, "\n", "}", catch_js, finally_js);};
 let get_deconstructed_obj_entry_name = function (node) {
 node ??= nil;let __coil_temp;
-return dot(dot(Map[Meta.from_entries]([["obj_reg_entry", "name"], ["obj_entry_rename", "old_name"]]), at)[invoke](dot(node, at)[invoke]("type")), pipe)[invoke](node);};
+return dot(dot(Map[Meta.from_entries]([[Keyword.for("obj_reg_entry"), Keyword.for("name")], [Keyword.for("obj_entry_rename"), Keyword.for("old_name")]]), at)[invoke](dot(node, at)[invoke](Keyword.for("type"))), pipe)[invoke](node);};
 let get_deconstructed_array_entry_name = function (node) {
 node ??= nil;let __coil_temp;
-return dot(dot(Map[Meta.from_entries]([["id_assign", "name"]]), at)[invoke](dot(node, at)[invoke]("type")), pipe)[invoke](node);};
+return dot(dot(Map[Meta.from_entries]([[Keyword.for("id_assign"), Keyword.for("name")]]), at)[invoke](dot(node, at)[invoke](Keyword.for("type"))), pipe)[invoke](node);};
 let eval_import_deconstruction_entry = function (node) {
 node ??= nil;let __coil_temp;
-return dot(node, pipe)[invoke]("type", Map[Meta.from_entries]([["obj_reg_entry", function ({'name': name}) {
+return dot(node, pipe)[invoke](Keyword.for("type"), Map[Meta.from_entries]([[Keyword.for("obj_reg_entry"), function ({'name': name}) {
 name ??= nil;let __coil_temp;
-return resolve_name[invoke](name);}], ["obj_entry_rename", function ({'old_name': old_name, 'new_name': new_name}) {
+return resolve_name[invoke](name);}], [Keyword.for("obj_entry_rename"), function ({'old_name': old_name, 'new_name': new_name}) {
 old_name ??= nil;
 new_name ??= nil;let __coil_temp;
 return str[invoke](resolve_name[invoke](old_name), " as ", resolve_name[invoke](new_name));}]]))[invoke](node);};
@@ -434,7 +413,7 @@ entries ??= nil;let __coil_temp;
 return str[invoke]("{", dot(dot(entries, map)[invoke](eval_import_deconstruction_entry), join)[invoke](", "), "}");};
 let eval_import_assign_exprs = function (node) {
 node ??= nil;let __coil_temp;
-return dot(node, pipe)[invoke]("type", Map[Meta.from_entries]([["id_assign", eval_id_assign_name], ["object_deconstruction", eval_import_deconstruction_expr], ["assign_all_as", eval_assign_all_as]]))[invoke](node);};
+return dot(node, pipe)[invoke](Keyword.for("type"), Map[Meta.from_entries]([[Keyword.for("id_assign"), eval_id_assign_name], [Keyword.for("object_deconstruction"), eval_import_deconstruction_expr], [Keyword.for("assign_all_as"), eval_assign_all_as]]))[invoke](node);};
 let eval_import = function ({'assign_expr': assign_expr, 'path': path}) {
 assign_expr ??= nil;
 path ??= nil;let __coil_temp;
@@ -450,7 +429,7 @@ path ??= nil;let __coil_temp;
 return str[invoke]("import ", path);};
 let eval_statement = function (node) {
 node ??= nil;let __coil_temp;
-let eval_fn = dot(dot(node, at)[invoke]("type"), pipe)[invoke](Map[Meta.from_entries]([["if", eval_if], ["direct_import", eval_direct_import], ["import", eval_import], ["export", eval_export], ["export_default", eval_export_default], ["let", eval_let], ["if_let", eval_if_let], ["return", eval_return], ["protocol_def", eval_protocol], ["for_loop", eval_for_loop], ["id_assign", eval_id_assign], ["while_loop", eval_while_loop], ["loop", eval_loop], ["while_let_loop", eval_while_let_loop], ["continue", eval_continue], ["break", eval_break], ["try", eval_try]]));
+let eval_fn = dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("if"), eval_if], [Keyword.for("direct_import"), eval_direct_import], [Keyword.for("import"), eval_import], [Keyword.for("export"), eval_export], [Keyword.for("export_default"), eval_export_default], [Keyword.for("let"), eval_let], [Keyword.for("if_let"), eval_if_let], [Keyword.for("return"), eval_return], [Keyword.for("protocol_def"), eval_protocol], [Keyword.for("for_loop"), eval_for_loop], [Keyword.for("id_assign"), eval_id_assign], [Keyword.for("while_loop"), eval_while_loop], [Keyword.for("loop"), eval_loop], [Keyword.for("while_let_loop"), eval_while_let_loop], [Keyword.for("continue"), eval_continue], [Keyword.for("break"), eval_break], [Keyword.for("try"), eval_try]]));
 return ((__coil_temp = {left: eval_fn}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : eval_expr))[invoke](node)[Algebra["+"]](";");};
 let eval_ast = function (ast) {
 ast ??= nil;let __coil_temp;

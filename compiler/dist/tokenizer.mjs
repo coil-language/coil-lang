@@ -1,5 +1,5 @@
 "use strict";
-import {ObjectLiteral, Nil, nil, dot, raise__b, panic__b, type_of, str, from_js, from_memo} from '../src/std/globals.mjs'
+import {ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b, type_of, str, from_js} from '../src/std/globals.mjs'
 import Meta, {nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, as_kw} from '../src/std/meta.mjs';
 import Iter, {take, until, skip, find, find_map, zip, reduce, map, flat_map, each, count, filter, filter_map, reject, all__q, any__q, split, compact, join, into, compose} from '../src/std/iter.mjs';
 import Algebra from '../src/std/algebra.mjs';
@@ -29,13 +29,13 @@ let __coil_temp;
 return dot(str, 'slice')[invoke](index);};
 let scan = function (pattern) {
 pattern ??= nil;let __coil_temp;
-let result = dot(rest_of_string[invoke](), "match")[invoke](pattern);
+let result = dot(rest_of_string[invoke](), Keyword.for("match"))[invoke](pattern);
 if (((__coil_temp = {left: dot(result, nil__q)[invoke]()}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : dot(result, 'index')[Meta["!="]]((0))))[Meta.as_bool]()) {
 let __coil_temp;
 return false;
 } else {
 let __coil_temp;
-index = index[Algebra["+"]](dot(dot(result, (0)), "length"));
+index = index[Algebra["+"]](dot(dot(result, (0)), Keyword.for("length")));
 return dot(result, (0));
 };};
 let line = (1);
@@ -55,7 +55,7 @@ line = line[Algebra["+"]]((1));
 col = (1);
 } else if ((type[Meta["!="]](pass))[Meta.as_bool]()) {
 let __coil_temp;
-dot(tokens, 'push')[invoke](ObjectLiteral[Meta.from_entries]([["type", type], ["value", value], ["line", line], ["col", col]]));
+dot(tokens, 'push')[invoke](ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), type], [Keyword.for("value"), value], [Keyword.for("line"), line], [Keyword.for("col"), col]]));
 col = col[Algebra["+"]](dot(value, len)[invoke]());
 } else {
 let __coil_temp;
@@ -71,5 +71,5 @@ panic__b[invoke]("No token matched.");
 };
 };
 return tokens;};
-let tokenize = Tokenizer[Meta.from_entries]([[/^\n/, newline], [/^\s+/, pass], [/^\#.*/, pass], [/^\-\-.*/, pass], [/^\,/, pass], [/^\;/, pass], [/^if\s/, "if"], [/^else\s/, "else"], [/^return\s/, "return"], [/^import\s/, "import"], [/^export\s/, "export"], [/^default\s/, "default"], [/^from\s/, "from"], [/^let\s/, "let"], [/^protocol\s/, "protocol"], [/^for\s/, "for"], [/^try\s/, "try"], [/^catch\s/, "catch"], [/^finally\s/, "finally"], [/^instanceof\s/, "instanceof"], [/^end\b/, "end"], [/^while\s/, "while"], [/^loop\s/, "loop"], [/^and\s/, "and"], [/^or\s/, "or"], [/^continue\s/, "continue"], [/^break\s/, "break"], [/^of\s/, "of"], [/^yield\b/, "yield"], [/^async\s/, "async"], [/^await\s/, "await"], [/^\=\>/, "arrow"], [/^\@/, "at"], [/^\=\=/, "double_eq"], [/^\!\=/, "not_eq"], [/^\!/, "bang"], [/^\=/, "eq"], [/^def\b/, "def"], [/^\{/, "open_b"], [/^\}/, "close_b"], [/^\(/, "open_p"], [/^\)/, "close_p"], [/^\|/, "pipe_bar"], [/^[\-\+]?(\d+\.)?\d+n/, "bigint"], [/^[\-\+]?(\d+\.)?\d+/, "num"], [/^\.\.\./, "dot_dot_dot"], [/^\.\./, "dot_dot"], [/^\./, "dot"], [/^\/.*\/[a-z]?/, "regex_lit"], [/^\>\=/, "gt_eq"], [/^\<\=/, "lt_eq"], [/^\>/, "gt"], [/^\</, "lt"], [/^\+/, "plus"], [/^\%/, "mod"], [/^\-/, "minus"], [/^\*\*/, "pow"], [/^\*/, "times"], [/^\//, "div"], [/^\[/, "open_sq"], [/^\]/, "close_sq"], [/^\"([^\\\"]|\\.)*\"/s, "string_lit"], [/^[a-zA-Z_\?\!\$0-9]+/, "id"], [/^\:[a-zA-Z_\?\!\$0-9]+/, "keyword"], [/^\:/, "colon"]]);
+let tokenize = Tokenizer[Meta.from_entries]([[/^\n/, newline], [/^\s+/, pass], [/^\#.*/, pass], [/^\-\-.*/, pass], [/^\,/, pass], [/^\;/, pass], [/^if\s/, Keyword.for("if")], [/^else\s/, Keyword.for("else")], [/^return\s/, Keyword.for("return")], [/^import\s/, Keyword.for("import")], [/^export\s/, Keyword.for("export")], [/^default\s/, Keyword.for("default")], [/^from\s/, Keyword.for("from")], [/^let\s/, Keyword.for("let")], [/^protocol\s/, Keyword.for("protocol")], [/^for\s/, Keyword.for("for")], [/^try\s/, Keyword.for("try")], [/^catch\s/, Keyword.for("catch")], [/^finally\s/, Keyword.for("finally")], [/^instanceof\s/, Keyword.for("instanceof")], [/^end\b/, Keyword.for("end")], [/^while\s/, Keyword.for("while")], [/^loop\s/, Keyword.for("loop")], [/^and\s/, Keyword.for("and")], [/^or\s/, Keyword.for("or")], [/^continue\s/, Keyword.for("continue")], [/^break\s/, Keyword.for("break")], [/^of\s/, Keyword.for("of")], [/^yield\b/, Keyword.for("yield")], [/^async\s/, Keyword.for("async")], [/^await\s/, Keyword.for("await")], [/^\=\>/, Keyword.for("arrow")], [/^\@/, Keyword.for("at")], [/^\=\=/, Keyword.for("double_eq")], [/^\!\=/, Keyword.for("not_eq")], [/^\!/, Keyword.for("bang")], [/^\=/, Keyword.for("eq")], [/^def\b/, Keyword.for("def")], [/^\{/, Keyword.for("open_b")], [/^\}/, Keyword.for("close_b")], [/^\(/, Keyword.for("open_p")], [/^\)/, Keyword.for("close_p")], [/^\|/, Keyword.for("pipe_bar")], [/^[\-\+]?(\d+\.)?\d+n/, Keyword.for("bigint")], [/^[\-\+]?(\d+\.)?\d+/, Keyword.for("num")], [/^\.\.\./, Keyword.for("dot_dot_dot")], [/^\.\./, Keyword.for("dot_dot")], [/^\./, Keyword.for("dot")], [/^\/.*\/[a-z]?/, Keyword.for("regex_lit")], [/^\>\=/, Keyword.for("gt_eq")], [/^\<\=/, Keyword.for("lt_eq")], [/^\>/, Keyword.for("gt")], [/^\</, Keyword.for("lt")], [/^\+/, Keyword.for("plus")], [/^\%/, Keyword.for("mod")], [/^\-/, Keyword.for("minus")], [/^\*\*/, Keyword.for("pow")], [/^\*/, Keyword.for("times")], [/^\//, Keyword.for("div")], [/^\[/, Keyword.for("open_sq")], [/^\]/, Keyword.for("close_sq")], [/^\"([^\\\"]|\\.)*\"/s, Keyword.for("string_lit")], [/^[a-zA-Z_\?\!\$0-9]+/, Keyword.for("id")], [/^\:[a-zA-Z_\?\!\$0-9]+/, Keyword.for("keyword")], [/^\:/, Keyword.for("colon")]]);
 export default tokenize;

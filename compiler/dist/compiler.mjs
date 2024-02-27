@@ -1,5 +1,5 @@
 "use strict";
-import {ObjectLiteral, Nil, nil, dot, raise__b, panic__b, type_of, str, from_js, from_memo} from '../src/std/globals.mjs'
+import {ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b, type_of, str, from_js} from '../src/std/globals.mjs'
 import Meta, {nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, as_kw} from '../src/std/meta.mjs';
 import Iter, {take, until, skip, find, find_map, zip, reduce, map, flat_map, each, count, filter, filter_map, reject, all__q, any__q, split, compact, join, into, compose} from '../src/std/iter.mjs';
 import Algebra from '../src/std/algebra.mjs';
@@ -23,7 +23,7 @@ let collection_view = CollectionView[Meta.create]([tokens, (0)]);
 let ast = parse[invoke](collection_view);
 let js = emit[invoke](ast);
 let imports = str[invoke](`\"use strict\";
-import {ObjectLiteral, Nil, nil, dot, raise__b, panic__b, type_of, str, from_js, from_memo} from '`, std_prefix, `/src/std/globals.mjs'
+import {ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b, type_of, str, from_js} from '`, std_prefix, `/src/std/globals.mjs'
 import Meta, {nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, as_kw} from '`, std_prefix, `/src/std/meta.mjs';
 import Iter, {take, until, skip, find, find_map, zip, reduce, map, flat_map, each, count, filter, filter_map, reject, all__q, any__q, split, compact, join, into, compose} from '`, std_prefix, `/src/std/iter.mjs';
 import Algebra from '`, std_prefix, `/src/std/algebra.mjs';
