@@ -1,6 +1,6 @@
 "use strict";
 import {ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b, type_of, str, from_js} from '../src/std/globals.mjs'
-import Meta, {nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, as_kw} from '../src/std/meta.mjs';
+import Meta, {nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, as_kw, assert__b} from '../src/std/meta.mjs';
 import Iter, {take, until, skip, find, find_map, zip, reduce, map, flat_map, each, count, filter, filter_map, reject, all__q, any__q, split, compact, join, into, compose} from '../src/std/iter.mjs';
 import Algebra from '../src/std/algebra.mjs';
 import Bool, {negate} from '../src/std/bool.mjs';
@@ -385,28 +385,6 @@ return "continue";};
 let eval_break = function () {
 let __coil_temp;
 return "break";};
-let eval_try = function (node) {
-node ??= nil;let __coil_temp;
-let body_js = dot(dot(node, at)[invoke](Keyword.for("body")), pipe)[invoke](eval_ast);
-body_js ??= nil;;
-let catch_js = "";
-catch_js ??= nil;;
-let finally_js = "";
-finally_js ??= nil;;
-if ((dot(node, has__q)[invoke](Keyword.for("catch")))[Meta.as_bool]()) {
-let __coil_temp;
-let {'name': name, 'body': body} = dot(node, at)[invoke](Keyword.for("catch"));
-name ??= nil;
-body ??= nil;;
-catch_js = str[invoke](" catch (", name, ") {\n", eval_ast[invoke](body), "\n}");
-};
-if ((dot(node, has__q)[invoke](Keyword.for("finally")))[Meta.as_bool]()) {
-let __coil_temp;
-let {'body': body} = dot(node, at)[invoke](Keyword.for("finally"));
-body ??= nil;;
-finally_js = str[invoke](" finally {\n", eval_ast[invoke](body), "\n}");
-};
-return str[invoke]("try {\n", body_js, "\n", "}", catch_js, finally_js);};
 let get_deconstructed_obj_entry_name = function (node) {
 node ??= nil;let __coil_temp;
 return dot(dot(Map[Meta.from_entries]([[Keyword.for("obj_reg_entry"), Keyword.for("name")], [Keyword.for("obj_entry_rename"), Keyword.for("old_name")]]), at)[invoke](dot(node, at)[invoke](Keyword.for("type"))), pipe)[invoke](node);};
@@ -442,7 +420,7 @@ path ??= nil;let __coil_temp;
 return str[invoke]("import ", path);};
 let eval_statement = function (node) {
 node ??= nil;let __coil_temp;
-let eval_fn = dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("if"), eval_if], [Keyword.for("direct_import"), eval_direct_import], [Keyword.for("import"), eval_import], [Keyword.for("export"), eval_export], [Keyword.for("export_default"), eval_export_default], [Keyword.for("let"), eval_let], [Keyword.for("if_let"), eval_if_let], [Keyword.for("return"), eval_return], [Keyword.for("protocol_def"), eval_protocol], [Keyword.for("for_loop"), eval_for_loop], [Keyword.for("id_assign"), eval_id_assign], [Keyword.for("while_loop"), eval_while_loop], [Keyword.for("loop"), eval_loop], [Keyword.for("while_let_loop"), eval_while_let_loop], [Keyword.for("continue"), eval_continue], [Keyword.for("break"), eval_break], [Keyword.for("try"), eval_try]]));
+let eval_fn = dot(dot(node, at)[invoke](Keyword.for("type")), pipe)[invoke](Map[Meta.from_entries]([[Keyword.for("if"), eval_if], [Keyword.for("direct_import"), eval_direct_import], [Keyword.for("import"), eval_import], [Keyword.for("export"), eval_export], [Keyword.for("export_default"), eval_export_default], [Keyword.for("let"), eval_let], [Keyword.for("if_let"), eval_if_let], [Keyword.for("return"), eval_return], [Keyword.for("protocol_def"), eval_protocol], [Keyword.for("for_loop"), eval_for_loop], [Keyword.for("id_assign"), eval_id_assign], [Keyword.for("while_loop"), eval_while_loop], [Keyword.for("loop"), eval_loop], [Keyword.for("while_let_loop"), eval_while_let_loop], [Keyword.for("continue"), eval_continue], [Keyword.for("break"), eval_break]]));
 eval_fn ??= nil;;
 return ((__coil_temp = {left: eval_fn}, __coil_temp.left[Meta.as_bool]() ? __coil_temp.left : eval_expr))[invoke](node)[Algebra["+"]](";");};
 let eval_ast = function (ast) {

@@ -1,0 +1,12 @@
+export def match_on(property) = {
+  def Meta:from_entries(entries) = {
+    ...entries
+    def Meta:invoke(object, ...args)
+      if object.property.nil?()
+        panic!("property `" property "` is nil")
+      else
+        return this.(object.property)(object, ...args)
+      end
+    end
+  }
+}

@@ -67,7 +67,6 @@ let tokenize = Tokenizer{
   /^let\s/ => :let
   /^protocol\s/ => :protocol
   /^for\s/ => :for
-  /^try\s/ => :try
   /^catch\s/ => :catch
   /^finally\s/ => :finally
   /^instanceof\s/ => :instanceof

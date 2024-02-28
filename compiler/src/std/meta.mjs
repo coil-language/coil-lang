@@ -14,6 +14,7 @@ const Meta = Object.freeze({
   as_bool: Symbol("coil-lang@0.1.6/std/meta/Meta:as_bool"),
   as_num: Symbol("coil-lang@0.1.6/std/meta/Meta:as_num"),
   as_kw: Symbol("coil-lang@0.1.9/std/meta/Meta:as_kw"),
+  "assert!": Symbol("coil-lang@0.1.29/std/meta/Meta:assert!"),
 });
 
 Nil[Meta.create] = function () {
@@ -234,6 +235,16 @@ Keyword.prototype[Meta.invoke] = function (collection) {
   else return collection[this] ?? nil;
 };
 
+class AssertionError extends Error {}
+
+Object.prototype[Meta["assert!"]] = function (msg, ...args) {
+  if (!this[Meta.as_bool]()) {
+    if (args.length > 0) console.log(...args);
+    throw new AssertionError(msg);
+  }
+  return this;
+};
+
 export default Meta;
 
 export const {
@@ -247,4 +258,5 @@ export const {
   pipe,
   as_num,
   as_kw,
+  "assert!": assert__b,
 } = Meta;

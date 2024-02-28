@@ -1,6 +1,6 @@
 "use strict";
 import {ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b, type_of, str, from_js} from '../src/std/globals.mjs'
-import Meta, {nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, as_kw} from '../src/std/meta.mjs';
+import Meta, {nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, as_kw, assert__b} from '../src/std/meta.mjs';
 import Iter, {take, until, skip, find, find_map, zip, reduce, map, flat_map, each, count, filter, filter_map, reject, all__q, any__q, split, compact, join, into, compose} from '../src/std/iter.mjs';
 import Algebra from '../src/std/algebra.mjs';
 import Bool, {negate} from '../src/std/bool.mjs';
@@ -10,6 +10,7 @@ import {inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum, InclusiveR
 import Record, {keys, values} from '../src/std/record.mjs';
 import Underscore, {_} from '../src/std/underscore.mjs';
 let __coil_temp;
+import {ParseError} from "./parse_error.mjs";
 let expect_token__b = function (tokens, kw) {
 tokens ??= nil;
 kw ??= nil;let __coil_temp;
@@ -657,9 +658,6 @@ return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries](
 let parse_finally = function (tokens) {
 tokens ??= nil;let __coil_temp;
 return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("finally")]])]), Chomp[Meta.create]([Keyword.for("finally")]), block[invoke](Keyword.for("body"))])[invoke](tokens);};
-let parse_try = function (tokens) {
-tokens ??= nil;let __coil_temp;
-return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("try")]])]), Chomp[Meta.create]([Keyword.for("try")]), block[invoke](Keyword.for("body")), Optional[Meta.create]([Keyword.for("catch"), parse_catch, Keyword.for("catch")]), Optional[Meta.create]([Keyword.for("finally"), parse_finally, Keyword.for("finally")])])[invoke](tokens);};
 let parse_import = function (tokens) {
 tokens ??= nil;let __coil_temp;
 return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("import")]])]), Chomp[Meta.create]([Keyword.for("import")]), Then[Meta.create]([parse_assign_expr, Keyword.for("assign_expr")]), Chomp[Meta.create]([Keyword.for("from")]), Then[Meta.create]([parse_str, Keyword.for("path")])])[invoke](tokens);};
@@ -673,7 +671,7 @@ let parse_direct_import = Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[
 parse_direct_import ??= nil;;
 let parse_statement = function (tokens) {
 tokens ??= nil;let __coil_temp;
-return ParseMap[Meta.from_entries]([[Keyword.for("let"), parse_let], [Keyword.for("for"), parse_for_loop], [Keyword.for("try"), parse_try], [Keyword.for("protocol"), parse_protocol], [Keyword.for("return"), parse_return], [Keyword.for("continue"), parse_continue], [Keyword.for("break"), parse_break], [Keyword.for("loop"), parse_loop], [[Keyword.for("import"), Keyword.for("string_lit")], parse_direct_import], [Keyword.for("import"), parse_import], [[Keyword.for("export"), Keyword.for("default")], parse_export_default], [Keyword.for("export"), parse_export], [[Keyword.for("while"), Keyword.for("let")], parse_while_let_loop], [Keyword.for("while"), parse_while_loop], [[Keyword.for("if"), Keyword.for("let")], parse_if_let], [Keyword.for("if"), parse_if], [_, parse_expr]])[invoke](tokens);};
+return ParseMap[Meta.from_entries]([[Keyword.for("let"), parse_let], [Keyword.for("for"), parse_for_loop], [Keyword.for("protocol"), parse_protocol], [Keyword.for("return"), parse_return], [Keyword.for("continue"), parse_continue], [Keyword.for("break"), parse_break], [Keyword.for("loop"), parse_loop], [[Keyword.for("import"), Keyword.for("string_lit")], parse_direct_import], [Keyword.for("import"), parse_import], [[Keyword.for("export"), Keyword.for("default")], parse_export_default], [Keyword.for("export"), parse_export], [[Keyword.for("while"), Keyword.for("let")], parse_while_let_loop], [Keyword.for("while"), parse_while_loop], [[Keyword.for("if"), Keyword.for("let")], parse_if_let], [Keyword.for("if"), parse_if], [_, parse_expr]])[invoke](tokens);};
 let block = function (name) {
 name ??= nil;let __coil_temp;
 return Parser[Meta.create]([Until[Meta.create]([Keyword.for("end"), parse_statement, name]), Chomp[Meta.create]([Keyword.for("end")])]);};

@@ -402,21 +402,6 @@ def eval_continue() = "continue"
 
 def eval_break() = "break"
 
-def eval_try(node)
-  let body_js = node.at(:body).pipe(eval_ast)
-  let catch_js = ""
-  let finally_js = ""
-  if node.has?(:catch)
-    let {name, body} = node.at(:catch)
-    catch_js = str(" catch (" name ") {\n" eval_ast(body) "\n}")
-  end
-  if node.has?(:finally)
-    let {body} = node.at(:finally)
-    finally_js = str(" finally {\n" eval_ast(body) "\n}")
-  end
-  return str("try {\n" body_js "\n" "}" catch_js finally_js)
-end
-
 def get_deconstructed_obj_entry_name(node) =
   Map{:obj_reg_entry => :name
       :obj_entry_rename => :old_name}
@@ -468,7 +453,6 @@ def eval_statement(node)
     :while_let_loop => eval_while_let_loop
     :continue => eval_continue
     :break => eval_break
-    :try => eval_try
   })
 
   return (eval_fn or eval_expr)(node) + ";"

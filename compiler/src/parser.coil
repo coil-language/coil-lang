@@ -1,3 +1,5 @@
+import {ParseError} from "./parse_error.mjs"
+
 def expect_token!(tokens, kw)
   if tokens.first().at(:type) != kw
     raise!(ParseError[kw, tokens.first()])
@@ -257,7 +259,7 @@ let PARSE_SND_EXPR_STEP_MAP = ParseMap{
 
 def parse_snd_expr_step(tokens, lhs) = PARSE_SND_EXPR_STEP_MAP(tokens, lhs)
 
-def parse_snd_expr([lhs tokens])  
+def parse_snd_expr([lhs tokens])
   while let [new_lhs rest] = parse_snd_expr_step(tokens, lhs)
     lhs = new_lhs
     tokens = rest
@@ -780,14 +782,6 @@ def parse_finally(tokens) = Parser[
   block(:body)
 ](tokens)
 
-def parse_try(tokens) = Parser[
-  Init[{type: :try}]
-  Chomp[:try]
-  block(:body)
-  Optional[:catch parse_catch :catch]
-  Optional[:finally parse_finally :finally]
-](tokens)
-
 def parse_import(tokens) = Parser[
   Init[{type: :import}]
   Chomp[:import]
@@ -817,7 +811,6 @@ let parse_direct_import = Parser[
 def parse_statement(tokens) = ParseMap{
   :let => parse_let
   :for => parse_for_loop
-  :try => parse_try
   :protocol => parse_protocol
   :return => parse_return
   :continue => parse_continue
