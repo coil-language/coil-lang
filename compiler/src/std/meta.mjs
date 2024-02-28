@@ -16,6 +16,10 @@ const Meta = Object.freeze({
   as_kw: Symbol("coil-lang@0.1.9/std/meta/Meta:as_kw"),
 });
 
+Nil[Meta.create] = function () {
+  throw new TypeError("Cannot create instance of Nil");
+};
+
 str.fmt = function (...args) {
   return (object) => {
     let out = "";
@@ -80,8 +84,7 @@ Boolean.prototype[Meta["=="]] = function (other) {
 };
 
 Nil.prototype[Meta["=="]] = function (other) {
-  // TODO: we probably shouldn't allow multiple instances of Nil
-  return this === other || other instanceof Nil;
+  return this === other;
 };
 
 Function.prototype[Meta["=="]] = function (other) {
