@@ -44,7 +44,9 @@ Object.prototype[Meta.log] = function (...args) {
 };
 
 String.prototype[Meta.as_num] = function () {
-  return Number(this);
+  let result = Number(this);
+  if (Number.isNaN(result)) throw new TypeError("Not a number");
+  return result;
 };
 
 Number.prototype[Meta.as_num] = function () {
@@ -109,7 +111,7 @@ Keyword.prototype[Meta["=="]] = function (other) {
 
 Set.prototype[Meta["=="]] = function (other) {
   if (!(other instanceof Set)) {
-    throw new TypeError("Expected Set");
+    return false;
   } else if (other.size !== this.size) {
     return false;
   } else {
@@ -227,8 +229,8 @@ Number.prototype[Meta.invoke] = function (collection) {
 };
 
 Keyword.prototype[Meta.invoke] = function (collection) {
-  // hmm.. not sure if we wanna allow this, really have to think about the purpose of Keywords in coil
   if (collection[at]) return collection[at](this) ?? nil;
+  // hmm.. not sure if we wanna allow this, really have to think about the purpose of Keywords in coil
   else return collection[this] ?? nil;
 };
 
