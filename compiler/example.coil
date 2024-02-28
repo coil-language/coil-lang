@@ -1,2 +1,1 @@
-let {val: [c]} = {val: [1]}
-c.log()
+{a: 1 b: 2}.len().log()

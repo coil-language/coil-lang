@@ -19,7 +19,7 @@ ObjectLiteral.prototype[Collection.at] = function (key) {
 };
 
 ObjectLiteral.prototype[Collection.len] = function () {
-  return Object.keys(this).at.length;
+  return Object.keys(this).length;
 };
 
 ObjectLiteral.prototype[Collection["empty?"]] = function () {
@@ -31,6 +31,7 @@ ObjectLiteral.prototype[Collection["has?"]] = function (key) {
 };
 
 Array.prototype[Collection.at] = function (idx) {
+  if (typeof idx !== "number") throw new TypeError("Expected number");
   return this.at(idx);
 };
 

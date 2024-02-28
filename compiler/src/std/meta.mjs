@@ -1,4 +1,5 @@
 import { ObjectLiteral, Keyword, Nil, nil, str } from "./globals.mjs";
+import { at } from "./collection.mjs";
 
 const Meta = Object.freeze({
   "nil?": Symbol("coil-lang@0.1.6/std/meta/Meta:nil?"),
@@ -215,37 +216,17 @@ Array.prototype[Meta.invoke] = function (index) {
 };
 
 String.prototype[Meta.invoke] = function (collection) {
-  if (typeof collection === "string" || collection instanceof Keyword) {
-    throw new TypeError(
-      "Can't 'invoke' a string with " + collection.toString()
-    );
-  } else {
-    return collection[Meta.invoke](this) ?? nil;
-  }
+  return collection[at](this) ?? nil;
 };
 
 Number.prototype[Meta.invoke] = function (collection) {
-  if (collection instanceof Number) {
-    throw new TypeError("Can't 'invoke' a number on a number");
-  } else if (collection instanceof Keyword) {
-    return this.collection ?? nil;
-  } else {
-    return collection[Meta.invoke](this) ?? nil;
-  }
+  return collection[at](this) ?? nil;
 };
 
 Keyword.prototype[Meta.invoke] = function (collection) {
-  if (collection instanceof Keyword) {
-    throw new TypeError(
-      "Can't 'invoke' a keyword with" + collection.toString()
-    );
-  } else if (typeof collection === "string") {
-    return collection[this];
-  } else if (typeof collection[Meta.invoke] !== "undefined") {
-    return collection[Meta.invoke](this) ?? nil;
-  } else {
-    return collection[this] ?? nil;
-  }
+  // hmm.. not sure if we wanna allow this, really have to think about the purpose of Keywords in coil
+  if (collection[at]) return collection[at](this) ?? nil;
+  else return collection[this] ?? nil;
 };
 
 export default Meta;
