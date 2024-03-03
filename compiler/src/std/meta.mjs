@@ -70,6 +70,8 @@ ObjectLiteral[Meta.from_entries] = function (entries) {
   return new ObjectLiteral(entries);
 };
 
+Array[Meta.from_entries] = (entries) => entries;
+
 Nil.prototype[Meta["nil?"]] = function () {
   return true;
 };
