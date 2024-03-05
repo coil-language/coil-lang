@@ -2,20 +2,25 @@ import { ObjectLiteral, Keyword, Nil, nil, str } from "./globals.mjs";
 import { at } from "./collection.mjs";
 
 const Meta = Object.freeze({
-  "nil?": Symbol("coil-lang@0.1.6/std/meta/Meta:nil?"),
-  create: Symbol("coil-lang@0.1.6/std/meta/Meta:create"),
-  from_entries: Symbol("coil-lang@0.1.6/std/meta/Meta:from_entries"),
-  "==": Symbol("coil-lang@0.1.6/std/meta/Meta:=="),
-  "!=": Symbol("coil-lang@0.1.6/std/meta/Meta:!="),
-  "exists?": Symbol("coil-lang@0.1.6/std/meta/Meta:exists?"),
-  log: Symbol("coil-lang@0.1.6/std/meta/Meta:log"),
-  invoke: Symbol("coil-lang@0.1.6/std/meta/Meta:invoke"),
-  pipe: Symbol("coil-lang@0.1.6/std/meta/Meta:pipe"),
-  as_bool: Symbol("coil-lang@0.1.6/std/meta/Meta:as_bool"),
-  as_num: Symbol("coil-lang@0.1.6/std/meta/Meta:as_num"),
-  as_kw: Symbol("coil-lang@0.1.9/std/meta/Meta:as_kw"),
-  "assert!": Symbol("coil-lang@0.1.29/std/meta/Meta:assert!"),
+  "nil?": Symbol("std/meta/Meta:nil?"),
+  create: Symbol("std/meta/Meta:create"),
+  from_entries: Symbol("std/meta/Meta:from_entries"),
+  "==": Symbol("std/meta/Meta:=="),
+  "!=": Symbol("std/meta/Meta:!="),
+  "exists?": Symbol("std/meta/Meta:exists?"),
+  log: Symbol("std/meta/Meta:log"),
+  invoke: Symbol("std/meta/Meta:invoke"),
+  pipe: Symbol("std/meta/Meta:pipe"),
+  as_bool: Symbol("std/meta/Meta:as_bool"),
+  as_num: Symbol("std/meta/Meta:as_num"),
+  as_kw: Symbol("std/meta/Meta:as_kw"),
+  "assert!": Symbol("std/meta/Meta:assert!"),
+  "freeze!": Symbol("std/metaMeta:freeze"),
 });
+
+Object.prototype[Meta["freeze!"]] = function () {
+  return Object.freeze(this);
+};
 
 Nil[Meta.create] = function () {
   throw new TypeError("Cannot create instance of Nil");
@@ -261,4 +266,5 @@ export const {
   as_num,
   as_kw,
   "assert!": assert__b,
+  "freeze!": freeze__b,
 } = Meta;

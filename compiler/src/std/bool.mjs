@@ -1,7 +1,7 @@
 import { Nil } from "./globals.mjs";
 
 const Bool = Object.freeze({
-  negate: Symbol("coil-lang@0.1.6/std/bool/Bool:negate"),
+  negate: Symbol("std/bool/Bool:negate"),
 });
 
 Nil.prototype[Bool.negate] = function () {

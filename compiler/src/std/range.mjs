@@ -1,7 +1,7 @@
 import Meta from "./meta.mjs";
 import Algebra from "./algebra.mjs";
 
-export const inc = Symbol("coil-lang@0.1.6/std/range/inc");
+export const inc = Symbol("std/range/inc");
 
 Number.prototype[inc] = function () {
   return this + 1;

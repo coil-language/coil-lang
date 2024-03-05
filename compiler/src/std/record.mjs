@@ -1,8 +1,8 @@
 import { ObjectLiteral } from "./globals.mjs";
 
 const Record = Object.freeze({
-  keys: Symbol("coil-lang@0.1.6/std/record/Record:keys"),
-  values: Symbol("coil-lang@0.1.6/std/record/Record:values"),
+  keys: Symbol("std/record/Record:keys"),
+  values: Symbol("std/record/Record:values"),
 });
 
 ObjectLiteral.prototype[Record.keys] = function () {

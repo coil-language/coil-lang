@@ -1,14 +1,14 @@
 const Algebra = Object.freeze({
-  "+": Symbol("coil-lang@0.1.6/std/algebra/Algebra:+"),
-  "-": Symbol("coil-lang@0.1.6/std/algebra/Algebra:-"),
-  "/": Symbol("coil-lang@0.1.6/std/algebra/Algebra:/"),
-  "*": Symbol("coil-lang@0.1.6/std/algebra/Algebra:*"),
-  "**": Symbol("coil-lang@0.1.6/std/algebra/Algebra:**"),
-  "%": Symbol("coil-lang@0.1.6/std/algebra/Algebra:%"),
-  ">": Symbol("coil-lang@0.1.6/std/algebra/Algebra:>"),
-  ">=": Symbol("coil-lang@0.1.6/std/algebra/Algebra:>="),
-  "<": Symbol("coil-lang@0.1.6/std/algebra/Algebra:<"),
-  "<=": Symbol("coil-lang@0.1.6/std/algebra/Algebra:<="),
+  "+": Symbol("std/algebra/Algebra:+"),
+  "-": Symbol("std/algebra/Algebra:-"),
+  "/": Symbol("std/algebra/Algebra:/"),
+  "*": Symbol("std/algebra/Algebra:*"),
+  "**": Symbol("std/algebra/Algebra:**"),
+  "%": Symbol("std/algebra/Algebra:%"),
+  ">": Symbol("std/algebra/Algebra:>"),
+  ">=": Symbol("std/algebra/Algebra:>="),
+  "<": Symbol("std/algebra/Algebra:<"),
+  "<=": Symbol("std/algebra/Algebra:<="),
 });
 
 Number.prototype[Algebra["+"]] = function (other) {

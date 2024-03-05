@@ -2,11 +2,12 @@ import Meta from "./meta.mjs";
 import { ObjectLiteral } from "./globals.mjs";
 
 const Collection = Object.freeze({
-  at: Symbol("coil-lang/@0.1.15/std/collection/Collection:at"),
-  len: Symbol("coil-lang/@0.1.15/std/collection/Collection:len"),
-  "empty?": Symbol("coil-lang/@0.1.15/std/collection/Collection:empty?"),
-  "has?": Symbol("coil-lang/@0.1.15/std/collection/Collection:has?"),
-  "delete!": Symbol("coil-lang/@0.1.15/std/collection/Collection:delete!"),
+  at: Symbol("std/collection/Collection:at"),
+  len: Symbol("std/collection/Collection:len"),
+  "empty?": Symbol("std/collection/Collection:empty?"),
+  "has?": Symbol("std/collection/Collection:has?"),
+  "delete!": Symbol("std/collection/Collection:delete!"),
+  delete: Symbol("std/collection/Collection:delete"),
 });
 
 ObjectLiteral.prototype[Collection["delete!"]] = function (...keys) {

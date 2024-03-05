@@ -1,6 +1,6 @@
 "use strict";
 import {ObjectLiteral, Nil, nil, Keyword, dot, raise__b, panic__b, type_of, str, from_js} from '../src/std/globals.mjs'
-import Meta, {nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, as_kw, assert__b} from '../src/std/meta.mjs';
+import Meta, {nil__q, create, from_entries, as_num, exists__q, as_bool, log, invoke, pipe, as_kw, assert__b, freeze__b} from '../src/std/meta.mjs';
 import Iter, {take, until, skip, find, find_map, zip, reduce, map, flat_map, each, count, filter, filter_map, reject, all__q, any__q, split, compact, join, into, compose} from '../src/std/iter.mjs';
 import Algebra from '../src/std/algebra.mjs';
 import Bool, {negate} from '../src/std/bool.mjs';
@@ -12,9 +12,12 @@ import Underscore, {_} from '../src/std/underscore.mjs';
 let __coil_temp;
 let resolve_name = function (name) {
 name ??= nil;let __coil_temp;
-if ((name)[Meta.as_bool]()) {
+if ((name[Meta["=="]]("new"))[Meta.as_bool]()) {
 let __coil_temp;
-return dot(dot(dot(dot(name, Keyword.for("replaceAll"))[invoke]("?", "__q"), Keyword.for("replaceAll"))[invoke]("!", "__b"), Keyword.for("replaceAll"))[invoke](">", "_lt_"), Keyword.for("replaceAll"))[invoke]("-", "_");
+return "__new__";
+} else if ((name)[Meta.as_bool]()) {
+let __coil_temp;
+return dot(dot(dot(name, Keyword.for("replaceAll"))[invoke]("?", "__q"), Keyword.for("replaceAll"))[invoke]("!", "__b"), Keyword.for("replaceAll"))[invoke](">", "_lt_");
 } else {
 let __coil_temp;
 return name;

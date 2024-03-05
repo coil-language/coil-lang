@@ -1,10 +1,11 @@
 def resolve_name(name)
-  if name
+  if name == "new"
+    return "__new__"
+  else if name
     return name
       .:replaceAll("?", "__q")
       .:replaceAll("!", "__b")
       .:replaceAll(">", "_lt_")
-      .:replaceAll("-", "_")
   else
     return name
   end
