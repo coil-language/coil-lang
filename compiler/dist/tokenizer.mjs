@@ -7,7 +7,7 @@ import Bool, {negate} from '../src/std/bool.mjs';
 import Collection, {at, len, empty__q, has__q, delete__b} from '../src/std/collection.mjs';
 import OrderedCollection, {first} from '../src/std/ordered_collection.mjs';
 import {inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum, InclusiveRangeNoMinimum, ExclusiveRangeNoMaximum, ExclusiveRangeNoMinimum} from '../src/std/range.mjs';
-import Record, {keys, values} from '../src/std/record.mjs';
+import Record, {keys, values, set, set__b} from '../src/std/record.mjs';
 import Underscore, {_} from '../src/std/underscore.mjs';
 let __coil_temp;
 let Tokenizer = function (entries) {

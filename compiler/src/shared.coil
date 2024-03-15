@@ -12,7 +12,7 @@ def CollectionView:prototype.(Collection:at)(idx) =
 def CollectionView:prototype.first =
   this:collection.at(this:idx)
 
-def CollectionView:prototype:skip(n) =
+def CollectionView:prototype:slice(n) =
   CollectionView[this:collection, this:idx + n]
 
 def* CollectionView:prototype.(Symbol:iterator)

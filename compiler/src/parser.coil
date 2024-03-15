@@ -30,7 +30,7 @@ def Init:prototype.parse([_expr tokens]) =
 def One(@kw, @as) end
 def One:prototype.parse([expr tokens])
   let {value, type} = expect_token!(tokens this:kw).first()
-  return [{...expr, this:as => value} tokens:skip(1)]
+  return [{...expr, this:as => value} tokens:slice(1)]
 end
 
 protocol can_parse?
@@ -67,10 +67,10 @@ def Chomp(...@kws) end
 def Chomp:prototype.parse([expr tokens])
   let i = 0
   for kw of this:kws
-    expect_token!(tokens:skip(i), kw)
+    expect_token!(tokens:slice(i), kw)
     i = i + 1
   end
-  return [expr, tokens:skip(i)]
+  return [expr, tokens:slice(i)]
 end
 
 def Then(@parser, @kw) end
@@ -132,7 +132,7 @@ end
 def Either(@set, @kw) end
 def Either:prototype.parse([expr tokens])
   let op = verify_exists!(this:set(tokens.first().at(:type)), this:set)
-  let [new_expr, rest] = [tokens.first(), tokens:skip(1)]
+  let [new_expr, rest] = [tokens.first(), tokens:slice(1)]
   return [{...expr this:kw => new_expr.at(:value)}, rest]
 end
 

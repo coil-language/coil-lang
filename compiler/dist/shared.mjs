@@ -7,7 +7,7 @@ import Bool, {negate} from '../src/std/bool.mjs';
 import Collection, {at, len, empty__q, has__q, delete__b} from '../src/std/collection.mjs';
 import OrderedCollection, {first} from '../src/std/ordered_collection.mjs';
 import {inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum, InclusiveRangeNoMinimum, ExclusiveRangeNoMaximum, ExclusiveRangeNoMinimum} from '../src/std/range.mjs';
-import Record, {keys, values} from '../src/std/record.mjs';
+import Record, {keys, values, set, set__b} from '../src/std/record.mjs';
 import Underscore, {_} from '../src/std/underscore.mjs';
 let __coil_temp;
 export let CollectionView = function (collection, idx) {
@@ -28,7 +28,7 @@ return dot(dot(this, 'collection'), at)[invoke](dot(this, 'idx')[Algebra["+"]](i
 CollectionView['prototype'][first] = function () {
 let __coil_temp;
 return dot(dot(this, 'collection'), at)[invoke](dot(this, 'idx'));};
-CollectionView['prototype']['skip'] = function (n) {
+CollectionView['prototype']['slice'] = function (n) {
 n ??= nil;let __coil_temp;
 return CollectionView[Meta.create]([dot(this, 'collection'), dot(this, 'idx')[Algebra["+"]](n)]);};
 CollectionView['prototype'][(dot(Symbol, 'iterator'))] = function *() {
