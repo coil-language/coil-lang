@@ -1,0 +1,4 @@
+#!sh
+mkdir -p dist/test
+deno run --allow-read --allow-write ./dist/cli.mjs ./test/algebra.coil ./dist/test/algebra.mjs --std-prefix=../..
+deno test ./dist/test/algebra.mjs
