@@ -10,6 +10,12 @@ const Collection = Object.freeze({
   delete: Symbol("std/collection/Collection:delete"),
 });
 
+ObjectLiteral.prototype[Collection.delete] = function (...keys) {
+  let out = new ObjectLiteral(this);
+  for (let key of keys) delete out[key];
+  return out;
+};
+
 ObjectLiteral.prototype[Collection["delete!"]] = function (...keys) {
   for (let key of keys) delete this[key];
   return this;
@@ -48,9 +54,17 @@ Array.prototype[Collection["has?"]] = function (value) {
   return this.some((elem) => elem[Meta["=="]](value));
 };
 
-Array.prototype[Collection["delete!"]] = function (...indices) {
-  for (let idx of indices) this.splice(idx, 1);
+Array.prototype[Collection["delete!"]] = function (...values) {
+  for (let i = 0; i < this.length; i++) {
+    if (values.some((val) => this[i][Meta["=="]](val))) {
+      this.splice(i, 1);
+    }
+  }
   return this;
+};
+
+Array.prototype[Collection.delete] = function (...values) {
+  return this.filter((value) => !values.some((val) => val[Meta["=="]](value)));
 };
 
 String.prototype[Collection.at] = function (idx) {
@@ -90,6 +104,12 @@ Map.prototype[Collection["delete!"]] = function (...keys) {
   return this;
 };
 
+Map.prototype[Collection.delete] = function (...keys) {
+  let out = new Map(this);
+  for (let key of keys) out.delete(key);
+  return out;
+};
+
 Set.prototype[Collection.at] = function (value) {
   if (this.has(value)) {
     return value;
@@ -113,6 +133,12 @@ Set.prototype[Collection["delete!"]] = function (...values) {
   return this;
 };
 
+Set.prototype[Collection.delete] = function (...values) {
+  let out = new Set(this);
+  for (let value of values) out.delete(value);
+  return out;
+};
+
 export default Collection;
 
 export const {
@@ -121,4 +147,5 @@ export const {
   "empty?": empty__q,
   "has?": has__q,
   "delete!": delete__b,
+  delete: __delete__,
 } = Collection;

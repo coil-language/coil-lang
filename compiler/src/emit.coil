@@ -1,6 +1,8 @@
 def resolve_name(name)
   if name == "new"
     return "__new__"
+  else if name == "delete"
+    return "__delete__"
   else if name
     return name
       .:replaceAll("?", "__q")

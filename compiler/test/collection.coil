@@ -1,0 +1,48 @@
+import { assertEquals: assert_equals, assertThrows: assert_throws } from "https://deno.land/std@0.220.0/assert/mod.ts"
+
+let {test} = Deno
+
+test("{}.empty?() == true" || assert_equals({}.empty?() true))
+test("[].empty?() == true" || assert_equals([].empty?() true))
+test("Set[].empty?() == true" || assert_equals(Set[].empty?() true))
+test("Map{}.empty?() == true" || assert_equals(Map{}.empty?() true))
+test("{key: :value}.empty?() == false" || assert_equals({key: :value}.empty?() false))
+test("[1].empty?() == false" || assert_equals([1].empty?() false))
+test("Set[1].empty?() == false" || assert_equals(Set[1].empty?() false))
+test("Map{key: :value}.empty?() == false" || assert_equals(Map{key: :value}.empty?() false))
+test("[1].at(0) == 1" || assert_equals([1].at(0), 1))
+test("Set[1].at(1) == 1" || assert_equals(Set[1].at(1), 1))
+test("{key: :value}.at(:key) == :value" || assert_equals({key: :value}.at(:key), :value))
+test("Map{key: :value}.at(:key) == :value" || assert_equals(Map{key: :value}.at(:key), :value))
+test("[1 2 3].len() == 3" || assert_equals([1 2 3].len(), 3))
+test("Set[1 2 3].len() == 3" || assert_equals(Set[1 2 3].len(), 3))
+test("{key: :value}.len() == 1" || assert_equals({key: :value}.len(), 1))
+test("Map{key: :value}.len() == 1" || assert_equals(Map{key: :value}.len(), 1))
+test("[1].has?(1) == true" || assert_equals([1].has?(1), true))
+test("Set[1].has?(1) == true" || assert_equals(Set[1].has?(1), true))
+test("{key: :value}.has?(:key) == true" || assert_equals({key: :value}.has?(:key), true))
+test("Map{key: :value}.has?(:key) == true" || assert_equals(Map{key: :value}.has?(:key), true))
+test("[1 2].delete(1)" || {
+  let original = [1 2]
+  let deleted = original.delete(1)
+  assert_equals(original, [1 2])
+  assert_equals(deleted, [2])
+})
+test("Set[1 2].delete(1)" || {
+  let original = Set[1 2]
+  let deleted = original.delete(1)
+  assert_equals(original, Set[1 2])
+  assert_equals(deleted, Set[2])
+})
+test("{key: :value}.delete(:key)" || {
+  let original = {key: :value}
+  let deleted = original.delete(:key)
+  assert_equals(original, {key: :value})
+  assert_equals(deleted, {})
+})
+test("Map{key: :value}.delete(:key)" || {
+  let original = Map{key: :value}
+  let deleted = original.delete(:key)
+  assert_equals(original, Map{key: :value})
+  assert_equals(deleted, Map{})
+})

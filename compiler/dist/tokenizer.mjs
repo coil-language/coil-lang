@@ -4,7 +4,7 @@ import Meta, {nil__q, create, from_entries, as_num, exists__q, as_bool, log, inv
 import Iter, {take, until, skip, find, find_map, zip, reduce, map, flat_map, each, count, filter, filter_map, reject, all__q, any__q, split, compact, join, into, compose} from '../src/std/iter.mjs';
 import Algebra from '../src/std/algebra.mjs';
 import Bool, {negate} from '../src/std/bool.mjs';
-import Collection, {at, len, empty__q, has__q, delete__b} from '../src/std/collection.mjs';
+import Collection, {at, len, empty__q, has__q, delete__b, __delete__} from '../src/std/collection.mjs';
 import OrderedCollection, {first} from '../src/std/ordered_collection.mjs';
 import {inc, InclusiveRange, ExclusiveRange, InclusiveRangeNoMaximum, InclusiveRangeNoMinimum, ExclusiveRangeNoMaximum, ExclusiveRangeNoMinimum} from '../src/std/range.mjs';
 import Record, {keys, values, set, set__b} from '../src/std/record.mjs';
