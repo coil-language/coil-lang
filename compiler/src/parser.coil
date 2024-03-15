@@ -94,7 +94,7 @@ def Until:prototype.parse([expr tokens])
   let exprs = []
   while tokens.first().at(:type) != this:end_kw
     let [expr new_tokens] = verify_exists!(this:parser(tokens) this)
-    exprs.:push(expr)
+    exprs:push(expr)
     tokens = new_tokens
   end
   if this:kw

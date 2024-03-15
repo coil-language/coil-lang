@@ -15,6 +15,7 @@ const Meta = Object.freeze({
   as_num: Symbol("std/meta/Meta:as_num"),
   as_kw: Symbol("std/meta/Meta:as_kw"),
   "assert!": Symbol("std/meta/Meta:assert!"),
+  "assert_eq!": Symbol("std/meta/Meta:assert_eq!"),
   "freeze!": Symbol("std/metaMeta:freeze"),
 });
 
@@ -252,6 +253,14 @@ Object.prototype[Meta["assert!"]] = function (msg, ...args) {
   return this;
 };
 
+Object.prototype[Meta["assert_eq!"]] = function (other, msg, ...args) {
+  if (!this[Meta["=="]](other)) {
+    console.log(this, "not equal to", other, ...args);
+    throw new AssertionError(msg);
+  }
+  return this;
+};
+
 export default Meta;
 
 export const {
@@ -266,5 +275,6 @@ export const {
   as_num,
   as_kw,
   "assert!": assert__b,
+  "assert_eq!": assert_eq__b,
   "freeze!": freeze__b,
 } = Meta;
