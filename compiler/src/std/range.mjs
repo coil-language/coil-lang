@@ -12,6 +12,8 @@ BigInt.prototype[inc] = function () {
 };
 
 String.prototype[inc] = function () {
+  if (this.length !== 1)
+    throw new TypeError("Can't increment a string of more than 1 character");
   return String.fromCharCode(this.charCodeAt(0) + 1);
 };
 
