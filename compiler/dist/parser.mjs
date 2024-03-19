@@ -364,7 +364,11 @@ let parse_snd_assign = function (tokens, lhs) {
 tokens ??= nil;
 lhs ??= nil;let __coil_temp;
 return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("snd_assign")], [Keyword.for("lhs"), lhs]])]), Chomp[Meta.create]([Keyword.for("eq")]), Then[Meta.create]([parse_expr, Keyword.for("rhs")])])[invoke](tokens);};
-let PARSE_SND_EXPR_STEP_MAP = ParseMap[Meta.from_entries]([[Keyword.for("open_p"), parse_fn_call], [Keyword.for("open_b"), parse_meta_from_entries], [Keyword.for("open_sq"), parse_meta_create], [Keyword.for("dot"), parse_dot], [Keyword.for("keyword"), parse_keyword_lookup], [[Keyword.for("dot_dot"), Keyword.for("eq")], parse_inclusive_range], [Keyword.for("dot_dot"), parse_exclusive_range]]);
+let parse_dot_yield = function (tokens, lhs) {
+tokens ??= nil;
+lhs ??= nil;let __coil_temp;
+return Parser[Meta.create]([Init[Meta.create]([ObjectLiteral[Meta.from_entries]([[Keyword.for("type"), Keyword.for("dot_yield")], [Keyword.for("lhs"), lhs]])]), Chomp[Meta.create]([Keyword.for("dot"), Keyword.for("yield")])])[invoke](tokens);};
+let PARSE_SND_EXPR_STEP_MAP = ParseMap[Meta.from_entries]([[Keyword.for("open_p"), parse_fn_call], [Keyword.for("open_b"), parse_meta_from_entries], [Keyword.for("open_sq"), parse_meta_create], [Keyword.for("keyword"), parse_keyword_lookup], [[Keyword.for("dot"), Keyword.for("yield")], parse_dot_yield], [Keyword.for("dot"), parse_dot], [[Keyword.for("dot_dot"), Keyword.for("eq")], parse_inclusive_range], [Keyword.for("dot_dot"), parse_exclusive_range]]);
 PARSE_SND_EXPR_STEP_MAP ??= nil;;
 let parse_snd_expr_step = function (tokens, lhs) {
 tokens ??= nil;

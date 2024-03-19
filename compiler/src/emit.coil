@@ -212,6 +212,8 @@ def eval_await({expr}) = str("await " eval_expr(expr))
 
 def eval_yield({star? expr}) = str("(yield" (star? and "*") " " eval_expr(expr) ")")
 
+def eval_dot_yield({lhs}) = str("(yield " eval_expr(lhs) ")")
+
 def eval_paren_expr({expr}) = str("(" eval_expr(expr) ")")
 
 def eval_keyword({value}) = str("Keyword.for(\"" value  "\")")
@@ -356,6 +358,7 @@ def eval_expr(node) = node.at(:type).pipe(Map{
   :spread => eval_spread
   :await => eval_await
   :yield => eval_yield
+  :dot_yield => eval_dot_yield
   :paren_expr => eval_paren_expr
   :inclusive_range => eval_inclusive_range
   :exclusive_range => eval_exclusive_range
